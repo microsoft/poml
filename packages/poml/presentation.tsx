@@ -618,6 +618,13 @@ export namespace MultiMedia {
     position?: Position; // Only applicable when the image is shown as image (not as text).
   }
 
+  export interface AudioProps {
+    type?: string; // audio/mpeg, audio/wav, etc.
+    base64?: string; // Used for models that does support audio.
+    alt?: string; // Used for models that does not support audio.
+    position?: Position; // Only applicable when the audio is shown as audio (not as text).
+  }
+
   export const Environment = component('MultiMedia.Environment')((
     props: React.PropsWithChildren<PropsMultiMediaBase>
   ) => {
@@ -655,6 +662,15 @@ export namespace MultiMedia {
     const { ...others } = props;
     return (
       <MultiMedia.Environment {...others}>{irElement('img', { ...others })}</MultiMedia.Environment>
+    );
+  });
+
+  export const Audio = component('MultiMedia.Audio')((props: PropsMultiMediaBase & AudioProps) => {
+    const { ...others } = props;
+    return (
+      <MultiMedia.Environment {...others}>
+        {irElement('audio', { ...others })}
+      </MultiMedia.Environment>
     );
   });
 }

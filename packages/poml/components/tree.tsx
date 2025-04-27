@@ -1,10 +1,12 @@
 // import * as React from 'react';
 // import { List, Item, BlockProps } from '../poml';
 
-// export interface TreeItemData {
-//   name: string;
-//   children?: TreeItemData[];
-// }
+import { PropsSyntaxBase } from "poml/essentials";
+
+export interface TreeItemData {
+  name: string;
+  children?: TreeItemData[];
+}
 
 // export interface SimpleTreeProps extends BlockProps {
 //   items: TreeItemData[];
@@ -59,3 +61,13 @@
 //     </Tree>
 //   )
 // };
+
+
+export interface FolderProps extends PropsSyntaxBase {
+  src?: string;
+  data?: TreeItemData[];
+  filter?: string | RegExp;
+  maxDepth?: number;
+  showContent?: boolean;
+}
+

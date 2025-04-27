@@ -724,3 +724,40 @@ export const Image = component('Image', { aliases: ['img'], asynchorous: true })
     return <Inline syntax={syntax}>{alt}</Inline>;
   }
 });
+
+interface AudioProps extends PropsSyntaxBase, MultiMedia.AudioProps {
+  src?: string;
+}
+
+/**
+ * Audio (`<audio>`) embeds an audio file in the content.
+ */
+export const Audio = component('Audio', { aliases: ['audio'], asynchorous: true })((
+  props: AudioProps
+) => {
+  let { syntax, src, base64, type, ...others } = props;
+  const presentation = computeSyntaxContext(props, 'multimedia', []);
+  if (presentation === 'multimedia') {
+    if (src) {
+      if (base64) {
+        throw ReadError.fromProps('Cannot specify both `src` and `base64`.', others);
+      }
+      src = expandRelative(src);
+      if (!fs.existsSync(src)) {
+        throw ReadError.fromProps(`Audio file not found: ${src}`, others);
+      }
+    } else if (!base64) {
+      throw ReadError.fromProps('Either `src` or `base64` must be specified.', others);
+    }
+    return (
+      <MultiMedia.Audio
+        presentation={presentation}
+        base64={base64}
+        type={type}
+        {...others}
+      />
+    );
+  } else {
+    return null;
+  }
+});
