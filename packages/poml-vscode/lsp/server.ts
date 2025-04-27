@@ -17,11 +17,13 @@ import {
   HoverParams,
   MarkupKind,
   RelatedFullDocumentDiagnosticReport,
-  TelemetryEventNotification
+  TelemetryEventNotification,
+  FullDocumentDiagnosticReport,
+  UnchangedDocumentDiagnosticReport
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
-
+import * as crypto from 'crypto';
 import { Message, poml, read, write } from 'poml';
 import {
   ErrorCollection,
@@ -125,25 +127,15 @@ class PomlLspServer {
 
     this.connection.onRequest(PreviewMethodName, this.onPreview.bind(this));
 
-    // FIXME: I found this raised quite a lot of false positives.
-    // Currently Ctrl+S is a workaround to refresh the diagnostics.
-    // The content of a text document has changed. This event is emitted
-    // when the text document first opened or when its content has changed.
-    this.documents.onDidChangeContent(async change => {
-      const diagnosticReport = await this.onDiagnostic({ textDocument: change.document });
-      this.connection.sendDiagnostics({
-        uri: change.document.uri,
-        diagnostics: diagnosticReport.items
-      });
-    });
+    // Provide a way to force the diagnostics to be reset.
     this.documents.onDidSave(async change => {
-      // Invalid the diagnostic cache
+      // Invalidate the diagnostic cache
       const uri = change.document.uri.toString();
       this.diagnosticCache.delete(uri);
       const diagnosticReport = await this.onDiagnostic({ textDocument: change.document });
       this.connection.sendDiagnostics({
         uri: change.document.uri,
-        diagnostics: diagnosticReport.items
+        diagnostics: diagnosticReport.kind === DocumentDiagnosticReportKind.Full ? diagnosticReport.items : []
       });
     });
 
@@ -286,15 +278,16 @@ class PomlLspServer {
 
   private async onDiagnostic(
     params: DocumentDiagnosticParams
-  ): Promise<RelatedFullDocumentDiagnosticReport> {
+  ): Promise<UnchangedDocumentDiagnosticReport | FullDocumentDiagnosticReport> {
     const key = params.textDocument.uri.toString();
-    this.connection.languages.diagnostics.refresh();
     const document = this.documents.get(params.textDocument.uri);
     const cache = this.diagnosticCache.get(key) ?? { key, fileContent: undefined, diagnostics: [] };
     if (cache.fileContent === document?.getText()) {
+      // Compute hash of the file content
+      const hash = crypto.createHash('sha256').update(cache.fileContent ?? '').digest('hex');
       return {
-        kind: DocumentDiagnosticReportKind.Full,
-        items: cache.diagnostics
+        kind: DocumentDiagnosticReportKind.Unchanged,
+        resultId: hash
       };
     } else {
       const result = document !== undefined ? await this.validateTextDocument(document) : [];
@@ -307,9 +300,11 @@ class PomlLspServer {
         });
       }
       this.diagnosticCache.set(key, { key, fileContent: document!.getText(), diagnostics: result });
+      const hash = crypto.createHash('sha256').update(document!.getText()).digest('hex');
       return {
         kind: DocumentDiagnosticReportKind.Full,
-        items: result
+        items: result,
+        resultId: hash
       };
     }
   }
