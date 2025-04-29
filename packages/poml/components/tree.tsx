@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PropsSyntaxBase, computeSyntaxContext, List, ListItem, Text, Header, Code, SubContent, Object } from "poml/essentials";
 import { component, expandRelative } from 'poml/base';
-import { Markup, Serialize } from 'poml/presentation';
 
 export interface TreeItemData {
   name: string;
@@ -16,8 +15,29 @@ export interface TreeProps extends PropsSyntaxBase {
   showContent?: boolean;
 }
 
-// TODO: explain the format with an example
-function renderAsHeaderContentTree(items: TreeItemData[], parentPath = '', showContent: boolean = false): React.ReactNode[] {
+// Example:
+// For input:
+// [
+//   {
+//     name: 'Project',
+//     children: [
+//       { name: 'src', children: [{ name: 'index.js', value: 'console.log("hello")' }] },
+//       { name: 'package.json', value: '{ "name": "project" }' }
+//     ]
+//   }
+// ]
+// Output with showContent=true will be:
+// <Header>Project</Header>
+// <SubContent>
+//   <Header>Project/src</Header>
+//   <SubContent>
+//     <Header>Project/src/index.js</Header>
+//     <Code lang="js">console.log("hello")</Code>
+//   </SubContent>
+//   <Header>Project/package.json</Header>
+//   <Code lang="json">{ "name": "project" }</Code>
+// </SubContent>
+function treeToHeaderContentTree(items: TreeItemData[], parentPath = '', showContent: boolean = false): React.ReactNode[] {
   return items.map((item, index) => {
     const currentPath = parentPath ? `${parentPath}/${item.name}` : item.name;
     const hasContent = item.value && showContent;
@@ -33,29 +53,59 @@ function renderAsHeaderContentTree(items: TreeItemData[], parentPath = '', showC
     }
     
     if (item.children && item.children.length > 0) {
-      elements.push(<SubContent>{renderAsHeaderContentTree(item.children, currentPath, showContent)}</SubContent>);
+      elements.push(<SubContent>{treeToHeaderContentTree(item.children, currentPath, showContent)}</SubContent>);
     }
     
     return elements;
   });
 }
 
-// TODO: explain  the format with an example
-function renderAsNestedList(items: TreeItemData[], depth = 0): React.ReactNode {
+// Example:
+// For input:
+// [
+//   {
+//     name: 'Project',
+//     children: [
+//       { name: 'src', children: [{ name: 'index.js' }] },
+//       { name: 'package.json' }
+//     ]
+//   }
+// ]
+// Output will be:
+// - Project
+//   - src
+//     - index.js
+//   - package.json
+function treeToNestedList(items: TreeItemData[], depth = 0): React.ReactNode {
   return (
     <List>
       {items.map((item, index) => (
         <ListItem key={`item-${index}`}>
           {item.name}
-          {item.children && item.children.length > 0 && renderAsNestedList(item.children, depth + 1)}
+          {item.children && item.children.length > 0 && treeToNestedList(item.children, depth + 1)}
         </ListItem>
       ))}
     </List>
   );
 }
 
-// TODO: explain  the format with an example
-function renderAsPureTextContents(items: TreeItemData[], parentPath = ''): string {
+// Example:
+// For input:
+// [
+//   {
+//     name: 'Project',
+//     children: [
+//       { name: 'src', children: [{ name: 'index.js', value: 'console.log("hello")' }] },
+//       { name: 'package.json', value: '{ "name": "project" }' }
+//     ]
+//   }
+// ]
+// Output will be:
+// Project/src/index.js
+//     console.log("hello")
+// Project/package.json
+//     { "name": "project" }
+function treeToPureTextContents(items: TreeItemData[], parentPath = ''): string {
   return items.map(item => {
     const currentPath = parentPath ? `${parentPath}/${item.name}` : item.name;
     const result: string[] = [];
@@ -66,36 +116,43 @@ function renderAsPureTextContents(items: TreeItemData[], parentPath = ''): strin
     }
     
     if (item.children && item.children.length > 0) {
-      result.push(renderAsPureTextContents(item.children, currentPath));
+      result.push(treeToPureTextContents(item.children, currentPath));
     }
     
     return result;
   }).flat(Infinity).join('\n');
 }
 
-// TODO: explain  the format with an example
-function renderWithBoxDrawings(items: TreeItemData[], prefix = '', isLast = true): string {
-  let result = '';
-  // FIXME: this is not correct, the top level should not have a prefix
-  
-  items.forEach((item, index) => {
-    const isLastItem = index === items.length - 1;
-    const connector = isLastItem ? '└─' : '├─';
-    const line = `${prefix}${connector} ${item.name}`;
-    result += line + '\n';
-    
-    if (item.value) {
-      const valuePrefix = isLastItem ? '   └─ ' : '│  └─ ';
-      result += `${prefix}${valuePrefix}${item.value}\n`;
-    }
+// Example:
+// For input:
+// [
+//   {
+//     name: 'Project',
+//     children: [
+//       { name: 'src', children: [{ name: 'index.js', value: 'console.log("hello")' }] },
+//       { name: 'package.json', value: '{ "name": "project" }' }
+//     ]
+//   }
+// ]
+// Output will be:
+// Project
+// ├─ src
+// │  └─ index.js
+// └─ package.json
+function treeToBoxDrawings(items: TreeItemData[], prefix = '', isLastItem = true): string {
+  return items.map((item, index) => {
+    const result: string[] = [];
+    const isLast = index === items.length - 1;
+    const connector = prefix.length > 0 ? (isLast ? '└─ ' : '├─ ') : '';
+    const line = `${prefix}${connector}${item.name}`;
+    result.push(line);
+    // Does not support show content here.
     
     if (item.children && item.children.length > 0) {
-      const newPrefix = `${prefix}${isLastItem ? '   ' : '│  '}`;
-      result += renderTextTree(item.children, prefix + (isLastItem ? '   ' : '│  '), isLastItem);
+      const newPrefix = `${prefix}${isLast ? '   ' : '│  '}`;
+      result.push(treeToBoxDrawings(item.children, newPrefix, false));
     }
-  });
-  
-  return result;
+  }).join('\n');
 }
 
 // Function to convert tree items to a nested object for JSON/YAML output
@@ -132,19 +189,19 @@ export const Tree = component('Tree')((props: TreeProps) => {
     return <Object data={object} {...others} />;
   } else if (presentation === 'free') {
     if (showContent) {
-      const pureText = renderAsPureTextContents(items);
+      const pureText = treeToPureTextContents(items);
       return <Text whiteSpace="pre" {...others}>{pureText}</Text>;
     } else {
-      const boxDrawings = renderWithBoxDrawings(items);
+      const boxDrawings = treeToBoxDrawings(items);
       return <Text whiteSpace="pre" {...others}>{boxDrawings}</Text>;
     }
   } else {
     if (showContent) {
-      return <>{renderAsHeaderContentTree(items, '', showContent)}</>;
+      return <>{treeToHeaderContentTree(items, '', showContent)}</>;
     } else {
       return (
         <List {...others}>
-          {renderAsNestedList(items)}
+          {treeToNestedList(items)}
         </List>
       );
     }
@@ -206,8 +263,7 @@ function readDirectoryToTreeItems(
       children: children.length > 0 ? children : undefined
     };
   } catch (error) {
-    console.error(`Error reading directory ${dirPath}:`, error);
-    return { name };
+    throw new Error(`Error reading directory ${dirPath}: ${error}`);
   }
 }
 
@@ -246,11 +302,10 @@ export const Folder = component('Folder')((props: FolderProps) => {
       // Add the root name as the first item
       treeData = [{ name: path.basename(resolvedPath), children: treeData }];
     } catch (error) {
-      console.error(`Error processing folder ${src}:`, error);
-      return <Text>Error loading folder: {src}</Text>;
+      throw new Error(`Error processing folder ${src}: ${error}`);
     }
   } else {
-    return <Text>Either src or data must be provided</Text>;
+    throw new Error('Either src or data must be provided');
   }
   
   // FIXME: the max depth should be handled when reading the directory instead of inside.
