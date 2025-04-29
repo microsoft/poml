@@ -4,6 +4,7 @@ import { describe, expect, test } from '@jest/globals';
 
 import { poml, read, write } from 'poml';
 import { readDocx, readDocxFromPath, readPdfFromPath, Document } from 'poml/components/document';
+import { Tree, TreeItemData } from 'poml/components/tree';
 import { readFileSync } from 'fs';
 import { ErrorCollection } from 'poml/base';
 
@@ -91,52 +92,140 @@ describe('message', () => {
   });
 });
 
-// test('tree', () => {
-//   const tree = (
-//     <Tree>
-//       <TreeItem name='Data Grid'>
-//         <TreeItem name='data-grid' />
-//         <TreeItem name='data-grid-pro' />
-//         <TreeItem name='data-grid-premium' />
-//       </TreeItem>
-//       <TreeItem name='Date and Time Pickers'>
-//         <TreeItem name='date-pickers' />
-//         <TreeItem name='date-pickers-pro' />
-//       </TreeItem>
-//       <TreeItem name='Charts'>
-//         <TreeItem name='charts' />
-//       </TreeItem>
-//       <TreeItem name='Tree View'>
-//         <TreeItem name='tree-view' />
-//       </TreeItem>
-//     </Tree>
-//   );
-//   expect(render(tree)).toMatch(
-//     /^<list stub="tree"><item stub="tree-item">Data Grid<list stub="tree"><item stub="tree-item">data-grid/g
-//   );
-// });
+describe('tree',  () => {
+  const treeData: TreeItemData[] = [
+    {
+      name: 'Data Grid',
+      children: [{ name: 'data-grid' }, { name: 'data-grid-pro', value: 'Content Grid Pro' }, { name: 'data-grid-premium' }],
+    },
+    {
+      name: 'Date and Time Pickers',
+      children: [{ name: 'date-pickers', value: 'Content Date Pickers' }, { name: 'date-pickers-pro' }],
+    },
+    {
+      name: 'Tree.view',
+      value: 'Content Tree View'
+    },
+  ];
 
-// test('tree', () => {
-//   const treeData: TreeItemData[] = [
-//     {
-//       name: 'Data Grid',
-//       children: [{ name: 'data-grid' }, { name: 'data-grid-pro' }, { name: 'data-grid-premium' }],
-//     },
-//     {
-//       name: 'Date and Time Pickers',
-//       children: [{ name: 'date-pickers' }, { name: 'date-pickers-pro' }],
-//     },
-//     {
-//       name: 'Charts',
-//       children: [{ name: 'charts' }],
-//     },
-//     {
-//       name: 'Tree View',
-//       children: [{ name: 'tree-view' }],
-//     },
-//   ];
-//   const tree = <SimpleTree items={treeData} />;
-//   expect(render(tree)).toMatch(
-//     /^<list stub="tree"><item stub="tree-item">Data Grid<list stub="tree"><item stub="tree-item">data-grid/g
-//   );
-// });
+  const backticks = '```';
+
+  const treeMarkdownWithContent = `# Data Grid
+
+## Data Grid/data-grid
+
+## Data Grid/data-grid-pro
+
+${backticks}
+Content Grid Pro
+${backticks}
+
+## Data Grid/data-grid-premium
+
+# Date and Time Pickers
+
+## Date and Time Pickers/date-pickers
+
+${backticks}
+Content Date Pickers
+${backticks}
+
+## Date and Time Pickers/date-pickers-pro
+
+# Tree.view
+
+${backticks}
+Content Tree View
+${backticks}`;
+
+  const treeMarkdownWithoutContent = `- Data Grid
+  - data-grid
+  - data-grid-pro
+  - data-grid-premium
+- Date and Time Pickers
+  - date-pickers
+  - date-pickers-pro
+- Tree.view`;
+
+  const treeTextWithContent = `Data Grid/data-grid
+Data Grid/data-grid-pro
+    Content Grid Pro
+Data Grid/data-grid-premium
+Date and Time Pickers/date-pickers
+    Content Date Pickers
+Date and Time Pickers/date-pickers-pro
+Tree.view
+    Content Tree View`;
+
+  // with box drawings
+  const treeTextWithoutContent = `Data Grid
+├─ data-grid
+├─ data-grid-pro
+│  └─ Content Grid Pro
+└─ data-grid-premium
+Date and Time Pickers
+├── date-pickers
+│   └── Content Date Pickers
+└── date-pickers-pro
+Tree.view
+└── Content Tree View`;
+
+  const treeYamlWithoutContent = `Data Grid:
+  data-grid:
+  data-grid-pro: Content Grid Pro
+  data-grid-premium:
+Date and Time Pickers:
+  date-pickers: Content Date Pickers
+  date-pickers-pro:
+Tree.view:
+  Content Tree View`;
+
+  const testJsonWithContent = `{
+  "Data Grid": {
+    "data-grid": {},
+    "data-grid-pro": "Content Grid Pro",
+    "data-grid-premium": {}
+  },
+  "Date and Time Pickers": {
+    "date-pickers": "Content Date Pickers",
+    "date-pickers-pro": {}
+  },
+  "Tree.view": "Content Tree View"
+}`;
+
+  test('tree markdown with content', async () => {
+    const markup = <Tree items={treeData} syntax="markdown" showContent={true} />;
+    const result = await poml(markup);
+    expect(result).toBe(treeMarkdownWithContent);
+  });
+
+  test('tree markdown without content', async () => {
+    const markup = <Tree items={treeData} syntax="markdown" />;
+    const result = await poml(markup);
+    expect(result).toBe(treeMarkdownWithoutContent);
+  });
+
+  test('tree text with content', async () => {
+    const markup = <Tree items={treeData} syntax="text" showContent={true} />;
+    const result = await poml(markup);
+    expect(result).toBe(treeTextWithContent);
+  });
+
+  test('tree text without content', async () => {
+    const markup = <Tree items={treeData} syntax="text" />;
+    const result = await poml(markup);
+    expect(result).toBe(treeTextWithoutContent);
+  });
+
+  test('tree yaml without content', async () => {
+    const markup = <Tree items={treeData} syntax="yaml" />;
+    const result = await poml(markup);
+    expect(result).toBe(treeYamlWithoutContent);
+  });
+
+  test('tree json with content', async () => {
+    const markup = <Tree items={treeData} syntax="json" showContent={true} />;
+    const result = await poml(markup);
+    expect(result).toBe(testJsonWithContent);
+  });
+});
