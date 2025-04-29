@@ -25,7 +25,8 @@ export interface TreeProps extends PropsSyntaxBase {
   showContent?: boolean;
 }
 
-/**
+// FIXME: The comment is not in the right format due to the parser limitation
+/*
  * # Project
  *
  * ## Project/src
@@ -73,7 +74,7 @@ function treeToHeaderContentTree(
   });
 }
 
-/**
+/*
  * Example:
  * - Project
  *   - src
@@ -93,7 +94,7 @@ function treeToNestedList(items: TreeItemData[], depth = 0): React.ReactNode {
   );
 }
 
-/**
+/*
  * Example:
  * .git/
  * .git/branches/
@@ -135,7 +136,7 @@ function treeToPureTextContents(items: TreeItemData[], parentPath = ''): string 
     .join('\n');
 }
 
-/**
+/*
  * Example:
  * Project
  * ├── src

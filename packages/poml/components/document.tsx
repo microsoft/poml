@@ -97,12 +97,14 @@ function convertTableFromHtml(
   );
 }
 
-function htmlToPoml(
+export function htmlToPoml(
   element: cheerio.Cheerio<any>,
   $: cheerio.CheerioAPI,
   options?: DocumentProps
 ): React.ReactElement {
-  if (
+  if (element.is('style') || element.is('script')) {
+    return <></>;
+  } else if (
     element.is('h1') ||
     element.is('h2') ||
     element.is('h3') ||
@@ -128,11 +130,17 @@ function htmlToPoml(
   } else if (element.is('img')) {
     // src is in the format of data:image/png;base64, so we can't use it directly
     const src = element.attr('src')!;
-    const base64 = src.split(',')[1];
-    if (options?.multimedia || options?.multimedia === undefined) {
-      return <Image syntax="multimedia" base64={base64} alt={element.attr('alt')} />;
+    // check whether src is in the format of data:type;base64
+    if (src.startsWith('data:') && src.includes(';base64')) {
+      const base64 = src.split(',')[1];
+      if (options?.multimedia || options?.multimedia === undefined) {
+        return <Image syntax="multimedia" base64={base64} alt={element.attr('alt')} />;
+      } else {
+        return <Image base64={base64} alt={element.attr('alt')} />;
+      }
     } else {
-      return <Image base64={base64} alt={element.attr('alt')} />;
+      // TODO: Probably needs to fetch a file or URL
+      return <></>;
     }
   } else if (element.is('table')) {
     return convertTableFromHtml(element, $, options);

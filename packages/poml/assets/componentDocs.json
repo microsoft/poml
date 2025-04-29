@@ -925,6 +925,100 @@
     ]
   },
   {
+    "name": "Tree",
+    "description": "Renders a tree structure in various formats.",
+    "params": [
+      {
+        "name": "syntax",
+        "type": "string",
+        "choices": [
+          "markdown",
+          "html",
+          "json",
+          "text",
+          "xml"
+        ],
+        "description": "The output syntax to use for rendering the tree",
+        "required": false
+      },
+      {
+        "name": "items",
+        "type": "TreeItemData[]",
+        "choices": [],
+        "description": "Array of tree items to render",
+        "required": false
+      },
+      {
+        "name": "showContent",
+        "type": "boolean",
+        "choices": [],
+        "description": "Whether to show content values of tree items",
+        "required": false
+      }
+    ],
+    "example": "```xml\n<Tree items={treeData} syntax=\"markdown\" showContent={true} />\n```",
+    "baseComponents": []
+  },
+  {
+    "name": "Folder",
+    "description": "Displays a directory structure as a tree.",
+    "params": [
+      {
+        "name": "syntax",
+        "type": "string",
+        "choices": [
+          "markdown",
+          "html",
+          "json",
+          "text",
+          "xml"
+        ],
+        "description": "The output syntax of the content.",
+        "required": false
+      },
+      {
+        "name": "src",
+        "type": "string",
+        "choices": [],
+        "description": "The source directory path to display.",
+        "required": false
+      },
+      {
+        "name": "data",
+        "type": "TreeItemData[]",
+        "choices": [],
+        "description": "Alternative to src, directly provide tree data structure.",
+        "required": false
+      },
+      {
+        "name": "filter",
+        "type": "string",
+        "choices": [
+          "string",
+          "RegExp"
+        ],
+        "description": "A regular expression to filter files.\n  The regex is applied to the folder names and file names (not the full path).\n  Directories are included by default unless all of their nested content is filtered out.\n  When filter is on, empty directories will not be shown.",
+        "required": false
+      },
+      {
+        "name": "maxDepth",
+        "type": "number",
+        "choices": [],
+        "description": "Maximum depth of directory traversal. Default is 3.",
+        "required": false
+      },
+      {
+        "name": "showContent",
+        "type": "boolean",
+        "choices": [],
+        "description": "Whether to show file contents. Default is false.",
+        "required": false
+      }
+    ],
+    "example": "To display a directory structure with a filter for Python files:\n```xml\n<folder src=\"project_dir\" filter=\".*\\.py$\" maxDepth=\"3\" />\n```",
+    "baseComponents": []
+  },
+  {
     "name": "CaptionedParagraph",
     "description": "CaptionedParagraph (`<cp>` for short) creates a paragraph with a customized caption title.",
     "params": [
@@ -984,6 +1078,54 @@
     "example": "```xml\n<cp caption=\"Constraints\">\n  <list>\n    <item>Do not exceed 1000 tokens.</item>\n    <item>Please use simple words.</item>\n  </list>\n</cp>\n```",
     "baseComponents": [
       "Paragraph"
+    ]
+  },
+  {
+    "name": "Webpage",
+    "description": "Displays content from a webpage.",
+    "params": [
+      {
+        "name": "url",
+        "type": "string",
+        "choices": [],
+        "description": "The URL of the webpage to fetch and display.",
+        "required": false
+      },
+      {
+        "name": "src",
+        "type": "string",
+        "choices": [],
+        "description": "Local file path to an HTML file to display.",
+        "required": false
+      },
+      {
+        "name": "buffer",
+        "type": "string",
+        "choices": [
+          "string",
+          "Buffer"
+        ],
+        "description": "HTML content as string or buffer.",
+        "required": false
+      },
+      {
+        "name": "extractText",
+        "type": "boolean",
+        "choices": [],
+        "description": "Whether to extract plain text content (true) or convert HTML to structured POML (false). Default is false.",
+        "required": false
+      },
+      {
+        "name": "selector",
+        "type": "string",
+        "choices": [],
+        "description": "CSS selector to extract specific content from the page (e.g., \"article\", \".content\", \"#main\"). Default is \"body\".",
+        "required": false
+      }
+    ],
+    "example": "Display content from a URL:\n```xml\n<webpage url=\"https://example.com\" />\n```\n\nExtract only specific content using a selector:\n```xml\n<webpage url=\"https://example.com\" selector=\"main article\" />\n```\n\nConvert HTML to structured POML components:\n```xml\n<webpage url=\"https://example.com\" extractText=\"false\" />\n```",
+    "baseComponents": [
+      "Inline"
     ]
   },
   {
@@ -1355,5 +1497,67 @@
     "baseComponents": [
       "Inline"
     ]
+  },
+  {
+    "name": "Audio",
+    "description": "Audio (`<audio>`) embeds an audio file in the content.\n\nAccepts either a file path (`src`) or base64-encoded audio data (`base64`).\nThe MIME type can be provided via `type` or will be inferred from the file extension.",
+    "params": [
+      {
+        "name": "src",
+        "type": "string",
+        "choices": [],
+        "description": "Path to the audio file. If provided, the file will be read and encoded as base64.",
+        "required": false
+      },
+      {
+        "name": "base64",
+        "type": "string",
+        "choices": [],
+        "description": "Base64-encoded audio data. Cannot be used together with `src`.",
+        "required": false
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "choices": [],
+        "description": "The alternative text to show when the image cannot be displayed.",
+        "required": false
+      },
+      {
+        "name": "type",
+        "type": "string",
+        "choices": [],
+        "description": "The MIME type of the audio (e.g., audio/mpeg, audio/wav). If not specified, it will be inferred from the file extension.\n  The type must be consistent with the real type of the file. The consistency will NOT be checked or converted.\n  The type can be specified with or without the `audio/` prefix.",
+        "required": false
+      },
+      {
+        "name": "position",
+        "type": "string",
+        "choices": [
+          "top",
+          "bottom",
+          "here"
+        ],
+        "description": "The position of the image. Default is `here`.",
+        "defaultValue": "here",
+        "required": false
+      },
+      {
+        "name": "syntax",
+        "type": "string",
+        "choices": [
+          "markdown",
+          "html",
+          "json",
+          "yaml",
+          "xml",
+          "multimedia"
+        ],
+        "description": "Only when specified as `multimedia`, the image will be shown.\n  Otherwise, the alt text will be shown. By default, it's `multimedia` when `alt` is not specified. Otherwise, it's undefined (inherit from parent).",
+        "required": false
+      }
+    ],
+    "example": "```xml\n<Audio src=\"path/to/audio.mp3\" />\n```",
+    "baseComponents": []
   }
 ]

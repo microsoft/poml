@@ -5,6 +5,7 @@ import { describe, expect, test, beforeAll } from '@jest/globals';
 import { poml, read, write } from 'poml';
 import { readDocx, readDocxFromPath, readPdfFromPath, Document } from 'poml/components/document';
 import { Tree, TreeItemData, Folder } from 'poml/components/tree';
+import { Webpage } from 'poml/components/webpage';
 import { readFileSync } from 'fs';
 import { ErrorCollection } from 'poml/base';
 import { mkdirSync, existsSync } from 'fs';
@@ -414,5 +415,71 @@ ${backticks}`);
     - nested2
     - nested6
   - .ignoremeplease`);
+  });
+});
+
+describe('webpage', () => {
+  const webpagePath = __dirname + '/assets/sampleWebpage.html';
+  
+  test('extracting text from HTML', async () => {
+    const markup = <Webpage src={webpagePath} />;
+    const result = await poml(markup);
+    expect(result).toBe(`# Enter the main heading, usually the same as the title.
+
+Be **bold** in stating your key points. Put them in a list: 
+
+- The first item in your list
+- The second item; *italicize* key words
+
+Improve your image by including an image. 
+
+Add a link to your favorite Web site.
+Break up your page with a horizontal rule or two. 
+
+Finally, link to another page in your own Web site.
+
+© Wiley Publishing, 2011`);
+  });
+  
+  test('using selector to extract specific content', async () => {
+    const markup = <Webpage src={webpagePath} selector="ul" />;
+    const result = await poml(markup);
+    expect(result).toBe(`- The first item in your list
+- The second item; *italicize* key words`);
+  });
+  
+  test('selector with no matches', async () => {
+    const markup = <Webpage src={webpagePath} selector=".non-existent-class" />;
+    const result = await poml(markup);
+    
+    expect(result).toContain('No elements found matching selector: .non-existent-class');
+  });
+  
+  test('extract text from HTML', async () => {
+    const markup = <Webpage src={webpagePath} extractText={true} />;
+    const result = await poml(markup);
+
+    expect(result).toBe(`Enter the main heading, usually the same as the title.
+Be bold in stating your key points. Put them in a list: 
+
+The first item in your list
+The second item; italicize key words
+
+Improve your image by including an image. 
+
+Add a link to your favorite Web site.
+Break up your page with a horizontal rule or two. 
+
+Finally, link to another page in your own Web site.
+
+© Wiley Publishing, 2011`);
+  });
+  
+  test('loading HTML from buffer', async () => {
+    const htmlContent = readFileSync(webpagePath, 'utf-8');
+    const markup = <Webpage buffer={htmlContent} selector="h1" syntax="html" />;
+    const result = await poml(markup);
+
+    expect(result).toContain('<h1>Enter the main heading, usually the same as the title.</h1>');
   });
 });
