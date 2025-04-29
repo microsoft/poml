@@ -57,7 +57,16 @@ describe('essentials', () => {
     const syntaxViaStylesheet = `<poml><img src="${imagePath}" alt="example" /><stylesheet>{"image":{"syntax":"markdown"}}</stylesheet></poml>`;
     const result2 = await poml(syntaxViaStylesheet);
     expect(result2).toBe('example');
-  })
+  });
+
+  test('audio', async () => {
+    const audioPath = __dirname + '/assets/audioThreeSeconds.mp3';
+    const markup = <essentials.Audio src={audioPath} />;
+    const result = await poml(markup);
+    expect(result.length).toBe(1);
+    expect((result[0] as any).type).toBe('audio/mpeg');
+    expect((result[0] as any).base64).toBeTruthy();
+  });
 
   test('writer options', async () => {
     const header = (

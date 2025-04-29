@@ -1487,13 +1487,13 @@ export class MultiMediaWriter extends Writer<MultiMediaOptions> {
     return {};
   }
 
-  private handleImage(element: cheerio.Cheerio<any>, $: cheerio.CheerioAPI): WriterPartialResult {
-    if (!element.is('img')) {
-      return this.raiseError(`Not an img: ${element}`, element);
+  private handleImageOrAudio(element: cheerio.Cheerio<any>, $: cheerio.CheerioAPI): WriterPartialResult {
+    if (!element.is('img') && !element.is('audio')) {
+      return this.raiseError(`Not an img or audio: ${element}`, element);
     }
     const base64 = element.attr('base64');
     const alt = element.attr('alt');
-    const type = element.attr('type') || 'image';
+    const type = element.attr('type') || 'image'; // image by default
     if (base64) {
       const position = element.attr('position') || 'here';
       if (!['here', 'top', 'bottom'].includes(position)) {
@@ -1511,7 +1511,7 @@ export class MultiMediaWriter extends Writer<MultiMediaOptions> {
         multimedia: []
       };
     } else {
-      return this.raiseError('No base64 or alt attribute in img.', element);
+      return this.raiseError('No base64 or alt attribute in multimedia.', element);
     }
   }
 
@@ -1545,8 +1545,8 @@ export class MultiMediaWriter extends Writer<MultiMediaOptions> {
       } else {
         return new EnvironmentDispatcher(this.ir).writeElementTree(element, $);
       }
-    } else if (element.is('img')) {
-      return this.handleImage(element, $);
+    } else if (element.is('img') || element.is('audio')) {
+      return this.handleImageOrAudio(element, $);
     } else {
       return this.raiseError('Multimedia writer is unable to process this element.', element);
     }

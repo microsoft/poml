@@ -15,6 +15,7 @@ import {
 } from './presentation';
 import fs from 'fs';
 import { preprocessImage } from './util/image';
+import { preprocessAudio } from './util/audio';
 
 export interface PropsSyntaxBase extends PropsBase {
   syntax?: string;
@@ -731,6 +732,28 @@ interface AudioProps extends PropsSyntaxBase, MultiMedia.AudioProps {
 
 /**
  * Audio (`<audio>`) embeds an audio file in the content.
+ *
+ * Accepts either a file path (`src`) or base64-encoded audio data (`base64`).
+ * The MIME type can be provided via `type` or will be inferred from the file extension.
+ *
+ * @param {string} src - Path to the audio file. If provided, the file will be read and encoded as base64.
+ * @param {string} base64 - Base64-encoded audio data. Cannot be used together with `src`.
+ * @param {string} alt - The alternative text to show when the image cannot be displayed.
+ * @param {string} type - The MIME type of the audio (e.g., audio/mpeg, audio/wav). If not specified, it will be inferred from the file extension.
+ *   The type must be consistent with the real type of the file. The consistency will NOT be checked or converted.
+ *   The type can be specified with or without the `audio/` prefix.
+ * @param {'top'|'bottom'|'here'} position - The position of the image. Default is `here`.
+ * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'multimedia'} syntax - Only when specified as `multimedia`, the image will be shown.
+ *   Otherwise, the alt text will be shown. By default, it's `multimedia` when `alt` is not specified. Otherwise, it's undefined (inherit from parent).
+ *
+ * @example
+ * ```xml
+ * <Audio src="path/to/audio.mp3" />
+ * ```
+ * @example
+ * ```xml
+ * <Audio base64="..." type="audio/wav" />
+ * ```
  */
 export const Audio = component('Audio', { aliases: ['audio'], asynchorous: true })((
   props: AudioProps
@@ -749,11 +772,18 @@ export const Audio = component('Audio', { aliases: ['audio'], asynchorous: true 
     } else if (!base64) {
       throw ReadError.fromProps('Either `src` or `base64` must be specified.', others);
     }
+    const audio = useWithCatch(
+      preprocessAudio({ src, base64, type }),
+      others
+    );
+    if (!audio) {
+      return null;
+    }
     return (
       <MultiMedia.Audio
         presentation={presentation}
-        base64={base64}
-        type={type}
+        base64={audio.base64}
+        type={audio.mimeType}
         {...others}
       />
     );
