@@ -1,12 +1,14 @@
 import * as React from 'react';
 
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, test, beforeAll } from '@jest/globals';
 
 import { poml, read, write } from 'poml';
 import { readDocx, readDocxFromPath, readPdfFromPath, Document } from 'poml/components/document';
-import { Tree, TreeItemData } from 'poml/components/tree';
+import { Tree, TreeItemData, Folder } from 'poml/components/tree';
 import { readFileSync } from 'fs';
 import { ErrorCollection } from 'poml/base';
+import { mkdirSync, existsSync } from 'fs';
+import * as path from 'path';
 
 describe('document', () => {
   test('pdf', async () => {
@@ -30,10 +32,12 @@ describe('document', () => {
   });
 
   test('txt', async () => {
-    const document = await poml(<Document buffer={"123\n456"} />);
+    const document = await poml(<Document buffer={'123\n456'} />);
     expect(document).toBe('123\n456');
 
-    const documentJson = await poml(<Document src={__dirname + '/assets/peopleList.json'} parser='txt' />);
+    const documentJson = await poml(
+      <Document src={__dirname + '/assets/peopleList.json'} parser="txt" />
+    );
     expect(documentJson).toBe(readFileSync(__dirname + '/assets/peopleList.json', 'utf-8'));
   });
 
@@ -41,7 +45,9 @@ describe('document', () => {
     const result = await poml(<Document src={__dirname + '/assets/sampleWord.docx'} />);
     expect(result.length).toEqual(5);
     expect((result[3] as any).base64).toBeTruthy();
-    expect(result[4]).toMatch(/without any merged cells:\n\n\| Screen Reader \| Responses \| Share \|\n/g);
+    expect(result[4]).toMatch(
+      /without any merged cells:\n\n\| Screen Reader \| Responses \| Share \|\n/g
+    );
   });
 });
 
@@ -92,20 +98,27 @@ describe('message', () => {
   });
 });
 
-describe('tree',  () => {
+describe('tree', () => {
   const treeData: TreeItemData[] = [
     {
       name: 'Data Grid',
-      children: [{ name: 'data-grid' }, { name: 'data-grid-pro', value: 'Content Grid Pro' }, { name: 'data-grid-premium' }],
+      children: [
+        { name: 'data-grid' },
+        { name: 'data-grid-pro', value: 'Content Grid Pro' },
+        { name: 'data-grid-premium' }
+      ]
     },
     {
       name: 'Date and Time Pickers',
-      children: [{ name: 'date-pickers', value: 'Content Date Pickers' }, { name: 'date-pickers-pro' }],
+      children: [
+        { name: 'date-pickers', value: 'Content Date Pickers' },
+        { name: 'date-pickers-pro' }
+      ]
     },
     {
       name: 'Tree.view',
       value: 'Content Tree View'
-    },
+    }
   ];
 
   const backticks = '```';
@@ -134,7 +147,7 @@ ${backticks}
 
 # Tree.view
 
-${backticks}
+${backticks}view
 Content Tree View
 ${backticks}`;
 
@@ -147,48 +160,55 @@ ${backticks}`;
   - date-pickers-pro
 - Tree.view`;
 
-  const treeTextWithContent = `Data Grid/data-grid
+  const treeTextWithContent = `Data Grid
+Data Grid/data-grid
 Data Grid/data-grid-pro
-    Content Grid Pro
+==> start Data Grid/data-grid-pro <==
+Content Grid Pro
+==> end Data Grid/data-grid-pro <==
+
 Data Grid/data-grid-premium
+Date and Time Pickers
 Date and Time Pickers/date-pickers
-    Content Date Pickers
+==> start Date and Time Pickers/date-pickers <==
+Content Date Pickers
+==> end Date and Time Pickers/date-pickers <==
+
 Date and Time Pickers/date-pickers-pro
 Tree.view
-    Content Tree View`;
+==> start Tree.view <==
+Content Tree View
+==> end Tree.view <==
+`;
 
   // with box drawings
   const treeTextWithoutContent = `Data Grid
-├─ data-grid
-├─ data-grid-pro
-│  └─ Content Grid Pro
-└─ data-grid-premium
+├── data-grid
+├── data-grid-pro
+└── data-grid-premium
 Date and Time Pickers
 ├── date-pickers
-│   └── Content Date Pickers
 └── date-pickers-pro
-Tree.view
-└── Content Tree View`;
+Tree.view`;
 
   const treeYamlWithoutContent = `Data Grid:
-  data-grid:
-  data-grid-pro: Content Grid Pro
-  data-grid-premium:
+  data-grid: null
+  data-grid-pro: null
+  data-grid-premium: null
 Date and Time Pickers:
-  date-pickers: Content Date Pickers
-  date-pickers-pro:
-Tree.view:
-  Content Tree View`;
+  date-pickers: null
+  date-pickers-pro: null
+Tree.view: null`;
 
   const testJsonWithContent = `{
   "Data Grid": {
-    "data-grid": {},
+    "data-grid": null,
     "data-grid-pro": "Content Grid Pro",
-    "data-grid-premium": {}
+    "data-grid-premium": null
   },
   "Date and Time Pickers": {
     "date-pickers": "Content Date Pickers",
-    "date-pickers-pro": {}
+    "date-pickers-pro": null
   },
   "Tree.view": "Content Tree View"
 }`;
@@ -227,5 +247,172 @@ Tree.view:
     const markup = <Tree items={treeData} syntax="json" showContent={true} />;
     const result = await poml(markup);
     expect(result).toBe(testJsonWithContent);
+  });
+});
+
+describe('folder', () => {
+  const directory = __dirname + '/assets/directory';
+  const content123jsx = readFileSync(directory + '/anotherdirectory/123.jsx', 'utf-8');
+  const content456cpp = readFileSync(directory + '/anotherdirectory/456.cpp', 'utf-8');
+  const contentNestedFileTxt = readFileSync(
+    directory + '/nested1/nested2/nested3/nested5/nestedFile.txt',
+    'utf-8'
+  );
+  const contentIgnoreplease = readFileSync(
+    directory + '/nested1/nested2/nested4/.ignoreplease',
+    'utf-8'
+  );
+  const contentIgnoremeplease = readFileSync(directory + '/.ignoremeplease', 'utf-8');
+
+  // Create directory structure if it doesn't exist
+  beforeAll(() => {
+    const directories = [
+      directory,
+      path.join(directory, 'anotherdirectory'),
+      path.join(directory, 'nested1'),
+      path.join(directory, 'nested1', 'nested2'),
+      path.join(directory, 'nested1', 'nested2', 'nested3'),
+      path.join(directory, 'nested1', 'nested2', 'nested3', 'nested5'),
+      path.join(directory, 'nested1', 'nested2', 'nested4'),
+      path.join(directory, 'nested1', 'nested6')
+    ];
+
+    // Create each directory if it doesn't exist
+    directories.forEach(dir => {
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
+    });
+  });
+
+  test('basic folder structure', async () => {
+    const markup = <Folder src={directory} syntax="text" maxDepth={10} />;
+    const result = await poml(markup);
+
+    expect(result).toBe(`directory
+├── anotherdirectory
+│   ├── 123.jsx
+│   └── 456.cpp
+├── nested1
+│   ├── nested2
+│   │   ├── nested3
+│   │   │   └── nested5
+│   │   │       └── nestedFile.txt
+│   │   └── nested4
+│   │       └── .ignoreplease
+│   └── nested6
+└── .ignoremeplease`);
+  });
+
+  test('test file contents', async () => {
+    const markup = <Folder src={directory} syntax="json" maxDepth={10} showContent={true} />;
+    const result = await poml(markup);
+    console.log(result);
+    expect(JSON.parse(result as string)).toStrictEqual({
+      directory: {
+        anotherdirectory: {
+          '123.jsx': content123jsx,
+          '456.cpp': content456cpp
+        },
+        nested1: {
+          nested2: {
+            nested3: {
+              nested5: {
+                'nestedFile.txt': contentNestedFileTxt,
+              }
+            },
+            nested4: {
+              '.ignoreplease': contentIgnoreplease
+            }
+          },
+          nested6: null
+        },
+        '.ignoremeplease': contentIgnoremeplease
+      }
+    });
+  });
+
+  test('folder with maxDepth=1', async () => {
+    const markup = <Folder src={directory} maxDepth={1} syntax="markdown" showContent={true} />;
+    const result = await poml(markup);
+
+    const backticks = '```';
+    expect(result).toBe(`# directory
+
+## directory/anotherdirectory
+
+## directory/nested1
+
+## directory/.ignoremeplease
+
+${backticks}
+abcde
+fhijk
+${backticks}`);
+  });
+
+  test('folder with maxDepth=2', async () => {
+    const markup = <Folder src={directory} maxDepth={2} syntax="xml" showContent={false} />;
+    const result = await poml(markup);
+
+    expect(result).toBe(`<directory>
+  <anotherdirectory>
+    <_123.jsx/>
+    <_456.cpp/>
+  </anotherdirectory>
+  <nested1>
+    <nested2/>
+    <nested6/>
+  </nested1>
+  <_.ignoremeplease/>
+</directory>`);
+  });
+
+  test('folder with filter=jsx', async () => {
+    const markup = <Folder src={directory} filter={/.*\.jsx$/} syntax="text" maxDepth={4} />;
+    const result = await poml(markup);
+
+    // Using full text match with JSX filter
+    expect(result).toBe(`directory
+└── anotherdirectory
+    └── 123.jsx`);
+  });
+
+  test('folder with filter not starting with dot', async () => {
+    const markup = <Folder src={directory} filter={/^[^.].*$/} syntax="text" maxDepth={10} />;
+    const result = await poml(markup);
+
+    // Using a filter that excludes files starting with dot
+    expect(result).toBe(`directory
+├── anotherdirectory
+│   ├── 123.jsx
+│   └── 456.cpp
+└── nested1
+    └── nested2
+        └── nested3
+            └── nested5
+                └── nestedFile.txt`);
+  });
+
+  test('folder with filter and maxDepth combined', async () => {
+    const markup = <Folder src={directory} filter={/.*\.txt$/} maxDepth={3} syntax="text" />;
+    const result = await poml(markup);
+
+    expect(result).toBe(`directory`);
+  });
+
+  test('folder with different syntax (markdown)', async () => {
+    const markup = <Folder src={directory} maxDepth={2} syntax="markdown" />;
+    const result = await poml(markup);
+
+    // Using full text match with markdown syntax
+    expect(result).toBe(`- directory
+  - anotherdirectory
+    - 123.jsx
+    - 456.cpp
+  - nested1
+    - nested2
+    - nested6
+  - .ignoremeplease`);
   });
 });
