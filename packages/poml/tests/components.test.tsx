@@ -337,7 +337,7 @@ describe('folder', () => {
     const result = await poml(markup);
 
     const backticks = '```';
-    expect(result).toBe(`# directory
+    expect((result as string).replace(/\r\n/g, '\n')).toBe(`# directory
 
 ## directory/anotherdirectory
 
@@ -348,7 +348,7 @@ describe('folder', () => {
 ${backticks}
 abcde
 fhijk
-${backticks}`);
+${backticks}`.replace(/\r\n/g, '\n'));
   });
 
   test('folder with maxDepth=2', async () => {
