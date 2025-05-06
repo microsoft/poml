@@ -42,6 +42,12 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
     } else if (paramMatch[2] === 'Buffer|string') {
       type = 'Buffer';
       fallbackType = 'string';
+    } else if (paramMatch[2] === 'RegExp|string') {
+      type = 'RegExp';
+      fallbackType = 'string';
+    } else if (paramMatch[2] === 'string|Buffer') {
+      type = 'Buffer';
+      fallbackType = 'string';
     } else if (paramMatch[2] && paramMatch[2].includes('|')) {
       type = 'string';
       choices = paramMatch[2].split('|').map((choice) => choice.replace(/['"\s]/g, '').trim());

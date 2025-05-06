@@ -128,6 +128,5 @@ export const Webpage = component('Webpage', { asynchorous: true })((
 ) => {
   const { src, url, buffer, extractText, selector, ...others } = props;
   const content = useWithCatch(processWebpage(props), others);
-  console.log(others);
   return <Text {...others}>{content ?? null}</Text>;
 });

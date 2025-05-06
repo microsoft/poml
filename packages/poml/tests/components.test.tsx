@@ -308,7 +308,6 @@ describe('folder', () => {
   test('test file contents', async () => {
     const markup = <Folder src={directory} syntax="json" maxDepth={10} showContent={true} />;
     const result = await poml(markup);
-    console.log(result);
     expect(JSON.parse(result as string)).toStrictEqual({
       directory: {
         anotherdirectory: {

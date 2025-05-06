@@ -894,10 +894,10 @@ To display a directory structure with a filter for Python files:
 
 #### Parameters
 
-- **syntax**: Can be one of: markdown, html, json, text, xml. The output syntax of the content.
+- **syntax**: Can be one of: markdown, html, json, yaml, text, xml. The output syntax of the content.
 - **src**: The source directory path to display.
 - **data**: TreeItemData[]. Alternative to src, directly provide tree data structure.
-- **filter**: Can be one of: string, RegExp. A regular expression to filter files.
+- **filter**: RegExp. A regular expression to filter files.
     The regex is applied to the folder names and file names (not the full path).
     Directories are included by default unless all of their nested content is filtered out.
     When filter is on, empty directories will not be shown.
@@ -968,7 +968,7 @@ Renders a tree structure in various formats.
 
 #### Parameters
 
-- **syntax**: Can be one of: markdown, html, json, text, xml. The output syntax to use for rendering the tree
+- **syntax**: Can be one of: markdown, html, json, yaml, text, xml. The output syntax to use for rendering the tree
 - **items**: TreeItemData[]. Array of tree items to render
 - **showContent**: Boolean. Whether to show content values of tree items
 
@@ -997,7 +997,7 @@ Convert HTML to structured POML components:
 
 - **url**: The URL of the webpage to fetch and display.
 - **src**: Local file path to an HTML file to display.
-- **buffer**: Can be one of: string, Buffer. HTML content as string or buffer.
+- **buffer**: Buffer. HTML content as string or buffer.
 - **extractText**: Boolean. Whether to extract plain text content (true) or convert HTML to structured POML (false). Default is false.
 - **selector**: CSS selector to extract specific content from the page (e.g., "article", ".content", "#main"). Default is "body".
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.

@@ -935,6 +935,7 @@
           "markdown",
           "html",
           "json",
+          "yaml",
           "text",
           "xml"
         ],
@@ -970,6 +971,7 @@
           "markdown",
           "html",
           "json",
+          "yaml",
           "text",
           "xml"
         ],
@@ -992,11 +994,9 @@
       },
       {
         "name": "filter",
-        "type": "string",
-        "choices": [
-          "string",
-          "RegExp"
-        ],
+        "type": "RegExp",
+        "fallbackType": "string",
+        "choices": [],
         "description": "A regular expression to filter files.\n  The regex is applied to the folder names and file names (not the full path).\n  Directories are included by default unless all of their nested content is filtered out.\n  When filter is on, empty directories will not be shown.",
         "required": false
       },
@@ -1100,11 +1100,9 @@
       },
       {
         "name": "buffer",
-        "type": "string",
-        "choices": [
-          "string",
-          "Buffer"
-        ],
+        "type": "Buffer",
+        "fallbackType": "string",
+        "choices": [],
         "description": "HTML content as string or buffer.",
         "required": false
       },

@@ -193,7 +193,7 @@ function treeItemsToObject(items: TreeItemData[], showContent: boolean = false):
 /**
  * Renders a tree structure in various formats.
  *
- * @param {'markdown'|'html'|'json'|'text'|'xml'} syntax - The output syntax to use for rendering the tree
+ * @param {'markdown'|'html'|'json'|'yaml'|'text'|'xml'} syntax - The output syntax to use for rendering the tree
  * @param {TreeItemData[]} items - Array of tree items to render
  * @param {boolean} showContent - Whether to show content values of tree items
  *
@@ -316,10 +316,10 @@ export interface FolderProps extends PropsSyntaxBase {
 /**
  * Displays a directory structure as a tree.
  *
- * @param {'markdown'|'html'|'json'|'text'|'xml'} syntax - The output syntax of the content.
+ * @param {'markdown'|'html'|'json'|'yaml'|'text'|'xml'} syntax - The output syntax of the content.
  * @param {string} src - The source directory path to display.
  * @param {TreeItemData[]} data - Alternative to src, directly provide tree data structure.
- * @param {string|RegExp} filter - A regular expression to filter files.
+ * @param {RegExp|string} filter - A regular expression to filter files.
  *   The regex is applied to the folder names and file names (not the full path).
  *   Directories are included by default unless all of their nested content is filtered out.
  *   When filter is on, empty directories will not be shown.

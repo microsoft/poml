@@ -593,6 +593,27 @@ export class PomlComponent {
               }
             }
           }
+        } else if (param.type === 'RegExp' || param.type === 'RegExp|string') {
+          if (typeof value === 'string') {
+            if (value.startsWith('/')) {
+              // Extract flags if present
+              const lastSlashIndex = value.lastIndexOf('/');
+              if (lastSlashIndex > 0) {
+                const pattern = value.substring(1, lastSlashIndex);
+                const flags = value.substring(lastSlashIndex + 1);
+                // Only create RegExp with flags if flags exist and are valid
+                if (flags && /^[gimsuy]*$/.test(flags)) {
+                  value = new RegExp(pattern, flags);
+                } else if (lastSlashIndex === value.length - 1) {
+                  // Format is /pattern/ with no flags
+                  value = new RegExp(pattern);
+                }
+              }
+            } else {
+              // Default behavior for strings not in /pattern/ format
+              value = new RegExp(value);
+            }
+          }
         } else {
           // Keep as is.
         }
