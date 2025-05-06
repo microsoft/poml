@@ -1489,7 +1489,7 @@ export class MultiMediaWriter extends Writer<MultiMediaOptions> {
 
   private handleImageOrAudio(element: cheerio.Cheerio<any>, $: cheerio.CheerioAPI): WriterPartialResult {
     if (!element.is('img') && !element.is('audio')) {
-      return this.raiseError(`Not an img or audio: ${element}`, element);
+      return this.raiseError(`Invalid element: Only <img> or <audio> tags are allowed. Found: ${element}`, element);
     }
     const base64 = element.attr('base64');
     const alt = element.attr('alt');
