@@ -3,6 +3,11 @@
   "publisher": "ms-poml",
   "displayName": "POML",
   "description": "Prompt Orchestration Markup Language",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/poml"
+  },
+  "icon": "media/icon/poml-icon-128.png",
   "version": "0.0.5",
   "engines": {
     "vscode": "^1.92.0"
