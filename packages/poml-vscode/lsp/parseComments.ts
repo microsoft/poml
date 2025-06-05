@@ -244,7 +244,7 @@ function generatePythonMethod(tag: ComponentSpec): string {
   }
   docstring += `        """`;
 
-  const methodBody = `return self._tag(
+  const methodBody = `return self.tag(
             ${callArgsList.join(',\n            ')},
             **kwargs,
         )`;

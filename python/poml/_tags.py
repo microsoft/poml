@@ -40,7 +40,7 @@ class _TagLib:
             <Document src="sample.docx" multimedia="false"/>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Document",
             src=src,
             buffer=buffer,
@@ -78,7 +78,7 @@ class _TagLib:
             <role>You are a data scientist.</role>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Role",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -128,7 +128,7 @@ class _TagLib:
             </task>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Task",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -167,7 +167,7 @@ class _TagLib:
             <output-format>Respond with a JSON without additional characters or punctuations.</output-format>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="OutputFormat",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -209,7 +209,7 @@ class _TagLib:
             </stepwise-instructions>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="StepwiseInstructions",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -245,7 +245,7 @@ class _TagLib:
             <hint>Alice first purchased 4 apples and then 3 more, so she has 7 apples in total.</hint>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Hint",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -281,7 +281,7 @@ class _TagLib:
             <introducer>Here are some examples.</introducer>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Introducer",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -334,7 +334,7 @@ class _TagLib:
             </examples>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="ExampleSet",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -388,7 +388,7 @@ class _TagLib:
             </example>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Example",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -433,7 +433,7 @@ class _TagLib:
             <input>What is the capital of {{country}}?</input>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="ExampleInput",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -478,7 +478,7 @@ class _TagLib:
             <output>The capital of {{country}} is {{capital}}.</output>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="ExampleOutput",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -518,7 +518,7 @@ class _TagLib:
             <qa>What is the capital of France?</qa>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Question",
             questionCaption=questionCaption,
             answerCaption=answerCaption,
@@ -541,7 +541,7 @@ class _TagLib:
             <system-msg>Answer concisely.</system-msg>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="SystemMessage",
             **kwargs,
         )
@@ -558,7 +558,7 @@ class _TagLib:
             <user-msg>What is the capital of France?</user-msg>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="HumanMessage",
             **kwargs,
         )
@@ -575,7 +575,7 @@ class _TagLib:
             <ai-msg>Paris</ai-msg>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="AiMessage",
             **kwargs,
         )
@@ -595,7 +595,7 @@ class _TagLib:
             <msg-content content="What is the capital of France?" />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="MessageContent",
             content=content,
             **kwargs,
@@ -620,7 +620,7 @@ class _TagLib:
             <conversation messages="{{[{ speaker: 'human', content: 'What is the capital of France?' }, { speaker: 'ai', content: 'Paris' }]}}" />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Conversation",
             messages=messages,
             selectedMessages=selectedMessages,
@@ -670,7 +670,7 @@ class _TagLib:
             <table src="data.xlsx" parser="excel" maxRecords="10" syntax="csv" />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Table",
             syntax=syntax,
             records=records,
@@ -703,7 +703,7 @@ class _TagLib:
             <Tree items={treeData} syntax="markdown" showContent={true} />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Tree",
             syntax=syntax,
             items=items,
@@ -740,7 +740,7 @@ class _TagLib:
             <folder src="project_dir" filter=".*\\.py$" maxDepth="3" />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Folder",
             syntax=syntax,
             src=src,
@@ -782,7 +782,7 @@ class _TagLib:
             </cp>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="CaptionedParagraph",
             caption=caption,
             captionSerialized=captionSerialized,
@@ -828,7 +828,7 @@ class _TagLib:
             <webpage url="https://example.com" extractText="false" />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Webpage",
             url=url,
             src=src,
@@ -884,7 +884,7 @@ class _TagLib:
             </poml>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Text",
             syntax=syntax,
             className=className,
@@ -911,7 +911,7 @@ class _TagLib:
             <p>Contents of the paragraph.</p>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Paragraph",
             blankLine=blankLine,
             **kwargs,
@@ -942,7 +942,7 @@ class _TagLib:
             <p>I'm listening to <span>music</span> right now.</p>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Inline",
             syntax=syntax,
             className=className,
@@ -967,7 +967,7 @@ class _TagLib:
             <br />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Newline",
             newLineCount=newLineCount,
             **kwargs,
@@ -988,7 +988,7 @@ class _TagLib:
             <Header syntax="markdown">Section Title</Header>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Header",
             **kwargs,
         )
@@ -1010,7 +1010,7 @@ class _TagLib:
             </section>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="SubContent",
             **kwargs,
         )
@@ -1027,7 +1027,7 @@ class _TagLib:
             <p><b>Task:</b> Do something.</p>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Bold",
             **kwargs,
         )
@@ -1044,7 +1044,7 @@ class _TagLib:
             Your <i>italicized</i> text.
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Italic",
             **kwargs,
         )
@@ -1061,7 +1061,7 @@ class _TagLib:
             <s>This messages is removed.</s>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Strikethrough",
             **kwargs,
         )
@@ -1078,7 +1078,7 @@ class _TagLib:
             This text is <u>underlined</u>.
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Underline",
             **kwargs,
         )
@@ -1106,7 +1106,7 @@ class _TagLib:
             </code>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Code",
             inline=inline,
             lang=lang,
@@ -1132,7 +1132,7 @@ class _TagLib:
             </list>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="List",
             listStyle=listStyle,
             **kwargs,
@@ -1154,7 +1154,7 @@ class _TagLib:
             </list>
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="ListItem",
             **kwargs,
         )
@@ -1177,7 +1177,7 @@ class _TagLib:
             <Object syntax="json" data="{ key: 'value' }" />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Object",
             syntax=syntax,
             data=data,
@@ -1219,7 +1219,7 @@ class _TagLib:
             <Image src="path/to/image.jpg" alt="Image description" position="bottom" />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Image",
             src=src,
             alt=alt,
@@ -1264,7 +1264,7 @@ class _TagLib:
             <Audio src="path/to/audio.mp3" />
             ```
         """
-        return self._tag(
+        return self.tag(
             tag_name="Audio",
             src=src,
             base64=base64,
