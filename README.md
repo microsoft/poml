@@ -42,7 +42,7 @@ This example defines a role and task for the LLM, includes an image for context,
 
 *Coming soon:* Search for "POML" in the Visual Studio Code Marketplace to install the POML extension.
 
-*Currently:* You can install the extension manually by downloading the `.vsix` file from our GitHub releases page and installing it in VS Code via the Extensions view.
+*Currently:* You can install the extension manually by downloading the `.vsix` file from our [GitHub releases page](https://github.com/microsoft/poml/releases) and installing it in VS Code via the Extensions view.
 
 You can also install POML using npm for Node.js projects or pip for Python projects.
 
