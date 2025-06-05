@@ -32,8 +32,8 @@
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "light": "./media/icon/poml-icon.svg",
-          "dark": "./media/icon/poml-icon.svg"
+          "light": "./media/icon/poml-icon-16.svg",
+          "dark": "./media/icon/poml-icon-16.svg"
         }
       }
     ],
