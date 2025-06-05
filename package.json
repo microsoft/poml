@@ -300,7 +300,7 @@
     "ts-patch": "^3.2.1",
     "typescript": "^5.4.5",
     "typescript-transform-paths": "^3.5.2",
-    "webpack": "^5.93.0",
+    "webpack": "^5.99.6",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
