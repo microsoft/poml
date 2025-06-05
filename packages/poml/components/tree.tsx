@@ -261,8 +261,12 @@ function readDirectoryToTreeItems(
     const children: TreeItemData[] = [];
     const entries = fs.readdirSync(dirPath, { withFileTypes: true }).sort((a, b) => {
       // Directories first, then files
-      if (a.isDirectory() && !b.isDirectory()) return -1;
-      if (!a.isDirectory() && b.isDirectory()) return 1;
+      if (a.isDirectory() && !b.isDirectory()) {
+        return -1;
+      }
+      if (!a.isDirectory() && b.isDirectory()) {
+        return 1;
+      }
       return a.name.localeCompare(b.name);
     });
 

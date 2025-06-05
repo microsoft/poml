@@ -188,6 +188,7 @@ interface DocumentProps extends PropsSyntaxBase {
   src?: string;
   parser?: DocumentParser;
   buffer?: string | Buffer;
+  base64?: string;
   multimedia?: boolean;
   selectedPages?: string;
 }
@@ -238,6 +239,7 @@ async function autoParseDocument(
  *
  * @param {string} src - The source file to read the data from. This must be provided if records is not provided.
  * @param {Buffer|string} buffer - Document data buffer. Recommended to use `src` instead unless you want to use a string.
+ * @param {string} base64 - Base64 encoded string of the document data. Mutually exclusive with `src` and `buffer`.
  * @param {'auto'|'pdf'|'docx'|'txt'} parser - The parser to use for reading the data. If not provided, it will be inferred from the file extension.
  * @param {boolean} multimedia - If true, the multimedias will be displayed. If false, the alt strings will be displayed at best effort. Default is `true`.
  * @param {string} selectedPages - The pages to be selected. This is only available **for PDF documents**. If not provided, all pages will be selected.
@@ -255,15 +257,22 @@ async function autoParseDocument(
 export const Document = component('Document', { aliases: ['doc'], asynchorous: true })((
   props: DocumentProps
 ) => {
-  let { buffer, parser, ...others } = props;
+  let { buffer, parser, base64, ...others } = props;
   let parsedBuffer: Buffer | undefined;
-  if (typeof buffer === 'string') {
-    parsedBuffer = Buffer.from(buffer, 'utf-8');
-    if (parser === undefined || parser === 'auto') {
-      parser = 'txt';
+  if (base64) {
+    if (buffer !== undefined) {
+      throw new Error('Either buffer or base64 should be provided, not both.');
     }
+    parsedBuffer = Buffer.from(base64, 'base64');
   } else {
-    parsedBuffer = buffer;
+    if (typeof buffer === 'string') {
+      parsedBuffer = Buffer.from(buffer, 'utf-8');
+      if (parser === undefined || parser === 'auto') {
+        parser = 'txt';
+      }
+    } else {
+      parsedBuffer = buffer;
+    }
   }
   const document = useWithCatch(
     autoParseDocument({ buffer: parsedBuffer, parser, ...others }),

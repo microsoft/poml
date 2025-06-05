@@ -50,6 +50,15 @@ describe('document', () => {
       /without any merged cells:\n\n\| Screen Reader \| Responses \| Share \|\n/g
     );
   });
+
+  test('docx from base64', async () => {
+    const buffer = readFileSync(__dirname + '/assets/sampleWord.docx');
+    const base64 = buffer.toString('base64');
+    const result = await poml(<Document base64={base64} parser="docx" />);
+    expect(result[4]).toMatch(
+      /without any merged cells:\n\n\| Screen Reader \| Responses \| Share \|\n/g
+    );
+  });
 });
 
 describe('message', () => {
@@ -477,6 +486,15 @@ Finally, link to another page in your own Web site.
   test('loading HTML from buffer', async () => {
     const htmlContent = readFileSync(webpagePath, 'utf-8');
     const markup = <Webpage buffer={htmlContent} selector="h1" syntax="html" />;
+    const result = await poml(markup);
+
+    expect(result).toContain('<h1>Enter the main heading, usually the same as the title.</h1>');
+  });
+
+  test('loading HTML from base64', async () => {
+    const htmlContent = readFileSync(webpagePath, 'utf-8');
+    const base64Content = Buffer.from(htmlContent).toString('base64');
+    const markup = <Webpage base64={base64Content} selector="h1" syntax="html" />;
     const result = await poml(markup);
 
     expect(result).toContain('<h1>Enter the main heading, usually the same as the title.</h1>');

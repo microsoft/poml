@@ -10,6 +10,7 @@ export interface WebpageProps extends PropsSyntaxBase {
   src?: string;
   url?: string;
   buffer?: string | Buffer;
+  base64?: string;
   extractText?: boolean;
   selector?: string;
 }
@@ -102,6 +103,7 @@ async function processWebpage(props: WebpageProps): Promise<React.ReactElement> 
  * @param {string} url - The URL of the webpage to fetch and display.
  * @param {string} src - Local file path to an HTML file to display.
  * @param {string|Buffer} buffer - HTML content as string or buffer.
+ * @param {string} base64 - Base64 encoded HTML content.
  * @param {boolean} extractText - Whether to extract plain text content (true) or convert HTML to structured POML (false). Default is false.
  * @param {string} selector - CSS selector to extract specific content from the page (e.g., "article", ".content", "#main"). Default is "body".
  *
@@ -126,7 +128,13 @@ async function processWebpage(props: WebpageProps): Promise<React.ReactElement> 
 export const Webpage = component('Webpage', { asynchorous: true })((
   props: WebpageProps
 ) => {
-  const { src, url, buffer, extractText, selector, ...others } = props;
-  const content = useWithCatch(processWebpage(props), others);
+  let { src, url, buffer, base64, extractText, selector, ...others } = props;
+  if (base64) {
+    if (buffer !== undefined) {
+      throw new Error('Either buffer or base64 should be provided, not both.');
+    }
+    buffer = Buffer.from(base64, 'base64');
+  }
+  const content = useWithCatch(processWebpage({ ...props, buffer: buffer }), others);
   return <Text {...others}>{content ?? null}</Text>;
 });
