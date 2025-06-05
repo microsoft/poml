@@ -1,9 +1,9 @@
-import "poml";
-import { ComponentSpec, Parameter } from "poml/base";
+import 'poml';
+import { ComponentSpec, Parameter } from 'poml/base';
 
-import { readFileSync, readdirSync, writeFileSync } from "fs";
-import { join } from "path";
-import { formatComponentDocumentation } from "./documentFormatter";
+import { readFileSync, readdirSync, writeFile, writeFileSync } from 'fs';
+import { join } from 'path';
+import { formatComponentDocumentation } from './documentFormatter';
 
 const basicComponents: string[] = [];
 const intentions: string[] = [];
@@ -18,13 +18,14 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
     .replace(/^\/\*\*?/, '')
     .replace(/\*\/$/, '')
     .split('\n')
-    .map((line) => line.replace(/^\s*\*( )?/, ''))
-    .map((line) => line.replace(/\s+$/, ''))
+    .map(line => line.replace(/^\s*\*( )?/, ''))
+    .map(line => line.replace(/\s+$/, ''))
     .join('\n');
 
   // Recognize description, @param and @example in the comment.
   const descriptionRegex = /([\s\S]*?)(?=@param|@example|@see|$)/;
-  const paramRegex = /@param\s+(\{([\S'"\|]+?)\}\s+)?(\w+)\s+-\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
+  const paramRegex =
+    /@param\s+(\{([\S'"\|]+?)\}\s+)?(\w+)\s+-\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
   const exampleRegex = /@example\s+([\s\S]*?)(?=@param|@example|@see|$)/;
   const seeRegex = /@see\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
 
@@ -50,7 +51,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
       fallbackType = 'string';
     } else if (paramMatch[2] && paramMatch[2].includes('|')) {
       type = 'string';
-      choices = paramMatch[2].split('|').map((choice) => choice.replace(/['"\s]/g, '').trim());
+      choices = paramMatch[2].split('|').map(choice => choice.replace(/['"\s]/g, '').trim());
     } else if (paramMatch[2]) {
       type = paramMatch[2];
     }
@@ -80,7 +81,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
     params,
     example,
     baseComponents
-  }
+  };
 }
 
 function extractTsComments(text: string) {
@@ -95,7 +96,8 @@ function extractTsComments(text: string) {
 
 function extractComponentComments(text: string) {
   const comments: ComponentSpec[] = [];
-  const commentRegex = /(\/\*\*([\s\S]*?)\*\/)\nexport const [\w]+ = component\(['"](\w+)['"](,[\S\s]*?)?\)/g;
+  const commentRegex =
+    /(\/\*\*([\s\S]*?)\*\/)\nexport const [\w]+ = component\(['"](\w+)['"](,[\S\s]*?)?\)/g;
   let match;
   while ((match = commentRegex.exec(text)) !== null) {
     const doc = { name: match[3], ...tsCommentToMarkdown(match[2]) };
@@ -103,7 +105,6 @@ function extractComponentComments(text: string) {
   }
   return comments;
 }
-
 
 function* walk(folderPath: string): IterableIterator<string> {
   for (const entry of readdirSync(folderPath, { withFileTypes: true })) {
@@ -135,7 +136,7 @@ function scanComponentDocs(folderPath: string) {
     } else {
       utilities.push(...names);
     }
-  };
+  }
   return allComments;
 }
 
@@ -159,6 +160,134 @@ function docsToMarkdown(docs: ComponentSpec[]) {
   return parts.join('\n\n');
 }
 
+function camelToSnake(str: string): string {
+  return str
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2') // Handles cases like "XMLFile" -> "XML_File"
+    .replace(/([a-z\d])([A-Z])/g, '$1_$2') // Handles "camelCase" -> "camel_Case"
+    .toLowerCase(); // Converts to lowercase: "XML_File" -> "xml_file"
+}
+
+function getPythonType(jsonType: string, paramName: string): string {
+  const lcJsonType = jsonType.toLowerCase();
+  switch (lcJsonType) {
+    case 'string':
+      return 'str';
+    case 'boolean':
+      return 'bool';
+    case 'buffer':
+      return 'bytes';
+    case 'number':
+      // Heuristic for int vs float based on common parameter names
+      if (
+        paramName.includes('max') ||
+        paramName.includes('count') ||
+        paramName.includes('depth') ||
+        paramName.endsWith('Index')
+      ) {
+        return 'int';
+      }
+      return 'float';
+    case 'object':
+      return 'Any'; // Could be Dict[str, Any]
+    case 'regexp':
+      return 'str'; // Python uses strings for regex patterns
+    default:
+      if (jsonType.endsWith('[]')) {
+        // Handles array types like TreeItemData[]
+        return 'List[Any]'; // Generic list type
+      }
+      // For unknown or complex non-array types (e.g., a specific object schema name)
+      return 'Any';
+  }
+}
+
+function generatePythonMethod(tag: ComponentSpec): string {
+  const methodName = camelToSnake(tag.name!);
+  let paramsSignatureList: string[] = ['        self'];
+  let argsDocstring = '';
+  const callArgsList: string[] = [`tag_name="${tag.name}"`];
+
+  tag.params.forEach(param => {
+    const paramName = param.name; // Use original JSON name for Python parameter
+    const pythonType = getPythonType(param.type, paramName);
+    const typeHint = `Optional[${pythonType}]`;
+
+    paramsSignatureList.push(`        ${paramName}: ${typeHint} = None`);
+    callArgsList.push(`${paramName}=${paramName}`);
+
+    let paramDesc = param.description.replace(/\n/g, '\n            ');
+    if (param.defaultValue !== undefined) {
+      const defValStr =
+        typeof param.defaultValue === 'string' ? `"${param.defaultValue}"` : param.defaultValue;
+      paramDesc += ` Default is \`${defValStr}\`.`;
+    }
+    if (param.choices && param.choices.length > 0) {
+      paramDesc += ` Choices: ${param.choices.map(c => `\`${JSON.stringify(c)}\``).join(', ')}.`;
+    }
+    argsDocstring += `            ${paramName} (${typeHint}): ${paramDesc}\n`;
+  });
+
+  paramsSignatureList.push('        **kwargs: Any');
+
+  const paramsString = paramsSignatureList.join(',\n');
+
+  let docstring = `"""${tag.description.replace(/\n/g, '\n        ')}\n\n`;
+  if (argsDocstring) {
+    docstring += `        Args:\n${argsDocstring}`;
+  }
+  if (tag.example) {
+    const exampleIndented = tag.example
+      .replace(/\\/g, '\\\\') // Escape backslashes for string literal
+      .replace(/"""/g, '\\"\\"\\"') // Escape triple quotes if any in example
+      .replace(/\n/g, '\n            ');
+    docstring += `\n        Example:\n            ${exampleIndented}\n`;
+  }
+  docstring += `        """`;
+
+  const methodBody = `return self._tag(
+            ${callArgsList.join(',\n            ')},
+            **kwargs,
+        )`;
+
+  return `
+    def ${methodName}(
+${paramsString},
+    ):
+        ${docstring}
+        ${methodBody}
+    `;
+}
+
+function generatePythonFile(jsonData: ComponentSpec[]): string {
+  let pythonCode = `# This file is auto-generated from component documentation.
+# Do not edit manually. Run \`npm run build-comment\` to regenerate.
+
+from typing import Optional, Any, Union, List, Dict
+# from numbers import Number # For more specific number types if needed
+
+class _TagLib:
+
+    def tag(self, tag_name: str, **kwargs: Any) -> Any:
+        """Helper method to create a tag with the given name and attributes.
+        Implemented by subclasses.
+        """
+        raise NotImplementedError("This method should be implemented by subclasses.")
+`;
+
+  jsonData.forEach(tag => {
+    if (!tag.name) {
+      console.warn('Skipping tag with no name:', tag);
+      return;
+    }
+    pythonCode += generatePythonMethod(tag);
+  });
+
+  return pythonCode;
+}
+
 const allDocs = scanComponentDocs('packages/poml');
+const pythonCode = generatePythonFile(allDocs);
 writeFileSync('packages/poml/assets/componentDocs.json', JSON.stringify(allDocs, null, 2));
 writeFileSync('docs/components.md', docsToMarkdown(allDocs));
+writeFileSync('python/poml/_tags.py', pythonCode);
+console.log('Component documentation generated successfully!');

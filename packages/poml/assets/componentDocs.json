@@ -19,6 +19,13 @@
         "required": false
       },
       {
+        "name": "base64",
+        "type": "string",
+        "choices": [],
+        "description": "Base64 encoded string of the document data. Mutually exclusive with `src` and `buffer`.",
+        "required": false
+      },
+      {
         "name": "parser",
         "type": "string",
         "choices": [
@@ -1104,6 +1111,13 @@
         "fallbackType": "string",
         "choices": [],
         "description": "HTML content as string or buffer.",
+        "required": false
+      },
+      {
+        "name": "base64",
+        "type": "string",
+        "choices": [],
+        "description": "Base64 encoded HTML content.",
         "required": false
       },
       {

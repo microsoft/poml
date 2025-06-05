@@ -4,7 +4,8 @@ import json
 import tempfile
 import warnings
 
-from .api import poml  # Assuming this exists in your project structure
+from .api import poml
+from ._tags import _TagLib
 
 
 def _write_file_for_poml(content: str):
@@ -73,7 +74,7 @@ class _ImplicitDualTagHandler:
             )
 
 
-class Prompt:
+class Prompt(_TagLib):
     """
     Builds an XML structure using ElementTree, supporting context-managed tags.
     """
@@ -196,33 +197,17 @@ class Prompt:
         self.root_elements.clear()
         self.current_parent_stack.clear()
 
-    # --- Tag-specific methods using the dual-use handler ---
-    # These methods provide a convenient API for creating specific XML tags.
-
-    def task(self, **attrs) -> _ImplicitDualTagHandler:
-        """Task tag. Use with `with` for content, or call directly for self-closing."""
-        return _ImplicitDualTagHandler(self, "Task", attrs)
-
-    def document(self, **attrs) -> _ImplicitDualTagHandler:
-        """Document tag. Use with `with` for content, or call directly for self-closing."""
-        return _ImplicitDualTagHandler(self, "Document", attrs)
-
-    def p(self, **attrs) -> _ImplicitDualTagHandler:
-        """Paragraph tag. Use with `with` for content, or call directly for self-closing."""
-        return _ImplicitDualTagHandler(self, "p", attrs)
-
-    # Add any other tag from your JSON schema here, following the same pattern:
-    # def some_tag_name(self, **attrs) -> _ImplicitDualTagHandler:
-    #     return _ImplicitDualTagHandler(self, "SomeTagName", attrs)
+    def tag(self, tag_name: str, **attrs) -> _ImplicitDualTagHandler:
+        return _ImplicitDualTagHandler(self, tag_name, attrs)
 
 
 if __name__ == '__main__':
     # Example usage of the Prompt class
     with Prompt() as p:
-        with p.p():
+        with p.paragraph():
             with p.task(id="task1", status="open"):
                 p.text("This is a task description.")
-            with p.p():
+            with p.paragraph():
                 p.text("This is a paragraph in the document.")
 
         xml_output = p.dump_xml()  # Get pretty-printed XML for debugging

@@ -748,6 +748,7 @@ To display a Word document without including the real multimedia:
 
 - **src**: The source file to read the data from. This must be provided if records is not provided.
 - **buffer**: Buffer. Document data buffer. Recommended to use `src` instead unless you want to use a string.
+- **base64**: Base64 encoded string of the document data. Mutually exclusive with `src` and `buffer`.
 - **parser**: Can be one of: auto, pdf, docx, txt. The parser to use for reading the data. If not provided, it will be inferred from the file extension.
 - **multimedia**: Boolean. If true, the multimedias will be displayed. If false, the alt strings will be displayed at best effort. Default is `true`.
 - **selectedPages**: The pages to be selected. This is only available **for PDF documents**. If not provided, all pages will be selected.
@@ -998,6 +999,7 @@ Convert HTML to structured POML components:
 - **url**: The URL of the webpage to fetch and display.
 - **src**: Local file path to an HTML file to display.
 - **buffer**: Buffer. HTML content as string or buffer.
+- **base64**: Base64 encoded HTML content.
 - **extractText**: Boolean. Whether to extract plain text content (true) or convert HTML to structured POML (false). Default is false.
 - **selector**: CSS selector to extract specific content from the page (e.g., "article", ".content", "#main"). Default is "body".
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
