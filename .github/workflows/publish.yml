@@ -7,7 +7,25 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+            arch: x64
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            arch: arm64
+          - os: windows-latest
+            platform: win32-x64
+            arch: x64
+          - os: windows-11-arm
+            platform: win32-arm64
+            arch: arm64
+          - os: macos-13
+            platform: darwin-x64
+            arch: x64
+          - os: macos-latest
+            platform: darwin-arm64
+            arch: arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -25,14 +43,53 @@ jobs:
     - run: npm ci
     - run: npm run build-webview
     - run: npm run build-cli
-    - run: npm run package
+    - name: Package VSCode Extension for ${{ matrix.platform }}
+      run: npm run package -- --target ${{ matrix.platform }}
     - run: python -m pip install -e .[dev]
     - run: hatch build -t wheel
-    - uses: actions/upload-artifact@v4
+    
+    # Upload VSIX files individually (not as zip)
+    - name: Find VSIX file
+      id: find-vsix
+      shell: bash
+      run: |
+        VSIX_FILE=$(find . -name "*.vsix" -type f | head -1)
+        if [ -z "$VSIX_FILE" ]; then
+          echo "No VSIX file found!"
+          exit 1
+        fi
+        echo "vsix-file=$VSIX_FILE" >> $GITHUB_OUTPUT
+        # Extract base name and create platform-specific name
+        BASE_NAME=$(basename "$VSIX_FILE" .vsix)
+        PLATFORM_VSIX="${BASE_NAME}-${{ matrix.platform }}.vsix"
+        echo "platform-vsix-name=$PLATFORM_VSIX" >> $GITHUB_OUTPUT
+    
+    - name: Upload VSIX for ${{ matrix.platform }}
+      uses: actions/upload-artifact@v4
       with:
-        name: poml-vscode-${{ matrix.os }}
-        path: "*.vsix"
-    - uses: actions/upload-artifact@v4
+        name: ${{ steps.find-vsix.outputs.platform-vsix-name }}
+        path: ${{ steps.find-vsix.outputs.vsix-file }}
+        compression-level: 0
+    
+    # Upload Python wheel files individually
+    - name: Find and upload Python wheel
+      shell: bash
+      run: |
+        WHEEL_FILE=$(find dist -name "*.whl" -type f | head -1)
+        if [ -z "$WHEEL_FILE" ]; then
+          echo "No wheel file found!"
+          exit 1
+        fi
+        # Extract base name and create platform-specific name
+        BASE_NAME=$(basename "$WHEEL_FILE" .whl)
+        PLATFORM_WHEEL="${BASE_NAME}-${{ matrix.platform }}.whl"
+        echo "wheel-file=$WHEEL_FILE" >> $GITHUB_OUTPUT
+        echo "platform-wheel-name=$PLATFORM_WHEEL" >> $GITHUB_OUTPUT
+      id: find-wheel
+    
+    - name: Upload Python wheel for ${{ matrix.platform }}
+      uses: actions/upload-artifact@v4
       with:
-        name: poml-python-${{ matrix.os }}
-        path: dist/*
+        name: ${{ steps.find-wheel.outputs.platform-wheel-name }}
+        path: ${{ steps.find-wheel.outputs.wheel-file }}
+        compression-level: 0
