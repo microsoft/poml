@@ -223,25 +223,25 @@
         "poml.scrollPreviewWithEditor": {
           "type": "boolean",
           "default": true,
-          "description": "Double click in the POML preview to switch to the editor.",
+          "description": "(Planned) Double click in the POML preview to switch to the editor.",
           "scope": "resource"
         },
         "poml.markEditorSelection": {
           "type": "boolean",
           "default": true,
-          "description": "Mark the current editor selection in the html preview.",
+          "description": "(Planned) Mark the current editor selection in the POML preview.",
           "scope": "resource"
         },
         "poml.scrollEditorWithPreview": {
           "type": "boolean",
           "default": true,
-          "description": "When a html preview is scrolled, update the view of the editor.",
+          "description": "(Planned) When a POML preview is scrolled, update the view of the editor.",
           "scope": "resource"
         },
         "poml.doubleClickToSwitchToEditor": {
           "type": "boolean",
           "default": true,
-          "description": "When a html editor is scrolled, update the view of the preview.",
+          "description": "(Planned) When a POML editor is scrolled, update the view of the preview.",
           "scope": "resource"
         },
         "poml.trace": {
@@ -251,7 +251,7 @@
             "verbose"
           ],
           "default": "off",
-          "description": "%html.trace.desc%",
+          "description": "Enable/disable tracing of the POML extension.",
           "scope": "window"
         }
       }
@@ -269,6 +269,7 @@
     "compile": "tspc -p ./",
     "watch": "tspc -watch -p ./",
     "package": "vsce package",
+    "package:win": "vsce package --target win32-x64",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint packages",
     "test": "jest",

@@ -40,7 +40,11 @@ jobs:
     - run: npm ci
     - run: npm run build-webview
     - run: npm run build-cli
+    - name: Package VSCode Extension for Windows
+      if: matrix.platform == 'win32-x64'
+      run: npm run package:win
     - name: Package VSCode Extension for ${{ matrix.platform }}
+      if: matrix.platform != 'win32-x64'
       run: npm run package -- --target ${{ matrix.platform }}
     - run: python -m pip install -e .[dev]
     - run: hatch build -t wheel
