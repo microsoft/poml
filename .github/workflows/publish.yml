@@ -27,7 +27,7 @@ jobs:
     - run: npm run build-cli
     - run: npm run package
     - run: python -m pip install -e .[dev]
-    - run: hatch build
+    - run: hatch build -t wheel
     - uses: actions/upload-artifact@v4
       with:
         name: poml-vscode-${{ matrix.os }}
