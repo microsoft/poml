@@ -15,11 +15,6 @@ module.exports = [
     },
     externals: {
       vscode: 'commonjs vscode', // the vscode-module is created on-the-fly and must be excluded
-      // Handle binary dependencies that can't be bundled
-      'sharp': 'commonjs sharp',
-      'pdf-parse': 'commonjs pdf-parse',
-      // Optional dependencies that might cause issues
-      '@img/sharp-win32-x64': 'commonjs @img/sharp-win32-x64'
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
@@ -64,10 +59,9 @@ module.exports = [
       libraryTarget: 'commonjs2'
     },
     externals: {
-      // Handle binary dependencies that can't be bundled
-      'sharp': 'commonjs sharp',
+      vscode: 'commonjs vscode',
+      sharp: 'commonjs sharp',
       'pdf-parse': 'commonjs pdf-parse',
-      '@img/sharp-win32-x64': 'commonjs @img/sharp-win32-x64'
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],

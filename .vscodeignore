@@ -17,3 +17,6 @@ webpack.config.*
 # Exclude all node_modules since we're using webpack bundling
 # Binary dependencies are marked as externals in webpack config
 node_modules/**
+!node_modules/@img/**
+!node_modules/pdf-parse
+!node_modules/sharp
