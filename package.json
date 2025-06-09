@@ -18,7 +18,7 @@
   "activationEvents": [
     "onWebviewPanel:poml.preview"
   ],
-  "main": "./out/poml-vscode/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "languages": [
       {
@@ -258,7 +258,10 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build-extension",
+    "build-extension": "webpack-cli --config webpack.config.extension.js",
+    "build-extension-dev": "webpack-cli --config webpack.config.extension.js --mode development",
+    "watch-extension": "webpack-cli --config webpack.config.extension.js --mode development --watch",
     "build-webview": "webpack-cli --config webpack.config.webview.js",
     "build-cli": "webpack-cli --config webpack.config.cli.js",
     "build-comment": "npm run compile && node ./out/poml-vscode/lsp/parseComments.js && npm run compile && node ./out/poml-vscode/lsp/parseComments.js",
@@ -273,7 +276,6 @@
   "devDependencies": {
     "@accessibility-insights/eslint-plugin": "^1.3.2",
     "@types/d3-dsv": "~2.0.0",
-    "@types/deasync": "^0.1.5",
     "@types/jquery": "^3.5.32",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash.throttle": "^4.1.9",
@@ -318,7 +320,6 @@
     "cheerio": "^1.0.0",
     "closest-match": "^1.3.3",
     "d3-dsv": "~2.0.0",
-    "deasync": "^0.1.30",
     "jquery": "^3.7.1",
     "js-yaml": "^4.1.0",
     "langchain": "^0.3.15",

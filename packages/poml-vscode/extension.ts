@@ -63,7 +63,7 @@ let client: LanguageClient;
 export function activateClient(context: vscode.ExtensionContext, reporter?: TelemetryClient) {
   // The server is implemented in node
   const serverModule = context.asAbsolutePath(
-    path.join('out', 'poml-vscode', 'lsp', 'server.js')
+    path.join('dist', 'server.js')
   );
 
   // If the extension is launched in debug mode then the debug server options are used

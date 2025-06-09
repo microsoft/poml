@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+out/**
 packages/**
 python/**
 examples/**
@@ -13,3 +14,6 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 webpack.config.*
 .pytest_cache/**
+# Exclude all node_modules since we're using webpack bundling
+# Binary dependencies are marked as externals in webpack config
+node_modules/**
