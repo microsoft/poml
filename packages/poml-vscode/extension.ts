@@ -111,7 +111,7 @@ export function deactivateClient(): Thenable<void> | undefined {
 
 function environmentData(): { [key: string]: string | undefined } {
   return {
-    version: vscode.extensions.getExtension('ms-poml.poml')?.packageJSON.version,
+    version: vscode.extensions.getExtension('poml-team.poml')?.packageJSON.version,
     os: os.platform(),
     osRelease: os.release(),
     architecture: os.arch(),
