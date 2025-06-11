@@ -108,11 +108,15 @@ jobs:
         # Create platform-specific wheel name with proper platform tag
         PLATFORM_WHEEL="${DIST_NAME}-${VERSION}-${PYTHON_TAG}-${ABI_TAG}-${{ matrix.wheel_platform }}.whl"
         echo "platform-wheel-name=$PLATFORM_WHEEL" >> $GITHUB_OUTPUT
+        
+        # Rename the wheel file to platform-specific name
+        cp "$WHEEL_FILE" "dist/$PLATFORM_WHEEL"
+        echo "renamed-wheel-file=dist/$PLATFORM_WHEEL" >> $GITHUB_OUTPUT
       id: find-wheel
     
     - name: Upload Python wheel for ${{ matrix.platform }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.find-wheel.outputs.platform-wheel-name }}
-        path: ${{ steps.find-wheel.outputs.wheel-file }}
+        path: ${{ steps.find-wheel.outputs.renamed-wheel-file }}
         compression-level: 0
