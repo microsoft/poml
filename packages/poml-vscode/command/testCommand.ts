@@ -100,6 +100,16 @@ export class TestCommand implements Command {
       reportParams.rawText = document.getText();
     }
 
+    // Check if language model settings are configured
+    const setting = this.getLanguageModelSettings(uri);
+    if (!setting || !setting.provider || !setting.model || !setting.apiKey || !setting.apiUrl) {
+      vscode.window.showErrorMessage(
+        'Language model settings are not fully configured. Please set your provider, model, API key, and endpoint in the extension settings before testing prompts.'
+      );
+      this.log('error', 'Prompt test aborted: LLM settings not configured.');
+      return;
+    }
+
     this.log(
       'info',
       `Testing prompt with ${this.isChatting ? 'chat model' : 'text completion model'}: ${fileUrl}`
