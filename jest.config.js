@@ -5,5 +5,11 @@ module.exports = {
     '^.+.tsx?$': ['ts-jest', {}],
   },
   roots: ['<rootDir>/packages/poml/tests', '<rootDir>/packages/poml-vscode/tests'],
-  moduleDirectories: ['node_modules', 'packages']
+  moduleDirectories: ['node_modules', 'packages'],
+
+  // Handle the PDF parsing worker teardown issue
+  forceExit: true,
+  detectOpenHandles: true,
+  // Increase timeout for async operations like PDF parsing
+  testTimeout: 30000
 };

@@ -14,6 +14,7 @@ const args = yargs(hideBin(process.argv)).options({
   speakerMode: { type: 'boolean', alias: 'chat', description: 'Output in speaker mode (JSON)', default: true },
   prettyPrint: { type: 'boolean', alias: 'p', description: 'Pretty print the output', default: false },
   strict: { type: 'boolean', description: 'Strict mode', default: true },
+  cwd: { type: 'string', description: 'Working directory (defaults to file location if file is specified, otherwise current directory)' },
 }).parseSync();
 
 commandLine(args);

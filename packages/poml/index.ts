@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { readFileSync, writeFileSync } from 'fs';
 import { renderToString } from "react-dom/server";
+import path from 'path';
 import { EnvironmentDispatcher } from "./writer";
 import { ErrorCollection, Message, RichContent, StyleSheetProvider } from './base';
 import { PomlFile, PomlReaderOptions } from './file';
@@ -80,6 +81,7 @@ interface CliArgs {
   speakerMode?: boolean;
   prettyPrint?: boolean;
   strict?: boolean;
+  cwd?: string;
 }
 
 export async function commandLine(args: CliArgs) {
@@ -87,13 +89,26 @@ export async function commandLine(args: CliArgs) {
     trim: args.trim,
   };
 
+  // Determine the working directory
+  let workingDirectory: string;
+  if (args.cwd) {
+    workingDirectory = path.resolve(args.cwd);
+  } else if (args.file) {
+    workingDirectory = path.dirname(path.resolve(args.file));
+  } else {
+    workingDirectory = process.cwd();
+  }
+
   let input: string;
+  let sourcePath: string | undefined;
   if (args.input && args.file) {
     throw new Error('Cannot specify both input and file');
   } else if (args.input) {
     input = args.input;
   } else if (args.file) {
-    input = readFileSync(args.file, { encoding: 'utf8' });
+    const filePath = path.resolve(workingDirectory, args.file);
+    input = readFileSync(filePath, { encoding: 'utf8' });
+    sourcePath = filePath;
   } else {
     throw new Error('Must specify either input or file');
   }
@@ -108,20 +123,22 @@ export async function commandLine(args: CliArgs) {
       context[key] = value;
     }
   } else if (args.contextFile) {
-    const contextFromFile = JSON.parse(readFileSync(args.contextFile, { encoding: 'utf8' }));
+    const contextFilePath = path.resolve(workingDirectory, args.contextFile);
+    const contextFromFile = JSON.parse(readFileSync(contextFilePath, { encoding: 'utf8' }));
     context = { ...context, ...contextFromFile };
   }
 
   let stylesheet: { [key: string]: any } = {};
   if (args.stylesheetFile) {
-    stylesheet = { ...stylesheet, ...JSON.parse(readFileSync(args.stylesheetFile, { encoding: 'utf8' })) };
+    const stylesheetFilePath = path.resolve(workingDirectory, args.stylesheetFile);
+    stylesheet = { ...stylesheet, ...JSON.parse(readFileSync(stylesheetFilePath, { encoding: 'utf8' })) };
   }
   if (args.stylesheet) {
     stylesheet = { ...stylesheet, ...JSON.parse(args.stylesheet) };
   }
 
   ErrorCollection.clear();
-  const ir = await read(input, readOptions, context, stylesheet);
+  const ir = await read(input, readOptions, context, stylesheet, sourcePath);
 
   const speakerMode = args.speakerMode === true || args.speakerMode === undefined;
   const prettyPrint = args.prettyPrint === true;
@@ -147,7 +164,8 @@ export async function commandLine(args: CliArgs) {
   }
 
   if (args.output) {
-    writeFileSync(args.output, output);
+    const outputPath = path.resolve(workingDirectory, args.output);
+    writeFileSync(outputPath, output);
   } else {
     process.stdout.write(output);
   }

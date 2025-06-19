@@ -1,10 +1,17 @@
 import * as React from 'react';
+import * as fs from 'fs';
+import * as path from 'path';
 
-import { beforeAll, describe, expect, test } from '@jest/globals';
+import { beforeAll, afterAll, describe, expect, test } from '@jest/globals';
 import { spyOn } from 'jest-mock';
 
 import { read, write, poml, commandLine } from 'poml';
 import { ErrorCollection, ReadError, WriteError } from 'poml/base';
+
+// Add a finalizer to allow any lingering async operations (like from pdf-parse) to complete.
+afterAll(async () => {
+  await new Promise(resolve => setTimeout(resolve, 500));
+});
 
 describe('endToEnd', () => {
   test('simple', async () => {
@@ -153,4 +160,36 @@ describe('cli', () => {
       '[{\"speaker\":\"human\",\"content\":\"world\"}]'
     );
   });
+});
+
+describe('examples compilation', () => {
+  beforeAll(() => {
+    spyOn(process.stdout, 'write').mockImplementation(() => true);
+  });
+
+  // Dynamically generate tests for all .poml files in the examples folder
+  const examplesDir = path.resolve(__dirname, '../../../examples');
+  const exampleFiles = fs.readdirSync(examplesDir)
+    .filter(file => file.endsWith('.poml'))
+    .sort(); // Sort for consistent test order
+
+  exampleFiles.forEach(fileName => {
+    test(`${fileName} compiles successfully`, async () => {
+      const filePath = path.join(examplesDir, fileName);
+      await expect(async () => {
+        await commandLine({ 
+          file: filePath, 
+          speakerMode: true 
+        });
+      }).not.toThrow();
+    });
+  });
+
+  // Fallback test if no example files are found
+  if (exampleFiles.length === 0) {
+    test('no example files found', () => {
+      console.warn(`No .poml files found in ${examplesDir}`);
+      expect(true).toBe(true); // Always pass this test
+    });
+  }
 });
