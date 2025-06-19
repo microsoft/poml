@@ -23,8 +23,6 @@
     </cp>
   </cp>
 
-  <p>hello world</p>
-
   <!-- This can also be stepwise-instructions, and it's case-insensitive. -->
   <StepwiseInstructions>
     <!-- Read a file and save it as instructions -->
