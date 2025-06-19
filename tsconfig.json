@@ -24,7 +24,8 @@
       { "transform": "typescript-transform-paths" }
     ],
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "types": ["node", "mocha"]
   },
   "include": ["packages/**/*"]
 }

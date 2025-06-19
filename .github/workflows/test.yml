@@ -40,4 +40,10 @@ jobs:
       if: runner.os == 'Linux'
     - run: npm run test -- packages/poml/tests
       if: runner.os != 'Linux'
+    - name: Run VSCode Extension Tests
+      run: xvfb-run -a npm run test-vscode
+      if: runner.os == 'Linux'
+    - name: Run VSCode Extension Tests
+      run: npm run test-vscode
+      if: runner.os != 'Linux'
     - run: python -m pytest python/tests
