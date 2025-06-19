@@ -144,7 +144,16 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
               <span className="toolbar-tooltip">Source Code</span>
             </div>
             <div className="toolbar-item">
-              <a className="codicon codicon-copy" role="button" aria-label="Copy"></a>
+              <a
+                className="codicon codicon-copy"
+                role="button"
+                aria-label="Copy"
+                data-value={
+                  typeof message.content === 'string'
+                    ? message.content
+                    : JSON.stringify(message.content, null, 2)
+                }
+              ></a>
               <span className="toolbar-tooltip">Copy</span>
             </div>
           </div>
@@ -164,7 +173,10 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
 function Content(props: WebviewUserOptions & PreviewResponse) {
   let { displayFormat, ir, content } = props;
 
-  let toCopy: string = JSON.stringify(content, null, 2);
+  let toCopy: string =
+    typeof content === 'string'
+      ? content
+      : JSON.stringify(content, null, 2);
   let result: React.ReactElement;
   if (content.length > 0 && content[0].hasOwnProperty('speaker')) {
     content = content as Message[];

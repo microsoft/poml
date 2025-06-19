@@ -21,6 +21,11 @@ export const setupToolbar = (vscode: any, messaging: MessagePoster) => {
     navigator.clipboard.writeText(copyText);
   });
 
+  $(document).on('click', '.chat-message-toolbar .codicon-copy', function () {
+    const copyText = $(this).attr('data-value') ?? '';
+    navigator.clipboard.writeText(copyText);
+  });
+
   $('.toolbar .button.onoff').on('click', function () {
     $(this).toggleClass('active');
     $(this).data('value', $(this).hasClass('active'));
