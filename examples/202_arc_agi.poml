@@ -1,0 +1,36 @@
+<poml>
+<SystemMessage>Be brief and clear in your responses</SystemMessage>
+<let src="assets/202_arc_agi_data.json"/>
+<HumanMessage>
+<p>Find the common rule that maps an input grid to an output grid, given the examples below.</p>
+<examples>
+  <example for="example in train" chat="false" caption="Example {{ loop.index }}" captionStyle="header">
+    <input><table records="{{ example.input }}"/></input>
+    <output><table records="{{ example.output }}"/></output>
+  </example>
+</examples>
+
+<p>Below is a test input grid. Predict the corresponding output grid by applying the rule you found. Your final answer should just be the text output grid itself.</p>
+<input><table records="{{ test[0].input }}"/></input>
+</HumanMessage>
+
+<stylesheet>
+{
+  "table": {
+    "syntax": "csv",
+    "writerOptions": {
+        "csvHeader": false,
+        "csvSeparator": " "
+    }
+  },
+  "input": {
+    "captionEnding": "colon-newline",
+    "captionStyle": "plain"
+  },
+  "output": {
+    "captionEnding": "colon-newline",
+    "captionStyle": "plain"
+  }
+}
+</stylesheet>
+</poml>

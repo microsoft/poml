@@ -1,0 +1,36 @@
+<poml>
+<task>You are given various potential options or approaches for a project. Convert these into a well-structured research plan.</task>
+
+<stepwise-instructions>
+<list listStyle="decimal">
+<item>Identifies Key Objectives
+  <list listStyle="dash">
+    <item>Clarify what questions each option aims to answer</item>
+    <item>Detail the data/info needed for evaluation</item>
+  </list>
+</item>
+<item>Describes Research Methods
+  <list listStyle="dash">
+    <item>Outline how you’ll gather and analyze data</item>
+    <item>Mention tools or methodologies for each approach</item>
+  </list>
+</item>
+
+<item>Provides Evaluation Criteria
+  <list listStyle="dash">
+    <item>Metrics, benchmarks, or qualitative factors to compare options  </item>
+    <item>Criteria for success or viability</item>
+  </list>
+</item>
+
+<item>Specifies Expected Outcomes
+  <list listStyle="dash">
+    <item>Possible findings or results  </item>
+    <item>Next steps or actions following the research</item>
+  </list>
+</item>
+</list>
+
+Produce a methodical plan focusing on clear, practical steps.
+</stepwise-instructions>
+</poml>

@@ -1,0 +1,52 @@
+<poml>
+  <role>You are a chatbot agent answering customer's questions in a chat.</role>
+
+  <task>
+    Your task is to answer the customer's question using the data provided in the data section.
+    <!-- Use listStyle property to change the style of a list. -->
+    <list listStyle="decimal">
+      <item>You can access order history in the orders section including email id and order total with payment summary.</item>
+      <item>Refer to orderlines for item level details within each order in orders.</item>
+    </list>
+  </task>
+
+  <!-- cp means CaptionedParagraph, which is a paragraph with customized headings. -->
+  <cp caption="Data">
+    <cp caption="Orders">
+      <!-- Use table to read a csv file. By default, it follows its parents' style (markdown in this case). -->
+      <table src="assets/201_orders.csv" />
+    </cp>
+
+    <cp caption="Orderlines">
+      <!-- Use syntax to specify its output format. -->
+      <table src="assets/201_orderlines.csv" syntax="tsv" />
+    </cp>
+  </cp>
+
+  <p>hello world</p>
+
+  <!-- This can also be stepwise-instructions, and it's case-insensitive. -->
+  <StepwiseInstructions>
+    <!-- Read a file and save it as instructions -->
+    <let src="assets/201_order_instructions.json" name="instructions"/>
+    <!-- Use a for loop to iterate over the instructions, use {{ }} to evaluate an expression -->
+    <p for="ins in instructions">
+      Instruction {{loop.index+1}}: {{ ins }}
+    </p>
+  </StepwiseInstructions>
+
+  <!-- Specify the speaker of a block. -->
+  <HumanMessage>
+    <!-- Use a question-answer format. -->
+    <qa>How much did I pay for my last order?</qa>
+  </HumanMessage>
+
+  <!-- Use stylesheet (a CSS-like JSON) to modify the style in a batch. -->
+  <stylesheet>
+    {
+      "cp": {
+        "captionTextTransform": "upper"
+      }
+    }
+  </stylesheet>
+</poml>

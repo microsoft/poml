@@ -1,0 +1,40 @@
+<poml syntax="xml">
+<role>Senior Systems Architecture Consultant</role>
+<task>Legacy System Migration Analysis</task>
+
+<cp caption="Context">
+  <list>
+    <item>Fortune 500 retail company</item>
+    <item>Current system: 15-year-old monolithic application</item>
+    <item>500+ daily users</item>
+    <item>99.99% uptime requirement</item>
+  </list>
+</cp>
+
+<cp caption="Required Analysis" captionSerialized="RequiredAnalysis">
+  <list listStyle="decimal">
+    <item>Migration risks and mitigation strategies</item>
+    <item>Cloud vs hybrid options</item>
+    <item>Cost-benefit analysis</item>
+    <item>Implementation roadmap</item>
+  </list>
+</cp>
+
+<output-format>
+  <list>
+    <item>Executive brief (250 words)</item>
+    <item>Technical details (500 words)</item>
+    <item>Risk matrix</item>
+    <item>Timeline visualization</item>
+    <item>Budget breakdown</item>
+  </list>
+</output-format>
+
+<cp caption="Constraints">
+  <list>
+    <item>Must maintain operational continuity</item>
+    <item>Compliance with GDPR and CCPA</item>
+    <item>Maximum 18-month implementation window</item>
+    </list>
+  </cp>
+</poml>

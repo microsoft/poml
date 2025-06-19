@@ -1,0 +1,2 @@
+OrderId,OrderLineId,CreatedTimestamp,ItemDescription,Quantity,FulfillmentStatus,ExpectedDeliveryDate,ActualDeliveryDate,ActualShipDate,ExpectedShipDate,TrackingInformation,ShipToAddress,CarrierCode,DeliveryMethod,UnitPrice,OrderLineSubTotal,LineShippingCharge,TotalTaxes,Payments
+CC10182,1,,Shorts,0.0,unshipped,2024-01-31,2024-02-01,2024-01-30,2024-01-29,,,,ShipToAddress,115.99,0.0,0.0,0.0,

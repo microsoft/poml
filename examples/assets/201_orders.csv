@@ -1,0 +1,3 @@
+OrderId,CustomerEmail,CreatedTimestamp,IsCancelled,OrderTotal,PaymentSummary
+CC10182,222larabrown@gmail.com,2024-01-19,true,0.0,Not available
+CC10183,baklavainthebalkans@gmail.com,2024-01-19,true,0.0,Not available

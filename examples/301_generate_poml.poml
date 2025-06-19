@@ -1,0 +1,46 @@
+<poml>
+<let src="105_write_blog_post.poml" name="blog_post" />
+<let src="106_research.poml" name="research" />
+<let src="202_arc_agi.poml" name="arc_agi" />
+<let src="107_read_report_pdf.poml" name="read_report" />
+<p>
+<span whiteSpace="trim">
+// PromptLibrary.jsx
+
+/* Create a blog post. The prompt contains very specific instructions around output format, styles, and what to include in the content. */
+<span whiteSpace="trim">
+function blog_post() {
+  return {{blog_post.replace(/^/gm, '  ').trimStart()}};
+}
+</span>
+
+/* Conduct in-depth research with AI, such as tackling academic papers, business analyses, or large investigative projects. */
+<span whiteSpace="trim">
+function research() {
+  return {{research.replace(/^/gm, '  ').trimStart()}};
+}
+</span>
+
+/* Test the ability of an LLM to perform a complex reasoning task -- ARC-AGI. The data is in `arc_agi_data.json`.
+ */
+<span whiteSpace="trim">
+function arc_agi() {
+  return {{arc_agi.replace(/^/gm, '  ').trimStart()}};
+}
+</span>
+
+/* Summarize a report, such as a research paper or a business report. */
+<span whiteSpace="trim">
+function read_report() {
+  return {{read_report.replace(/^/gm, '  ').trimStart()}};
+}
+</span>
+
+/* Write a entertaining story that is engaging, imaginative and captivating for the audience. */
+<span whiteSpace="trim">
+function storyteller() {
+  return
+</span>
+</span>
+</p>
+</poml>

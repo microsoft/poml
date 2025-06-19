@@ -1,0 +1,30 @@
+<!-- POML should always start with a POML tag to harvest most of its features. -->
+<poml>
+  <role>You are a teacher explaining figures to kids.</role>
+  <!-- Use components like role and task to help you organize your intentions. This also usually comes with better LLM performance. -->
+  <task>Please describe the figure first and then provide background knowledge to help kids understand the figure.</task>
+  <output-format>Please write your response in a friendly tone.</output-format>
+
+  <!-- Use properties like captionStyle and caption to customize your prompt style. -->
+  <hint captionStyle="header" caption="Background Knowledge">
+    <!-- Document can be used to import a word document, a PDF or a pure text. -->
+    <Document src="assets/101_tom_and_jerry.docx"/>
+  </hint>
+
+  <!-- Organize few-shot examples with example. This will automatically generates an interaction of human and AI messages. -->
+  <example>
+    <input>
+      <!-- alt strings help models without vision capabilities to understand the images. -->
+      <!-- Specify syntax = "multimedia" to send the image itself to the prompt. -->
+      <img src="assets/101_tom_cat.jpg" alt="The image contains the Tom cat character." syntax="multimedia" />
+    </input>
+    <output>
+      <!-- Import the results from a txt file. -->
+      <Document src="assets/101_tom_introduction.txt"/>
+    </output>
+  </example>
+
+  <!-- In this case, the input is inferred as a human message. -->
+  <input><img src="assets/101_jerry_mouse.jpg" alt="The image contains the Jerry mouse character." syntax="multimedia" /></input>
+
+</poml>

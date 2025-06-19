@@ -1,0 +1,48 @@
+<poml>
+<task className="instruction">Create a blog post with these specifications:</task>
+
+<output-format className="instruction">
+<list listStyle="decimal">
+  <item>Title: [SEO-friendly title]</item>
+  <item>Introduction (100 words)
+  <list>
+    <item>Hook statement</item>
+    <item>Context setting</item>
+    <item>Main points preview</item>
+  </list>
+  </item>
+  <item>Main body (800 words)
+  <list>
+    <item>3-4 main points</item>
+    <item>Each point: [subtitle + 200 words]</item>
+    <item>Include real examples</item>
+    <item>Add actionable tips</item>
+  </list>
+  </item>
+  <item>Conclusion (100 words)
+  <list>
+    <item>Summary of key points</item>
+    <item>Call to action</item>
+  </list>
+  </item>
+</list>
+</output-format>
+
+<cp className="instruction" caption="Style" captionSerialized="style">
+<list>
+  <item>Tone: Professional but conversational</item>
+  <item>Level: Intermediate audience</item>
+  <item>Voice: Active, engaging</item>
+  <item>Format: Scannable, with subheadings</item>
+</list>
+</cp>
+
+<cp className="instruction" caption="Include" captionSerialized="include">
+<list>
+  <item>Practical examples</item>
+  <item>Statistics or research</item>
+  <item>Actionable takeaways</item>
+  <item>Relevant analogies</item>
+</list>
+</cp>
+</poml>

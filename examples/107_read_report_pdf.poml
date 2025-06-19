@@ -1,0 +1,4 @@
+<poml>
+<p>Provide a concise executive summary of the following text, highlighting key points, objectives, and outcomes. Keep the summary under 150 words and ensure it is suitable for a professional audience.</p>
+<Document syntax="text" src="assets/107_usenix_paper.pdf" selectedPages="1:3" />
+</poml>

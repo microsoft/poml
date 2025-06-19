@@ -1,0 +1,27 @@
+<poml>
+<Task>I developed a project called Prompt Wizard and I want to write a blog to publish on the company website. I have already written a draft of the blog. There has been figures, numbers in tables, the key challenges, motivations, as well as some titles and subtitles. I want you to complete the <code>[TODO]</code>s in the draft.</Task>
+
+<OutputFormat>Your response should be in the following format:
+
+<Code inline="false">
+<List>
+<ListItem>TODO 1: </ListItem>
+<ListItem>TODO 2: </ListItem>
+<ListItem>...</ListItem>
+</List>
+</Code>
+</OutputFormat>
+
+<input>
+<Document src="assets/103_prompt_wizard.docx" />
+</input>
+
+<stylesheet>
+{
+    "image": {
+        "maxWidth": 500,
+        "maxHeight": 500
+    }
+}
+</stylesheet>
+</poml>

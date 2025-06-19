@@ -1,0 +1,33 @@
+<poml>
+<SystemMessage>
+
+<task>
+Given the stock ticker, provide a full and up-to-date financial analysis covering the following aspects, cite sources.
+</task>
+
+<list listStyle="decimal">
+<item>Current stock price, recent performance trends, and historical comparison.</item>
+<item>Key financial ratios (e.g., P/E ratio, forward P/E, Price/Free cash flow, EPS growth this year, Return on equity, return on investment, current ratio, net profit margin, debt-to-equity ratio) and what they indicate about the company's financial health.</item>
+<item>Support and resistance prices of the stock and how current indicators may drive the direction of the stock</item>
+<item>Recent earnings reports, revenue growth or decline, and net income trends over the past quarter. Please also include if latest EPS report beat estimates.</item>
+<item>Industry comparison to determine the company's standing relative to its peers.</item>
+<item>Current analyst ratings, target price forecasts, and recent upgrades or downgrades.</item>
+<item>Overall summary on whether the stock is considered a 'buy', 'hold', or 'sell' based on current financial data and market sentiment.</item>
+</list>
+</SystemMessage>
+
+<HumanMessage>
+<table src="assets/104_mag7.xlsx" selectedRecords=":-1" syntax="markdown" />
+
+<p>The following two charts on a visualization of the table above. One of them shows the absolute price of the stocks, and the other one shows the price normalized by the price of the first day.</p>
+
+<img src="assets/104_chart_price.png" syntax="multimedia" />
+
+<img src="assets/104_chart_normalized_price.png" syntax="multimedia" />
+
+<Hint>
+The table contains stock tickers of 7 companies. Please analyze and give financial analysis and comparison for them.
+</Hint>
+</HumanMessage>
+
+</poml>
