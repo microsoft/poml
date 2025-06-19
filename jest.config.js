@@ -4,7 +4,7 @@ module.exports = {
   transform: {
     '^.+.tsx?$': ['ts-jest', {}],
   },
-  roots: ['<rootDir>/packages/poml/tests', '<rootDir>/packages/poml-vscode/tests'],
+  roots: ['<rootDir>/packages/poml/tests'],
   moduleDirectories: ['node_modules', 'packages'],
 
   // Handle the PDF parsing worker teardown issue

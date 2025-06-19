@@ -41,3 +41,7 @@ jobs:
     - run: npm run test -- packages/poml/tests
       if: runner.os != 'Linux'
     - run: python -m pytest python/tests
+    - run: xvfb-run -a npm run compile && xvfb-run -a npm run test-vscode
+      if: runner.os == 'Linux'
+    - run: npm run compile && npm run test-vscode
+      if: runner.os != 'Linux'
