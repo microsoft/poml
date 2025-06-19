@@ -36,9 +36,9 @@ jobs:
     - run: npm run lint
     - run: npm run package
     - run: python -m pip install -e .[dev]
-    - run: xvfb-run -a npm run test -- packages/poml/tests
+    - run: xvfb-run -a npm test
       if: runner.os == 'Linux'
-    - run: npm run test -- packages/poml/tests
+    - run: npm test
       if: runner.os != 'Linux'
     - run: python -m pytest python/tests
     - run: xvfb-run -a npm run compile && xvfb-run -a npm run test-vscode
