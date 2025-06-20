@@ -171,7 +171,6 @@ interface PomlErrorOptions extends ErrorOptions {
 
 class PomlError extends Error {
   public severity: 'error' | 'warning' = 'error';
-  public sourcePath?: string;
 
   constructor(message: string, options?: PomlErrorOptions) {
     super(message, options);
@@ -179,7 +178,6 @@ class PomlError extends Error {
     if (options?.severity) {
       this.severity = options.severity;
     }
-    this.sourcePath = options?.sourcePath;
   }
 }
 
@@ -191,30 +189,28 @@ export class SystemError extends PomlError {
 }
 
 export class ReadError extends PomlError {
-  public sourcePath?: string;
   constructor(
     message: string,
     public startIndex?: number,
     public endIndex?: number,
+    public sourcePath?: string,
     options?: PomlErrorOptions
   ) {
     super(message, options);
     this.name = 'ReadError';
-    this.sourcePath = options?.sourcePath;
   }
 
   public static fromProps(message: string, props: PropsBase, options?: PomlErrorOptions) {
-    const mergedOptions = { ...options, sourcePath: props.sourcePath };
-    return new ReadError(message, props.originalStartIndex, props.originalEndIndex, mergedOptions);
+    return new ReadError(message, props.originalStartIndex, props.originalEndIndex, props.sourcePath, options);
   }
 }
 
 export class WriteError extends PomlError {
-  public sourcePath?: string;
   constructor(
     message: string,
     public startIndex?: number,
     public endIndex?: number,
+    public sourcePath?: string,
     public irStartIndex?: number,
     public irEndIndex?: number,
     public relatedIr?: string,

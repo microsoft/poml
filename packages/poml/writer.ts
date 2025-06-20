@@ -137,6 +137,7 @@ class Writer<WriterOptions> {
         message,
         parseAttrAsInt('original-start-index'),
         parseAttrAsInt('original-end-index'),
+        element[0].sourcePath,
         element[0].startIndex,
         element[0].endIndex,
         this.ir
