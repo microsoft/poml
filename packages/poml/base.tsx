@@ -218,7 +218,6 @@ export class WriteError extends PomlError {
   ) {
     super(message, options);
     this.name = 'WriteError';
-    this.sourcePath = options?.sourcePath;
   }
 }
 

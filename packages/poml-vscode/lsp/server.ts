@@ -356,6 +356,8 @@ class PomlLspServer {
           } catch {
             targetText = '';
           }
+          // FIXME: I don't think we should create a new TextDocument here.
+          // Confirm this setting.
           doc = TextDocument.create(src, 'poml', 0, targetText);
         }
       }
