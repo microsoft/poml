@@ -17,6 +17,7 @@ suite('Include diagnostics', () => {
 
     const badUri = vscode.Uri.file(bad);
     const diags = vscode.languages.getDiagnostics(badUri);
-    assert.ok(diags.length > 0, 'Expected diagnostics for included file');
+    assert.strictEqual(diags.length, 1, 'Expected one diagnostic for included file');
+    assert.ok(/Expecting token/.test(diags[0].message), 'Unexpected diagnostic message');
   });
 });

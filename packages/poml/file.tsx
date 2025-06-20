@@ -675,7 +675,102 @@ export class PomlFile {
       return <></>;
     }
 
-    if (tagName.toLowerCase() === 'include') {
+    const isInclude = tagName.toLowerCase() === 'include';
+
+    if (!isInclude) {
+      const component = findComponentByAlias(tagName);
+      if (typeof component === 'string') {
+        // Add a read error
+        this.reportError(component, this.xmlOpenNameRange(element));
+        return <></>;
+      }
+
+      // For loop
+      const forLoops = this.handleForLoop(element, globalContext);
+      const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
+      const resultElements: React.ReactElement[] = [];
+
+      for (let i = 0; i < forLoopedContext.length; i++) {
+        const currentLocal = { ...localContext, ...forLoopedContext[i] };
+        const context = { ...globalContext, ...currentLocal };
+
+        // If condition
+        if (!this.handleIfCondition(element, context)) {
+          continue;
+        }
+
+        const attrib: any = element.attributes.reduce(
+          (acc, attribute) => {
+            const [key, value] = this.handleAttribute(attribute, context) || [null, null];
+            if (key && value !== null) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as { [key: string]: any }
+        );
+
+        // Retain the position of current element for future diagnostics
+        const range = this.xmlElementRange(element);
+        attrib.originalStartIndex = range.start;
+        attrib.originalEndIndex = range.end;
+        attrib.sourcePath = this.sourcePath;
+
+        // Add key attribute for react
+        if (!attrib.key && forLoopedContext.length > 1) {
+          attrib.key = `key-${i}`;
+        }
+
+        const contents = xmlElementContents(element).filter(el => {
+          // Filter out stylesheet and context element in the root poml element
+          if (
+            tagName === 'poml' &&
+            el.type === 'XMLElement' &&
+            ['context', 'stylesheet'].includes((el as XMLElement).name?.toLowerCase() ?? '')
+          ) {
+            return false;
+          } else {
+            return true;
+          }
+        });
+
+        const avoidObject = (el: any) => {
+          if (typeof el === 'object' && el !== null && !React.isValidElement(el)) {
+            return JSON.stringify(el);
+          }
+          return el;
+        };
+
+        const processedContents = contents.reduce((acc, el, i) => {
+          if (el.type === 'XMLTextContent') {
+            // const isFirst = i === 0,
+            //   isLast = i === contents.length - 1;
+            // const text = this.config.trim ? trimText(el.text || '', isFirst, isLast) : el.text || '';
+            acc.push(
+              ...this.handleText(
+                el.text ?? '',
+                { ...globalContext, ...currentLocal },
+                this.xmlElementRange(el)
+              ).map(avoidObject)
+            );
+          } else if (el.type === 'XMLElement') {
+            acc.push(this.parseXmlElement(el, globalContext, currentLocal));
+          }
+          return acc;
+        }, [] as any[]);
+
+        resultElements.push(
+          React.createElement(component.render.bind(component), attrib, ...processedContents)
+        );
+      }
+
+      if (resultElements.length === 1) {
+        return resultElements[0];
+      } else {
+        // Cases where there are multiple elements or zero elements.
+        return <>{resultElements}</>;
+      }
+    } else {
       const forLoops = this.handleForLoop(element, globalContext);
       const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
       const resultElements: React.ReactElement[] = [];
@@ -699,98 +794,6 @@ export class PomlFile {
       return resultElements.length === 1 ? resultElements[0] : <>{resultElements}</>;
     }
 
-    const component = findComponentByAlias(tagName);
-    if (typeof component === 'string') {
-      // Add a read error
-      this.reportError(component, this.xmlOpenNameRange(element));
-      return <></>;
-    }
-
-    // For loop
-    const forLoops = this.handleForLoop(element, globalContext);
-    const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
-    const resultElements: React.ReactElement[] = [];
-
-    for (let i = 0; i < forLoopedContext.length; i++) {
-      const currentLocal = { ...localContext, ...forLoopedContext[i] };
-      const context = { ...globalContext, ...currentLocal };
-
-      // If condition
-      if (!this.handleIfCondition(element, context)) {
-        continue;
-      }
-
-      const attrib: any = element.attributes.reduce(
-        (acc, attribute) => {
-          const [key, value] = this.handleAttribute(attribute, context) || [null, null];
-          if (key && value !== null) {
-            acc[key] = value;
-          }
-          return acc;
-        },
-        {} as { [key: string]: any }
-      );
-
-      // Retain the position of current element for future diagnostics
-      const range = this.xmlElementRange(element);
-      attrib.originalStartIndex = range.start;
-      attrib.originalEndIndex = range.end;
-      attrib.sourcePath = this.sourcePath;
-
-      // Add key attribute for react
-      if (!attrib.key && forLoopedContext.length > 1) {
-        attrib.key = `key-${i}`;
-      }
-
-      const contents = xmlElementContents(element).filter(el => {
-        // Filter out stylesheet and context element in the root poml element
-        if (
-          tagName === 'poml' &&
-          el.type === 'XMLElement' &&
-          ['context', 'stylesheet'].includes((el as XMLElement).name?.toLowerCase() ?? '')
-        ) {
-          return false;
-        } else {
-          return true;
-        }
-      });
-
-      const avoidObject = (el: any) => {
-        if (typeof el === 'object' && el !== null && !React.isValidElement(el)) {
-          return JSON.stringify(el);
-        }
-        return el;
-      };
-
-      const processedContents = contents.reduce((acc, el, i) => {
-        if (el.type === 'XMLTextContent') {
-          // const isFirst = i === 0,
-          //   isLast = i === contents.length - 1;
-          // const text = this.config.trim ? trimText(el.text || '', isFirst, isLast) : el.text || '';
-          acc.push(
-            ...this.handleText(
-              el.text ?? '',
-              { ...globalContext, ...currentLocal },
-              this.xmlElementRange(el)
-            ).map(avoidObject)
-          );
-        } else if (el.type === 'XMLElement') {
-          acc.push(this.parseXmlElement(el, globalContext, currentLocal));
-        }
-        return acc;
-      }, [] as any[]);
-
-      resultElements.push(
-        React.createElement(component.render.bind(component), attrib, ...processedContents)
-      );
-    }
-
-    if (resultElements.length === 1) {
-      return resultElements[0];
-    } else {
-      // Cases where there are multiple elements or zero elements.
-      return <>{resultElements}</>;
-    }
   }
 
   private recoverPosition(position: number): number {

@@ -257,6 +257,14 @@ describe('include', () => {
     );
     expect(result).toStrictEqual([]);
   });
+
+  test('nested include', async () => {
+    const text = '<poml><include src="assets/includeNested.poml"/></poml>';
+    const result = write(
+      await read(text, undefined, { name: 'world' }, undefined, __filename)
+    );
+    expect(result).toBe('hello world\n\n3\n\n4');
+  });
 });
 
 describe('testPropsPreprocess', () => {

@@ -123,7 +123,8 @@ export namespace Markup {
       children,
       originalStartIndex,
       originalEndIndex,
-      writerOptions
+      writerOptions,
+      sourcePath
     } = props;
 
     if (!markupLang) {
@@ -142,7 +143,7 @@ export namespace Markup {
     ) : (
       irElement(
         'env',
-        { presentation: 'markup', markupLang, writerOptions, originalStartIndex, originalEndIndex, sourcePath: props.sourcePath },
+        { presentation: 'markup', markupLang, writerOptions, originalStartIndex, originalEndIndex, sourcePath },
         <PresentationApproach.Provider
           value={{
             presentation: 'markup',
@@ -433,6 +434,7 @@ export namespace Serialize {
       originalStartIndex,
       originalEndIndex,
       writerOptions,
+      sourcePath,
       ...others
     } = props;
 
@@ -457,7 +459,8 @@ export namespace Serialize {
             serializer,
             originalStartIndex,
             originalEndIndex,
-            writerOptions
+            writerOptions,
+            sourcePath
           },
           <PresentationApproach.Provider
             value={{
@@ -561,6 +564,7 @@ export namespace Free {
       originalStartIndex,
       originalEndIndex,
       writerOptions,
+      sourcePath,
       whiteSpace = 'pre',
       ...others
     } = props;
@@ -572,7 +576,7 @@ export namespace Free {
       ) : (
         irElement(
           'env',
-          { presentation: 'free', originalStartIndex, originalEndIndex, writerOptions, whiteSpace },
+          { presentation: 'free', originalStartIndex, originalEndIndex, writerOptions, whiteSpace, sourcePath },
           <PresentationApproach.Provider
             value={{
               presentation: 'free',
@@ -636,6 +640,7 @@ export namespace MultiMedia {
       originalStartIndex,
       originalEndIndex,
       writerOptions,
+      sourcePath,
       ...others
     } = props;
 
@@ -645,7 +650,7 @@ export namespace MultiMedia {
     ) : (
       irElement(
         'env',
-        { presentation: 'multimedia', originalStartIndex, originalEndIndex, writerOptions },
+        { presentation: 'multimedia', originalStartIndex, originalEndIndex, writerOptions, sourcePath },
         <PresentationApproach.Provider
           value={{
             presentation: 'multimedia',

@@ -191,6 +191,7 @@ export class SystemError extends PomlError {
 }
 
 export class ReadError extends PomlError {
+  public sourcePath?: string;
   constructor(
     message: string,
     public startIndex?: number,
@@ -199,6 +200,7 @@ export class ReadError extends PomlError {
   ) {
     super(message, options);
     this.name = 'ReadError';
+    this.sourcePath = options?.sourcePath;
   }
 
   public static fromProps(message: string, props: PropsBase, options?: PomlErrorOptions) {
@@ -208,6 +210,7 @@ export class ReadError extends PomlError {
 }
 
 export class WriteError extends PomlError {
+  public sourcePath?: string;
   constructor(
     message: string,
     public startIndex?: number,
@@ -219,6 +222,7 @@ export class WriteError extends PomlError {
   ) {
     super(message, options);
     this.name = 'WriteError';
+    this.sourcePath = options?.sourcePath;
   }
 }
 

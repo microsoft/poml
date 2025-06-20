@@ -1,0 +1,2 @@
+<include src="includeChild.poml"/>
+<include src="includeNumber.poml" for="i in [3,4]"/>
