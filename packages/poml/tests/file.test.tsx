@@ -235,6 +235,30 @@ describe('templateEngine', () => {
   });
 });
 
+describe('include', () => {
+  test('basic include', async () => {
+    const text = '<poml><include src="assets/includeChild.poml"/></poml>';
+    const result = write(
+      await read(text, undefined, { name: 'world' }, undefined, __filename)
+    );
+    expect(result).toBe('hello world');
+  });
+
+  test('include loop', async () => {
+    const text = '<poml><include src="assets/includeNumber.poml" for="i in [1,2]"/></poml>';
+    const result = write(await read(text, undefined, undefined, undefined, __filename));
+    expect(result).toBe('1\n\n2');
+  });
+
+  test('include if', async () => {
+    const text = '<poml><include src="assets/includeChild.poml" if="false"/></poml>';
+    const result = write(
+      await read(text, undefined, { name: 'world' }, undefined, __filename)
+    );
+    expect(result).toStrictEqual([]);
+  });
+});
+
 describe('testPropsPreprocess', () => {
   test('parameter', async () => {
     const text = '<div class-name="hello">w12345</div>';

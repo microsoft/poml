@@ -496,19 +496,81 @@ export class PomlFile {
   private handleInclude = (
     element: XMLElement,
     context: { [key: string]: any }
-  ): XMLElement | undefined => {
-    // TODO: fix error display
-    // TODO: complete this
-    // syntax: <include src="path/to/file" />
+  ): React.ReactElement | undefined => {
     if (element.name?.toLowerCase() !== 'include') {
       return undefined;
     }
+
     const src = xmlAttribute(element, 'src');
     if (!src || !src.value) {
       this.reportError('src attribute is expected.', this.xmlElementRange(element));
-      return undefined;
+      return <></>;
     }
+
     const source = src.value;
+
+    let text: string;
+    try {
+      text = readSource(
+        source,
+        this.sourcePath ? path.dirname(this.sourcePath) : undefined,
+        'string'
+      );
+    } catch (e) {
+      this.reportError(
+        e !== undefined && (e as Error).message
+          ? (e as Error).message
+          : `Error reading source: ${source}`,
+        this.xmlAttributeValueRange(src),
+        e
+      );
+      return <></>;
+    }
+
+    const includePath =
+      this.sourcePath && !path.isAbsolute(source)
+        ? path.join(path.dirname(this.sourcePath), source)
+        : source;
+
+    const included = new PomlFile(text, this.config, includePath);
+    const root = included.xmlRootElement();
+    if (!root) {
+      return <></>;
+    }
+
+    let contents: (XMLElement | XMLTextContent)[] = [];
+    if (root.name?.toLowerCase() === 'poml') {
+      contents = xmlElementContents(root);
+    } else {
+      contents = [root];
+    }
+    const resultNodes: any[] = [];
+
+    contents.forEach((el, idx) => {
+      if (el.type === 'XMLTextContent') {
+        resultNodes.push(
+          ...included
+            .handleText(el.text ?? '', context, included.xmlElementRange(el))
+            .map(v =>
+              typeof v === 'object' && v !== null && !React.isValidElement(v)
+                ? JSON.stringify(v)
+                : v
+            )
+        );
+      } else if (el.type === 'XMLElement') {
+        const child = included.parseXmlElement(el as XMLElement, context, {});
+        resultNodes.push(
+          React.isValidElement(child)
+            ? React.cloneElement(child, { key: `child-${idx}` })
+            : child
+        );
+      }
+    });
+
+    if (resultNodes.length === 1) {
+      return <>{resultNodes[0]}</>;
+    }
+    return <>{resultNodes}</>;
   };
 
   private unescapeText = (text: string): string => {
@@ -610,6 +672,30 @@ export class PomlFile {
     if (!tagName) {
       // Probably already had an invalid syntax error.
       return <></>;
+    }
+
+    if (tagName.toLowerCase() === 'include') {
+      const forLoops = this.handleForLoop(element, globalContext);
+      const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
+      const resultElements: React.ReactElement[] = [];
+      for (let i = 0; i < forLoopedContext.length; i++) {
+        const currentLocal = { ...localContext, ...forLoopedContext[i] };
+        const context = { ...globalContext, ...currentLocal };
+        if (!this.handleIfCondition(element, context)) {
+          continue;
+        }
+        const included = this.handleInclude(element, context);
+        if (included) {
+          if (forLoopedContext.length > 1) {
+            resultElements.push(
+              <React.Fragment key={`key-${i}`}>{included}</React.Fragment>
+            );
+          } else {
+            resultElements.push(included);
+          }
+        }
+      }
+      return resultElements.length === 1 ? resultElements[0] : <>{resultElements}</>;
     }
 
     const component = findComponentByAlias(tagName);

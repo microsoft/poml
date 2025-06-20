@@ -234,6 +234,25 @@ You can conditionally render elements using the `if` attribute:
 
 If `isVisible` is `true`, the first paragraph will be rendered. The second paragraph will not be rendered because isHidden is false. The value of `if` can be a simple variable name (which is treated as a boolean) or a POML expression.
 
+### Include Files
+
+You can split prompts into multiple files and include them using the `<include>` tag.
+
+```xml
+<poml>
+  <include src="snippet.poml" />
+</poml>
+```
+
+The file specified in `src` is read and its contents are injected as if they were written in place. Variables from the current context are available inside the included file. The `for` and `if` attributes work as expected:
+
+```xml
+<poml>
+  <include src="row.poml" for="i in [1,2,3]" />
+  <include src="footer.poml" if="showFooter" />
+</poml>
+```
+
 ## Stylesheet
 
 POML allows you to define styles for your elements using the `<stylesheet>` tag.  This enables you to apply CSS-like styles (or, more generally, component attributes) to your markup.
