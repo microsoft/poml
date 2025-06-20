@@ -37,8 +37,7 @@ import {
 } from 'poml/base';
 import { PomlFile, PomlToken } from 'poml/file';
 import { readdirSync, readFileSync } from 'fs';
-import * as vscode from 'vscode';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { PreviewParams, PreviewMethodName, PreviewResponse } from '../panel/types';
 import { formatComponentDocumentation, formatParameterDocumentation } from './documentFormatter';
 import {
@@ -341,7 +340,9 @@ class PomlLspServer {
     };
 
     for (const e of errors) {
-      const src = (e as any).sourcePath ? vscode.Uri.file((e as any).sourcePath).toString() : textDocument.uri.toString();
+      const src = (e as any).sourcePath
+        ? pathToFileURL((e as any).sourcePath).toString()
+        : textDocument.uri.toString();
       let targetText = text;
       let doc = textDocument;
       if (src !== textDocument.uri.toString()) {
