@@ -37,6 +37,7 @@ import {
 } from 'poml/base';
 import { PomlFile, PomlToken } from 'poml/file';
 import { readdirSync, readFileSync } from 'fs';
+import * as vscode from 'vscode';
 import { fileURLToPath } from 'url';
 import { PreviewParams, PreviewMethodName, PreviewResponse } from '../panel/types';
 import { formatComponentDocumentation, formatParameterDocumentation } from './documentFormatter';
@@ -312,6 +313,7 @@ class PomlLspServer {
   private async validateTextDocument(textDocument: TextDocument): Promise<Diagnostic[]> {
     const text = textDocument.getText();
     const diagnostics: Diagnostic[] = [];
+    const otherDiagnostics: Record<string, { text: string; diags: Diagnostic[] }> = {};
 
     const response = await this.onPreview({
       uri: textDocument.uri,
@@ -324,48 +326,76 @@ class PomlLspServer {
 
     const normalizeStartEnd = (
       start: number | undefined,
-      end: number | undefined
+      end: number | undefined,
+      length: number
     ): [number, number] => {
       start = start ?? 0;
       if (isNaN(start)) {
         start = 0;
       }
-      end = Math.max(start + 1, end !== undefined ? end + 1 : text.length);
+      end = Math.max(start + 1, end !== undefined ? end + 1 : length);
       if (isNaN(end)) {
-        end = text.length;
+        end = length;
       }
       return [start, end];
     };
 
     for (const e of errors) {
+      const src = (e as any).sourcePath ? vscode.Uri.file((e as any).sourcePath).toString() : textDocument.uri.toString();
+      let targetText = text;
+      let doc = textDocument;
+      if (src !== textDocument.uri.toString()) {
+        const cached = this.documents.get(src as any);
+        if (cached) {
+          targetText = cached.getText();
+          doc = cached;
+        } else {
+          try {
+            targetText = readFileSync((e as any).sourcePath, 'utf-8');
+          } catch {
+            targetText = '';
+          }
+          doc = TextDocument.create(src, 'poml', 0, targetText);
+        }
+      }
       if (typeof e === 'string') {
-        diagnostics.push({
+        const diag = {
           severity: DiagnosticSeverity.Error,
           range: {
-            start: textDocument.positionAt(0),
-            end: textDocument.positionAt(text.length)
+            start: doc.positionAt(0),
+            end: doc.positionAt(targetText.length)
           },
           message: e,
           source: 'POML Unknown Error (please report)'
-        });
+        } as Diagnostic;
+        if (src === textDocument.uri.toString()) {
+          diagnostics.push(diag);
+        } else {
+          (otherDiagnostics[src] ??= { text: targetText, diags: [] }).diags.push(diag);
+        }
       } else if (e instanceof ReadError) {
-        const [start, end] = normalizeStartEnd(e.startIndex, e.endIndex);
-        diagnostics.push({
+        const [start, end] = normalizeStartEnd(e.startIndex, e.endIndex, targetText.length);
+        const diag: Diagnostic = {
           severity: DiagnosticSeverity.Warning,
           range: {
-            start: textDocument.positionAt(start),
-            end: textDocument.positionAt(end)
+            start: doc.positionAt(start),
+            end: doc.positionAt(end)
           },
           message: e.message,
           source: 'POML Reader'
-        });
+        };
+        if (src === textDocument.uri.toString()) {
+          diagnostics.push(diag);
+        } else {
+          (otherDiagnostics[src] ??= { text: targetText, diags: [] }).diags.push(diag);
+        }
       } else if (e instanceof WriteError) {
-        const [start, end] = normalizeStartEnd(e.startIndex, e.endIndex);
+        const [start, end] = normalizeStartEnd(e.startIndex, e.endIndex, targetText.length);
         const diagnostic: Diagnostic = {
           severity: DiagnosticSeverity.Warning,
           range: {
-            start: textDocument.positionAt(start),
-            end: textDocument.positionAt(end)
+            start: doc.positionAt(start),
+            end: doc.positionAt(end)
           },
           message: e.message,
           source: 'POML Writer'
@@ -385,28 +415,47 @@ class PomlLspServer {
             }
           ];
         }
-        diagnostics.push(diagnostic);
+        if (src === textDocument.uri.toString()) {
+          diagnostics.push(diagnostic);
+        } else {
+          (otherDiagnostics[src] ??= { text: targetText, diags: [] }).diags.push(diagnostic);
+        }
       } else if (e instanceof SystemError) {
-        diagnostics.push({
+        const diag = {
           severity: DiagnosticSeverity.Error,
           range: {
-            start: textDocument.positionAt(0),
-            end: textDocument.positionAt(text.length)
+            start: doc.positionAt(0),
+            end: doc.positionAt(targetText.length)
           },
           message: e.message,
           source: 'POML System (please report)'
-        });
+        } as Diagnostic;
+        if (src === textDocument.uri.toString()) {
+          diagnostics.push(diag);
+        } else {
+          (otherDiagnostics[src] ??= { text: targetText, diags: [] }).diags.push(diag);
+        }
       } else {
-        diagnostics.push({
+        const diag = {
           severity: DiagnosticSeverity.Error,
           range: {
-            start: textDocument.positionAt(0),
-            end: textDocument.positionAt(text.length)
+            start: doc.positionAt(0),
+            end: doc.positionAt(targetText.length)
           },
           message: e.message,
           source: 'POML Unknown Error (please report)'
-        });
+        } as Diagnostic;
+        if (src === textDocument.uri.toString()) {
+          diagnostics.push(diag);
+        } else {
+          (otherDiagnostics[src] ??= { text: targetText, diags: [] }).diags.push(diag);
+        }
       }
+    }
+
+    for (const [uri, { text: targetText, diags }] of Object.entries(otherDiagnostics)) {
+      this.diagnosticCache.set(uri, { key: uri, fileContent: targetText, diagnostics: diags });
+      this.connection.sendDiagnostics({ uri, diagnostics: diags });
     }
 
     return diagnostics;

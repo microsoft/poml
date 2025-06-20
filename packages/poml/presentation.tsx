@@ -142,7 +142,7 @@ export namespace Markup {
     ) : (
       irElement(
         'env',
-        { presentation: 'markup', markupLang, writerOptions, originalStartIndex, originalEndIndex },
+        { presentation: 'markup', markupLang, writerOptions, originalStartIndex, originalEndIndex, sourcePath: props.sourcePath },
         <PresentationApproach.Provider
           value={{
             presentation: 'markup',

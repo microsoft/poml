@@ -296,7 +296,8 @@ export class PomlFile {
       msg,
       {
         originalStartIndex: range?.start,
-        originalEndIndex: range?.end
+        originalEndIndex: range?.end,
+        sourcePath: this.sourcePath
       },
       { cause: cause }
     );
@@ -734,6 +735,7 @@ export class PomlFile {
       const range = this.xmlElementRange(element);
       attrib.originalStartIndex = range.start;
       attrib.originalEndIndex = range.end;
+      attrib.sourcePath = this.sourcePath;
 
       // Add key attribute for react
       if (!attrib.key && forLoopedContext.length > 1) {

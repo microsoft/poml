@@ -47,6 +47,9 @@ export interface PropsBase {
   originalStartIndex?: number;
   originalEndIndex?: number;
 
+  // Source path for diagnostics
+  sourcePath?: string;
+
   // Experimental
   writerOptions?: object;
   whiteSpace?: 'pre' | 'filter' | 'trim';
@@ -163,10 +166,12 @@ const trimText = (text: string, isFirst: boolean, isLast: boolean): string => {
 
 interface PomlErrorOptions extends ErrorOptions {
   severity?: 'error' | 'warning';
+  sourcePath?: string;
 }
 
 class PomlError extends Error {
   public severity: 'error' | 'warning' = 'error';
+  public sourcePath?: string;
 
   constructor(message: string, options?: PomlErrorOptions) {
     super(message, options);
@@ -174,6 +179,7 @@ class PomlError extends Error {
     if (options?.severity) {
       this.severity = options.severity;
     }
+    this.sourcePath = options?.sourcePath;
   }
 }
 
@@ -196,7 +202,8 @@ export class ReadError extends PomlError {
   }
 
   public static fromProps(message: string, props: PropsBase, options?: PomlErrorOptions) {
-    return new ReadError(message, props.originalStartIndex, props.originalEndIndex, options);
+    const mergedOptions = { ...options, sourcePath: props.sourcePath };
+    return new ReadError(message, props.originalStartIndex, props.originalEndIndex, mergedOptions);
   }
 }
 
