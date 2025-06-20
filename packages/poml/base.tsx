@@ -166,7 +166,6 @@ const trimText = (text: string, isFirst: boolean, isLast: boolean): string => {
 
 interface PomlErrorOptions extends ErrorOptions {
   severity?: 'error' | 'warning';
-  sourcePath?: string;
 }
 
 class PomlError extends Error {
