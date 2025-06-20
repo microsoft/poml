@@ -705,6 +705,7 @@ export class PomlFile {
         // Logic for all other components
         const component = findComponentByAlias(tagName);
         if (typeof component === 'string') {
+          // Add a read error
           this.reportError(component, this.xmlOpenNameRange(element));
           // Return empty fragment to prevent rendering this element
           // You might want to 'continue' the loop as well.
@@ -722,14 +723,13 @@ export class PomlFile {
           {} as { [key: string]: any }
         );
 
-        // Retain the position of the current element for future diagnostics
+        // Retain the position of current element for future diagnostics
         const range = this.xmlElementRange(element);
         attrib.originalStartIndex = range.start;
         attrib.originalEndIndex = range.end;
-        attrib.sourcePath = this.sourcePath;
 
-        // Add key attribute for react if in a loop
-        if (forLoopedContext.length > 1) {
+        // Add key attribute for react
+        if (!attrib.key && forLoopedContext.length > 1) {
           attrib.key = `key-${i}`;
         }
 
@@ -741,8 +741,9 @@ export class PomlFile {
             ['context', 'stylesheet'].includes((el as XMLElement).name?.toLowerCase() ?? '')
           ) {
             return false;
+          } else {
+            return true;
           }
-          return true;
         });
 
         const avoidObject = (el: any) => {
@@ -752,8 +753,11 @@ export class PomlFile {
           return el;
         };
 
-        const processedContents = contents.reduce((acc, el) => {
+        const processedContents = contents.reduce((acc, el, i) => {
           if (el.type === 'XMLTextContent') {
+            // const isFirst = i === 0,
+            //   isLast = i === contents.length - 1;
+            // const text = this.config.trim ? trimText(el.text || '', isFirst, isLast) : el.text || '';
             acc.push(
               ...this.handleText(
                 el.text ?? '',
@@ -773,8 +777,8 @@ export class PomlFile {
           ...processedContents
         );
       }
-
       if (elementToAdd) {
+        // If we have an element to add, push it to the result elements.
         resultElements.push(elementToAdd);
       }
     }
