@@ -561,9 +561,7 @@ export class PomlFile {
       } else if (el.type === 'XMLElement') {
         const child = included.parseXmlElement(el as XMLElement, context, {});
         resultNodes.push(
-          React.isValidElement(child)
-            ? React.cloneElement(child, { key: `child-${idx}` })
-            : child
+          React.isValidElement(child) ? React.cloneElement(child, { key: `child-${idx}` }) : child
         );
       }
     });
@@ -583,7 +581,7 @@ export class PomlFile {
       .replace(/#apos;/g, "'")
       .replace(/#hash;/g, '#')
       .replace(/#lbrace;/g, '{')
-      .replace(/#rbrace;/g, '}')
+      .replace(/#rbrace;/g, '}');
   };
 
   private handleText = (text: string, context: { [key: string]: any }, position?: Range): any[] => {
@@ -674,29 +672,43 @@ export class PomlFile {
       // Probably already had an invalid syntax error.
       return <></>;
     }
-
     const isInclude = tagName.toLowerCase() === 'include';
 
-    if (!isInclude) {
-      const component = findComponentByAlias(tagName);
-      if (typeof component === 'string') {
-        // Add a read error
-        this.reportError(component, this.xmlOpenNameRange(element));
-        return <></>;
+    // Common logic for handling for-loops
+    const forLoops = this.handleForLoop(element, globalContext);
+    const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
+    const resultElements: React.ReactElement[] = [];
+
+    for (let i = 0; i < forLoopedContext.length; i++) {
+      const currentLocal = { ...localContext, ...forLoopedContext[i] };
+      const context = { ...globalContext, ...currentLocal };
+
+      // Common logic for handling if-conditions
+      if (!this.handleIfCondition(element, context)) {
+        continue;
       }
 
-      // For loop
-      const forLoops = this.handleForLoop(element, globalContext);
-      const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
-      const resultElements: React.ReactElement[] = [];
+      let elementToAdd: React.ReactElement | null = null;
 
-      for (let i = 0; i < forLoopedContext.length; i++) {
-        const currentLocal = { ...localContext, ...forLoopedContext[i] };
-        const context = { ...globalContext, ...currentLocal };
-
-        // If condition
-        if (!this.handleIfCondition(element, context)) {
-          continue;
+      if (isInclude) {
+        // Logic for <include> tags
+        const included = this.handleInclude(element, context);
+        if (included) {
+          // Add a key if we are in a loop with multiple items
+          if (forLoopedContext.length > 1) {
+            elementToAdd = <React.Fragment key={`include-${i}`}>{included}</React.Fragment>;
+          } else {
+            elementToAdd = included;
+          }
+        }
+      } else {
+        // Logic for all other components
+        const component = findComponentByAlias(tagName);
+        if (typeof component === 'string') {
+          this.reportError(component, this.xmlOpenNameRange(element));
+          // Return empty fragment to prevent rendering this element
+          // You might want to 'continue' the loop as well.
+          return <></>;
         }
 
         const attrib: any = element.attributes.reduce(
@@ -710,14 +722,14 @@ export class PomlFile {
           {} as { [key: string]: any }
         );
 
-        // Retain the position of current element for future diagnostics
+        // Retain the position of the current element for future diagnostics
         const range = this.xmlElementRange(element);
         attrib.originalStartIndex = range.start;
         attrib.originalEndIndex = range.end;
         attrib.sourcePath = this.sourcePath;
 
-        // Add key attribute for react
-        if (!attrib.key && forLoopedContext.length > 1) {
+        // Add key attribute for react if in a loop
+        if (forLoopedContext.length > 1) {
           attrib.key = `key-${i}`;
         }
 
@@ -729,9 +741,8 @@ export class PomlFile {
             ['context', 'stylesheet'].includes((el as XMLElement).name?.toLowerCase() ?? '')
           ) {
             return false;
-          } else {
-            return true;
           }
+          return true;
         });
 
         const avoidObject = (el: any) => {
@@ -741,11 +752,8 @@ export class PomlFile {
           return el;
         };
 
-        const processedContents = contents.reduce((acc, el, i) => {
+        const processedContents = contents.reduce((acc, el) => {
           if (el.type === 'XMLTextContent') {
-            // const isFirst = i === 0,
-            //   isLast = i === contents.length - 1;
-            // const text = this.config.trim ? trimText(el.text || '', isFirst, isLast) : el.text || '';
             acc.push(
               ...this.handleText(
                 el.text ?? '',
@@ -759,41 +767,25 @@ export class PomlFile {
           return acc;
         }, [] as any[]);
 
-        resultElements.push(
-          React.createElement(component.render.bind(component), attrib, ...processedContents)
+        elementToAdd = React.createElement(
+          component.render.bind(component),
+          attrib,
+          ...processedContents
         );
       }
 
-      if (resultElements.length === 1) {
-        return resultElements[0];
-      } else {
-        // Cases where there are multiple elements or zero elements.
-        return <>{resultElements}</>;
+      if (elementToAdd) {
+        resultElements.push(elementToAdd);
       }
-    } else {
-      const forLoops = this.handleForLoop(element, globalContext);
-      const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
-      const resultElements: React.ReactElement[] = [];
-      for (let i = 0; i < forLoopedContext.length; i++) {
-        const currentLocal = { ...localContext, ...forLoopedContext[i] };
-        const context = { ...globalContext, ...currentLocal };
-        if (!this.handleIfCondition(element, context)) {
-          continue;
-        }
-        const included = this.handleInclude(element, context);
-        if (included) {
-          if (forLoopedContext.length > 1) {
-            resultElements.push(
-              <React.Fragment key={`key-${i}`}>{included}</React.Fragment>
-            );
-          } else {
-            resultElements.push(included);
-          }
-        }
-      }
-      return resultElements.length === 1 ? resultElements[0] : <>{resultElements}</>;
     }
 
+    // Common logic for returning the final result
+    if (resultElements.length === 1) {
+      return resultElements[0];
+    } else {
+      // Cases where there are multiple elements or zero elements.
+      return <>{resultElements}</>;
+    }
   }
 
   private recoverPosition(position: number): number {
