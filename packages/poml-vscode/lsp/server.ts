@@ -40,6 +40,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { PreviewParams, PreviewMethodName, PreviewResponse } from '../panel/types';
 import { formatComponentDocumentation, formatParameterDocumentation } from './documentFormatter';
+import { computeMessageOffsets, computePlainSpans } from '../util/sourceMap';
 import {
   DelayedTelemetryReporter,
   TelemetryEvent,
@@ -58,7 +59,7 @@ interface DiagnosticCache {
   diagnostics: Diagnostic[];
 }
 
-class PomlLspServer {
+export class PomlLspServer {
   // Create a connection for the server, using Node's IPC as a transport.
   // Also include all preview / proposed LSP features.
   private readonly connection;
@@ -227,6 +228,8 @@ class PomlLspServer {
       rawText: documentContent,
       ir,
       content: result,
+      messageOffsets: computeMessageOffsets(ir),
+      plainSpans: computePlainSpans(ir),
       error: params.returnAllErrors
         ? ErrorCollection.list()
         : ErrorCollection.empty()
@@ -610,5 +613,7 @@ class PomlLspServer {
   }
 }
 
-const lspServer = new PomlLspServer();
-lspServer.listen();
+if (require.main === module) {
+  const lspServer = new PomlLspServer();
+  lspServer.listen();
+}

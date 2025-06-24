@@ -2,13 +2,17 @@ import $ from 'jquery';
 import { createPosterForVsCode } from './util';
 import { getState } from './state';
 import { setupToolbar } from './toolbar';
+import {
+  getEditorLineNumberForPageOffset,
+  offsetToLine,
+  ActiveLineMarker
+} from './scrollSync';
 
 import throttle from 'lodash.throttle';
 
 declare let acquireVsCodeApi: any;
 
-// var scrollDisabled = true;
-// const marker = new ActiveLineMarker();
+const marker = new ActiveLineMarker();
 const state = getState();
 const vscode = acquireVsCodeApi();
 vscode.setState(state);
@@ -51,8 +55,7 @@ window.addEventListener('message', event => {
 
   switch (event.data.type) {
     case 'onDidChangeTextEditorSelection':
-      // FIXME
-      // marker.onDidChangeTextEditorSelection(event.data.line);
+      marker.onDidChangeTextEditorSelection(event.data.line);
       break;
 
     case 'updateView':
@@ -66,57 +69,58 @@ document.addEventListener('dblclick', event => {
     return;
   }
 
-  // FIXME: dblclick for switch to editor
+  for (let node = event.target as HTMLElement | null; node; node = node.parentElement) {
+    if (node.tagName === 'A') {
+      return;
+    }
 
-  // Ignore clicks on links
-  // for (let node = event.target as HTMLElement; node; node = node.parentNode as HTMLElement) {
-  //     if (node.tagName === 'A') {
-  //         return;
-  //     }
-  // }
-
-  // const offset = event.pageY;
-  // const line = getEditorLineNumberForPageOffset(offset);
-  // if (typeof line === 'number' && !isNaN(line)) {
-  //     messaging.postMessage('didClick', { line: Math.floor(line) });
-  // }
-});
-
-document.addEventListener('click', event => {
-  if (!event) {
-    return;
+    const dataOffset = node.getAttribute('data-offset');
+    if (dataOffset) {
+      const offset = parseInt(dataOffset, 10);
+      if (!isNaN(offset)) {
+        const line = offsetToLine(offset, (state as any).rawText);
+        messaging.postMessage('didClick', { line });
+        return;
+      }
+    }
   }
 
-  // FIXME: click links for opening documents in editor
-  // let node: any = event.target;
-  // while (node) {
-  //     if (node.tagName && node.tagName === 'A' && node.href) {
-  //         if (node.getAttribute('href').startsWith('#')) {
-  //             break;
-  //         }
-  //         if (node.href.startsWith('file://') || node.href.startsWith('vscode-resource:')) {
-  //             const [path, fragment] = node.href.replace(/^(file:\/\/|vscode-resource:)/i, '').split('#');
-  //             messaging.postCommand('_html.openDocumentLink', [{ path, fragment }]);
-  //             event.preventDefault();
-  //             event.stopPropagation();
-  //             break;
-  //         }
-  //         break;
-  //     }
-  //     node = node.parentNode;
-  // }
-}, true);
+  const offset = event.pageY;
+  const line = getEditorLineNumberForPageOffset(offset);
+  if (typeof line === 'number' && !isNaN(line)) {
+    messaging.postMessage('didClick', { line: Math.floor(line) });
+  }
+});
 
-// FIXME: scroll sync
-// if (state.scrollEditorWithPreview) {
-//     window.addEventListener('scroll', throttle(() => {
-//         if (scrollDisabled) {
-//             scrollDisabled = false;
-//         } else {
-//             const line = getEditorLineNumberForPageOffset(window.scrollY);
-//             if (typeof line === 'number' && !isNaN(line)) {
-//                 messaging.postMessage('revealLine', { line });
-//             }
-//         }
-//     }, 50));
-// }
+document.addEventListener(
+  'click',
+  event => {
+    if (!event) {
+      return;
+    }
+
+    let node: HTMLElement | null = event.target as HTMLElement;
+    while (node) {
+      if (node.tagName === 'A' && (node as HTMLAnchorElement).href) {
+        const href = (node as HTMLAnchorElement).getAttribute('href') || '';
+        if (href.startsWith('#')) {
+          break;
+        }
+        if (href.startsWith('file://') || href.startsWith('vscode-resource:')) {
+          const [path, fragment] = href
+            .replace(/^(file:\/\/|vscode-resource:)/i, '')
+            .split('#');
+          messaging.postCommand('_html.openDocumentLink', [{ path, fragment }]);
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        break;
+      }
+      node = node.parentElement;
+    }
+  },
+  true
+);
+
+// Scroll sync is currently disabled pending further implementation.
