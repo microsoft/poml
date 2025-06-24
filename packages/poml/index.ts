@@ -3,12 +3,13 @@ import { readFileSync, writeFileSync } from 'fs';
 import { renderToString } from "react-dom/server";
 import path from 'path';
 import { EnvironmentDispatcher } from "./writer";
-import { ErrorCollection, Message, RichContent, StyleSheetProvider } from './base';
+import { ErrorCollection, Message, RichContent, StyleSheetProvider, SystemError } from './base';
 import { PomlFile, PomlReaderOptions } from './file';
 import './presentation';
 import './essentials';
 import "./components";
 import { reactRender } from './util/reactRender';
+import { dumpTrace, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
 
 export { RichContent, Message };
 
@@ -82,12 +83,17 @@ interface CliArgs {
   prettyPrint?: boolean;
   strict?: boolean;
   cwd?: string;
+  traceDir?: string;
 }
 
 export async function commandLine(args: CliArgs) {
   const readOptions = {
     trim: args.trim,
   };
+
+  if (args.traceDir) {
+    setTrace(true, args.traceDir);
+  }
 
   // Determine the working directory
   let workingDirectory: string;
@@ -124,14 +130,14 @@ export async function commandLine(args: CliArgs) {
     }
   } else if (args.contextFile) {
     const contextFilePath = path.resolve(workingDirectory, args.contextFile);
-    const contextFromFile = JSON.parse(readFileSync(contextFilePath, { encoding: 'utf8' }));
+    const contextFromFile = parseJsonWithBuffers(readFileSync(contextFilePath, { encoding: 'utf8' }));
     context = { ...context, ...contextFromFile };
   }
 
   let stylesheet: { [key: string]: any } = {};
   if (args.stylesheetFile) {
     const stylesheetFilePath = path.resolve(workingDirectory, args.stylesheetFile);
-    stylesheet = { ...stylesheet, ...JSON.parse(readFileSync(stylesheetFilePath, { encoding: 'utf8' })) };
+    stylesheet = { ...stylesheet, ...parseJsonWithBuffers(readFileSync(stylesheetFilePath, { encoding: 'utf8' })) };
   }
   if (args.stylesheet) {
     stylesheet = { ...stylesheet, ...JSON.parse(args.stylesheet) };
@@ -143,18 +149,29 @@ export async function commandLine(args: CliArgs) {
   const speakerMode = args.speakerMode === true || args.speakerMode === undefined;
   const prettyPrint = args.prettyPrint === true;
   let output: string = '';
+  let result: any;
   if (prettyPrint) {
     if (speakerMode) {
-      const messages = write(ir, { speaker: true });
-      const outputs = messages.map((message) => {
-        return `===== ${message.speaker} =====\n\n${renderContent(message.content)}`
+      result = write(ir, { speaker: true });
+      const outputs = (result as Message[]).map((message) => {
+        return `===== ${message.speaker} =====\n\n${renderContent(message.content)}`;
       });
       output = outputs.join('\n\n');
     } else {
-      output = renderContent(write(ir));
+      result = write(ir);
+      output = renderContent(result);
     }
   } else {
-    output = JSON.stringify(write(ir, { speaker: speakerMode }));
+    result = write(ir, { speaker: speakerMode });
+    output = JSON.stringify(result);
+  }
+
+  if (isTracing()) {
+    try {
+      dumpTrace(input, context, stylesheet, result);
+    } catch (err: any) {
+      ErrorCollection.add(new SystemError('Failed to dump trace', { cause: err }));
+    }
   }
 
   if (args.strict === true || args.strict === undefined) {
@@ -189,3 +206,5 @@ const renderContent = (content: RichContent) => {
   });
   return outputs.join('\n\n');
 }
+
+export { setTrace, clearTrace, parseJsonWithBuffers, dumpTrace };
