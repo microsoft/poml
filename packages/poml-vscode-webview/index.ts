@@ -2,6 +2,7 @@ import $ from 'jquery';
 import { createPosterForVsCode } from './util';
 import { getState } from './state';
 import { setupToolbar } from './toolbar';
+import { getEditorLineNumberForPageOffset, offsetToLine } from './scrollSync';
 
 import throttle from 'lodash.throttle';
 
@@ -66,20 +67,27 @@ document.addEventListener('dblclick', event => {
     return;
   }
 
-  // FIXME: dblclick for switch to editor
+  for (let node = event.target as HTMLElement | null; node; node = node.parentElement) {
+    if (node.tagName === 'A') {
+      return;
+    }
 
-  // Ignore clicks on links
-  // for (let node = event.target as HTMLElement; node; node = node.parentNode as HTMLElement) {
-  //     if (node.tagName === 'A') {
-  //         return;
-  //     }
-  // }
+    const dataOffset = node.getAttribute('data-offset');
+    if (dataOffset) {
+      const offset = parseInt(dataOffset, 10);
+      if (!isNaN(offset)) {
+        const line = offsetToLine(offset, (state as any).rawText);
+        messaging.postMessage('didClick', { line });
+        return;
+      }
+    }
+  }
 
-  // const offset = event.pageY;
-  // const line = getEditorLineNumberForPageOffset(offset);
-  // if (typeof line === 'number' && !isNaN(line)) {
-  //     messaging.postMessage('didClick', { line: Math.floor(line) });
-  // }
+  const offset = event.pageY;
+  const line = getEditorLineNumberForPageOffset(offset);
+  if (typeof line === 'number' && !isNaN(line)) {
+    messaging.postMessage('didClick', { line: Math.floor(line) });
+  }
 });
 
 document.addEventListener('click', event => {
