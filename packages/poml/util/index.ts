@@ -122,3 +122,5 @@ export const guessStringType = (value: string): [any, AnyValue] => {
     }
   }
 }
+
+export * from './trace';

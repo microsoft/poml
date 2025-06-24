@@ -9,6 +9,7 @@ import './presentation';
 import './essentials';
 import "./components";
 import { reactRender } from './util/reactRender';
+import { dumpTrace, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
 
 export { RichContent, Message };
 
@@ -66,6 +67,9 @@ export const poml = async (element: React.ReactElement | string): Promise<RichCo
   if (!ErrorCollection.empty()) {
     throw ErrorCollection.first();
   }
+  if (typeof element === 'string') {
+    dumpTrace(element, undefined, undefined, result);
+  }
   return result;
 }
 
@@ -82,12 +86,17 @@ interface CliArgs {
   prettyPrint?: boolean;
   strict?: boolean;
   cwd?: string;
+  traceDir?: string;
 }
 
 export async function commandLine(args: CliArgs) {
   const readOptions = {
     trim: args.trim,
   };
+
+  if (args.traceDir) {
+    setTrace(true, args.traceDir);
+  }
 
   // Determine the working directory
   let workingDirectory: string;
@@ -124,14 +133,14 @@ export async function commandLine(args: CliArgs) {
     }
   } else if (args.contextFile) {
     const contextFilePath = path.resolve(workingDirectory, args.contextFile);
-    const contextFromFile = JSON.parse(readFileSync(contextFilePath, { encoding: 'utf8' }));
+    const contextFromFile = parseJsonWithBuffers(readFileSync(contextFilePath, { encoding: 'utf8' }));
     context = { ...context, ...contextFromFile };
   }
 
   let stylesheet: { [key: string]: any } = {};
   if (args.stylesheetFile) {
     const stylesheetFilePath = path.resolve(workingDirectory, args.stylesheetFile);
-    stylesheet = { ...stylesheet, ...JSON.parse(readFileSync(stylesheetFilePath, { encoding: 'utf8' })) };
+    stylesheet = { ...stylesheet, ...parseJsonWithBuffers(readFileSync(stylesheetFilePath, { encoding: 'utf8' })) };
   }
   if (args.stylesheet) {
     stylesheet = { ...stylesheet, ...JSON.parse(args.stylesheet) };
@@ -163,6 +172,14 @@ export async function commandLine(args: CliArgs) {
     }
   }
 
+  if (isTracing()) {
+    try {
+      dumpTrace(input, context, stylesheet, JSON.parse(output));
+    } catch {
+      // ignore tracing errors
+    }
+  }
+
   if (args.output) {
     const outputPath = path.resolve(workingDirectory, args.output);
     writeFileSync(outputPath, output);
@@ -189,3 +206,5 @@ const renderContent = (content: RichContent) => {
   });
   return outputs.join('\n\n');
 }
+
+export { setTrace, clearTrace, parseJsonWithBuffers, dumpTrace };
