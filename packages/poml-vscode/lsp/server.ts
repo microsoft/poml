@@ -167,11 +167,12 @@ export class PomlLspServer {
   private async computePreviewResponse(params: PreviewParams): Promise<PreviewResponse> {
     const { speakerMode, uri } = params;
 
-    const filePath = fileURLToPath(uri);
+    let filePath: string | undefined = undefined;
     let documentContent: string = '';
     if (params.text !== undefined) {
       documentContent = params.text;
     } else {
+      filePath = fileURLToPath(uri);
       const textDocument = this.documents.get(uri);
 
       if (textDocument) {
