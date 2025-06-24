@@ -128,15 +128,12 @@ class PomlLspServer {
     this.connection.onRequest(PreviewMethodName, this.onPreview.bind(this));
 
     // Provide a way to force the diagnostics to be reset.
-    this.documents.onDidSave(async change => {
+    this.documents.onDidSave(change => {
       // Invalidate the diagnostic cache
       const uri = change.document.uri.toString();
       this.diagnosticCache.delete(uri);
-      const diagnosticReport = await this.onDiagnostic({ textDocument: change.document });
-      this.connection.sendDiagnostics({
-        uri: change.document.uri,
-        diagnostics: diagnosticReport.kind === DocumentDiagnosticReportKind.Full ? diagnosticReport.items : []
-      });
+      // Ask the client to pull fresh diagnostics
+      this.connection.languages.diagnostics.refresh();
     });
 
     // Make the text document manager listen on the connection
