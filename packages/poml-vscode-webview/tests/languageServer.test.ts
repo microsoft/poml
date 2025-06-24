@@ -1,4 +1,6 @@
 import { describe, test, expect, jest } from '@jest/globals';
+import path from 'path';
+import { pathToFileURL } from 'url';
 
 jest.mock('vscode-languageserver/node', () => ({
   createConnection: () => ({
@@ -26,8 +28,10 @@ import { PreviewParams } from 'poml-vscode/panel/types';
 describe('language server preview', () => {
   test('preview response includes source mappings', async () => {
     const server = new PomlLspServer();
+    const absPath = path.resolve('test.poml');
+    const fileUri = pathToFileURL(absPath).toString();
     const params: PreviewParams = {
-      uri: 'file:///test.poml',
+      uri: fileUri,
       text: '<p><p speaker="ai">hello</p><p speaker="human">world</p></p>',
       speakerMode: true,
       displayFormat: 'rendered'
