@@ -59,7 +59,7 @@ interface DiagnosticCache {
   diagnostics: Diagnostic[];
 }
 
-class PomlLspServer {
+export class PomlLspServer {
   // Create a connection for the server, using Node's IPC as a transport.
   // Also include all preview / proposed LSP features.
   private readonly connection;
@@ -164,7 +164,7 @@ class PomlLspServer {
     }
   }
 
-  private async computePreviewResponse(params: PreviewParams): Promise<PreviewResponse> {
+  public async computePreviewResponse(params: PreviewParams): Promise<PreviewResponse> {
     const { speakerMode, uri } = params;
 
     const filePath = fileURLToPath(uri);
@@ -613,5 +613,7 @@ class PomlLspServer {
   }
 }
 
-const lspServer = new PomlLspServer();
-lspServer.listen();
+if (require.main === module) {
+  const lspServer = new PomlLspServer();
+  lspServer.listen();
+}
