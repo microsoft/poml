@@ -123,6 +123,14 @@ export function getEditorLineNumberForPageOffset(offset: number) {
   return null;
 }
 
+export function offsetToLine(offset: number, text: string): number {
+  if (offset <= 0) {
+    return 0;
+  }
+  const before = text.slice(0, offset);
+  return before.split(/\r?\n/).length - 1;
+}
+
 /**
  * Useful for activating the selected elements.
  * Currently unused.

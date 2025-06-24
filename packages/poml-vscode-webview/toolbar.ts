@@ -2,6 +2,7 @@ import $ from 'jquery';
 import { MessagePoster } from './util';
 import { WebviewState, WebviewMessage, WebviewUserOptions } from '../poml-vscode/panel/types';
 import { getState } from './state';
+import { getEditorLineNumberForPageOffset, offsetToLine } from './scrollSync';
 
 let toolbarUpdate: (() => void) | undefined = undefined;
 
@@ -24,6 +25,26 @@ export const setupToolbar = (vscode: any, messaging: MessagePoster) => {
   $(document).on('click', '.chat-message-toolbar .codicon-copy', function () {
     const copyText = $(this).attr('data-value') ?? '';
     navigator.clipboard.writeText(copyText);
+  });
+
+  $(document).on('click', '.chat-message-toolbar .codicon-code', function () {
+    const elem = $(this).closest('.chat-message')[0];
+    const offsetAttr = elem ? elem.getAttribute('data-offset') : null;
+    if (offsetAttr) {
+      const offset = parseInt(offsetAttr, 10);
+      if (!isNaN(offset)) {
+        const line = offsetToLine(offset, (getState() as any).rawText);
+        messaging.postMessage(WebviewMessage.DidClick, { line });
+        return;
+      }
+    }
+    const top = elem ? elem.getBoundingClientRect().top + window.scrollY : 0;
+    const line = getEditorLineNumberForPageOffset(top);
+    if (typeof line === 'number' && !isNaN(line)) {
+      messaging.postMessage(WebviewMessage.DidClick, { line: Math.floor(line) });
+    } else {
+      messaging.postCommand('poml.showSource', []);
+    }
   });
 
   $('.toolbar .button.onoff').on('click', function () {

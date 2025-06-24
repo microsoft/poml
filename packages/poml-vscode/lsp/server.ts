@@ -40,6 +40,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { PreviewParams, PreviewMethodName, PreviewResponse } from '../panel/types';
 import { formatComponentDocumentation, formatParameterDocumentation } from './documentFormatter';
+import { computeMessageOffsets, computePlainSpans } from '../util/sourceMap';
 import {
   DelayedTelemetryReporter,
   TelemetryEvent,
@@ -227,6 +228,8 @@ class PomlLspServer {
       rawText: documentContent,
       ir,
       content: result,
+      messageOffsets: computeMessageOffsets(ir),
+      plainSpans: computePlainSpans(ir),
       error: params.returnAllErrors
         ? ErrorCollection.list()
         : ErrorCollection.empty()

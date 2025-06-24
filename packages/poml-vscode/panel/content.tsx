@@ -3,6 +3,7 @@ import { renderToString } from 'react-dom/server';
 import { PreviewResponse, WebviewState, WebviewUserOptions } from './types';
 import { Message, RichContent } from 'poml';
 import { Converter as MarkdownConverter } from 'showdown';
+import { PlainSpan } from '../util/sourceMap';
 
 type HeadlessPomlVscodePanelContentProps = WebviewUserOptions & PreviewResponse;
 
@@ -110,8 +111,20 @@ function Markdown(props: { content: RichContent }) {
   return <div dangerouslySetInnerHTML={{ __html: converter.makeHtml(concatenatedMarkdown) }} />;
 }
 
-function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
-  const { messages, toRender } = props;
+function PlainTextWithOffsets(props: { spans: PlainSpan[] }) {
+  return (
+    <pre>
+      <code>
+        {props.spans.map((span, idx) => (
+          <span key={idx} data-offset={span.offset}>{span.text}</span>
+        ))}
+      </code>
+    </pre>
+  );
+}
+
+function ChatMessages(props: { messages: Message[]; toRender: boolean; offsets?: number[] }) {
+  const { messages, toRender, offsets } = props;
   return messages.map((message, idx) => {
     let role: string = message.speaker;
     let icon = 'feedback';
@@ -125,8 +138,9 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
       role = 'AI';
       icon = 'robot';
     }
+    const offsetAttr = offsets ? { 'data-offset': offsets[idx] } : {};
     return (
-      <div className={`chat-message chat-message-${message.speaker}`} key={`message-${idx}`}>
+      <div className={`chat-message chat-message-${message.speaker}`} key={`message-${idx}`} {...offsetAttr}>
         <div className="chat-message-header">
           <div className="content">
             <div className="avatar">
@@ -180,12 +194,13 @@ function Content(props: WebviewUserOptions & PreviewResponse) {
   let result: React.ReactElement;
   if (content.length > 0 && content[0].hasOwnProperty('speaker')) {
     content = content as Message[];
+    const offsets = props.messageOffsets ?? [];
     if (displayFormat === 'ir') {
       result = <CodeBlock content={ir} />;
     } else if (displayFormat === 'plain') {
-      result = <ChatMessages messages={content} toRender={false} />;
+      result = <ChatMessages messages={content} toRender={false} offsets={offsets} />;
     } else if (displayFormat === 'rendered') {
-      result = <ChatMessages messages={content} toRender={true} />;
+      result = <ChatMessages messages={content} toRender={true} offsets={offsets} />;
     } else {
       result = <div>Invalid display format</div>;
     }
@@ -194,7 +209,8 @@ function Content(props: WebviewUserOptions & PreviewResponse) {
     if (displayFormat === 'ir') {
       result = <CodeBlock content={ir} />;
     } else if (displayFormat === 'plain') {
-      result = <CodeBlock content={content} />;
+      const spans = props.plainSpans ?? [];
+      result = <PlainTextWithOffsets spans={spans} />;
     } else if (displayFormat === 'rendered') {
       result = <Markdown content={content} />;
     } else {
