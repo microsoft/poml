@@ -1,0 +1,29 @@
+===== human =====
+
+# Task
+
+You are given various potential options or approaches for a project. Convert these into a well-structured research plan.
+
+# Stepwise Instructions
+
+1. Identifies Key Objectives 
+
+   - Clarify what questions each option aims to answer
+   - Detail the data/info needed for evaluation
+
+2. Describes Research Methods 
+
+   - Outline how you’ll gather and analyze data
+   - Mention tools or methodologies for each approach
+
+3. Provides Evaluation Criteria 
+
+   - Metrics, benchmarks, or qualitative factors to compare options
+   - Criteria for success or viability
+
+4. Specifies Expected Outcomes 
+
+   - Possible findings or results
+   - Next steps or actions following the research
+
+ Produce a methodical plan focusing on clear, practical steps.

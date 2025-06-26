@@ -1,0 +1,151 @@
+===== human =====
+
+Provide a concise executive summary of the following text, highlighting key points, objectives, and outcomes. Keep the summary under 150 words and ensure it is suitable for a professional audience.
+
+
+
+F1F2F3F4F5F6F7F8F9F10F11F12EscPowerSleep
+Wake
+Up
+Print
+Scrn
+SysRq
+Scroll
+Lock
+Pause
+Break
+InsertHome
+Page
+Up
+DeleteEnd
+Page
+Down
+½1
+2
+34567890+'
+Q
+W
+ERTYUIOPÅ^
+ASDFGHJKLÆØ*
+>Z
+XCVBNM;:
+_
+Num LockCaps LockScroll Lock
+Num
+Lock
+/
+*
+_
++
+Enter
+CtrlAlt
+Caps Lock
+Alt GrCtrl
+WebE-Mail+Volume-VolumeMutePreviousNextMenuTuner
+<\
+§!"#¤%&/()=?`
+|
+€
+@£${[]}
+"~
+'
+-
+.,
+789
+456
+123
+0
+HomePgUp
+EndPgDn
+InsDel
+,
+Figure 2:This figure floats to the top of the page, spanning both columns.
+3.1HTML5
+ThistemplateusesHTML5elementstoaidinrep-
+resentingthedocumentstructure.Thesection
+elementisusedtosplitthetextintosections,and
+theheaderelementholdstheheadlines.The
+figureelementisusedtoincludefiguresand
+theircorrenspondingcaptionsliveinsidethefig-
+captionelement.Theciteelementholdsallref-
+erences.
+Asmallmicroformat,basedonaconventionof
+classnames,isusedtoencodethenameandaffili-
+ation of the authors.
+3.2CSS
+ACSSstylesheetdescribeshowtoformatthe
+HTMLdocumentintoaPDFfile.CSSisadeclar-
+ativelanguagewhichattachespropertyvaluesto
+HTMLelementsanddocuments.Manyaspectsof
+CSSisusedtoachievethepresentationofUSENIX
+papers, including:
+•multi-column layout
+•footnotes
+•page and column floats
+•multi-level counters
+Somecommonlyusedfeaturesareabsentfrom
+theabovelist:pagenumbersandrunningheaders
+shouldnotbespecifedbyUSENIXauthors,these
+are added by those who compile the Proceedings.
+3.3JavaScript
+ThistemplateusesJavaScripttoprocessrefer-
+ences.Referencesareaddedatthepointwhere
+theyappear,andascriptislaterusedtomovethe
+referencestotheendofthepaper,leavingbehind
+a numeric marker.
+3.4PDF
+(This section has been added by Håkon Wium Lie)
+InordertoconvertthedocumenttoPDF,afor-
+matterisneeded.Commonbrowserssupport
+HTMLandCSS,buttheydonotsupportalltheCSS
+functionalityforpage-basedformatting.Forex-
+ample,browsersdonotsupportfootnotesorpage
+floats.Thispaperhasbeenformattedwith
+Prince,
+[a]
+apurpose-builtprogramforconverting
+HTMLandXMLdocumentsintoPDFbywayof
+CSS.Princeisacommercialproduct,butcanbe
+downloadedandusedforfreefornon-commercial
+purposes.
+InorderforPrincetoprocessthescriptinclud-
+edinthistemplate,acommandlineoptionmust
+be specified:
+$ prince --javascript example.html
+4Tables
+ThetablebelowlistsrecipientsoftheUSENIXLife-
+timeAchievementAwardinthe1900s.Noticehow
+notesinsidethetablearemovedtotheendofthe
+table.
+YearRecipient
+1999X Window System*
+1998Tim Berners-Lee
+1997Brian W. Kernighan
+[a]www.princexml.com
+
+1996The Software Tools Project
+1995The Creation ofUSENET**
+1994Networking Technologies
+1993Berkeley UNIX
+* Given to the Community at Large
+** Given toJim EllisandTom Truscott
+5Conclusions
+Eachgoodpaperconcludesthemostsignificant
+findings in the end.
+Acknowledgments
+Apoliteauthoralwaysincludesacknowledgments.
+Thankeveryone,especiallythosewhofundedthe
+work.
+Availability
+Pleaseincludeasectionattheendofyourpaper
+providingavailabilityinformation.Ifthesystem
+youdescribeisavailabletoothers,andifmorein-
+formation(reports,etc.)maybeobtained,indicate
+terms and contact information.
+References
+[1]STRUNK,W.JR.  ,ANDWHITE,E.B.TheElements
+ofStyle,4thEd,AllynandBacon,August,1999,
+ISBN 020530902X
+[2]ZOBEL,J.WritingforComputerScience,
+Springer-Verlag,December1997,ISBN
+9813083220

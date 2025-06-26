@@ -60,11 +60,10 @@ def write_file(content: str):
     return temp_file
 
 
-
-
 def poml(
     markup: str | Path, context: dict | str | Path | None = None, stylesheet: dict | str | Path | None = None,
-    chat: bool = True
+    chat: bool = True, output_file: str | Path | None = None, parse_output: bool = True,
+    extra_args: Optional[List[str]] = None
 ) -> list | dict | str:
     temp_input_file = temp_context_file = temp_stylesheet_file = None
     trace_record: Dict[str, Any] | None = None
@@ -103,8 +102,15 @@ def poml(
             else:
                 temp_input_file = write_file(markup)
                 markup = Path(temp_input_file.name)
-        with tempfile.NamedTemporaryFile("r") as output_file:
-            args = ["-f", str(markup), "-o", output_file.name]
+        with tempfile.NamedTemporaryFile("r") as temp_output_file:
+            if output_file is None:
+                output_file = temp_output_file.name
+                output_file_specified = False
+            else:
+                output_file_specified = True
+                if isinstance(output_file, Path):
+                    output_file = str(output_file)
+            args = ["-f", str(markup), "-o", output_file]
             if isinstance(context, dict):
                 temp_context_file = write_file(json.dumps(context))
                 args.extend(["--context-file", temp_context_file.name])
@@ -130,9 +136,20 @@ def poml(
 
             if _trace_enabled and _trace_dir is not None:
                 args.extend(["--traceDir", str(_trace_dir)])
+
+            if extra_args:
+                args.extend(extra_args)
             run(*args)
-            output = output_file.read()
-            result = json.loads(output)
+
+            if output_file_specified:
+                with open(output_file, "r") as output_file_handle:
+                    result = output_file_handle.read()
+            else:
+                result = temp_output_file.read()
+
+            if parse_output:
+                result = json.loads(result)
+
             if trace_record is not None:
                 trace_record["result"] = result
             return result

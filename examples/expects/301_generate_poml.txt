@@ -1,0 +1,153 @@
+===== human =====
+
+// PromptLibrary.jsx
+
+/* Create a blog post. The prompt contains very specific instructions around output format, styles, and what to include in the content. */
+function blog_post() {
+  return <poml>
+  <task className="instruction">Create a blog post with these specifications:</task>
+  
+  <output-format className="instruction">
+  <list listStyle="decimal">
+    <item>Title: [SEO-friendly title]</item>
+    <item>Introduction (100 words)
+    <list>
+      <item>Hook statement</item>
+      <item>Context setting</item>
+      <item>Main points preview</item>
+    </list>
+    </item>
+    <item>Main body (800 words)
+    <list>
+      <item>3-4 main points</item>
+      <item>Each point: [subtitle + 200 words]</item>
+      <item>Include real examples</item>
+      <item>Add actionable tips</item>
+    </list>
+    </item>
+    <item>Conclusion (100 words)
+    <list>
+      <item>Summary of key points</item>
+      <item>Call to action</item>
+    </list>
+    </item>
+  </list>
+  </output-format>
+  
+  <cp className="instruction" caption="Style" captionSerialized="style">
+  <list>
+    <item>Tone: Professional but conversational</item>
+    <item>Level: Intermediate audience</item>
+    <item>Voice: Active, engaging</item>
+    <item>Format: Scannable, with subheadings</item>
+  </list>
+  </cp>
+  
+  <cp className="instruction" caption="Include" captionSerialized="include">
+  <list>
+    <item>Practical examples</item>
+    <item>Statistics or research</item>
+    <item>Actionable takeaways</item>
+    <item>Relevant analogies</item>
+  </list>
+  </cp>
+  </poml>;
+}
+
+
+/* Conduct in-depth research with AI, such as tackling academic papers, business analyses, or large investigative projects. */
+function research() {
+  return <poml>
+  <task>You are given various potential options or approaches for a project. Convert these into a well-structured research plan.</task>
+  
+  <stepwise-instructions>
+  <list listStyle="decimal">
+  <item>Identifies Key Objectives
+    <list listStyle="dash">
+      <item>Clarify what questions each option aims to answer</item>
+      <item>Detail the data/info needed for evaluation</item>
+    </list>
+  </item>
+  <item>Describes Research Methods
+    <list listStyle="dash">
+      <item>Outline how you’ll gather and analyze data</item>
+      <item>Mention tools or methodologies for each approach</item>
+    </list>
+  </item>
+  
+  <item>Provides Evaluation Criteria
+    <list listStyle="dash">
+      <item>Metrics, benchmarks, or qualitative factors to compare options  </item>
+      <item>Criteria for success or viability</item>
+    </list>
+  </item>
+  
+  <item>Specifies Expected Outcomes
+    <list listStyle="dash">
+      <item>Possible findings or results  </item>
+      <item>Next steps or actions following the research</item>
+    </list>
+  </item>
+  </list>
+  
+  Produce a methodical plan focusing on clear, practical steps.
+  </stepwise-instructions>
+  </poml>;
+}
+
+
+/* Test the ability of an LLM to perform a complex reasoning task -- ARC-AGI. The data is in `arc_agi_data.json`.
+ */
+function arc_agi() {
+  return <poml>
+  <SystemMessage>Be brief and clear in your responses</SystemMessage>
+  <let src="assets/202_arc_agi_data.json"/>
+  <HumanMessage>
+  <p>Find the common rule that maps an input grid to an output grid, given the examples below.</p>
+  <examples>
+    <example for="example in train" chat="false" caption="Example {{ loop.index }}" captionStyle="header">
+      <input><table records="{{ example.input }}"/></input>
+      <output><table records="{{ example.output }}"/></output>
+    </example>
+  </examples>
+  
+  <p>Below is a test input grid. Predict the corresponding output grid by applying the rule you found. Your final answer should just be the text output grid itself.</p>
+  <input><table records="{{ test[0].input }}"/></input>
+  </HumanMessage>
+  
+  <stylesheet>
+  {
+    "table": {
+      "syntax": "csv",
+      "writerOptions": {
+          "csvHeader": false,
+          "csvSeparator": " "
+      }
+    },
+    "input": {
+      "captionEnding": "colon-newline",
+      "captionStyle": "plain"
+    },
+    "output": {
+      "captionEnding": "colon-newline",
+      "captionStyle": "plain"
+    }
+  }
+  </stylesheet>
+  </poml>;
+}
+
+
+/* Summarize a report, such as a research paper or a business report. */
+function read_report() {
+  return <poml>
+  <p>Provide a concise executive summary of the following text, highlighting key points, objectives, and outcomes. Keep the summary under 150 words and ensure it is suitable for a professional audience.</p>
+  <Document syntax="text" src="assets/107_usenix_paper.pdf" selectedPages="1:3" />
+  </poml>
+  ;
+}
+
+
+/* Write a entertaining story that is engaging, imaginative and captivating for the audience. */
+function storyteller() {
+  return

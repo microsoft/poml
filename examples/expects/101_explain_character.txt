@@ -1,0 +1,117 @@
+===== system =====
+
+# Role
+
+You are a teacher explaining figures to kids.
+
+# Task
+
+Please describe the figure first and then provide background knowledge to help kids understand the figure.
+
+# Output Format
+
+Please write your response in a friendly tone.
+
+# Background Knowledge
+
+Tom and Jerry
+
+Tom and Jerry is an American animated media franchise and series of comedy short films created in 1940 by William Hanna and Joseph Barbera. Best known for its 161 theatrical short films by Metro-Goldwyn-Mayer, the series centers on the enmity between the titular characters of a cat named Tom and a mouse named Jerry. Many shorts also feature several recurring characters.
+
+In its original run, Hanna and Barbera produced 114 Tom and Jerry shorts for MGM from 1940 to 1958.[1] During this time, they won seven Academy Awards for Best Animated Short Film, tying for first place with Walt Disney's Silly Symphonies with the most awards in the category. After the MGM cartoon studio closed in 1957, MGM revived the series with Gene Deitch directing an additional 13 Tom and Jerry shorts for Rembrandt Films in Czechoslovakia from 1961 to 1962. Tom and Jerry became the highest-grossing animated short film series of that time, overtaking Looney Tunes. Chuck Jones produced another 34 shorts with Sib Tower 12 Productions between 1963 and 1967. Five more shorts have been produced since 2001, making a total of 166 shorts.
+
+A number of spin-offs have been made, including the television series The Tom and Jerry Show (1975), The Tom and Jerry Comedy Show (1980–1982), Tom & Jerry Kids (1990–1993), Tom and Jerry Tales (2006–2008), and The Tom and Jerry Show (2014–2021). In 1992, the first feature-length film based on the series, Tom and Jerry: The Movie, was released. 13 direct-to-video films have been produced since 2002. In 2019, a musical adaptation of the series, titled Tom and Jerry: Purr-Chance to Dream, debuted in Japan, in advance of Tom and Jerry's 80th anniversary. In 2021, a live-action/animated hybrid film was released.
+
+## Plot
+
+The series features comic fights between an iconic set of adversaries, a house cat (Tom) and a house mouse (Jerry). The plots of many shorts are often set in the backdrop of a house, centering on Tom (who is often enlisted by a human) trying to capture Jerry, and the mayhem and destruction that follows. Tom rarely succeeds in catching Jerry, mainly because of Jerry's cleverness, cunning abilities, and luck. However, on several occasions, they have displayed genuine friendship and concern for each other's well-being. At other times, the pair set aside their rivalry in order to pursue a common goal, such as when a baby escapes the watch of a negligent babysitter, causing Tom and Jerry to pursue the baby and keep it away from danger, in the shorts Busy Buddies and Tot Watchers respectively. Despite their endless attacks on one another, they have saved each other's lives every time they were truly in danger, except in The Two Mouseketeers, which features an uncharacteristically morbid ending, and Blue Cat Blues, where both sit on a railroad track at the end after being jilted by girlfriends. The cartoon irises out with the whistle of an oncoming steam train.
+
+The cartoons are known for some of the most violent cartoon gags ever devised in theatrical animation: Tom may use axes, hammers, firearms, firecrackers, explosives, traps and poison to kill Jerry. Jerry's methods of retaliation are far more violent, with frequent success, including slicing Tom in half, decapitating him, shutting his head or fingers in a window or a door, stuffing Tom's tail in a waffle iron or a mangle, kicking him into a refrigerator, getting him electrocuted, pounding him with a mace, club or mallet, letting a tree or electric pole drive him into the ground, sticking matches into his feet and lighting them, tying him to a firework and setting it off, and so on.[2] While Tom and Jerry has often been criticized as excessively violent, there is no blood or gore in any scene.[3]: 42 [4]: 134 
+
+Music plays a very important part in the shorts, emphasizing the action, filling in for traditional sound effects, and lending emotion to the scenes. Musical director Scott Bradley created complex scores that combined elements of jazz, classical, and pop music. Bradley often used contemporary pop songs and songs from other films, including MGM films like The Wizard of Oz and Meet Me in St. Louis.
+
+Even though Tom and Jerry almost never speak, the shorts also often had dialogue from other characters. Minor characters are not similarly limited, and the two lead characters speak English on rare occasions. For example, the character Mammy Two Shoes has lines in nearly every cartoon in which she appears. Most of the vocal effects used for Tom and Jerry are their high-pitched laughs and gasping screams.
+
+## Characters
+
+Tom and Jerry
+
+Main articles: Tom Cat and Jerry Mouse
+
+Tom, named "Jasper" in his debut appearance, is a gray and white domestic shorthair cat. "Tom" is a generic name for a male cat. He is usually but not always, portrayed as living a comfortable, or even pampered life, while Jerry, whose name is not explicitly mentioned in his debut appearance, is a small, brown house mouse who always lives in close proximity to Tom. Despite being very energetic, determined and much larger, Tom is no match for Jerry's wits. Jerry possesses surprising strength for his size, approximately the equivalent of Tom's, lifting items such as anvils with relative ease and withstanding considerable impacts.[5]
+
+Although cats typically chase mice to eat them, it is quite rare for Tom to actually try to eat Jerry. He tries to hurt or compete with him just to taunt Jerry, even as revenge, or to obtain a reward from a human, including his owner(s)/master(s), for catching Jerry, or for generally doing his job well as a house cat. By the final "fade-out" of each cartoon, Jerry usually gets the best of Tom.
+
+Other results may be reached. On rare occasions, Tom triumphs, usually when Jerry becomes the aggressor or he pushes Tom a little too far. In The Million Dollar Cat, Jerry learns that Tom will lose his newly acquired wealth if he harms any animal, especially mice. He then torments Tom a little too much until he retaliates. In Timid Tabby Tom's look-alike cousin pushes Jerry over the edge. Occasionally and usually ironically, they both lose, usually because Jerry's last trap or attack on Tom backfires on him or he overlooks something. In Chuck Jones' Filet Meow, Jerry orders a shark from the pet store to scare Tom away from eating a goldfish. Afterward, the shark scares Jerry away as well. They occasionally end up being friends, although there is often a last-minute event that ruins the truce. One cartoon that has a friendly ending is Snowbody Loves Me.
+
+Both characters display sadistic tendencies, in that they are equally likely to take pleasure in tormenting each other, although it is often in response to a triggering event. However, when one character appears to truly be in mortal danger from an unplanned situation or due to actions by a third party, the other will develop a conscience and save him. Occasionally, they bond over a mutual sentiment towards an unpleasant experience and their attacking each other is more play than serious attacks. Multiple shorts show the two getting along with minimal difficulty, and they are more than capable of working together when the situation calls for it, usually against a third party who manages to torture and humiliate them both.
+
+Sometimes this partnership is forgotten quickly when an unexpected event happens, or when one character feels that the other is no longer necessary. This is the case in Posse Cat, when they agree that Jerry will allow himself to be caught if Tom agrees to share his reward dinner, but Tom then reneges. Other times, Tom keeps his promise to Jerry and the partnerships are not quickly dissolved after the problem is solved.
+
+Tom changes his love interest many times. The first love interest is Toots who appears in Puss n' Toots, and calls him "Tommy" in The Mouse Comes to Dinner. He is interested in a cat called Toots in The Zoot Cat although she has a different appearance to the original Toots. The most frequent love interest of Tom's is Toodles Galore, who never has any dialogue in the cartoons.
+
+Despite five shorts ending with a depiction of Tom's apparent death, his demise is never permanent. He even reads about his own death in a flashback in Jerry's Diary. He appears to die in explosions in Mouse Trouble, after which he is seen in heaven, Yankee Doodle Mouse and in Safety Second, while in The Two Mouseketeers he is guillotined offscreen. The short Blue Cat Blues ends with both Tom and Jerry sitting on the railroad tracks with the intent of suicide while the whistle of an oncoming train is heard foreshadowing their imminent death.
+
+Tom and Jerry speaking
+
+Although many supporting and minor characters speak, Tom and Jerry rarely do so themselves. One exception is The Lonesome Mouse where they speak several times briefly, primarily Jerry, to contrive to get Tom back into the house. Tom more often sings while wooing female cats. For example, Tom sings Louis Jordan's "Is You Is or Is You Ain't My Baby" in the 1946 short Solid Serenade. In that short and Zoot Cat, Tom woos female cats using a deep, heavily French-accented voice in imitation of then-popular leading man, actor Charles Boyer.
+
+At the end of The Million Dollar Cat, after beginning to antagonize Jerry he says, "Gee, I'm throwin' away a million dollars... BUT I'M HAPPY!". In Tom and Jerry: The Magic Ring, Jerry says, "No, no, no, no, no." when choosing the shop to remove his ring. In The Mouse Comes to Dinner, Tom speaks to his girlfriend Toots while inadvertently sitting on a stove: "Say, what's cookin'?", to which Toots replies "You are, stupid."
+
+Another instance of speech comes in Solid Serenade and The Framed Cat, where Tom directs Spike through a few dog tricks in a dog-trainer manner. In Puss Gets the Boot, Jerry prays for his life when Tom catches him by the tail. Jerry has whispered in Tom's ear on several occasions. In Love Me, Love My Mouse, Jerry calls Toots "Mama".
+
+Co-director William Hanna provided most of the squeaks, gasps, and other vocal effects for the pair, including the most famous sound effects from the series, Tom's leather-lunged scream, created by recording Hanna's scream and eliminating the beginning and ending of the recording, leaving only the strongest part of the scream on the soundtrack, and Jerry's nervous gulp.
+
+The only other reasonably common vocalization is made by Tom when some external reference claims a certain scenario or eventuality to be impossible, which inevitably thwarts Tom's plans – at which point, a bedraggled and battered Tom appears and says in a haunting, echoing voice "Don't you believe it!", a reference to the then-popular 1940s radio show Don't You Believe It!.[6][7] In Mouse Trouble, Tom says "Don't you believe it!" after being beaten up by Jerry, which also happens in The Missing Mouse. In the 1946 short Trap Happy, Tom hires a cat disguised as a mouse exterminator who, after several failed attempts to dispatch Jerry and suffering a lot of accidents in the process, changes profession to Cat exterminator by crossing out the "Mouse" on his title and writing "CAT", resulting in Tom spelling out the word out loud before reluctantly pointing at himself.
+
+One short, 1956's Blue Cat Blues, is narrated by Jerry in VoiceOver, voiced by Paul Frees, as they try to win back their ladyfriends. Jerry was voiced by Sara Berner during his appearance in the 1945 MGM musical Anchors Aweigh. Tom and Jerry: The Movie is the first, and so far only installment of the series where the famous cat-and-mouse duo regularly speaks or is able to be understood by humans. In that film, Tom was voiced by Richard Kind, and Jerry was voiced by Dana Hill.
+
+Spike and Tyke
+
+Main article: Spike and Tyke (characters)
+
+In his attempts to catch Jerry, Tom often has to deal with Spike, known as "Killer" and "Butch" in some shorts, an angry, vicious but gullible bulldog who tries to attack Tom for bothering him or his son Tyke while trying to get Jerry. Originally, Spike was unnamed and mute, aside from howls and biting noises as well as attacking indiscriminately, not caring whether it was Tom or Jerry though usually attacking Tom. In later cartoons, Spike spoke often, using a voice and expressions, performed by Billy Bletcher and later Daws Butler, modeled after comedian Jimmy Durante. Spike's coat has altered throughout the years between gray and creamy tan. The addition of Spike's son Tyke in the late 1940s led to both a slight softening of Spike's character and a short-lived spin-off theatrical series called Spike and Tyke.
+
+Most cartoons with Spike in them conform to a theme: usually, Spike is trying to accomplish something, such as building a dog house or sleeping, when Tom and Jerry's antics stop him doing it. Spike then presumably due to prejudice, singles out Tom as the culprit, and threatens him that if it ever happens again, he will do "something horrible" to him, effectively forcing Tom to take the blame, while Jerry overhears. Afterward, Jerry usually does anything he can to interrupt whatever Spike is doing, while Tom barely manages to stop him, usually getting injured in the process. Usually, Jerry eventually wrecks whatever Spike is doing in spectacular fashion, and leaves Tom to take the blame, forcing him to flee from Spike and inevitably lose.
+
+Off-screen, Spike does something to Tom, and Tom is generally shown injured or in a bad situation while Jerry smugly cuddles up to Spike unscathed. Tom sometimes gets irritated with Spike. An example is in That's My Pup!, when Spike forces Tom to run up a tree every time his son barked, causing Tom to hang Tyke on a flag pole. At least once, Tom does something that benefits Spike, who promises not to interfere ever again, causing Jerry to frantically leave the house and run into the distance, in Hic-cup Pup. Spike is well known for his famous "Listen pussycat!" catchphrase when he threatens Tom, his other famous catchphrase is "That's my boy!" normally said when he supports or congratulates his son.
+
+Tyke is described as a cute, sweet-looking, happy and lovable puppy. He is Spike's son. Unlike Spike, Tyke does not speak and only communicates, mostly towards his father, by barking, yapping, wagging his tail, whimpering and growling. Spike would always go out of his way to care and comfort his son and make sure that he is safe from Tom. Tyke loves his father and Spike loves his son and they get along like friends, although most of time they would be taking a nap or Spike would teach Tyke the main facts of life of being a dog. Like Spike, Tyke's appearance has altered throughout the years, from gray, with white paws, to creamy tan. When Tom & Jerry Kids first aired, this was the first time that viewers heard Tyke speak.
+
+Butch and Toodles Galore
+
+Butch is a black, cigar-smoking alley cat who also wants to eat Jerry. He is Tom's most frequent adversary. For most of the shorts he appears in, he is usually seen rivaling Tom over Toodles. Butch was Tom's chum as in some cartoons, where Butch is leader of Tom's alley cat buddies, who are mostly Lightning, Topsy, and Meathead. Butch talks more often than Tom or Jerry in most shorts.
+
+Butch and Toodles were originally introduced in Hugh Harman's 1941 short The Alley Cat, but were integrated into Tom and Jerry rather than continuing in their own series.
+
+Nibbles
+
+Main article: Nibbles (Tom and Jerry)
+
+Nibbles is a small gray mouse who often appears in shorts as an orphan mouse. He is a carefree individual who very rarely understands the danger of the situation, simply following instructions the best he can both to Jerry's command and his own innocent understanding of the situation. This can lead to such results as "getting the cheese" by simply asking Tom to pick it up for him, rather than following Jerry's example of outmaneuvering and sneaking around Tom. Many times Nibbles is an ally of Jerry in fights against Tom, including being the second Mouseketeer. He is given speaking roles in all his appearances as a Mouseketeer, often with a high-pitched French tone. However, during a short in which he rescued Robin Hood, his voice was instead more masculine, gruff, and cockney accented.
+
+The Housekeeper
+
+Main article: Mammy Two Shoes
+
+The housekeeper, usually seen from the torso down, is a heavy-set, middle-aged black woman who often has to deal with the mayhem generated by the lead characters. Voiced by character actress Lillian Randolph, she is often seen as the owner of Tom, and perhaps the homeowner as well. Her face was only shown once, very briefly, in Saturday Evening Puss. Her appearances have often been edited out, dubbed, or re-animated as a slim white woman in later television showings, since her character is a mammy archetype that had been protested as racist by the NAACP and other civil rights groups since the 1940s.[8][9] In a 1975 article in Film Comment she was referred to as "Mammy Two Shoes," a moniker that has been inaccurately attributed to the character ever since, The name "Mammy Two-Shoes" was on the Disney model sheets for a character in a Silly Symphony cartoon, though the name was never spoken in the cartoon. A similar housekeeper then appeared in MGM Bokso cartoons by Harman and Ising, also without a name. At no time, ever, was the name used in any Tom and Jerry cartoon, The author of the 1975 later apologized, but too much time had established the incorrect information, including on the DVD release DVD releases of the cartoons, in which the script read by Whoopi Goldberg on the Tom and Jerry Spotlight Collection: Vol. 2 DVD set, while explaining the importance of African-American representation in the cartoon series, however stereotyped, mentions the incorrect name numerous times.[10]
+
+===== human =====
+
+{"type":"image/jpeg","base64":"/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWI...
+
+===== ai =====
+
+Hello there! Let's take a look at this picture together. What do you see? That's right, it's Tom from the famous cartoon series "Tom and Jerry"!
+
+Tom is a gray and white domestic shorthair cat. In this picture, he looks a bit worried or scared, doesn't he? You can tell by his big, wide eyes and the way his mouth is shaped. Maybe Jerry, the clever little mouse, has played another trick on him!
+
+Now, let's talk a little more about Tom and Jerry so you can understand why Tom might look this way. "Tom and Jerry" is a fun cartoon that has been around since 1940. It was created by William Hanna and Joseph Barbera. The show is all about the funny and sometimes crazy adventures of Tom the cat and Jerry the mouse. Tom is always trying to catch Jerry, but Jerry is very smart and always finds a way to escape or trick Tom.
+
+Even though Tom and Jerry are often seen fighting, they do care about each other and sometimes work together to solve problems. The cartoon is full of funny moments, and even though they play tricks on each other, it's all in good fun.
+
+So, whenever you see Tom looking like this, you can imagine that he's probably just been outsmarted by Jerry once again! But don't worry, Tom never gives up and always comes back for more adventures.
+
+===== human =====
+
+{"type":"image/jpeg","base64":"/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWI...

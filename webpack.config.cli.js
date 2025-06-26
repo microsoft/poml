@@ -38,6 +38,11 @@ try {
         // The context tells the plugin where to find the 'from' files
         context: sourceNodeModulesPath,
         noErrorOnMissing: true,
+        // Add this to preserve the directory structure for individual files
+        ...(subPath.includes('/') && !subPath.endsWith('/**') ? {
+          // For individual files, we need to preserve the full path structure
+          to: path.join(outputNodeModulesPath, path.dirname(subPath))
+        } : {})
       };
     });
 

@@ -1,0 +1,41 @@
+===== human =====
+
+# Task
+
+Create a blog post with these specifications:
+
+# Output Format
+
+1. Title: [SEO-friendly title]
+
+2. Introduction (100 words) 
+
+   - Hook statement
+   - Context setting
+   - Main points preview
+
+3. Main body (800 words) 
+
+   - 3-4 main points
+   - Each point: [subtitle + 200 words]
+   - Include real examples
+   - Add actionable tips
+
+4. Conclusion (100 words) 
+
+   - Summary of key points
+   - Call to action
+
+# Style
+
+- Tone: Professional but conversational
+- Level: Intermediate audience
+- Voice: Active, engaging
+- Format: Scannable, with subheadings
+
+# Include
+
+- Practical examples
+- Statistics or research
+- Actionable takeaways
+- Relevant analogies
