@@ -322,7 +322,13 @@ class Writer<WriterOptions> {
       // back to considering all segments.
       const relevant = nonWs.length ? nonWs : msgSegs;
       if (!relevant.length) {
-        return undefined;
+        // If there are no relevant segments, we cannot produce an empty message.
+        return {
+          startIndex: 0,  // in this case, we cannot determine the start index
+          endIndex: 0,
+          speaker: sp.speaker,
+          content: []
+        }
       }
       const startIndex = Math.min(...relevant.map(seg => seg.inputStart));
       const endIndex = Math.max(...relevant.map(seg => seg.inputEnd));

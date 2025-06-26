@@ -101,6 +101,19 @@ describe('markdown', () => {
     ]);
   });
 
+  test('emptyMessages', () => {
+    const writer = new MarkdownWriter();
+    const ir = `<p><p speaker="human"></p><p speaker="ai"></p></p>`;
+    const direct = writer.writeMessages(ir);
+    const segs = writer.writeMessagesWithSourceMap(ir);
+    const reconstructed = segs.map(m => ({
+      speaker: m.speaker,
+      content: (writer as any).richContentFromSourceMap(m.content)
+    }));
+    expect(direct).toStrictEqual(reconstructed);
+    expect(segs).toStrictEqual([{ startIndex: 0, endIndex: 0, speaker: 'human', content: [] }]);
+  });
+
   test('markdownWriteMatchesSegments', () => {
     const writer = new MarkdownWriter();
     const ir = `<p><p speaker="human">hello</p><p>world</p></p>`;
@@ -161,7 +174,11 @@ describe('markdown', () => {
         endIndex: aiEnd,
         speaker: 'ai',
         content: [
-          { startIndex: imgStart, endIndex: imgEnd, content: [{ type: 'image', base64, alt: 'img' }] },
+          {
+            startIndex: imgStart,
+            endIndex: imgEnd,
+            content: [{ type: 'image', base64, alt: 'img' }]
+          },
           { startIndex: aiStart, endIndex: aiEnd, content: 'world' }
         ]
       }
@@ -187,7 +204,11 @@ describe('markdown', () => {
         endIndex: humanEnd,
         speaker: 'human',
         content: [
-          { startIndex: img1Start, endIndex: img1End, content: [{ type: 'image', base64, alt: 'img1' }] },
+          {
+            startIndex: img1Start,
+            endIndex: img1End,
+            content: [{ type: 'image', base64, alt: 'img1' }]
+          },
           { startIndex: humanStart, endIndex: humanEnd, content: 'Hello' }
         ]
       },
@@ -196,7 +217,11 @@ describe('markdown', () => {
         endIndex: aiEnd,
         speaker: 'ai',
         content: [
-          { startIndex: img2Start, endIndex: img2End, content: [{ type: 'image', base64, alt: 'img2' }] },
+          {
+            startIndex: img2Start,
+            endIndex: img2End,
+            content: [{ type: 'image', base64, alt: 'img2' }]
+          },
           { startIndex: aiStart, endIndex: aiEnd, content: 'World' }
         ]
       }
@@ -230,7 +255,9 @@ describe('serialize', () => {
     const writer = new XmlWriter();
     const testIr = `<any><any name="hello">world</any><any name="foo"><any type="integer">123</any><any type="boolean">false</any></any></any>`;
     const result = writer.write(testIr);
-    expect(result).toBe('<hello>world</hello>\n<foo>\n  <item>123</item>\n  <item>false</item>\n</foo>');
+    expect(result).toBe(
+      '<hello>world</hello>\n<foo>\n  <item>123</item>\n  <item>false</item>\n</foo>'
+    );
   });
 
   test('xmlNestMultimedia', async () => {
@@ -261,8 +288,8 @@ describe('free', () => {
     const testIr = `<env presentation="free">hello\nworld<env presentation="serialize"><any name="hello">world</any></env></env>`;
     const result = writer.write(testIr);
     expect(result).toBe('hello\nworld{\n  "hello": "world"\n}');
-  })
-})
+  });
+});
 
 describe('multimedia', () => {
   test('image', () => {
@@ -272,9 +299,7 @@ describe('multimedia', () => {
     ErrorCollection.clear();
     const result = writer.write(testIr);
     expect(ErrorCollection.empty()).toBe(true);
-    expect(result).toStrictEqual([
-      { type: 'image', base64, alt: 'example' }
-    ]);
+    expect(result).toStrictEqual([{ type: 'image', base64, alt: 'example' }]);
   });
 
   test('imageInText', () => {
@@ -298,7 +323,6 @@ describe('multimedia', () => {
       'hahaha',
       { type: 'image', base64, alt: 'example2' }
     ]);
-
   });
 
   test('imagePosition', () => {
@@ -313,5 +337,5 @@ describe('multimedia', () => {
       'helloworld\n\nfoo',
       { type: 'image', base64, alt: 'example2' }
     ]);
-  })
-})
+  });
+});
