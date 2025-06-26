@@ -58,38 +58,149 @@ describe('markdown', () => {
     const writer = new MarkdownWriter();
     const simple = `<p>hello world <b>foo</b></p>`;
     const result = writer.writeWithSourceMap(simple);
-    expect(result).toStrictEqual({
-      input: '<p>hello world <b>foo</b></p>',
-      output: 'hello world **foo**',
-      mappings: [
-        { inputStart: 15, inputEnd: 24, outputStart: 12, outputEnd: 18 },
-        { inputStart: 0, inputEnd: 28, outputStart: 0, outputEnd: 18 }
-      ],
-      speakers: [{ start: 0, end: 18, speaker: 'human' }],
-      multimedia: [],
-    });
+    expect(result).toStrictEqual([
+      { startIndex: 0, endIndex: 28, content: 'hello world ' },
+      { startIndex: 15, endIndex: 24, content: '**foo**' }
+    ]);
   });
 
   test('markdownSourceMapWithSpeaker', () => {
     const writer = new MarkdownWriter();
     const withSpeaker = `<p><p speaker="system">hello world</p><p speaker="human">foo bar</p><p>something</p></p>`;
     const result = writer.writeWithSourceMap(withSpeaker);
-    expect(result).toStrictEqual({
-      input:
-        '<p><p speaker="system">hello world</p><p speaker="human">foo bar</p><p>something</p></p>',
-      output: 'hello world\n\nfoo bar\n\nsomething',
-      mappings: [
-        { inputStart: 3, inputEnd: 37, outputStart: 0, outputEnd: 10 },
-        { inputStart: 38, inputEnd: 67, outputStart: 13, outputEnd: 19 },
-        { inputStart: 68, inputEnd: 83, outputStart: 22, outputEnd: 30 },
-        { inputStart: 0, inputEnd: 87, outputStart: 0, outputEnd: 30 }
-      ],
-      speakers: [
-        { start: 0, end: 10, speaker: 'system' },
-        { start: 13, end: 30, speaker: 'human' }
-      ],
-      multimedia: []
-    });
+    expect(result).toStrictEqual([
+      { startIndex: 3, endIndex: 37, content: 'hello world' },
+      { startIndex: 0, endIndex: 87, content: '\n\n' },
+      { startIndex: 38, endIndex: 67, content: 'foo bar' },
+      { startIndex: 0, endIndex: 87, content: '\n\n' },
+      { startIndex: 68, endIndex: 83, content: 'something' }
+    ]);
+  });
+
+  test('markdownMessagesSourceMap', () => {
+    const writer = new MarkdownWriter();
+    const withSpeaker = `<p><p speaker="system">hello world</p><p speaker="human">foo bar</p><p>something</p></p>`;
+    const result = writer.writeMessagesWithSourceMap(withSpeaker);
+    expect(result).toStrictEqual([
+      {
+        startIndex: 3,
+        endIndex: 37,
+        speaker: 'system',
+        content: [{ startIndex: 3, endIndex: 37, content: 'hello world' }]
+      },
+      {
+        startIndex: 38,
+        endIndex: 83,
+        speaker: 'human',
+        content: [
+          { startIndex: 38, endIndex: 67, content: 'foo bar' },
+          { startIndex: 0, endIndex: 87, content: '\n\n' },
+          { startIndex: 68, endIndex: 83, content: 'something' }
+        ]
+      }
+    ]);
+  });
+
+  test('markdownWriteMatchesSegments', () => {
+    const writer = new MarkdownWriter();
+    const ir = `<p><p speaker="human">hello</p><p>world</p></p>`;
+    const direct = writer.write(ir);
+    const segs = writer.writeWithSourceMap(ir);
+    const reconstructed = (writer as any).richContentFromSourceMap(segs);
+    expect(direct).toStrictEqual(reconstructed);
+  });
+
+  test('markdownWriteMessagesMatchesSegments', () => {
+    const writer = new MarkdownWriter();
+    const ir = `<p><p speaker="system">hello</p><p speaker="ai">world</p></p>`;
+    const direct = writer.writeMessages(ir);
+    const segs = writer.writeMessagesWithSourceMap(ir);
+    const reconstructed = segs.map(m => ({
+      speaker: m.speaker,
+      content: (writer as any).richContentFromSourceMap(m.content)
+    }));
+    expect(direct).toStrictEqual(reconstructed);
+  });
+
+  test('markdownSourceMapMultimedia', () => {
+    const writer = new MarkdownWriter();
+    const base64 = readFileSync(__dirname + '/assets/tomCat.jpg').toString('base64');
+    const ir = `<p>hello<env presentation="multimedia"><img base64="${base64}" alt="img"/></env>world</p>`;
+    const segs = writer.writeWithSourceMap(ir);
+    const rootEnd = ir.length - 1;
+    const imgStart = ir.indexOf('<img');
+    const imgEnd = ir.indexOf('/>', imgStart) + 1;
+    expect(segs).toStrictEqual([
+      { startIndex: 0, endIndex: rootEnd, content: 'hello' },
+      { startIndex: imgStart, endIndex: imgEnd, content: [{ type: 'image', base64, alt: 'img' }] },
+      { startIndex: 0, endIndex: rootEnd, content: 'world' }
+    ]);
+  });
+
+  test('markdownMessagesSourceMapMultimedia', () => {
+    const writer = new MarkdownWriter();
+    const base64 = readFileSync(__dirname + '/assets/tomCat.jpg').toString('base64');
+    const ir = `<p><p speaker="human">hello</p><p speaker="ai"><env presentation="multimedia"><img base64="${base64}" alt="img"/></env>world</p></p>`;
+    const segs = writer.writeMessagesWithSourceMap(ir);
+    const humanStart = ir.indexOf('<p speaker="human"');
+    const humanEnd = ir.indexOf('</p>', humanStart) + '</p>'.length - 1;
+    const aiStart = ir.indexOf('<p speaker="ai"');
+    const aiEnd = ir.indexOf('</p>', aiStart) + '</p>'.length - 1;
+    const imgStart = ir.indexOf('<img');
+    const imgEnd = ir.indexOf('/>', imgStart) + 1;
+    const rootEnd = ir.length - 1;
+    expect(segs).toStrictEqual([
+      {
+        startIndex: humanStart,
+        endIndex: humanEnd,
+        speaker: 'human',
+        content: [{ startIndex: humanStart, endIndex: humanEnd, content: 'hello' }]
+      },
+      {
+        startIndex: aiStart,
+        endIndex: aiEnd,
+        speaker: 'ai',
+        content: [
+          { startIndex: imgStart, endIndex: imgEnd, content: [{ type: 'image', base64, alt: 'img' }] },
+          { startIndex: aiStart, endIndex: aiEnd, content: 'world' }
+        ]
+      }
+    ]);
+  });
+
+  test('markdownMessagesSourceMapImagePosition', () => {
+    const writer = new MarkdownWriter();
+    const base64 = readFileSync(__dirname + '/assets/tomCat.jpg').toString('base64');
+    const ir = `<p><p speaker="human"><env presentation="multimedia"><img base64="${base64}" alt="img1" position="top"/></env>Hello</p><p speaker="ai"><env presentation="multimedia"><img base64="${base64}" alt="img2" position="top"/></env>World</p></p>`;
+    const segs = writer.writeMessagesWithSourceMap(ir);
+    const humanStart = ir.indexOf('<p speaker="human"');
+    const humanEnd = ir.indexOf('</p>', humanStart) + '</p>'.length - 1;
+    const aiStart = ir.indexOf('<p speaker="ai"');
+    const aiEnd = ir.indexOf('</p>', aiStart) + '</p>'.length - 1;
+    const img1Start = ir.indexOf('<img', humanStart);
+    const img1End = ir.indexOf('/>', img1Start) + 1;
+    const img2Start = ir.indexOf('<img', aiStart);
+    const img2End = ir.indexOf('/>', img2Start) + 1;
+    expect(segs).toStrictEqual([
+      {
+        startIndex: humanStart,
+        endIndex: humanEnd,
+        speaker: 'human',
+        content: [
+          { startIndex: img1Start, endIndex: img1End, content: [{ type: 'image', base64, alt: 'img1' }] },
+          { startIndex: humanStart, endIndex: humanEnd, content: 'Hello' }
+        ]
+      },
+      {
+        startIndex: aiStart,
+        endIndex: aiEnd,
+        speaker: 'ai',
+        content: [
+          { startIndex: img2Start, endIndex: img2End, content: [{ type: 'image', base64, alt: 'img2' }] },
+          { startIndex: aiStart, endIndex: aiEnd, content: 'World' }
+        ]
+      }
+    ]);
   });
 });
 

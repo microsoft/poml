@@ -31,6 +31,19 @@ export interface Message {
   content: RichContent;
 }
 
+export interface SourceMapRichContent {
+  startIndex: number;
+  endIndex: number;
+  content: RichContent;
+}
+
+export interface SourceMapMessage {
+  startIndex: number;
+  endIndex: number;
+  speaker: Speaker;
+  content: SourceMapRichContent[];
+}
+
 /**
  * Props base serves the following props subclass, as far as I can now think of:
  * 1. Props for markup basic components

@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { renderToString } from "react-dom/server";
 import path from 'path';
 import { EnvironmentDispatcher } from "./writer";
-import { ErrorCollection, Message, RichContent, StyleSheetProvider, SystemError } from './base';
+import { ErrorCollection, Message, RichContent, StyleSheetProvider, SystemError, SourceMapRichContent, SourceMapMessage } from './base';
 import { PomlFile, PomlReaderOptions } from './file';
 import './presentation';
 import './essentials';
@@ -11,7 +11,7 @@ import "./components";
 import { reactRender } from './util/reactRender';
 import { dumpTrace, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
 
-export { RichContent, Message };
+export { RichContent, Message, SourceMapRichContent, SourceMapMessage };
 
 export const read = async (
   element: React.ReactElement | string,
@@ -51,12 +51,32 @@ interface WriteOptionsSpeakerMode extends WriteOptions {
 export function write(ir: string, options?: WriteOptionsNoSpeakerMode): RichContent;
 export function write(ir: string, options: WriteOptionsSpeakerMode): Message[];
 export function write(ir: string, options?: WriteOptions): RichContent | Message[];
+/**
+ * Entry point for turning a parsed IR string into rich content or a list of
+ * speaker messages. The heavy lifting is done by `EnvironmentDispatcher`.
+ */
 export function write(ir: string, options?: WriteOptions): RichContent | Message[] {
   const writer = new EnvironmentDispatcher();
   if (options?.speaker) {
     return writer.writeMessages(ir);
   } else {
     return writer.write(ir);
+  }
+};
+
+export function writeWithSourceMap(ir: string, options?: WriteOptionsNoSpeakerMode): SourceMapRichContent[];
+export function writeWithSourceMap(ir: string, options: WriteOptionsSpeakerMode): SourceMapMessage[];
+export function writeWithSourceMap(ir: string, options?: WriteOptions): SourceMapRichContent[] | SourceMapMessage[];
+/**
+ * Variant of {@link write} that also exposes a source map describing the
+ * mapping between input indices and output content.
+ */
+export function writeWithSourceMap(ir: string, options?: WriteOptions): SourceMapRichContent[] | SourceMapMessage[] {
+  const writer = new EnvironmentDispatcher();
+  if (options?.speaker) {
+    return writer.writeMessagesWithSourceMap(ir);
+  } else {
+    return writer.writeWithSourceMap(ir);
   }
 };
 

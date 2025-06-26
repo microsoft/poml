@@ -9,7 +9,9 @@ import {
   ValidSpeakers,
   WriteError,
   ContentMultiMedia,
-  RichContent
+  RichContent,
+  SourceMapRichContent,
+  SourceMapMessage
 } from './base';
 import { Position } from './presentation';
 import yaml from 'js-yaml';
@@ -46,6 +48,14 @@ interface WriterResult {
   multimedia: PositionalContentMultiMedia[];
   mappings: MappingNode[];
   speakers: SpeakerNode[];
+}
+
+interface SourceSegment {
+  outStart: number;
+  outEnd: number;
+  inputStart: number;
+  inputEnd: number;
+  content: RichContent;
 }
 
 class Writer<WriterOptions> {
@@ -153,25 +163,29 @@ class Writer<WriterOptions> {
     throw new SystemError('Method not implemented.');
   }
 
+  /**
+   * Convert an IR string into {@link RichContent} without exposing mapping information.
+   *
+   * The method delegates to {@link writeWithSourceMap} and then collapses the
+   * returned segments back into a single rich content value.
+   */
   public write(ir: string): RichContent {
-    const result = this.writeWithSourceMap(ir);
-    return this.richContentFromString(result.output, result.multimedia);
+    const segments = this.writeWithSourceMap(ir);
+    return this.richContentFromSourceMap(segments);
   }
 
+  /**
+   * Convert an IR string into an array of speaker messages.
+   *
+   * It internally uses {@link writeMessagesWithSourceMap} and removes the
+   * mapping information from each message.
+   */
   public writeMessages(ir: string): Message[] {
-    const result = this.writeWithSourceMap(ir);
-    return result.speakers.map(node => {
-      const speakerString = result.output.slice(node.start, node.end + 1);
-      const speakerMultimedia = this.indentMultiMedia(
-        result.multimedia.filter(media => media.index >= node.start && media.index <= node.end),
-        -node.start,
-        0
-      );
-      return {
-        speaker: node.speaker,
-        content: this.richContentFromString(speakerString, speakerMultimedia)
-      };
-    });
+    const messages = this.writeMessagesWithSourceMap(ir);
+    return messages.map(m => ({
+      speaker: m.speaker,
+      content: this.richContentFromSourceMap(m.content)
+    }));
   }
 
   public assignSpeakers(result: WriterPartialResult, $: cheerio.CheerioAPI): SpeakerNode[] {
@@ -279,7 +293,182 @@ class Writer<WriterOptions> {
     return speakers;
   }
 
-  public writeWithSourceMap(ir: string): WriterResult {
+  /**
+   * Render the IR string and return detailed mapping for each produced content
+   * segment.
+   *
+   * Each returned {@link SourceMapRichContent} describes the slice of the input
+   * IR that generated the piece of output.
+   */
+  public writeWithSourceMap(ir: string): SourceMapRichContent[] {
+    const result = this.generateWriterResult(ir);
+    const segments = this.buildSourceMap(result);
+    return segments.map(s => ({ startIndex: s.inputStart, endIndex: s.inputEnd, content: s.content }));
+  }
+
+  /**
+   * Similar to {@link writeWithSourceMap} but groups the segments into speaker
+   * messages.
+   */
+  public writeMessagesWithSourceMap(ir: string): SourceMapMessage[] {
+    const result = this.generateWriterResult(ir);
+    const segments = this.buildSourceMap(result);
+    return result.speakers.map(sp => {
+      const msgSegs = segments.filter(seg => seg.outStart >= sp.start && seg.outEnd <= sp.end);
+      const nonWs = msgSegs.filter(seg => !(typeof seg.content === 'string' && seg.content.trim() === ''));
+      // Use only non-whitespace segments when computing the overall source range
+      // for this message so that trailing or leading padding does not expand the
+      // reported span. If the message contains nothing but whitespace we fall
+      // back to considering all segments.
+      const relevant = nonWs.length ? nonWs : msgSegs;
+      const startIndex = Math.min(...relevant.map(seg => seg.inputStart));
+      const endIndex = Math.max(...relevant.map(seg => seg.inputEnd));
+      return {
+        startIndex,
+        endIndex,
+        speaker: sp.speaker,
+        content: msgSegs.map(seg => ({ startIndex: seg.inputStart, endIndex: seg.inputEnd, content: seg.content }))
+      };
+    });
+  }
+
+  /**
+   * Transform a {@link WriterResult} into discrete source map segments.
+   *
+   * The segments are ordered so that rich content can be reconstructed in
+   * the correct visual order while preserving multimedia positioning.
+   */
+  private buildSourceMap(result: WriterResult): SourceSegment[] {
+    // Collect every boundary within the output that could signify a change in
+    // source location.  These come from the input/output mappings as well as
+    // multimedia positions.  Splitting the output on these boundaries ensures
+    // each segment corresponds to a single source range.
+    const boundaries = new Set<number>();
+    result.mappings.forEach(m => {
+      boundaries.add(m.outputStart);
+      boundaries.add(m.outputEnd + 1);
+    });
+    result.multimedia.forEach(m => {
+      boundaries.add(m.index);
+      boundaries.add(m.index + 1);
+    });
+    boundaries.add(0);
+    boundaries.add(result.output.length);
+    const points = Array.from(boundaries).sort((a, b) => a - b);
+
+    // `top` multimedia should appear before all textual content while `bottom`
+    // multimedia should come last.  We therefore keep three buckets and merge
+    // them at the end.
+    const topSegments: SourceSegment[] = [];
+    const middleSegments: SourceSegment[] = [];
+    const bottomSegments: SourceSegment[] = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const start = points[i];
+      const end = points[i + 1];
+      if (start >= end) {
+        continue;
+      }
+      const slice = result.output.slice(start, end);
+
+      // Find the most specific mapping that covers this slice.  This allows the
+      // resulting segment to map back to the tightest IR range responsible for
+      // the output.
+      let chosen: MappingNode | undefined;
+      for (const m of result.mappings) {
+        if (start >= m.outputStart && end - 1 <= m.outputEnd) {
+          if (!chosen || m.outputEnd - m.outputStart < chosen.outputEnd - chosen.outputStart) {
+            chosen = m;
+          }
+        }
+      }
+      if (!chosen) {
+        chosen = result.mappings[0];
+      }
+
+      // If a multimedia item starts at this boundary, emit it instead of text.
+      const media = result.multimedia.find(m => m.index === start);
+      if (media) {
+        const { position, index, ...rest } = media;
+        const segment: SourceSegment = {
+          outStart: start,
+          outEnd: end - 1,
+          inputStart: chosen.inputStart,
+          inputEnd: chosen.inputEnd,
+          content: [rest]
+        };
+        if (position === 'top') {
+          topSegments.push(segment);
+        } else if (position === 'bottom') {
+          bottomSegments.push(segment);
+        } else {
+          middleSegments.push(segment);
+        }
+      } else if (slice !== SPECIAL_CHARACTER && slice.length > 0) {
+        // Normal textual slice.
+        middleSegments.push({
+          outStart: start,
+          outEnd: end - 1,
+          inputStart: chosen.inputStart,
+          inputEnd: chosen.inputEnd,
+          content: slice
+        });
+      }
+    }
+
+    middleSegments.sort((a, b) => a.outStart - b.outStart);
+    // Order the buckets so that `top` items are emitted before any textual
+    // content and `bottom` items are emitted last. When filtering these
+    // segments by speaker boundaries, each top or bottom item still appears
+    // within the correct message.
+    return [...topSegments, ...middleSegments, ...bottomSegments];
+  }
+
+  /**
+   * Combine output pieces from a source map back into a single {@link RichContent} value.
+   */
+  private richContentFromSourceMap(contents: SourceMapRichContent[]): RichContent {
+    // Merge adjacent string segments while preserving multimedia objects.  This
+    // mirrors the logic used when originally producing the output.
+    const parts: (string | ContentMultiMedia)[] = [];
+
+    // Helper for appending textual data while collapsing consecutive strings.
+    const append = (txt: string) => {
+      if (parts.length > 0 && typeof parts[parts.length - 1] === 'string') {
+        parts[parts.length - 1] = (parts[parts.length - 1] as string) + txt;
+      } else if (txt.length > 0) {
+        parts.push(txt);
+      }
+    };
+
+    for (const seg of contents) {
+      const c = seg.content as any;
+      if (typeof c === 'string') {
+        append(c);
+      } else if (Array.isArray(c)) {
+        for (const item of c) {
+          if (typeof item === 'string') {
+            append(item);
+          } else {
+            parts.push(item);
+          }
+        }
+      } else {
+        parts.push(c);
+      }
+    }
+
+    if (parts.length === 1) {
+      return typeof parts[0] === 'string' ? parts[0] : [parts[0]];
+    }
+    return parts;
+  }
+
+  /**
+   * Execute the main writing logic and gather mapping, multimedia and speaker
+   * information before it is broken down into smaller segments.
+   */
+  private generateWriterResult(ir: string): WriterResult {
     this.reset(ir);
     const $ = cheerio.load(
       ir,
