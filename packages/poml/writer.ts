@@ -321,6 +321,9 @@ class Writer<WriterOptions> {
       // reported span. If the message contains nothing but whitespace we fall
       // back to considering all segments.
       const relevant = nonWs.length ? nonWs : msgSegs;
+      if (!relevant.length) {
+        return undefined;
+      }
       const startIndex = Math.min(...relevant.map(seg => seg.inputStart));
       const endIndex = Math.max(...relevant.map(seg => seg.inputEnd));
       return {
@@ -329,7 +332,7 @@ class Writer<WriterOptions> {
         speaker: sp.speaker,
         content: msgSegs.map(seg => ({ startIndex: seg.inputStart, endIndex: seg.inputEnd, content: seg.content }))
       };
-    });
+    }).filter(msg => msg !== undefined);
   }
 
   /**
@@ -383,6 +386,8 @@ class Writer<WriterOptions> {
         }
       }
       if (!chosen) {
+        // Mappings must be non-empty here because the points are derived from the
+        // mappings. If we cannot find a mapping, use the first one as a fallback.
         chosen = result.mappings[0];
       }
 
@@ -486,47 +491,6 @@ class Writer<WriterOptions> {
       multimedia: partialResult.multimedia,
       speakers: this.assignSpeakers(partialResult, $)
     };
-  }
-
-  private richContentFromString(
-    text: string,
-    multimedia: PositionalContentMultiMedia[]
-  ): RichContent {
-    // The string contains several positions which are meant to be places for multimedia.
-    // We need to split the string into segments and insert multimedia in between.
-    multimedia = multimedia.sort((a, b) => a.index - b.index);
-    const topMedia = multimedia.filter(media => media.position === 'top');
-    const bottomMedia = multimedia.filter(media => media.position === 'bottom');
-
-    const removePositionIndex = (media: PositionalContentMultiMedia): ContentMultiMedia => {
-      const { position, index, ...rest } = media;
-      return rest;
-    };
-
-    const segments: RichContent = topMedia.map(removePositionIndex);
-    const appendSegment = (segment: string) => {
-      if (segments.length > 0 && typeof segments[segments.length - 1] === 'string') {
-        segments[segments.length - 1] += segment;
-      } else if (segment.length > 0) {
-        segments.push(segment);
-      }
-    };
-
-    let lastOccurrence: number = -1;
-    for (const occur of multimedia) {
-      appendSegment(text.slice(lastOccurrence + 1, occur.index));
-      if (occur.position === 'here') {
-        segments.push(removePositionIndex(occur));
-      }
-      lastOccurrence = occur.index;
-    }
-    appendSegment(text.slice(lastOccurrence + 1));
-    segments.push(...bottomMedia.map(removePositionIndex));
-
-    if (segments.length === 1 && typeof segments[0] === 'string') {
-      return segments[0];
-    }
-    return segments;
   }
 
   private getRoot($: cheerio.CheerioAPI): cheerio.Cheerio<any> {
