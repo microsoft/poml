@@ -26,7 +26,7 @@ def parse_expects(expect_file: Path) -> list[Message]:
     for i in range(1, len(sections), 2):
         if i + 1 < len(sections):
             speaker = sections[i]
-            raw_content = sections[i + 1].strip("\n")
+            raw_content = sections[i + 1].replace("\r\n", "\n").strip("\n")
 
             # Parse content for mixed text and images
             contents = []
@@ -38,7 +38,7 @@ def parse_expects(expect_file: Path) -> list[Message]:
             last_end = 0
             for match in re.finditer(image_pattern, raw_content):
                 # Add text before this image (if any)
-                text_before = raw_content[last_end : match.start()].strip("\n")
+                text_before = raw_content[last_end : match.start()].replace("\r\n", "\n").strip("\n")
                 if text_before:
                     contents.append(text_before)
 
@@ -58,7 +58,7 @@ def parse_expects(expect_file: Path) -> list[Message]:
                 last_end = match.end()
 
             # Add any remaining text after the last image
-            remaining_text = raw_content[last_end:].strip("\n")
+            remaining_text = raw_content[last_end:].replace("\r\n", "\n").strip("\n")
             if remaining_text:
                 contents.append(remaining_text)
 
@@ -81,7 +81,7 @@ def _diff(expected: list[Message], actual: Any) -> str:
         if "content" not in act:
             return f"Message {i} missing 'content' key"
         if isinstance(act["content"], str):
-            if len(exp["contents"]) != 1 or exp["contents"][0] != act["content"].strip("\n"):
+            if len(exp["contents"]) != 1 or exp["contents"][0] != act["content"].replace("\r\n", "\n").strip("\n"):
                 return f"Message {i} contents mismatch: expected {exp['contents']}, got {repr(act['content'])}"
             continue
         if not isinstance(act["content"], list):
@@ -89,7 +89,7 @@ def _diff(expected: list[Message], actual: Any) -> str:
         if len(exp["contents"]) != len(act.get("content", [])):
             return f"Message {i} content length mismatch: expected {len(exp['contents'])}, got {len(act.get('content', []))}"
         for j, (exp_content, act_content) in enumerate(zip(exp["contents"], act.get("content", []))):
-            if isinstance(act_content, str) and exp_content == act_content.strip("\n"):
+            if isinstance(act_content, str) and exp_content == act_content.replace("\r\n", "\n").strip("\n"):
                 continue
             if isinstance(act_content, dict):
                 if "base64" in act_content and act_content["base64"].startswith(exp_content):
