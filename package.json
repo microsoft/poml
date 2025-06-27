@@ -266,7 +266,7 @@
     "build-cli": "webpack-cli --config webpack.config.cli.js",
     "generate-component-spec": "npm run compile && node ./out/poml-vscode/lsp/parseComments.js && npm run compile && node ./out/poml-vscode/lsp/parseComments.js",
     "generate-vscodeignore": "node ./vscodeignore.js",
-    "compile": "tspc -p ./",
+    "compile": "tspc -p ./ && npm run build-extension",
     "watch": "tspc -watch -p ./",
     "package": "vsce package",
     "package:win": "vsce package --target win32-x64",

@@ -57,6 +57,14 @@ export interface PreviewResponse {
   rawText: string;
   ir: string;
   content: RichContent | Message[];
+  /**
+   * For chat messages, the original start index of each message in the source file.
+   */
+  messageOffsets?: number[];
+  /**
+   * For plain text preview, mapping of spans to their source offsets.
+   */
+  plainSpans?: { text: string; offset: number }[];
   error?: string | any[];
 }
 
