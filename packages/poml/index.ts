@@ -132,9 +132,8 @@ export async function commandLine(args: CliArgs) {
   } else if (args.input) {
     input = args.input;
   } else if (args.file) {
-    const filePath = path.resolve(workingDirectory, args.file);
-    input = readFileSync(filePath, { encoding: 'utf8' });
-    sourcePath = filePath;
+    input = readFileSync(args.file, { encoding: 'utf8' });
+    sourcePath = args.file;
   } else {
     throw new Error('Must specify either input or file');
   }
