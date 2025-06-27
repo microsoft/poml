@@ -171,7 +171,8 @@ export async function readTxt(
   options?: DocumentProps
 ): Promise<React.ReactElement> {
   const text = dataBuffer.toString();
-  return <Text whiteSpace='pre'>{text}</Text>;
+  const textWithoutCrlf = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  return <Text whiteSpace='pre'>{textWithoutCrlf}</Text>;
 }
 
 export async function readTxtFromPath(
