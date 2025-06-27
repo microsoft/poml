@@ -11,7 +11,8 @@ import {
   ContentMultiMedia,
   RichContent,
   SourceMapRichContent,
-  SourceMapMessage
+  SourceMapMessage,
+  richContentFromSourceMap
 } from './base';
 import { Position } from './presentation';
 import yaml from 'js-yaml';
@@ -171,7 +172,7 @@ class Writer<WriterOptions> {
    */
   public write(ir: string): RichContent {
     const segments = this.writeWithSourceMap(ir);
-    return this.richContentFromSourceMap(segments);
+    return richContentFromSourceMap(segments);
   }
 
   /**
@@ -184,7 +185,7 @@ class Writer<WriterOptions> {
     const messages = this.writeMessagesWithSourceMap(ir);
     return messages.map(m => ({
       speaker: m.speaker,
-      content: this.richContentFromSourceMap(m.content)
+      content: richContentFromSourceMap(m.content)
     }));
   }
 
@@ -435,45 +436,6 @@ class Writer<WriterOptions> {
     return [...topSegments, ...middleSegments, ...bottomSegments];
   }
 
-  /**
-   * Combine output pieces from a source map back into a single {@link RichContent} value.
-   */
-  private richContentFromSourceMap(contents: SourceMapRichContent[]): RichContent {
-    // Merge adjacent string segments while preserving multimedia objects.  This
-    // mirrors the logic used when originally producing the output.
-    const parts: (string | ContentMultiMedia)[] = [];
-
-    // Helper for appending textual data while collapsing consecutive strings.
-    const append = (txt: string) => {
-      if (parts.length > 0 && typeof parts[parts.length - 1] === 'string') {
-        parts[parts.length - 1] = (parts[parts.length - 1] as string) + txt;
-      } else if (txt.length > 0) {
-        parts.push(txt);
-      }
-    };
-
-    for (const seg of contents) {
-      const c = seg.content as any;
-      if (typeof c === 'string') {
-        append(c);
-      } else if (Array.isArray(c)) {
-        for (const item of c) {
-          if (typeof item === 'string') {
-            append(item);
-          } else {
-            parts.push(item);
-          }
-        }
-      } else {
-        parts.push(c);
-      }
-    }
-
-    if (parts.length === 1) {
-      return typeof parts[0] === 'string' ? parts[0] : [parts[0]];
-    }
-    return parts;
-  }
 
   /**
    * Execute the main writing logic and gather mapping, multimedia and speaker

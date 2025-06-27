@@ -44,6 +44,40 @@ export interface SourceMapMessage {
   content: SourceMapRichContent[];
 }
 
+export function richContentFromSourceMap(contents: SourceMapRichContent[]): RichContent {
+  const parts: (string | ContentMultiMedia)[] = [];
+
+  const append = (txt: string) => {
+    if (parts.length > 0 && typeof parts[parts.length - 1] === 'string') {
+      parts[parts.length - 1] = (parts[parts.length - 1] as string) + txt;
+    } else if (txt.length > 0) {
+      parts.push(txt);
+    }
+  };
+
+  for (const seg of contents) {
+    const c = seg.content as any;
+    if (typeof c === 'string') {
+      append(c);
+    } else if (Array.isArray(c)) {
+      for (const item of c) {
+        if (typeof item === 'string') {
+          append(item);
+        } else {
+          parts.push(item);
+        }
+      }
+    } else {
+      parts.push(c);
+    }
+  }
+
+  if (parts.length === 1) {
+    return typeof parts[0] === 'string' ? parts[0] : [parts[0]];
+  }
+  return parts;
+}
+
 /**
  * Props base serves the following props subclass, as far as I can now think of:
  * 1. Props for markup basic components

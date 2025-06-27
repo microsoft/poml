@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { PreviewResponse, WebviewState, WebviewUserOptions } from './types';
-import { Message, RichContent } from 'poml';
+import { Message, RichContent, SourceMapMessage, SourceMapRichContent } from 'poml';
 import { Converter as MarkdownConverter } from 'showdown';
 
 type HeadlessPomlVscodePanelContentProps = WebviewUserOptions & PreviewResponse;
@@ -9,6 +9,10 @@ type HeadlessPomlVscodePanelContentProps = WebviewUserOptions & PreviewResponse;
 interface PomlVscodePanelContentProps extends WebviewState, HeadlessPomlVscodePanelContentProps {
   extensionResourcePath: (mediaFile: string) => string;
   localResourcePath: (resourceFile: string) => string;
+}
+
+function lineFromIndex(text: string, index: number): number {
+  return text.slice(0, index).split('\n').length - 1;
 }
 
 function ButtonContent(props: { icon: string; content: string }) {
@@ -68,8 +72,22 @@ function ToolBar(props: WebviewUserOptions) {
   );
 }
 
-function CodeBlock(props: { className?: string, content: RichContent }) {
-  const { content, className } = props;
+function CodeBlock(props: { className?: string; content: RichContent; mappings?: SourceMapRichContent[]; rawText?: string }) {
+  const { content, className, mappings, rawText } = props;
+  if (mappings && rawText) {
+    const spans = mappings.map((m, i) => {
+      const text = typeof m.content === 'string' ? m.content : JSON.stringify(m.content, null, 2);
+      const line = lineFromIndex(rawText, m.startIndex);
+      return (
+        <span key={i} data-line={line} className="code-span">{text}</span>
+      );
+    });
+    return (
+      <pre className={className}>
+        <code>{spans}</code>
+      </pre>
+    );
+  }
   if (typeof content === 'string') {
     return (
       <pre className={className}>
@@ -110,9 +128,11 @@ function Markdown(props: { content: RichContent }) {
   return <div dangerouslySetInnerHTML={{ __html: converter.makeHtml(concatenatedMarkdown) }} />;
 }
 
-function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
-  const { messages, toRender } = props;
+function ChatMessages(props: { messages: Message[]; toRender: boolean; mappings?: SourceMapMessage[]; rawText?: string }) {
+  const { messages, toRender, mappings, rawText } = props;
   return messages.map((message, idx) => {
+    const map = mappings ? mappings[idx] : undefined;
+    const line = map && rawText !== undefined ? lineFromIndex(rawText, map.startIndex) : undefined;
     let role: string = message.speaker;
     let icon = 'feedback';
     if (role === 'system') {
@@ -126,7 +146,7 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
       icon = 'robot';
     }
     return (
-      <div className={`chat-message chat-message-${message.speaker}`} key={`message-${idx}`}>
+      <div className={`chat-message chat-message-${message.speaker}`} key={`message-${idx}`} data-line={line}>
         <div className="chat-message-header">
           <div className="content">
             <div className="avatar">
@@ -140,6 +160,7 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
                 className="codicon codicon-code"
                 role="button"
                 aria-label="Jump to Source Code"
+                data-line={line}
               ></a>
               <span className="toolbar-tooltip">Source Code</span>
             </div>
@@ -162,7 +183,7 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
           {toRender ? (
             <Markdown content={message.content} />
           ) : (
-            <CodeBlock content={message.content} />
+            <CodeBlock content={message.content} mappings={map?.content} rawText={rawText} />
           )}
         </div>
       </div>
@@ -171,7 +192,7 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean }) {
 }
 
 function Content(props: WebviewUserOptions & PreviewResponse) {
-  let { displayFormat, ir, content } = props;
+  let { displayFormat, ir, content, sourceMap, rawText } = props;
 
   let toCopy: string =
     typeof content === 'string'
@@ -183,7 +204,9 @@ function Content(props: WebviewUserOptions & PreviewResponse) {
     if (displayFormat === 'ir') {
       result = <CodeBlock content={ir} />;
     } else if (displayFormat === 'plain') {
-      result = <ChatMessages messages={content} toRender={false} />;
+      result = (
+        <ChatMessages messages={content} toRender={false} mappings={sourceMap as SourceMapMessage[]} rawText={rawText} />
+      );
     } else if (displayFormat === 'rendered') {
       result = <ChatMessages messages={content} toRender={true} />;
     } else {
@@ -194,7 +217,7 @@ function Content(props: WebviewUserOptions & PreviewResponse) {
     if (displayFormat === 'ir') {
       result = <CodeBlock content={ir} />;
     } else if (displayFormat === 'plain') {
-      result = <CodeBlock content={content} />;
+      result = <CodeBlock content={content} mappings={sourceMap as SourceMapRichContent[]} rawText={rawText} />;
     } else if (displayFormat === 'rendered') {
       result = <Markdown content={content} />;
     } else {

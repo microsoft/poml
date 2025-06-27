@@ -3,7 +3,7 @@ import * as React from 'react';
 import { describe, expect, test } from '@jest/globals';
 import { MarkdownWriter, JsonWriter, MultiMediaWriter, YamlWriter, XmlWriter } from 'poml/writer';
 import { readFileSync } from 'fs';
-import { ErrorCollection } from 'poml/base';
+import { ErrorCollection, richContentFromSourceMap } from 'poml/base';
 
 describe('markdown', () => {
   test('markdownSimple', () => {
@@ -108,7 +108,7 @@ describe('markdown', () => {
     const segs = writer.writeMessagesWithSourceMap(ir);
     const reconstructed = segs.map(m => ({
       speaker: m.speaker,
-      content: (writer as any).richContentFromSourceMap(m.content)
+      content: richContentFromSourceMap(m.content)
     }));
     expect(direct).toStrictEqual(reconstructed);
     expect(segs).toStrictEqual([{ startIndex: 0, endIndex: 0, speaker: 'human', content: [] }]);
@@ -119,7 +119,7 @@ describe('markdown', () => {
     const ir = `<p><p speaker="human">hello</p><p>world</p></p>`;
     const direct = writer.write(ir);
     const segs = writer.writeWithSourceMap(ir);
-    const reconstructed = (writer as any).richContentFromSourceMap(segs);
+    const reconstructed = richContentFromSourceMap(segs);
     expect(direct).toStrictEqual(reconstructed);
   });
 
@@ -130,7 +130,7 @@ describe('markdown', () => {
     const segs = writer.writeMessagesWithSourceMap(ir);
     const reconstructed = segs.map(m => ({
       speaker: m.speaker,
-      content: (writer as any).richContentFromSourceMap(m.content)
+      content: richContentFromSourceMap(m.content)
     }));
     expect(direct).toStrictEqual(reconstructed);
   });
