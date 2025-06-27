@@ -172,7 +172,7 @@ function stripEndline(str: string): string {
 }
 
 function parseExpects(expectFile: string): ExpectMessage[] {
-  const content = fs.readFileSync(expectFile, 'utf-8');
+  const content = fs.readFileSync(expectFile, 'utf-8').replace(/\r\n/g, '\n');
 
   // Split by speaker headers (===== speaker =====)
   const sections = content.split(/===== (\w+) =====\n\n/);

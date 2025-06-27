@@ -119,8 +119,6 @@ export async function commandLine(args: CliArgs) {
   let workingDirectory: string;
   if (args.cwd) {
     workingDirectory = path.resolve(args.cwd);
-  } else if (args.file) {
-    workingDirectory = path.dirname(path.resolve(args.file));
   } else {
     workingDirectory = process.cwd();
   }
@@ -132,8 +130,9 @@ export async function commandLine(args: CliArgs) {
   } else if (args.input) {
     input = args.input;
   } else if (args.file) {
-    input = readFileSync(args.file, { encoding: 'utf8' });
-    sourcePath = args.file;
+    const filePath = path.resolve(workingDirectory, args.file);
+    input = readFileSync(filePath, { encoding: 'utf8' });
+    sourcePath = filePath;
   } else {
     throw new Error('Must specify either input or file');
   }

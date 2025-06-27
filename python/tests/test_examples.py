@@ -14,7 +14,7 @@ class Message(TypedDict):
 
 
 def parse_expects(expect_file: Path) -> list[Message]:
-    content = expect_file.read_text()
+    content = expect_file.read_text().replace("\r\n", "\n")
 
     # Split by speaker headers (===== speaker =====)
     sections = re.split(r"===== (\w+) =====\n\n", content)
