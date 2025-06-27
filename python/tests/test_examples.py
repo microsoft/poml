@@ -1,6 +1,7 @@
 import re
 import poml
 import json
+import pytest
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -96,18 +97,25 @@ def _diff(expected: list[Message], actual: Any) -> str:
     return ""
 
 
-def test_examples():
+def list_example_files():
     """
     Test that all example files can be processed without errors.
     """
-    for example_file in sorted(example_directory.glob("*.poml")):
-        result = poml.poml(example_file)
-        expect_file = example_directory / "expects" / (example_file.stem + ".txt")
-        if not expect_file.exists():
-            raise FileNotFoundError(f"Expected output file not found: {expect_file}")
+    return list(sorted(example_directory.glob("*.poml")))
 
-        # Parse the expected output
-        expected_messages = parse_expects(expect_file)
-        diff = _diff(expected_messages, result)
-        if diff:
-            raise AssertionError(f"Example {example_file.name} failed:\n{diff}")
+
+@pytest.mark.parametrize("example_file", list_example_files())
+def test_example_file(example_file):
+    """
+    Test that a specific example file can be processed without errors.
+    """
+    result = poml.poml(example_file)
+    expect_file = example_directory / "expects" / (example_file.stem + ".txt")
+    if not expect_file.exists():
+        raise FileNotFoundError(f"Expected output file not found: {expect_file}")
+
+    # Parse the expected output
+    expected_messages = parse_expects(expect_file)
+    diff = _diff(expected_messages, result)
+    if diff:
+        raise AssertionError(f"Example {example_file.name} failed:\n{diff}")
