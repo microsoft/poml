@@ -26,6 +26,23 @@ export const setupToolbar = (vscode: any, messaging: MessagePoster) => {
     navigator.clipboard.writeText(copyText);
   });
 
+  $(document).on('click', '.chat-message-toolbar .codicon-code', function () {
+    const line = parseInt($(this).data('line'));
+    if (!isNaN(line)) {
+      messaging.postMessage(WebviewMessage.DidClick, { line });
+    }
+  });
+
+  $(document).on('dblclick contextmenu', '[data-line]', function (e) {
+    if (!getState().doubleClickToSwitchToEditor && e.type === 'dblclick') {
+      return;
+    }
+    const line = parseInt($(this).data('line'));
+    if (!isNaN(line)) {
+      messaging.postMessage(WebviewMessage.DidClick, { line });
+    }
+  });
+
   $('.toolbar .button.onoff').on('click', function () {
     $(this).toggleClass('active');
     $(this).data('value', $(this).hasClass('active'));

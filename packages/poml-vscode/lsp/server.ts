@@ -24,7 +24,7 @@ import {
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as crypto from 'crypto';
-import { Message, poml, read, write } from 'poml';
+import { Message, poml, read, writeWithSourceMap, SourceMapMessage, SourceMapRichContent, richContentFromSourceMap } from 'poml';
 import {
   ErrorCollection,
   findComponentByAlias,
@@ -204,11 +204,19 @@ class PomlLspServer {
       };
     }
     let result: Message[] | RichContent;
+    let sourceMap: SourceMapMessage[] | SourceMapRichContent[] | undefined;
     try {
       if (speakerMode) {
-        result = write(ir, { speaker: true });
+        const map = writeWithSourceMap(ir, { speaker: true }) as SourceMapMessage[];
+        sourceMap = map;
+        result = map.map(m => ({
+          speaker: m.speaker,
+          content: richContentFromSourceMap(m.content)
+        }));
       } else {
-        result = write(ir);
+        const map = writeWithSourceMap(ir) as SourceMapRichContent[];
+        sourceMap = map;
+        result = richContentFromSourceMap(map);
       }
     } catch (e) {
       this.telemetryReporter.reportTelemetryError(TelemetryEvent.WriteUncaughtException, e);
@@ -224,6 +232,7 @@ class PomlLspServer {
       rawText: documentContent,
       ir,
       content: result,
+      sourceMap,
       error: params.returnAllErrors
         ? ErrorCollection.list()
         : ErrorCollection.empty()

@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { renderToString } from "react-dom/server";
 import path from 'path';
 import { EnvironmentDispatcher } from "./writer";
-import { ErrorCollection, Message, RichContent, StyleSheetProvider, SystemError, SourceMapRichContent, SourceMapMessage } from './base';
+import { ErrorCollection, Message, RichContent, StyleSheetProvider, SystemError, SourceMapRichContent, SourceMapMessage, richContentFromSourceMap } from './base';
 import { PomlFile, PomlReaderOptions } from './file';
 import './presentation';
 import './essentials';
@@ -11,7 +11,7 @@ import "./components";
 import { reactRender } from './util/reactRender';
 import { dumpTrace, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
 
-export { RichContent, Message, SourceMapRichContent, SourceMapMessage };
+export { RichContent, Message, SourceMapRichContent, SourceMapMessage, richContentFromSourceMap };
 
 export const read = async (
   element: React.ReactElement | string,
