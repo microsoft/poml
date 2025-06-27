@@ -61,6 +61,10 @@ export class POMLWebviewPanelManager implements vscode.WebviewPanelSerializer {
     return this._activePreview && this._activePreview.pomlUri;
   }
 
+  public get activePreview() {
+    return this._activePreview;
+  }
+
   public toggleLock() {
     const preview = this._activePreview;
     if (preview) {

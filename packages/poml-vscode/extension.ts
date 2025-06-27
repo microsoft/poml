@@ -40,6 +40,10 @@ export function activate(context: vscode.ExtensionContext) {
   commandManager.register(new command.ShowPreviewToSideCommand(webviewManager));
   commandManager.register(new command.ShowLockedPreviewToSideCommand(webviewManager));
   commandManager.register(new command.ShowSourceCommand(webviewManager));
+  commandManager.register(new command.AddContextFileCommand(webviewManager));
+  commandManager.register(new command.AddStylesheetFileCommand(webviewManager));
+  commandManager.register(new command.RemoveContextFileCommand(webviewManager));
+  commandManager.register(new command.RemoveStylesheetFileCommand(webviewManager));
   
   const connectionString = getConnectionString();
   if (connectionString) {

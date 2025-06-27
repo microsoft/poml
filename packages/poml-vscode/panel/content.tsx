@@ -37,6 +37,28 @@ function ToolBar(props: WebviewUserOptions) {
       <div className="button oneclick" id="copy">
         <ButtonContent icon="copy" content="Copy" />
       </div>
+      <div className="button oneclick" id="add-context">
+        <ButtonContent icon="file-symlink-file" content="Add Context" />
+      </div>
+      <div className="chips" id="context-chips">
+        {props.contexts?.map(f => (
+          <span className="chip" data-file={f} key={f}>
+            {f.split(/[\\/]/).pop()}
+            <span className="remove codicon codicon-close"></span>
+          </span>
+        ))}
+      </div>
+      <div className="button oneclick" id="add-stylesheet">
+        <ButtonContent icon="symbol-color" content="Add Stylesheet" />
+      </div>
+      <div className="chips" id="stylesheet-chips">
+        {props.stylesheets?.map(f => (
+          <span className="chip" data-file={f} key={f}>
+            {f.split(/[\\/]/).pop()}
+            <span className="remove codicon codicon-close"></span>
+          </span>
+        ))}
+      </div>
       <div
         className={`button onoff ${speakerMode ? 'active' : ''}`}
         id="speaker-mode"

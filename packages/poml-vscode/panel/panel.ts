@@ -34,6 +34,7 @@ export class POMLWebviewPanel {
   private isScrolling = false;
   private _disposed: boolean = false;
   private _userOptions: WebviewUserOptions;
+  private readonly resourceOptions = new Map<string, { contexts: string[]; stylesheets: string[] }>();
 
   public static async revive(
     webview: vscode.WebviewPanel,
@@ -55,7 +56,9 @@ export class POMLWebviewPanel {
       locked,
       {
         speakerMode: state.speakerMode,
-        displayFormat: state.displayFormat
+        displayFormat: state.displayFormat,
+        contexts: state.contexts ?? [],
+        stylesheets: state.stylesheets ?? []
       },
       context,
       previewConfigurations,
@@ -93,7 +96,9 @@ export class POMLWebviewPanel {
 
     const userOptions: WebviewUserOptions = {
       speakerMode: true,
-      displayFormat: 'plain'
+      displayFormat: 'plain',
+      contexts: [],
+      stylesheets: []
     };
 
     return new POMLWebviewPanel(
@@ -121,6 +126,10 @@ export class POMLWebviewPanel {
     this._pomlUri = resource;
     this._locked = locked;
     this._userOptions = userOptions;
+    this.resourceOptions.set(this._pomlUri.fsPath, {
+      contexts: [...(userOptions.contexts ?? [])],
+      stylesheets: [...(userOptions.stylesheets ?? [])],
+    });
     this.editor = webview;
 
     this.editor.onDidDispose(
@@ -159,7 +168,7 @@ export class POMLWebviewPanel {
             break;
 
           case WebviewMessage.Form:
-            this._userOptions = e.body;
+            this._userOptions = { ...this._userOptions, ...e.body };
             this.onDidUserOptionsChange();
             break;
         }
@@ -252,6 +261,21 @@ export class POMLWebviewPanel {
       this.throttleTimer = undefined;
     }
 
+    if (isResourceChange) {
+      this.resourceOptions.set(this._pomlUri.fsPath, {
+        contexts: [...(this._userOptions.contexts ?? [])],
+        stylesheets: [...(this._userOptions.stylesheets ?? [])],
+      });
+      const saved = this.resourceOptions.get(resource.fsPath);
+      if (saved) {
+        this._userOptions.contexts = [...saved.contexts];
+        this._userOptions.stylesheets = [...saved.stylesheets];
+      } else {
+        this._userOptions.contexts = [];
+        this._userOptions.stylesheets = [];
+      }
+    }
+
     this._pomlUri = resource;
 
     // Schedule update if none is pending
@@ -308,6 +332,56 @@ export class POMLWebviewPanel {
   public toggleLock() {
     this._locked = !this._locked;
     this.editor.title = POMLWebviewPanel.getPreviewTitle(this._pomlUri, this._locked);
+  }
+
+  public addContext(file: string) {
+    if (!this._userOptions.contexts) {
+      this._userOptions.contexts = [];
+    }
+    if (!this._userOptions.contexts.includes(file)) {
+      this._userOptions.contexts.push(file);
+      this.resourceOptions.set(this._pomlUri.fsPath, {
+        contexts: [...this._userOptions.contexts],
+        stylesheets: [...(this._userOptions.stylesheets ?? [])],
+      });
+      this.onDidUserOptionsChange();
+    }
+  }
+
+  public addStylesheet(file: string) {
+    if (!this._userOptions.stylesheets) {
+      this._userOptions.stylesheets = [];
+    }
+    if (!this._userOptions.stylesheets.includes(file)) {
+      this._userOptions.stylesheets.push(file);
+      this.resourceOptions.set(this._pomlUri.fsPath, {
+        contexts: [...(this._userOptions.contexts ?? [])],
+        stylesheets: [...this._userOptions.stylesheets],
+      });
+      this.onDidUserOptionsChange();
+    }
+  }
+
+  public removeContext(file: string) {
+    if (this._userOptions.contexts) {
+      this._userOptions.contexts = this._userOptions.contexts.filter(f => f !== file);
+      this.resourceOptions.set(this._pomlUri.fsPath, {
+        contexts: [...this._userOptions.contexts],
+        stylesheets: [...(this._userOptions.stylesheets ?? [])],
+      });
+      this.onDidUserOptionsChange();
+    }
+  }
+
+  public removeStylesheet(file: string) {
+    if (this._userOptions.stylesheets) {
+      this._userOptions.stylesheets = this._userOptions.stylesheets.filter(f => f !== file);
+      this.resourceOptions.set(this._pomlUri.fsPath, {
+        contexts: [...(this._userOptions.contexts ?? [])],
+        stylesheets: [...this._userOptions.stylesheets],
+      });
+      this.onDidUserOptionsChange();
+    }
   }
 
   private get iconPath() {
@@ -504,6 +578,7 @@ export class POMLWebviewPanel {
       ...response,
     });
     this.editor.webview.postMessage({ type: WebviewMessage.UpdateContent, content: content, source: resource.toString() });
+    this.editor.webview.postMessage({ type: WebviewMessage.UpdateUserOptions, options: this._userOptions, source: resource.toString() });
   }
 
 }

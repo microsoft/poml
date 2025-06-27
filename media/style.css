@@ -286,3 +286,26 @@ pre code {
 .chat-message-content {
   padding: 0 var(--poml-padding-02);
 }
+
+/* chip lists */
+.chips {
+  display: flex;
+  gap: var(--poml-padding-05);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--poml-padding-035);
+  background: var(--vscode-toolbar-hoverBackground);
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-radius: 10px;
+  font-size: var(--poml-font-size-08);
+}
+
+.chip .remove {
+  margin-left: var(--poml-padding-035);
+  cursor: pointer;
+}

@@ -16,7 +16,20 @@
     "Other"
   ],
   "activationEvents": [
-    "onWebviewPanel:poml.preview"
+    "onWebviewPanel:poml.preview",
+    "onCommand:poml.test",
+    "onCommand:poml.testNonChat",
+    "onCommand:poml.testRerun",
+    "onCommand:poml.testAbort",
+    "onCommand:poml.showPreview",
+    "onCommand:poml.showPreviewToSide",
+    "onCommand:poml.showLockedPreviewToSide",
+    "onCommand:poml.showSource",
+    "onCommand:poml.addContextFile",
+    "onCommand:poml.addStylesheetFile",
+    "onCommand:poml.removeContextFile",
+    "onCommand:poml.removeStylesheetFile",
+    "onCommand:poml.telemetry.completion"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -110,6 +123,26 @@
           "light": "./media/icon/view-source.svg",
           "dark": "./media/icon/view-source-inverse.svg"
         }
+      },
+      {
+        "command": "poml.addContextFile",
+        "title": "Add Context File",
+        "category": "POML"
+      },
+      {
+        "command": "poml.addStylesheetFile",
+        "title": "Add Stylesheet File",
+        "category": "POML"
+      },
+      {
+        "command": "poml.removeContextFile",
+        "title": "Remove Context File",
+        "category": "POML"
+      },
+      {
+        "command": "poml.removeStylesheetFile",
+        "title": "Remove Stylesheet File",
+        "category": "POML"
       },
       {
         "command": "poml.telemetry.completion",
