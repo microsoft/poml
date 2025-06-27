@@ -25,8 +25,10 @@ const SPECIAL_CHARACTER = 'À';
 type PositionalContentMultiMedia = ContentMultiMedia & { position: Position; index: number };
 
 interface MappingNode {
-  inputStart: number;
-  inputEnd: number;
+  originalStart?: number;  // Original start index in the input source code
+  originalEnd?: number;  // Original end index in the input source code
+  inputStart: number;  // Start index in the IR
+  inputEnd: number;  // End index in the IR
   outputStart: number;
   outputEnd: number;
 }
@@ -54,6 +56,8 @@ interface WriterResult {
 interface SourceSegment {
   outStart: number;
   outEnd: number;
+  irStart: number;
+  irEnd: number;
   inputStart: number;
   inputEnd: number;
   content: RichContent;
@@ -79,7 +83,16 @@ class Writer<WriterOptions> {
   }
 
   protected createMappingNode(element: cheerio.Cheerio<any>, outputLength: number): MappingNode {
+    const parseAttrAsInt = (attrName: string): number | undefined => {
+      const attrValue = element.attr(attrName);
+      return attrValue !== undefined && !isNaN(parseInt(attrValue, 10))
+        ? parseInt(attrValue, 10)
+        : undefined;
+    };
+
     return {
+      originalStart: parseAttrAsInt('original-start-index'),
+      originalEnd: parseAttrAsInt('original-end-index'),
       inputStart: element[0].startIndex,
       inputEnd: element[0].endIndex,
       outputStart: 0,
@@ -102,8 +115,7 @@ class Writer<WriterOptions> {
   ): MappingNode[] {
     return mappings.map(mapping => {
       return {
-        inputStart: mapping.inputStart,
-        inputEnd: mapping.inputEnd,
+        ...mapping,
         outputStart:
           mapping.outputStart >= ignoreBefore ? mapping.outputStart + indent : mapping.outputStart,
         outputEnd:
@@ -304,7 +316,7 @@ class Writer<WriterOptions> {
   public writeWithSourceMap(ir: string): SourceMapRichContent[] {
     const result = this.generateWriterResult(ir);
     const segments = this.buildSourceMap(result);
-    return segments.map(s => ({ startIndex: s.inputStart, endIndex: s.inputEnd, content: s.content }));
+    return segments.map(s => ({ startIndex: s.inputStart, endIndex: s.inputEnd, irStartIndex: s.irStart, irEndIndex: s.irEnd, content: s.content }));
   }
 
   /**
@@ -327,17 +339,21 @@ class Writer<WriterOptions> {
         return {
           startIndex: 0,  // in this case, we cannot determine the start index
           endIndex: 0,
+          irStartIndex: 0,
+          irEndIndex: 0,
           speaker: sp.speaker,
           content: []
         }
       }
-      const startIndex = Math.min(...relevant.map(seg => seg.inputStart));
-      const endIndex = Math.max(...relevant.map(seg => seg.inputEnd));
       return {
-        startIndex,
-        endIndex,
+        startIndex: Math.min(...relevant.map(seg => seg.inputStart)),
+        endIndex: Math.max(...relevant.map(seg => seg.inputEnd)),
+        irStartIndex: Math.min(...relevant.map(seg => seg.irStart)),
+        irEndIndex: Math.max(...relevant.map(seg => seg.irEnd)),
         speaker: sp.speaker,
-        content: msgSegs.map(seg => ({ startIndex: seg.inputStart, endIndex: seg.inputEnd, content: seg.content }))
+        content: msgSegs.map(seg => ({
+          startIndex: seg.inputStart, endIndex: seg.inputEnd, irStartIndex: seg.irStart, irEndIndex: seg.irEnd, content: seg.content
+        }))
       };
     }).filter(msg => msg !== undefined);
   }
@@ -373,6 +389,12 @@ class Writer<WriterOptions> {
     const middleSegments: SourceSegment[] = [];
     const bottomSegments: SourceSegment[] = [];
 
+    const originalStartIndices = result.mappings.map(m => m.originalStart).filter(m => m !== undefined);
+    const sourceStartIndex = originalStartIndices.length > 0 ? Math.min(...originalStartIndices) : 0;
+    const originalEndIndices = result.mappings.map(m => m.originalEnd).filter(m => m !== undefined);
+    const sourceEndIndex = originalEndIndices.length > 0 ? Math.max(...originalEndIndices) : 0;
+    console.dir(result.mappings, { depth: null });
+
     for (let i = 0; i < points.length - 1; i++) {
       const start = points[i];
       const end = points[i + 1];
@@ -385,10 +407,19 @@ class Writer<WriterOptions> {
       // resulting segment to map back to the tightest IR range responsible for
       // the output.
       let chosen: MappingNode | undefined;
+
+      // The chosen IR might not have a precise original start or end index, so we
+      // choose a fallback based on the original mappings.
+      let chosenOriginal: MappingNode | undefined;
+
       for (const m of result.mappings) {
         if (start >= m.outputStart && end - 1 <= m.outputEnd) {
           if (!chosen || m.outputEnd - m.outputStart < chosen.outputEnd - chosen.outputStart) {
             chosen = m;
+          }
+          if ((m.originalStart !== undefined && m.originalEnd !== undefined) && (
+            !chosenOriginal || m.originalEnd - m.originalStart < chosenOriginal.originalEnd! - chosenOriginal.originalStart!)) {
+            chosenOriginal = m;
           }
         }
       }
@@ -397,6 +428,7 @@ class Writer<WriterOptions> {
         // mappings. If we cannot find a mapping, use the first one as a fallback.
         chosen = result.mappings[0];
       }
+      console.log(start, end, chosen, chosenOriginal);
 
       // If a multimedia item starts at this boundary, emit it instead of text.
       const media = result.multimedia.find(m => m.index === start);
@@ -405,8 +437,10 @@ class Writer<WriterOptions> {
         const segment: SourceSegment = {
           outStart: start,
           outEnd: end - 1,
-          inputStart: chosen.inputStart,
-          inputEnd: chosen.inputEnd,
+          irStart: chosen.inputStart,
+          irEnd: chosen.inputEnd,
+          inputStart: chosenOriginal?.originalStart ?? sourceStartIndex,
+          inputEnd: chosenOriginal?.originalEnd ?? sourceEndIndex,
           content: [rest]
         };
         if (position === 'top') {
@@ -421,8 +455,10 @@ class Writer<WriterOptions> {
         middleSegments.push({
           outStart: start,
           outEnd: end - 1,
-          inputStart: chosen.inputStart,
-          inputEnd: chosen.inputEnd,
+          irStart: chosen.inputStart,
+          irEnd: chosen.inputEnd,
+          inputStart: chosenOriginal?.originalStart ?? sourceStartIndex,
+          inputEnd: chosenOriginal?.originalEnd ?? sourceEndIndex,
           content: slice
         });
       }
@@ -435,7 +471,6 @@ class Writer<WriterOptions> {
     // within the correct message.
     return [...topSegments, ...middleSegments, ...bottomSegments];
   }
-
 
   /**
    * Execute the main writing logic and gather mapping, multimedia and speaker

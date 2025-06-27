@@ -12,7 +12,7 @@ interface PomlVscodePanelContentProps extends WebviewState, HeadlessPomlVscodePa
 }
 
 function lineFromIndex(text: string, index: number): number {
-  return text.slice(0, index).split('\n').length - 1;
+  return text.slice(0, index).split(/\r?\n/g).length - 1;
 }
 
 function ButtonContent(props: { icon: string; content: string }) {

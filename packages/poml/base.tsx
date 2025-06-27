@@ -34,12 +34,16 @@ export interface Message {
 export interface SourceMapRichContent {
   startIndex: number;
   endIndex: number;
+  irStartIndex: number;
+  irEndIndex: number;
   content: RichContent;
 }
 
 export interface SourceMapMessage {
   startIndex: number;
   endIndex: number;
+  irStartIndex: number;
+  irEndIndex: number;
   speaker: Speaker;
   content: SourceMapRichContent[];
 }

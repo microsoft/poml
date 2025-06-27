@@ -59,8 +59,8 @@ describe('markdown', () => {
     const simple = `<p>hello world <b>foo</b></p>`;
     const result = writer.writeWithSourceMap(simple);
     expect(result).toStrictEqual([
-      { startIndex: 0, endIndex: 28, content: 'hello world ' },
-      { startIndex: 15, endIndex: 24, content: '**foo**' }
+      { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 28, content: 'hello world ' },
+      { startIndex: 0, endIndex: 0, irStartIndex: 15, irEndIndex: 24, content: '**foo**' }
     ]);
   });
 
@@ -69,11 +69,11 @@ describe('markdown', () => {
     const withSpeaker = `<p><p speaker="system">hello world</p><p speaker="human">foo bar</p><p>something</p></p>`;
     const result = writer.writeWithSourceMap(withSpeaker);
     expect(result).toStrictEqual([
-      { startIndex: 3, endIndex: 37, content: 'hello world' },
-      { startIndex: 0, endIndex: 87, content: '\n\n' },
-      { startIndex: 38, endIndex: 67, content: 'foo bar' },
-      { startIndex: 0, endIndex: 87, content: '\n\n' },
-      { startIndex: 68, endIndex: 83, content: 'something' }
+      { startIndex: 0, endIndex: 0, irStartIndex: 3, irEndIndex: 37, content: 'hello world' },
+      { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 87, content: '\n\n' },
+      { startIndex: 0, endIndex: 0, irStartIndex: 38, irEndIndex: 67, content: 'foo bar' },
+      { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 87, content: '\n\n' },
+      { startIndex: 0, endIndex: 0, irStartIndex: 68, irEndIndex: 83, content: 'something' }
     ]);
   });
 
@@ -83,19 +83,25 @@ describe('markdown', () => {
     const result = writer.writeMessagesWithSourceMap(withSpeaker);
     expect(result).toStrictEqual([
       {
-        startIndex: 3,
-        endIndex: 37,
+        startIndex: 0,
+        endIndex: 0,
+        irStartIndex: 3,
+        irEndIndex: 37,
         speaker: 'system',
-        content: [{ startIndex: 3, endIndex: 37, content: 'hello world' }]
+        content: [
+          { startIndex: 0, endIndex: 0, irStartIndex: 3, irEndIndex: 37, content: 'hello world' }
+        ]
       },
       {
-        startIndex: 38,
-        endIndex: 83,
+        startIndex: 0,
+        endIndex: 0,
+        irStartIndex: 38,
+        irEndIndex: 83,
         speaker: 'human',
         content: [
-          { startIndex: 38, endIndex: 67, content: 'foo bar' },
-          { startIndex: 0, endIndex: 87, content: '\n\n' },
-          { startIndex: 68, endIndex: 83, content: 'something' }
+          { startIndex: 0, endIndex: 0, irStartIndex: 38, irEndIndex: 67, content: 'foo bar' },
+          { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 87, content: '\n\n' },
+          { startIndex: 0, endIndex: 0, irStartIndex: 68, irEndIndex: 83, content: 'something' }
         ]
       }
     ]);
@@ -111,7 +117,9 @@ describe('markdown', () => {
       content: richContentFromSourceMap(m.content)
     }));
     expect(direct).toStrictEqual(reconstructed);
-    expect(segs).toStrictEqual([{ startIndex: 0, endIndex: 0, speaker: 'human', content: [] }]);
+    expect(segs).toStrictEqual([
+      { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 0, speaker: 'human', content: [] }
+    ]);
   });
 
   test('markdownWriteMatchesSegments', () => {
@@ -144,9 +152,15 @@ describe('markdown', () => {
     const imgStart = ir.indexOf('<img');
     const imgEnd = ir.indexOf('/>', imgStart) + 1;
     expect(segs).toStrictEqual([
-      { startIndex: 0, endIndex: rootEnd, content: 'hello' },
-      { startIndex: imgStart, endIndex: imgEnd, content: [{ type: 'image', base64, alt: 'img' }] },
-      { startIndex: 0, endIndex: rootEnd, content: 'world' }
+      { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: rootEnd, content: 'hello' },
+      {
+        startIndex: 0,
+        endIndex: 0,
+        irStartIndex: imgStart,
+        irEndIndex: imgEnd,
+        content: [{ type: 'image', base64, alt: 'img' }]
+      },
+      { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: rootEnd, content: 'world' }
     ]);
   });
 
@@ -164,22 +178,36 @@ describe('markdown', () => {
     const rootEnd = ir.length - 1;
     expect(segs).toStrictEqual([
       {
-        startIndex: humanStart,
-        endIndex: humanEnd,
+        startIndex: 0,
+        endIndex: 0,
+        irStartIndex: humanStart,
+        irEndIndex: humanEnd,
         speaker: 'human',
-        content: [{ startIndex: humanStart, endIndex: humanEnd, content: 'hello' }]
+        content: [
+          {
+            startIndex: 0,
+            endIndex: 0,
+            irStartIndex: humanStart,
+            irEndIndex: humanEnd,
+            content: 'hello'
+          }
+        ]
       },
       {
-        startIndex: aiStart,
-        endIndex: aiEnd,
+        startIndex: 0,
+        endIndex: 0,
+        irStartIndex: aiStart,
+        irEndIndex: aiEnd,
         speaker: 'ai',
         content: [
           {
-            startIndex: imgStart,
-            endIndex: imgEnd,
+            startIndex: 0,
+            endIndex: 0,
+            irStartIndex: imgStart,
+            irEndIndex: imgEnd,
             content: [{ type: 'image', base64, alt: 'img' }]
           },
-          { startIndex: aiStart, endIndex: aiEnd, content: 'world' }
+          { startIndex: 0, endIndex: 0, irStartIndex: aiStart, irEndIndex: aiEnd, content: 'world' }
         ]
       }
     ]);
@@ -200,29 +228,43 @@ describe('markdown', () => {
     const img2End = ir.indexOf('/>', img2Start) + 1;
     expect(segs).toStrictEqual([
       {
-        startIndex: humanStart,
-        endIndex: humanEnd,
+        startIndex: 0,
+        endIndex: 0,
+        irStartIndex: humanStart,
+        irEndIndex: humanEnd,
         speaker: 'human',
         content: [
           {
-            startIndex: img1Start,
-            endIndex: img1End,
+            startIndex: 0,
+            endIndex: 0,
+            irStartIndex: img1Start,
+            irEndIndex: img1End,
             content: [{ type: 'image', base64, alt: 'img1' }]
           },
-          { startIndex: humanStart, endIndex: humanEnd, content: 'Hello' }
+          {
+            startIndex: 0,
+            endIndex: 0,
+            irStartIndex: humanStart,
+            irEndIndex: humanEnd,
+            content: 'Hello'
+          }
         ]
       },
       {
-        startIndex: aiStart,
-        endIndex: aiEnd,
+        startIndex: 0,
+        endIndex: 0,
+        irStartIndex: aiStart,
+        irEndIndex: aiEnd,
         speaker: 'ai',
         content: [
           {
-            startIndex: img2Start,
-            endIndex: img2End,
+            startIndex: 0,
+            endIndex: 0,
+            irStartIndex: img2Start,
+            irEndIndex: img2End,
             content: [{ type: 'image', base64, alt: 'img2' }]
           },
-          { startIndex: aiStart, endIndex: aiEnd, content: 'World' }
+          { startIndex: 0, endIndex: 0, irStartIndex: aiStart, irEndIndex: aiEnd, content: 'World' }
         ]
       }
     ]);

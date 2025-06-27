@@ -5,7 +5,7 @@ import * as path from 'path';
 import { beforeAll, afterAll, describe, expect, test } from '@jest/globals';
 import { spyOn } from 'jest-mock';
 
-import { read, write, poml, commandLine } from 'poml';
+import { read, write, writeWithSourceMap, poml, commandLine } from 'poml';
 import { ErrorCollection, ReadError, WriteError } from 'poml/base';
 
 // Add a finalizer to allow any lingering async operations (like from pdf-parse) to complete.
@@ -133,6 +133,133 @@ describe('diagnosis', () => {
       expect(ir).toMatch(/^<obj serializer="json"/g);
       expect(originalSlice).toBe('<obj syntax="json"/>');
     }
+  });
+
+  test('writeWithSourceMap', async () => {
+    const original = '<poml><p>hello <b>world</b></p><p speaker="human">how are you?</p></poml>';
+    const fn = async () => {
+      ErrorCollection.clear();
+      const ir = await read(original);
+      const segments = writeWithSourceMap(ir, { speaker: true });
+      if (!ErrorCollection.empty()) {
+        throw ErrorCollection.first();
+      }
+      return segments;
+    };
+    const segments = await fn();
+    const p1Start = original.indexOf('<p>');
+    const p1End = original.indexOf('</p>') + 4 - 1; // +4 for '</p>', -1 for inclusive end
+    const bStart = original.indexOf('<b>');
+    const bEnd = original.indexOf('</b>') + 4 - 1;
+    const p2Start = original.indexOf('<p speaker="human">');
+    const p2End = original.lastIndexOf('</p>') + 4 - 1;
+    const expects = [
+      {
+        startIndex: p1Start,
+        endIndex: p1End,
+        irStartIndex: 170,
+        irEndIndex: 293,
+        speaker: 'system',
+        content: [
+          {
+            startIndex: p1Start,
+            endIndex: p1End,
+            irStartIndex: 170,
+            irEndIndex: 293,
+            content: 'hello '
+          },
+          {
+            startIndex: bStart,
+            endIndex: bEnd,
+            irStartIndex: 228,
+            irEndIndex: 289,
+            content: '**world**'
+          }
+        ]
+      },
+      {
+        startIndex: p2Start,
+        endIndex: p2End,
+        irStartIndex: 294,
+        irEndIndex: 378,
+        speaker: 'human',
+        content: [
+          {
+            startIndex: p2Start,
+            endIndex: p2End,
+            irStartIndex: 294,
+            irEndIndex: 378,
+            content: 'how are you?'
+          }
+        ]
+      }
+    ];
+    expect(segments).toStrictEqual(expects);
+  });
+
+  test('writeWithSourceMapWithTask', async () => {
+    const original = '<poml><p>hello</p><task>123</task></poml>';
+    const fn = async () => {
+      ErrorCollection.clear();
+      const ir = await read(original);
+      const segments = writeWithSourceMap(ir, { speaker: true });
+      if (!ErrorCollection.empty()) {
+        throw ErrorCollection.first();
+      }
+      return segments;
+    }
+    const segments = await fn();
+    const pStart = original.indexOf('<p>');
+    const pEnd = original.indexOf('</p>') + 4 - 1;
+    const taskStart = original.indexOf('<task>');
+    const taskEnd = original.indexOf('</task>') + 7 - 1;
+    const expects = [
+      {
+        startIndex: pStart,
+        endIndex: taskEnd,
+        irStartIndex: 170,
+        irEndIndex: 431,
+        speaker: 'human',
+        content: [
+          {
+            startIndex: pStart,
+            endIndex: pEnd,
+            irStartIndex: 170,
+            irEndIndex: 230,
+            content: 'hello'
+          },
+          {
+            startIndex: 0,
+            endIndex: original.length - 1,
+            irStartIndex: 99,
+            irEndIndex: 439,
+            content: '\n\n'
+          },
+          {
+            startIndex: taskStart,
+            endIndex: taskEnd,
+            irStartIndex: 325,
+            irEndIndex: 421,
+            content: '# Task'
+          },
+          {
+            startIndex: taskStart,
+            endIndex: taskEnd,
+            irStartIndex: 231,
+            irEndIndex: 435,
+            content: '\n\n'
+          },
+          {
+            startIndex: taskStart,
+            endIndex: taskEnd,
+            irStartIndex: 422,
+            irEndIndex: 431,
+            content: '123'
+          }
+        ]
+      }
+    ];
+    expect(segments).toStrictEqual(expects);
   });
 });
 
