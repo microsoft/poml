@@ -393,7 +393,6 @@ class Writer<WriterOptions> {
     const sourceStartIndex = originalStartIndices.length > 0 ? Math.min(...originalStartIndices) : 0;
     const originalEndIndices = result.mappings.map(m => m.originalEnd).filter(m => m !== undefined);
     const sourceEndIndex = originalEndIndices.length > 0 ? Math.max(...originalEndIndices) : 0;
-    console.dir(result.mappings, { depth: null });
 
     for (let i = 0; i < points.length - 1; i++) {
       const start = points[i];
