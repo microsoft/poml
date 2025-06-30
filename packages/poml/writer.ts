@@ -427,7 +427,6 @@ class Writer<WriterOptions> {
         // mappings. If we cannot find a mapping, use the first one as a fallback.
         chosen = result.mappings[0];
       }
-      console.log(start, end, chosen, chosenOriginal);
 
       // If a multimedia item starts at this boundary, emit it instead of text.
       const media = result.multimedia.find(m => m.index === start);
