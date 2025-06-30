@@ -11,9 +11,18 @@ suite('LSP Server', () => {
     await ext!.activate();
   });
 
+  teardown(async () => {
+    await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+    // give LSP server time to clear diagnostics
+    await new Promise(resolve => setTimeout(resolve, 500));
+  });
+
   test('diagnostics are produced for bad files', async function() {
     this.timeout(20000);
-    const bad = path.resolve(__dirname, '../../../packages/poml-vscode/test-fixtures/badSyntax.poml');
+    const bad = path.resolve(
+      __dirname,
+      '../../../packages/poml-vscode/test-fixtures/badSyntaxLsp.poml'
+    );
     const uri = vscode.Uri.file(bad);
     const doc = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(doc);
