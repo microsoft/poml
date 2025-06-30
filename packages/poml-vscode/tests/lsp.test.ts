@@ -1,14 +1,38 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
+import {
+  PreviewMethodName,
+  PreviewParams,
+  PreviewResponse
+} from '../panel/types';
+import {
+  LanguageClient,
+  LanguageClientOptions,
+  ServerOptions,
+  TransportKind
+} from 'vscode-languageclient/node';
 
 suite('LSP Server', () => {
-  const extId = 'poml-team.poml';
+  let client: LanguageClient;
 
-  suiteSetup(async () => {
-    const ext = vscode.extensions.getExtension(extId);
-    assert.ok(ext, 'Extension not found');
-    await ext!.activate();
+  suiteSetup(async function() {
+    this.timeout(20000);
+    const serverModule = path.resolve(__dirname, '../../../dist/server.js');
+    const serverOptions: ServerOptions = {
+      run: { module: serverModule, transport: TransportKind.ipc },
+      debug: { module: serverModule, transport: TransportKind.ipc }
+    };
+    const clientOptions: LanguageClientOptions = {
+      documentSelector: [{ scheme: 'file', language: 'poml' }]
+    };
+    client = new LanguageClient('poml-test', 'POML Language Server', serverOptions, clientOptions);
+    await client.start();
+    await new Promise(resolve => setTimeout(resolve, 3000));
+  });
+
+  suiteTeardown(async () => {
+    await client.stop();
   });
 
   teardown(async () => {
@@ -68,6 +92,28 @@ suite('LSP Server', () => {
     const list = (await vscode.commands.executeCommand('vscode.executeCompletionItemProvider', doc.uri, pos)) as vscode.CompletionList;
     const labels = list.items.map(item => (typeof item.label === 'string' ? item.label : item.label.label));
     assert.ok(labels.includes('speaker'), 'Expected "speaker" completion');
+  });
+
+  test('server preview request returns content', async function() {
+    this.timeout(20000);
+    const sample = path.resolve(
+      __dirname,
+      '../../../packages/poml-vscode/test-fixtures/test.poml'
+    );
+    const uri = vscode.Uri.file(sample);
+    const doc = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(doc);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const params: PreviewParams = {
+      uri: uri.toString(),
+      speakerMode: true,
+      displayFormat: 'rendered'
+    };
+    assert.ok(client, 'Language client not available');
+    const response: PreviewResponse = await client.sendRequest(PreviewMethodName, params);
+    assert.strictEqual(response.error, undefined, 'Preview response contains error');
+    assert.ok(response.content, 'Expected preview content');
   });
 });
 
