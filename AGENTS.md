@@ -1,13 +1,26 @@
-# Contributor Guide
+# Agent Contributor Guide
 
-This repository contains a TypeScript/JavaScript project together with a small Python package.
-Follow these instructions when using Codex or contributing changes.
+This repository contains a TypeScript/JavaScript project together with a lite Python SDK.
+These instructions are for agents like Codex to contribute changes.
+
+## Repository Structure
+- **packages/poml** – Core TypeScript package of POML parsing and rendering.
+- **packages/poml-vscode** – VS Code Extension package of POML.
+- **packages/poml-vscode-webview** – The VS Code Webview frontend JS/TS code.
+- **python/** – Python SDK and CLI implementation.
+- **examples/** – Sample POML files.
+- **docs/** – Project documentation.
 
 ## Environment Setup
-- **Node.js**: version 22.x
-- **Python**: version 3.11
+- **Node.js**: version 22.x (20.x should also work)
+- **Python**: version 3.11 (3.10 or 3.12 should also work)
 
-Run `bash setup.sh` from the repository root to install all dependencies.
+```bash
+npm ci
+npm run build-webview
+npm run build-cli
+python -m pip install -e .[dev]
+```
 
 ## Testing Instructions
 After your changes you must verify that everything still builds and tests pass.
@@ -21,11 +34,17 @@ npm test
 python -m pytest python/tests
 ```
 
-Optional VS Code extension tests can be run with:
+If you have updated the VS Code extension, please run the extension tests with:
 
 ```bash
-npm run compile && npm run test-vscode
+xvfb-run -a npm run compile && xvfb-run -a npm run test-vscode
+```
+
+Update the component specifications if you have updated the type annotations and documentations of the components.
+
+```bash
+npm run generate-component-spec
 ```
 
 ## PR Instructions
-Use the title format `[POML] <Your summary>` when opening pull requests.
+Use clear titles and summaries. Include relevant references to documentation when modifying or adding features.
