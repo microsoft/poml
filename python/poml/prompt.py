@@ -176,8 +176,17 @@ class Prompt(_TagLib):
         return self._generate_xml_string(pretty=True)
 
     def __enter__(self):
-        """Initializes Prompt for a new XML construction session within a 'with' block."""
-        self.root_elements = []
+        """Enter a context for building a prompt.
+
+        The Prompt instance can be reused across multiple ``with`` blocks. On
+        each entry we simply reset the stack of currently open elements while
+        preserving any previously created root elements so that additional tags
+        can be appended in subsequent sessions.
+        """
+
+        # Reset the stack of open elements for this new session but leave any
+        # existing root elements intact so the prompt can be extended across
+        # multiple ``with`` blocks.
         self.current_parent_stack = []
         return self
 
@@ -191,10 +200,11 @@ class Prompt(_TagLib):
                 "This may indicate nested tag context managers were not properly closed before the Prompt context ended."
             )
 
-        # Consistent with original behavior: clear internal state on exit.
-        # This means results should typically be obtained (via render/dump_xml)
-        # before the Prompt's 'with' block finishes if Prompt itself is a context manager.
-        self.root_elements.clear()
+        # Clear any open elements from the stack.  Previously the entire state
+        # was discarded on exit which meant ``dump_xml`` and ``render`` could
+        # only be called while inside the ``with`` block.  By keeping the root
+        # elements around we allow callers to finalize or extend the prompt
+        # after the block has exited.
         self.current_parent_stack.clear()
 
     def tag(self, tag_name: str, **attrs) -> _ImplicitDualTagHandler:
