@@ -31,6 +31,20 @@ suite('LSP Server', () => {
     assert.ok(diags.length > 0, 'Expected diagnostics for bad file');
   });
 
+  test('no diagnostics for valid files', async function() {
+    this.timeout(20000);
+    const good = path.resolve(
+      __dirname,
+      '../../../packages/poml-vscode/test-fixtures/test.poml'
+    );
+    const uri = vscode.Uri.file(good);
+    const doc = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(doc);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    const diags = vscode.languages.getDiagnostics(uri);
+    assert.strictEqual(diags.length, 0, 'Expected no diagnostics for clean file');
+  });
+
   test('hover provides documentation', async function() {
     this.timeout(20000);
     const sample = path.resolve(__dirname, '../../../packages/poml-vscode/test-fixtures/test.poml');
