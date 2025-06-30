@@ -33,13 +33,24 @@ export const setupToolbar = (vscode: any, messaging: MessagePoster) => {
     }
   });
 
-  $(document).on('dblclick contextmenu', '[data-line]', function (e) {
-    if (!getState().doubleClickToSwitchToEditor && e.type === 'dblclick') {
+  $(document).on('dblclick', '[data-line]', function (e) {
+    // Stop the event from bubbling up to parent elements that also match '[data-line]'.
+    // This ensures the code inside only runs ONCE for the innermost element clicked.
+    e.stopPropagation();
+
+    if (!getState().doubleClickToSwitchToEditor) {
       return;
     }
-    const line = parseInt($(this).data('line'));
-    if (!isNaN(line)) {
-      messaging.postMessage(WebviewMessage.DidClick, { line });
+
+    const line = $(this).attr('data-line');
+    if (line) {
+      const num = parseInt(line, 10);
+      if (!isNaN(num)) {
+        messaging.postMessage(WebviewMessage.DidClick, { line: num });
+
+        // Prevent the browser's default double-click action (e.g., selecting text).
+        e.preventDefault();
+      }
     }
   });
 

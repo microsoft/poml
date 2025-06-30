@@ -61,24 +61,6 @@ window.addEventListener('message', event => {
   }
 }, false);
 
-document.addEventListener('dblclick', event => {
-  if (!state.doubleClickToSwitchToEditor) {
-    return;
-  }
-  let node = event.target as HTMLElement | null;
-  while (node) {
-    const line = node.getAttribute('data-line');
-    if (line) {
-      const num = parseInt(line);
-      if (!isNaN(num)) {
-        messaging.postMessage('didClick', { line: num });
-        break;
-      }
-    }
-    node = node.parentElement;
-  }
-});
-
 document.addEventListener('click', event => {
   if (!event) {
     return;
