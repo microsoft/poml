@@ -21,7 +21,6 @@ def test_prompt():
                 p.text("This is a paragraph in the document.")
 
         xml_output = p.dump_xml()
-        print(xml_output)
         assert xml_output == (
             """<Task caption="My Task">This is a task description.<Paragraph>
     <Header>Subheading</Header>This is a paragraph in the document.</Paragraph>
@@ -34,6 +33,16 @@ def test_prompt():
                 "content": "# My Task\n\nThis is a task description.\n\n## Subheading\n\nThis is a paragraph in the document.",
             }
         ]
+
+
+def test_document():
+    with open(Path(__file__).parent / "assets" / "pdf_latex_image.pdf", "rb") as f:
+        pdf_contents = f.read()
+    with Prompt() as p:
+        with p.document(buffer=pdf_contents, parser="pdf"):
+            p.text("This is a PDF document.")
+    print(p.dump_xml())
+    print(p.render())
 
 
 def test_trace():
