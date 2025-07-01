@@ -14,6 +14,7 @@ import {
 } from 'vscode-languageclient/node';
 import { initializeReporter, getTelemetryReporter, TelemetryClient } from './util/telemetryClient';
 import { TelemetryEvent } from './util/telemetryServer';
+import { registerPomlChatParticipant } from './chat/pomlParticipant';
 
 let extensionPath = "";
 
@@ -40,6 +41,8 @@ export function activate(context: vscode.ExtensionContext) {
   commandManager.register(new command.ShowPreviewToSideCommand(webviewManager));
   commandManager.register(new command.ShowLockedPreviewToSideCommand(webviewManager));
   commandManager.register(new command.ShowSourceCommand(webviewManager));
+
+  registerPomlChatParticipant(context);
   
   const connectionString = getConnectionString();
   if (connectionString) {

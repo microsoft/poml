@@ -16,7 +16,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onWebviewPanel:poml.preview"
+    "onWebviewPanel:poml.preview",
+    "onChatParticipant:poml.runner"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -112,9 +113,17 @@
         }
       },
       {
-        "command": "poml.telemetry.completion",
-        "title": "Telemetry: Completion",
-        "category": "POML"
+      "command": "poml.telemetry.completion",
+      "title": "Telemetry: Completion",
+      "category": "POML"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "poml.runner",
+        "fullName": "POML",
+        "name": "poml",
+        "description": "Run a POML chat"
       }
     ],
     "menus": {
