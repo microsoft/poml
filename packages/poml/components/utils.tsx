@@ -200,10 +200,22 @@ export const CaptionedParagraph = component('CaptionedParagraph', {
         </Paragraph>
       );
     } else if (captionStyle === 'bold' || captionStyle === 'plain') {
+      let newChildren = children as any;
+      const firstChild = Array.isArray(children) ? children[0] : children;
+      if (typeof firstChild === 'string') {
+        const trimmed = firstChild.replace(/^\s+/, '');
+        if (trimmed !== firstChild) {
+          if (Array.isArray(children)) {
+            newChildren = [trimmed, ...children.slice(1)];
+          } else {
+            newChildren = trimmed;
+          }
+        }
+      }
       return (
         <Paragraph {...others}>
           <Caption captionStyle={captionStyle} {...others} />
-          {children}
+          {newChildren}
         </Paragraph>
       );
     } else if (captionStyle === 'hidden') {
