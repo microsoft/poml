@@ -228,10 +228,29 @@ class PomlLspServer {
         error: `Unable to perform "write" step when rendering file: ${e}`
       };
     }
+
+    let tokens: { perMessage: number[]; total: number } | undefined;
+    if (Array.isArray(result) && result.length > 0 && (result[0] as any).speaker) {
+      try {
+        const { encodingForModel } = require('js-tiktoken/dist/index.cjs');
+        const enc = encodingForModel('gpt-3.5-turbo');
+        let total = 0;
+        const perMessage = (result as Message[]).map(msg => {
+          const text = PomlLspServer.contentToString(msg.content);
+          const count = enc.encode(text).length;
+          total += count;
+          return count;
+        });
+        tokens = { perMessage, total };
+      } catch {
+        tokens = undefined;
+      }
+    }
     return {
       rawText: documentContent,
       ir,
       content: result,
+      tokens,
       sourceMap,
       error: params.returnAllErrors
         ? ErrorCollection.list()
@@ -613,6 +632,15 @@ class PomlLspServer {
     }
     this.incrementStatistics('completionResolve');
     return item;
+  }
+
+  private static contentToString(content: RichContent): string {
+    if (typeof content === 'string') {
+      return content;
+    }
+    return content
+      .map(part => (typeof part === 'string' ? part : part.alt ?? ''))
+      .join('');
   }
 }
 

@@ -59,6 +59,10 @@ export interface PreviewResponse {
   content: RichContent | Message[];
   error?: string | any[];
   sourceMap?: SourceMapRichContent[] | SourceMapMessage[];
+  tokens?: {
+    perMessage: number[];
+    total: number;
+  };
 }
 
 /**
