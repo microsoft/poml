@@ -41,4 +41,4 @@ Instruction 5: Answer in plain English and no sources are required.
 
 **QUESTION:** How much did I pay for my last order?
 
-**Answer:** 
+**Answer:**

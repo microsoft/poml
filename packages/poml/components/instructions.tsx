@@ -537,7 +537,12 @@ export const Question = component('Question', ['qa'])((
         {children}
       </CaptionedParagraph>
       {answerCaption && presentation === 'markup' ? (
-        <Caption caption={answerCaption} captionStyle={captionStyle} {...others} />
+        <Caption
+          caption={answerCaption}
+          captionStyle={captionStyle}
+          captionTailingSpace={false}
+          {...others}
+        />
       ) : null}
     </Paragraph>
   );

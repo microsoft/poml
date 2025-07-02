@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { component, ReadError } from 'poml/base';
+import { component, ReadError, trimChildrenWhiteSpace } from 'poml/base';
 import {
   PropsSyntaxAny,
   Text,
@@ -192,22 +192,24 @@ export const CaptionedParagraph = component('CaptionedParagraph', {
   const presentation = computeSyntaxContext(props);
   if (presentation === 'markup') {
     const { captionStyle = 'header', children, ...others } = props;
+    const trimmedChildren = trimChildrenWhiteSpace(children, props);
+    const hasContent = React.Children.count(trimmedChildren) > 0;
     if (captionStyle === 'header') {
       return (
         <Paragraph {...others}>
-          <Caption captionStyle={captionStyle} {...others} />
-          <SubContent>{children}</SubContent>
+          <Caption captionStyle={captionStyle} captionTailingSpace={hasContent} {...others} />
+          <SubContent>{trimmedChildren}</SubContent>
         </Paragraph>
       );
     } else if (captionStyle === 'bold' || captionStyle === 'plain') {
       return (
         <Paragraph {...others}>
-          <Caption captionStyle={captionStyle} {...others} />
-          {children}
+          <Caption captionStyle={captionStyle} captionTailingSpace={hasContent} {...others} />
+          {trimmedChildren}
         </Paragraph>
       );
     } else if (captionStyle === 'hidden') {
-      return <Paragraph {...others}>{children}</Paragraph>;
+      return <Paragraph {...others}>{trimmedChildren}</Paragraph>;
     } else {
       throw ReadError.fromProps(`Unsupported caption style: ${captionStyle}`, props);
     }

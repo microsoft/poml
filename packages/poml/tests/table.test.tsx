@@ -310,7 +310,7 @@ describe('table', () => {
         '\n' +
         '**Question:** How many calories are in Cupcake?\n' +
         '\n' +
-        '**Answer:** '
+        '**Answer:**'
     );
   });
 
