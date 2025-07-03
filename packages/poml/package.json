@@ -3,14 +3,14 @@
   "version": "0.0.5",
   "description": "Prompt Orchestration Markup Language",
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.mjs"
     }
   },
   "files": ["dist"],
@@ -24,9 +24,10 @@
   "engines": {
     "node": ">=18"
   },
-  "sideEffects": false,
   "scripts": {
-    "build": "tspc -p tsconfig.json",
+    "clean": "rm -rf .build dist README.md LICENSE",
+    "prebuild": "npm run clean && tspc -p tsconfig.json && cp util/xmlContentAssist.js .build/util/xmlContentAssist.js && cp util/xmlContentAssist.d.ts .build/util/xmlContentAssist.d.ts",
+    "build": "tsup .build/index.js .build/cli.js --format esm,cjs --dts --out-dir dist --sourcemap",
     "prepack": "cp ../../README.md . && cp ../../LICENSE . && npm run build",
     "postpack": "rm README.md LICENSE"
   },

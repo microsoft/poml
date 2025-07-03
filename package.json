@@ -303,6 +303,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.2.1",
+    "tsup": "^8.5.0",
     "typescript": "^5.4.5",
     "typescript-transform-paths": "^3.5.2",
     "webpack": "^5.93.0",
