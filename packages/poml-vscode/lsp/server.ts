@@ -45,6 +45,7 @@ import {
   TelemetryEvent,
   TelemetryServer
 } from 'poml-vscode/util/telemetryServer';
+import { parseJsonWithBuffers } from 'poml/util/trace';
 
 interface ComputationCache {
   key: string; // Can be file uri, file content, ...
@@ -192,7 +193,23 @@ class PomlLspServer {
     ErrorCollection.clear();
     let ir: string;
     try {
-      ir = await read(documentContent, undefined, undefined, undefined, filePath);
+      let context: { [key: string]: any } = {};
+      for (const c of params.contexts ?? []) {
+        try {
+          context = { ...context, ...parseJsonWithBuffers(readFileSync(c, 'utf-8')) };
+        } catch (e) {
+          console.error(`Failed to parse context file ${c}: ${e}`);
+        }
+      }
+      let stylesheet: { [key: string]: any } = {};
+      for (const s of params.stylesheets ?? []) {
+        try {
+          stylesheet = { ...stylesheet, ...parseJsonWithBuffers(readFileSync(s, 'utf-8')) };
+        } catch (e) {
+          console.error(`Failed to parse stylesheet file ${s}: ${e}`);
+        }
+      }
+      ir = await read(documentContent, undefined, context, stylesheet, filePath);
     } catch (e) {
       this.telemetryReporter.reportTelemetryError(TelemetryEvent.ReadUncaughtException, e);
       console.error(e);
@@ -325,7 +342,10 @@ class PomlLspServer {
       text: text,
       speakerMode: true,
       displayFormat: 'rendered',
-      returnAllErrors: true
+      returnAllErrors: true,
+      // FIXME: should use the binded contexts and stylesheets when running the validation.
+      contexts: [],
+      stylesheets: [],
     });
     const errors = Array.isArray(response.error) ? response.error : response.error ? [response.error] : [];
 

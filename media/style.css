@@ -44,11 +44,27 @@ body {
 }
 
 /* toolbar */
-
 .toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--poml-padding);
+}
+
+.toolbar-buttons {
   display: flex;
   gap: var(--poml-padding);
   align-items: center;
+}
+
+.toolbar-files {
+  display: flex;
+  gap: var(--poml-padding-05);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.chips.hidden {
+  display: none;
 }
 
 .toolbar .button {
@@ -89,6 +105,18 @@ body {
 
 .toolbar .button .expand {
   width: auto;
+}
+
+.toolbar .button .badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 50%;
+  width: var(--poml-font-size-15);
+  height: var(--poml-font-size-15);
+  line-height: var(--poml-font-size);
 }
 
 .toolbar .button .avatar .codicon {
@@ -133,6 +161,51 @@ body {
 
 .toolbar .menu .item:hover {
   background: var(--vscode-list-hoverBackground);
+}
+
+.chips {
+  display: flex;
+  gap: var(--poml-padding-05);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: var(--poml-padding-02) var(--poml-padding-035);
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-radius: 4px;
+  font-size: var(--poml-font-size-08);
+}
+
+.chip .content {
+  color: var(--vscode-editor-foreground);
+  cursor: default;
+}
+
+.chip .codicon {
+  padding: 0 var(--poml-padding-02);
+  font-size: var(--poml-font-size) !important;
+}
+
+.chip .remove {
+  margin-left: var(--poml-padding-02);
+  padding-right: 0;
+  cursor: pointer;
+}
+
+.chip .remove:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.chip.add {
+  cursor: pointer;
+}
+
+.chip.add:hover {
+  background: var(--vscode-toolbar-hoverBackground);
 }
 
 .menu .item .avatar {
@@ -258,7 +331,11 @@ pre code {
   border-radius: 50%;
 }
 
-.chat-message-toolbar .toolbar-item .toolbar-tooltip {
+.chat-message-toolbar .toolbar-item:hover {
+  background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+.tooltip {
   visibility: hidden;
   width: auto;
   font-size: var(--poml-font-size-08);
@@ -275,11 +352,12 @@ pre code {
   margin-left: -50%;
 }
 
-.chat-message-toolbar .toolbar-item:hover {
-  background-color: var(--vscode-toolbar-hoverBackground);
+.tooltip-long {
+  word-wrap: break-word;
+  text-align: left;
 }
 
-.chat-message-toolbar .toolbar-item:hover .toolbar-tooltip {
+.tooltip-anchor:hover .tooltip {
   visibility: visible;
 }
 

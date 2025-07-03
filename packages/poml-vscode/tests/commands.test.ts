@@ -3,6 +3,8 @@ import * as vscode from 'vscode';
 
 suite('Commands', () => {
   test('expected commands are registered', async () => {
+    const ext = vscode.extensions.getExtension('poml-team.poml');
+    await ext?.activate();
     const cmds = await vscode.commands.getCommands(true);
     const expected = [
       'poml.test',

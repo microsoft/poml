@@ -13,6 +13,8 @@ suite('Panel content helper', () => {
       doubleClickToSwitchToEditor: false,
       speakerMode: true,
       displayFormat: 'rendered',
+      contexts: [],
+      stylesheets: [],
       rawText: '<p>test</p>',
       ir: '',
       content: [],

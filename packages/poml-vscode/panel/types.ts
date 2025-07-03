@@ -10,6 +10,7 @@ export enum WebviewMessage {
   DidClick = 'didClick',
   Form = 'form',
   UpdateContent = 'updateContent',
+  UpdateUserOptions = 'updateUserOptions',
 }
 
 /**
@@ -43,6 +44,8 @@ export interface WebviewConfig {
 export interface WebviewUserOptions {
   speakerMode: boolean;
   displayFormat: 'rendered' | 'plain' | 'ir';
+  contexts: string[];
+  stylesheets: string[];
 }
 
 export const PreviewMethodName = 'poml/preview';

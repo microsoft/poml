@@ -38,35 +38,53 @@ function ToolBar(props: WebviewUserOptions) {
 
   return (
     <div className="toolbar">
-      <div className="button oneclick" id="copy">
-        <ButtonContent icon="copy" content="Copy" />
-      </div>
-      <div
-        className={`button onoff ${speakerMode ? 'active' : ''}`}
-        id="speaker-mode"
-        data-value={speakerMode}
-      >
-        <ButtonContent icon="comment-discussion" content="Speaker Mode" />
-      </div>
-      <div className="button menu-selection" id="display-format" data-value={displayFormat}>
-        <ButtonContent
-          icon="code-oss"
-          content={`Display: ${applicableDisplayFormats.find(val => val.value === displayFormat)?.content}`}
-        />
-        <div className="expand">
-          <i className="codicon codicon-triangle-down"></i>
+      <div className="toolbar-buttons">
+        <div className="button oneclick" id="copy">
+          <ButtonContent icon="copy" content="Copy" />
         </div>
-        <div className="menu">
-          {applicableDisplayFormats.map(item => (
-            <div
-              className={`item ${displayFormat === item.value ? 'selected' : ''}`}
-              data-value={item.value}
-              key={item.value}
-            >
-              <ButtonContent icon="check" content={item.content} />
+
+        <div
+          className={`button onoff ${props.contexts.length + props.stylesheets.length ? 'active' : ''}`} id="context-stylesheet"
+        >
+          <ButtonContent icon="references" content="Context & Stylesheet" />
+          {props.contexts.length + props.stylesheets.length > 0 && (
+            <div className="badge">
+              {props.contexts.length + props.stylesheets.length}
             </div>
-          ))}
+          )}
         </div>
+
+        <div
+          className={`button onoff ${speakerMode ? 'active' : ''}`}
+          id="speaker-mode"
+          data-value={speakerMode}
+        >
+          <ButtonContent icon="comment-discussion" content="Speaker Mode" />
+        </div>
+        <div className="button menu-selection" id="display-format" data-value={displayFormat}>
+          <ButtonContent
+            icon="code-oss"
+            content={`Display: ${applicableDisplayFormats.find(val => val.value === displayFormat)?.content}`}
+          />
+          <div className="expand">
+            <i className="codicon codicon-triangle-down"></i>
+          </div>
+          <div className="menu">
+            {applicableDisplayFormats.map(item => (
+              <div
+                className={`item ${displayFormat === item.value ? 'selected' : ''}`}
+                data-value={item.value}
+                key={item.value}
+              >
+                <ButtonContent icon="check" content={item.content} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className={`toolbar-files chips ${props.contexts.length + props.stylesheets.length ? '' : 'hidden'}`} id="context-stylesheet-files">
+        {/* This is set on the client side. */}
       </div>
     </div>
   );
@@ -155,16 +173,16 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean; mappings?
             <h3 className="name">{role}</h3>
           </div>
           <div className="chat-message-toolbar">
-            <div className="toolbar-item">
+            <div className="toolbar-item tooltip-anchor">
               <a
                 className="codicon codicon-code"
                 role="button"
                 aria-label="Jump to Source Code"
                 data-line={line}
               ></a>
-              <span className="toolbar-tooltip">Source Code</span>
+              <span className="tooltip">Source Code</span>
             </div>
-            <div className="toolbar-item">
+            <div className="toolbar-item tooltip-anchor">
               <a
                 className="codicon codicon-copy"
                 role="button"
@@ -175,7 +193,7 @@ function ChatMessages(props: { messages: Message[]; toRender: boolean; mappings?
                     : JSON.stringify(message.content, null, 2)
                 }
               ></a>
-              <span className="toolbar-tooltip">Copy</span>
+              <span className="tooltip">Copy</span>
             </div>
           </div>
         </div>

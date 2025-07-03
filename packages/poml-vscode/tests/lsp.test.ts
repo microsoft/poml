@@ -108,7 +108,9 @@ suite('LSP Server', () => {
     const params: PreviewParams = {
       uri: uri.toString(),
       speakerMode: true,
-      displayFormat: 'rendered'
+      displayFormat: 'rendered',
+      contexts: [],
+      stylesheets: [],
     };
     assert.ok(client, 'Language client not available');
     const response: PreviewResponse = await client.sendRequest(PreviewMethodName, params);

@@ -112,6 +112,26 @@
         }
       },
       {
+        "command": "poml.addContextFile",
+        "title": "Add Context File",
+        "category": "POML"
+      },
+      {
+        "command": "poml.addStylesheetFile",
+        "title": "Add Stylesheet File",
+        "category": "POML"
+      },
+      {
+        "command": "poml.removeContextFile",
+        "title": "Remove Context File",
+        "category": "POML"
+      },
+      {
+        "command": "poml.removeStylesheetFile",
+        "title": "Remove Stylesheet File",
+        "category": "POML"
+      },
+      {
         "command": "poml.telemetry.completion",
         "title": "Telemetry: Completion",
         "category": "POML"

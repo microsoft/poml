@@ -30,6 +30,10 @@ export function getState(): WebviewState {
   throw new Error('Could not load state');
 }
 
+export function setCachedState(state: WebviewState): void {
+  cachedState = state;
+}
+
 function getElementOrThrowException(id: string): HTMLElement {
   const element = document.getElementById(id);
   if (!element) {

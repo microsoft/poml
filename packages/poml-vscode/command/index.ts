@@ -6,3 +6,9 @@ export {
 export { ShowSourceCommand } from './showSource';
 export { TestCommand, TestNonChatCommand, TestRerunCommand, TestAbortCommand } from './testCommand';
 export { TelemetryCompletionAcceptanceCommand } from './telemetry';
+export {
+  AddContextFileCommand,
+  AddStylesheetFileCommand,
+  RemoveContextFileCommand,
+  RemoveStylesheetFileCommand,
+} from './addResources';

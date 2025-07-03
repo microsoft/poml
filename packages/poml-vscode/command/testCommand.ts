@@ -178,7 +178,10 @@ export class TestCommand implements Command {
     const requestParams: PreviewParams = {
       uri: uri.toString(),
       speakerMode: this.isChatting,
-      displayFormat: 'rendered'
+      displayFormat: 'rendered',
+      // FIXME: Use contexts and stylesheets configured
+      contexts: [],
+      stylesheets: [],
     };
 
     const response: PreviewResponse = await getClient().sendRequest<PreviewResponse>(

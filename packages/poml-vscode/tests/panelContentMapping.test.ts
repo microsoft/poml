@@ -14,6 +14,8 @@ test('panel embeds line numbers', () => {
     doubleClickToSwitchToEditor: false,
     speakerMode: true,
     displayFormat: 'plain',
+    contexts: [],
+    stylesheets: [],
     rawText: '<p speaker="ai">hello</p>',
     ir: '',
     content: [msg],
