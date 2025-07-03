@@ -87,7 +87,7 @@ jobs:
         WHEEL_NAME=$(basename "$WHEEL_FILE" .whl)
         
         # Split wheel name into components: name-version-python_tag-abi_tag-platform_tag
-        # Example: poml-0.0.5-py3-none-any -> poml, 0.0.5, py3, none, any
+        # Example: poml-999.0-py3-none-any -> poml, 999.0, py3, none, any
         IFS='-' read -ra PARTS <<< "$WHEEL_NAME"
         
         if [ ${#PARTS[@]} -ge 5 ]; then
