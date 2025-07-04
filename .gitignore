@@ -3,6 +3,7 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+*.whl
 /media/index.js
 /media/codicons
 /packages/poml-vscode-webview/*.js
