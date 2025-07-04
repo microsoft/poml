@@ -8,8 +8,9 @@ pool:
 variables:
   - name: GITHUB_REPO
     value: 'microsoft/poml'
-  - name: RUN_ID
-    value: '15574923104'
+  # RUN_ID should be set at the queue time.
+  # - name: RUN_ID
+  #   value: '15574923104'
 
 stages:
 - stage: DownloadAndPublish
