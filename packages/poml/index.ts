@@ -11,7 +11,8 @@ import "./components";
 import { reactRender } from './util/reactRender';
 import { dumpTrace, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
 
-export { RichContent, Message, SourceMapRichContent, SourceMapMessage, richContentFromSourceMap };
+export type { RichContent, Message, SourceMapRichContent, SourceMapMessage };
+export { richContentFromSourceMap };
 
 export const read = async (
   element: React.ReactElement | string,

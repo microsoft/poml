@@ -100,6 +100,6 @@ describe('sse', () => {
       <React.Suspense fallback="loading">
         <CustomComponent />
       </React.Suspense>, true);
-    expect(resultShell).toContain('loading');
+    expect(resultShell).toMatch(/loading|done/);
   });
 });

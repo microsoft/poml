@@ -1,5 +1,6 @@
 out
 dist
+.build
 node_modules
 .vscode-test/
 *.vsix
@@ -9,3 +10,4 @@ node_modules
 /packages/poml-vscode-webview/*.js.map
 /debug
 __pycache__/
+poml-*.tgz

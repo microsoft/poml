@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": ".build",
+    "rootDir": "../poml",
+    "declaration": true,
+    "composite": false,
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["../poml/**/*"],
+  "exclude": ["tests/**/*", "node_modules", "dist", ".build"]
+}

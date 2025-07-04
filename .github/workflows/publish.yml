@@ -120,3 +120,22 @@ jobs:
         name: ${{ steps.find-wheel.outputs.platform-wheel-name }}
         path: ${{ steps.find-wheel.outputs.renamed-wheel-file }}
         compression-level: 0
+
+    # Build and pack npm library only once
+    - name: Pack poml npm package
+      if: matrix.os == 'ubuntu-latest'
+      run: npm run pack-poml-lib
+
+    - name: Upload poml npm package
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: poml-npm
+        path: packages/poml/poml-*.tgz
+        compression-level: 0
+
+    - name: Publish poml npm package
+      if: matrix.os == 'ubuntu-latest'
+      run: npm run publish-poml-lib
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

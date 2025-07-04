@@ -5,7 +5,9 @@ const path = require('path');
 
 // --- Configuration ---
 // Add the names of the packages you need to ship in node_modules.
-const rootPackages = ['sharp', 'pdf-parse'];
+// For example:
+// const rootPackages = ['sharp', 'pdf-parse', 'pdfjs-dist'];
+const rootPackages = ['sharp'];
 // -------------------
 
 console.log('Generating .vscodeignore from package-lock.json...');
@@ -79,13 +81,10 @@ webpack.config.*
 node_modules/**
 dist/**/node_modules/**
 !node_modules/@img/**
-!node_modules/pdf-parse/lib/pdf.js/v1.10.100
-!node_modules/pdf-parse/lib/pdf-parse.js
-!node_modules/pdf-parse/index.js
-!node_modules/pdf-parse/package.json
 !node_modules/sharp/install
 !node_modules/sharp/lib
 !node_modules/sharp/package.json
+!node_modules/pdfjs-dist/**
 
 # But, do NOT ignore the following required modules:
 `;

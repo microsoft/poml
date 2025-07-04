@@ -4,19 +4,20 @@ import * as mammoth from 'mammoth';
 import * as cheerio from 'cheerio';
 
 import { Header, Newline, Text, Image, Paragraph, PropsSyntaxBase, List, ListItem, Bold, Italic } from 'poml/essentials';
-import pdf from 'pdf-parse';
+// import pdf from 'pdf-parse';
+import { pdfParse, getNumPages } from 'poml/util/pdf';
 import { component, expandRelative, useWithCatch } from 'poml/base';
 import { Table } from './table';
 import { parsePythonStyleSlice } from './utils';
 
 async function parsePdfWithPageLimit(dataBuffer: Buffer, startPage: number, endPage: number) {
   // This is a workaround for pdf-parse not supporting a range.
-  const data = await pdf(dataBuffer, { max: endPage + 1 });
+  const data = await pdfParse(dataBuffer, endPage + 1);
   if (startPage <= 0) {
-    return data.text;
+    return data;
   }
-  const minusData = await pdf(dataBuffer, { max: startPage });
-  return data.text.slice(minusData.text.length);
+  const minusData = await pdfParse(dataBuffer, startPage);
+  return data.slice(minusData.length);
 }
 
 export async function readPdf(
@@ -24,13 +25,13 @@ export async function readPdf(
   options?: DocumentProps
 ): Promise<React.ReactElement> {
   const { selectedPages } = options || {};
-  const original = await pdf(dataBuffer);
+  const numPages = await getNumPages(dataBuffer);
   if (selectedPages) {
-    const [start, end] = parsePythonStyleSlice(selectedPages, original.numpages);
+    const [start, end] = parsePythonStyleSlice(selectedPages, numPages);
     const result = await parsePdfWithPageLimit(dataBuffer, start, end);
     return <Text whiteSpace='pre'>{result}</Text>;
   } else {
-    return <Text whiteSpace='pre'>{original.text}</Text>;
+    return <Text whiteSpace='pre'>{await pdfParse(dataBuffer)}</Text>;
   }
 }
 

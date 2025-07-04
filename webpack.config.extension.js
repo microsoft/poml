@@ -62,6 +62,8 @@ module.exports = [
       vscode: 'commonjs vscode',
       sharp: 'commonjs sharp',
       'pdf-parse': 'commonjs pdf-parse',
+      'pdfjs-dist': 'commonjs pdfjs-dist',
+      'canvas': 'commonjs canvas',
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],

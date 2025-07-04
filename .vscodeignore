@@ -22,13 +22,10 @@ webpack.config.*
 node_modules/**
 dist/**/node_modules/**
 !node_modules/@img/**
-!node_modules/pdf-parse/lib/pdf.js/v1.10.100
-!node_modules/pdf-parse/lib/pdf-parse.js
-!node_modules/pdf-parse/index.js
-!node_modules/pdf-parse/package.json
 !node_modules/sharp/install
 !node_modules/sharp/lib
 !node_modules/sharp/package.json
+!node_modules/pdfjs-dist/**
 
 # But, do NOT ignore the following required modules:
 !node_modules/@emnapi/runtime/**
@@ -36,11 +33,8 @@ dist/**/node_modules/**
 !node_modules/color-convert/**
 !node_modules/color-name/**
 !node_modules/color-string/**
-!node_modules/debug/**
 !node_modules/detect-libc/**
 !node_modules/is-arrayish/**
-!node_modules/ms/**
-!node_modules/node-ensure/**
 !node_modules/semver/**
 !node_modules/simple-swizzle/**
 !node_modules/tslib/**

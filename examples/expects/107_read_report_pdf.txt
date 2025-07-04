@@ -4,148 +4,148 @@ Provide a concise executive summary of the following text, highlighting key poin
 
 
 
-F1F2F3F4F5F6F7F8F9F10F11F12EscPowerSleep
+F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12Esc Power Sleep 
 Wake
 Up
 Print
 Scrn
 SysRq
 Scroll
-Lock
+Lock 
 Pause
 Break
-InsertHome
+Insert Home 
 Page
 Up
-DeleteEnd
+Delete End 
 Page
 Down
-½1
-2
-34567890+'
-Q
-W
-ERTYUIOPÅ^
-ASDFGHJKLÆØ*
->Z
-XCVBNM;:
+½ 1 
+2 
+3 4 5 6 7 8 9 0 + '
+Q 
+W 
+E R T Y U I O P Å ^
+A S D F G H J K L Æ Ø *
+> Z 
+X C V B N M ; : 
 _
-Num LockCaps LockScroll Lock
+Num Lock Caps Lock Scroll Lock
 Num
-Lock
-/
-*
+Lock 
+/ 
+* 
 _
 +
 Enter
-CtrlAlt
+Ctrl Alt
 Caps Lock
-Alt GrCtrl
-WebE-Mail+Volume-VolumeMutePreviousNextMenuTuner
-<\
-§!"#¤%&/()=?`
+Alt Gr Ctrl
+Web E-Mail +Volume-VolumeMutePrevious NextMenuTuner
+< \
+§ ! " # ¤ % & / ( ) = ? `
 |
 €
-@£${[]}
-"~
+@ £ $ { [ ] }
+" ~
 '
 -
 .,
-789
-456
-123
+7 8 9
+4 5 6
+1 2 3
 0
-HomePgUp
-EndPgDn
-InsDel
+Home PgUp
+End PgDn
+Ins Del
 ,
-Figure 2:This figure floats to the top of the page, spanning both columns.
-3.1HTML5
-ThistemplateusesHTML5elementstoaidinrep-
-resentingthedocumentstructure.Thesection
-elementisusedtosplitthetextintosections,and
-theheaderelementholdstheheadlines.The
-figureelementisusedtoincludefiguresand
-theircorrenspondingcaptionsliveinsidethefig-
-captionelement.Theciteelementholdsallref-
+Figure 2: This figure floats to the top of the page, spanning both columns.
+3.1 HTML5
+This template uses HTML5 elements to aid in rep-
+resenting the document structure. The section
+element is used to split the text into sections, and
+the header element holds the headlines. The
+figure element is used to include figures and
+their corrensponding captions live inside the fig-
+caption element. The cite element holds all ref-
 erences.
-Asmallmicroformat,basedonaconventionof
-classnames,isusedtoencodethenameandaffili-
+A small microformat, based on a convention of
+class names, is used to encode the name and affili-
 ation of the authors.
-3.2CSS
-ACSSstylesheetdescribeshowtoformatthe
-HTMLdocumentintoaPDFfile.CSSisadeclar-
-ativelanguagewhichattachespropertyvaluesto
-HTMLelementsanddocuments.Manyaspectsof
-CSSisusedtoachievethepresentationofUSENIX
+3.2 CSS
+A CSS style sheet describes how to format the
+HTML document into a PDF file. CSS is a declar-
+ative language which attaches property values to
+HTML elements and documents. Many aspects of
+CSS is used to achieve the presentation of USENIX
 papers, including:
-•multi-column layout
-•footnotes
-•page and column floats
-•multi-level counters
-Somecommonlyusedfeaturesareabsentfrom
-theabovelist:pagenumbersandrunningheaders
-shouldnotbespecifedbyUSENIXauthors,these
+• multi-column layout
+• footnotes
+• page and column floats
+• multi-level counters
+Some commonly used features are absent from
+the above list: page numbers and running headers
+should not be specifed by USENIX authors, these
 are added by those who compile the Proceedings.
-3.3JavaScript
-ThistemplateusesJavaScripttoprocessrefer-
-ences.Referencesareaddedatthepointwhere
-theyappear,andascriptislaterusedtomovethe
-referencestotheendofthepaper,leavingbehind
+3.3 JavaScript
+This template uses JavaScript to process refer-
+ences. References are added at the point where
+they appear, and a script is later used to move the
+references to the end of the paper, leaving behind
 a numeric marker.
-3.4PDF
+3.4 PDF
 (This section has been added by Håkon Wium Lie)
-InordertoconvertthedocumenttoPDF,afor-
-matterisneeded.Commonbrowserssupport
-HTMLandCSS,buttheydonotsupportalltheCSS
-functionalityforpage-basedformatting.Forex-
-ample,browsersdonotsupportfootnotesorpage
-floats.Thispaperhasbeenformattedwith
+In order to convert the document to PDF, a for-
+matter is needed. Common browsers support
+HTML and CSS, but they do not support all the CSS
+functionality for page-based formatting. For ex-
+ample, browsers do not support footnotes or page
+floats. This paper has been formatted with
 Prince,
-[a]
-apurpose-builtprogramforconverting
-HTMLandXMLdocumentsintoPDFbywayof
-CSS.Princeisacommercialproduct,butcanbe
-downloadedandusedforfreefornon-commercial
+[a] 
+a purpose-built program for converting
+HTML and XML documents into PDF by way of
+CSS. Prince is a commercial product, but can be
+downloaded and used for free for non-commercial
 purposes.
-InorderforPrincetoprocessthescriptinclud-
-edinthistemplate,acommandlineoptionmust
+In order for Prince to process the script includ-
+ed in this template, a command line option must
 be specified:
 $ prince --javascript example.html
-4Tables
-ThetablebelowlistsrecipientsoftheUSENIXLife-
-timeAchievementAwardinthe1900s.Noticehow
-notesinsidethetablearemovedtotheendofthe
+4 Tables
+The table below lists recipients of the USENIX Life-
+time Achievement Award in the 1900s. Notice how
+notes inside the table are moved to the end of the
 table.
-YearRecipient
-1999X Window System*
-1998Tim Berners-Lee
-1997Brian W. Kernighan
-[a]www.princexml.com
+Year Recipient
+1999 X Window System*
+1998 Tim Berners-Lee
+1997 Brian W. Kernighan
+[a] www.princexml.com
 
-1996The Software Tools Project
-1995The Creation ofUSENET**
-1994Networking Technologies
-1993Berkeley UNIX
+1996 The Software Tools Project
+1995 The Creation of USENET **
+1994 Networking Technologies
+1993 Berkeley UNIX
 * Given to the Community at Large
-** Given toJim EllisandTom Truscott
-5Conclusions
-Eachgoodpaperconcludesthemostsignificant
+** Given to Jim Ellis and Tom Truscott
+5 Conclusions
+Each good paper concludes the most significant
 findings in the end.
 Acknowledgments
-Apoliteauthoralwaysincludesacknowledgments.
-Thankeveryone,especiallythosewhofundedthe
+A polite author always includes acknowledgments.
+Thank everyone, especially those who funded the
 work.
 Availability
-Pleaseincludeasectionattheendofyourpaper
-providingavailabilityinformation.Ifthesystem
-youdescribeisavailabletoothers,andifmorein-
-formation(reports,etc.)maybeobtained,indicate
+Please include a section at the end of your paper
+providing availability information. If the system
+you describe is available to others, and if more in-
+formation (reports, etc.) may be obtained, indicate
 terms and contact information.
 References
-[1]STRUNK,W.JR.  ,ANDWHITE,E.B.TheElements
-ofStyle,4thEd,AllynandBacon,August,1999,
+[1] STRUNK, W. JR., AND WHITE, E.B. The Elements
+of Style, 4th Ed, Allyn and Bacon, August, 1999,
 ISBN 020530902X
-[2]ZOBEL,J.WritingforComputerScience,
-Springer-Verlag,December1997,ISBN
+[2] ZOBEL, J. Writing for Computer Science,
+Springer-Verlag, December 1997, ISBN
 9813083220

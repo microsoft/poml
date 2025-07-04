@@ -79,7 +79,9 @@ module.exports = {
   },
   externals: {
     'sharp': 'commonjs sharp',
-    'pdf-parse': 'commonjs pdf-parse'
+    'pdf-parse': 'commonjs pdf-parse',
+    'pdfjs-dist': 'commonjs pdfjs-dist',
+    'canvas': 'commonjs canvas',
   },
   devtool: 'inline-source-map',
   target: 'node',
