@@ -21,6 +21,23 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pomlGallery",
+          "title": "POML",
+          "icon": "./media/icon/poml-icon-16.svg"
+        }
+      ]
+    },
+    "views": {
+      "pomlGallery": [
+        {
+          "id": "pomlPromptGallery",
+          "name": "Prompt Gallery"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "poml",
@@ -137,6 +154,22 @@
         "title": "Telemetry: Completion",
         "category": "POML"
       }
+      ,
+      {
+        "command": "poml.gallery.addPrompt",
+        "title": "Add Prompt",
+        "category": "POML"
+      },
+      {
+        "command": "poml.gallery.deletePrompt",
+        "title": "Delete Prompt",
+        "category": "POML"
+      },
+      {
+        "command": "poml.gallery.editPrompt",
+        "title": "Edit Prompt",
+        "category": "POML"
+      }
     ],
     "chatParticipants": [
       {
@@ -158,6 +191,25 @@
           "command": "poml.showSource",
           "when": "pomlPreviewFocus",
           "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "poml.gallery.addPrompt",
+          "when": "view == pomlPromptGallery",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "poml.gallery.deletePrompt",
+          "when": "view == pomlPromptGallery",
+          "group": "inline"
+        },
+        {
+          "command": "poml.gallery.editPrompt",
+          "when": "view == pomlPromptGallery",
+          "group": "inline"
         }
       ],
       "editor/title/run": [
