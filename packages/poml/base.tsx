@@ -771,12 +771,18 @@ class ComponentRegistry {
     return [...this.components];
   }
 
-  public getComponent(name: string): PomlComponent | undefined;
-  public getComponent(name: string, returnReasonIfNotFound: true): PomlComponent | string;
+  public getComponent(name: string, disabled?: Set<string>): PomlComponent | undefined;
+  public getComponent(name: string, returnReasonIfNotFound: true, disabled?: Set<string>): PomlComponent | string;
   public getComponent(
     name: string,
-    returnReasonIfNotFound: boolean = false
+    returnReasonIfNotFound: boolean | Set<string> = false,
+    disabled: Set<string> | undefined = undefined
   ): PomlComponent | string | undefined {
+    if (returnReasonIfNotFound instanceof Set) {
+      disabled = returnReasonIfNotFound;
+      returnReasonIfNotFound = false;
+    }
+
     const hyphenToCamelCase = (s: string) => {
       return s.toLowerCase().replace(/-([a-z])/g, g => g[1].toUpperCase());
     };
@@ -784,10 +790,15 @@ class ComponentRegistry {
     const nameVariants = [name.toLowerCase(), hyphenToCamelCase(name).toLowerCase()];
 
     for (const variant of nameVariants) {
-      for (const component in this.components) {
-        if (this.components[component].getAliases().includes(variant)) {
-          return this.components[component];
+      for (const component of this.components) {
+        const aliases = component.getAliases();
+        if (!aliases.includes(variant)) {
+          continue;
         }
+        if (disabled?.has(variant)) {
+          continue;
+        }
+        return component;
       }
     }
 
@@ -795,7 +806,9 @@ class ComponentRegistry {
       return undefined;
     }
 
-    const availableAliases = this.components.map(c => c.getAliases()).flat();
+    const availableAliases = this.components
+      .flatMap(c => c.getAliases())
+      .filter(a => !disabled?.has(a));
 
     const distances = availableAliases.map(alias => {
       return {
@@ -862,12 +875,18 @@ export function unregisterComponent(alias: string) {
  * Find a component by its alias. If not found, return a string that suggests the closest match.
  * @param alias Alias or official name.
  */
-export function findComponentByAlias(alias: string): PomlComponent | string {
-  return ComponentRegistry.instance.getComponent(alias, true);
+export function findComponentByAlias(
+  alias: string,
+  disabled?: Set<string>
+): PomlComponent | string {
+  return ComponentRegistry.instance.getComponent(alias, true, disabled);
 }
 
-export function findComponentByAliasOrUndefined(alias: string): PomlComponent | undefined {
-  return ComponentRegistry.instance.getComponent(alias);
+export function findComponentByAliasOrUndefined(
+  alias: string,
+  disabled?: Set<string>
+): PomlComponent | undefined {
+  return ComponentRegistry.instance.getComponent(alias, disabled);
 }
 
 export function listComponents() {

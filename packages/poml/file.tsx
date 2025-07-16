@@ -19,6 +19,7 @@ import { AnyValue, deepMerge, parseText, readSource } from './util';
 import { StyleSheetProvider, ErrorCollection } from './base';
 import { getSuggestions } from './util/xmlContentAssist';
 import path from 'path';
+import { POML_VERSION } from './version';
 
 export interface PomlReaderOptions {
   trim?: boolean;
@@ -56,6 +57,7 @@ export class PomlFile {
   private cst: CstNode;
   private tokenVector: IToken[];
   private documentRange: Range;
+  private disabledComponents: Set<string> = new Set();
 
   constructor(text: string, options?: PomlReaderOptions, sourcePath?: string) {
     this.config = {
@@ -572,6 +574,43 @@ export class PomlFile {
     return <>{resultNodes}</>;
   };
 
+  private handleMeta = (element: XMLElement): boolean => {
+    if (element.name?.toLowerCase() !== 'meta') {
+      return false;
+    }
+    const minVersion = xmlAttribute(element, 'minVersion')?.value;
+    if (minVersion && compareVersions(POML_VERSION, minVersion) < 0) {
+      this.reportError(
+        `POML version ${minVersion} or higher is required`,
+        this.xmlAttributeValueRange(xmlAttribute(element, 'minVersion')!)
+      );
+    }
+    const maxVersion = xmlAttribute(element, 'maxVersion')?.value;
+    if (maxVersion && compareVersions(POML_VERSION, maxVersion) > 0) {
+      this.reportError(
+        `POML version ${maxVersion} or lower is required`,
+        this.xmlAttributeValueRange(xmlAttribute(element, 'maxVersion')!)
+      );
+    }
+
+    const comps = xmlAttribute(element, 'components')?.value;
+    if (comps) {
+      comps.split(/[,\s]+/).forEach(token => {
+        token = token.trim();
+        if (!token) return;
+        const op = token[0];
+        const name = token.slice(1).toLowerCase();
+        if (!name) return;
+        if (op === '+') {
+          this.disabledComponents.delete(name);
+        } else if (op === '-') {
+          this.disabledComponents.add(name);
+        }
+      });
+    }
+    return true;
+  };
+
   private unescapeText = (text: string): string => {
     return text
       .replace(/#lt;/g, '<')
@@ -667,6 +706,10 @@ export class PomlFile {
       return <></>;
     }
 
+    if (this.handleMeta(element)) {
+      return <></>;
+    }
+
     const tagName = element.name;
     if (!tagName) {
       // Probably already had an invalid syntax error.
@@ -703,7 +746,7 @@ export class PomlFile {
         }
       } else {
         // Logic for all other components
-        const component = findComponentByAlias(tagName);
+        const component = findComponentByAlias(tagName, this.disabledComponents);
         if (typeof component === 'string') {
           // Add a read error
           this.reportError(component, this.xmlOpenNameRange(element));
@@ -922,7 +965,10 @@ export class PomlFile {
       const excludedComponents: string[] = [];
       if (element.name) {
         candidates.push(element.name);
-        const component = findComponentByAliasOrUndefined(element.name);
+        const component = findComponentByAliasOrUndefined(
+          element.name,
+          this.disabledComponents
+        );
         if (component !== undefined) {
           excludedComponents.push(component.name);
         }
@@ -955,7 +1001,10 @@ export class PomlFile {
       if (!element.name) {
         return [];
       }
-      const component = findComponentByAliasOrUndefined(element.name);
+      const component = findComponentByAliasOrUndefined(
+        element.name,
+        this.disabledComponents
+      );
       const parameters = component?.parameters();
       if (!component || !parameters) {
         return [];
@@ -991,7 +1040,10 @@ export class PomlFile {
       if (!element.name) {
         return [];
       }
-      const component = findComponentByAliasOrUndefined(element.name);
+      const component = findComponentByAliasOrUndefined(
+        element.name,
+        this.disabledComponents
+      );
       const parameters = component?.parameters();
       if (!component || !parameters) {
         return [];
@@ -1088,6 +1140,18 @@ const hyphenToCamelCase = (text: string): string => {
 
 const camelToHyphenCase = (text: string): string => {
   return text.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+};
+
+const compareVersions = (a: string, b: string): number => {
+  const pa = a.split('.').map(n => parseInt(n));
+  const pb = b.split('.').map(n => parseInt(n));
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const na = pa[i] || 0;
+    const nb = pb[i] || 0;
+    if (na > nb) return 1;
+    if (na < nb) return -1;
+  }
+  return 0;
 };
 
 const xmlAttribute = (element: XMLElement, key: string): XMLAttribute | undefined => {
