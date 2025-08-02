@@ -19,7 +19,10 @@ import {
   RelatedFullDocumentDiagnosticReport,
   TelemetryEventNotification,
   FullDocumentDiagnosticReport,
-  UnchangedDocumentDiagnosticReport
+  UnchangedDocumentDiagnosticReport,
+  CodeLens,
+  CodeLensParams,
+  ExecuteCommandParams
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -126,7 +129,11 @@ class PomlLspServer {
             interFileDependencies: false,
             workspaceDiagnostics: false
           },
-          hoverProvider: true
+          hoverProvider: true,
+          codeLensProvider: {},
+          executeCommandProvider: {
+            commands: ['poml.evaluateExpression']
+          }
         }
       };
     });
@@ -137,6 +144,8 @@ class PomlLspServer {
     this.connection.languages.diagnostics.on(this.onDiagnostic.bind(this));
 
     this.connection.onRequest(PreviewMethodName, this.onPreview.bind(this));
+    this.connection.onCodeLens(this.onCodeLens.bind(this));
+    this.connection.onExecuteCommand(this.onExecuteCommand.bind(this));
 
     // Provide a way to force the diagnostics to be reset.
     this.documents.onDidSave(change => {
@@ -631,6 +640,47 @@ class PomlLspServer {
       } else {
         return formatParameterDocumentation(param);
       }
+    }
+  }
+
+  private onCodeLens(params: CodeLensParams): CodeLens[] {
+    const document = this.documents.get(params.textDocument.uri);
+    if (!document) {
+      return [];
+    }
+    const text = document.getText();
+    const lenses: CodeLens[] = [];
+    const regex = /{{\s*(.+?)\s*}}/g;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(text))) {
+      const expression = match[1];
+      const start = document.positionAt(match.index);
+      lenses.push({
+        range: { start, end: start },
+        command: {
+          title: 'Evaluate',
+          command: 'poml.evaluateExpression',
+          arguments: [expression]
+        }
+      });
+    }
+    return lenses;
+  }
+
+  private onExecuteCommand(params: ExecuteCommandParams) {
+    if (params.command !== 'poml.evaluateExpression' || !params.arguments) {
+      return;
+    }
+    const expression = String(params.arguments[0]);
+    try {
+      const fn = new Function(`return (${expression})`);
+      const result = fn();
+      this.connection.console.log(String(result));
+      return result;
+    } catch (e) {
+      const message = e instanceof Error && e.stack ? e.stack : String(e);
+      this.connection.console.error(message);
+      return message;
     }
   }
 
