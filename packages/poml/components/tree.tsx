@@ -1,5 +1,5 @@
 import * as React from 'react';
-import fs from '../util/fs';
+import * as fs from 'fs';
 import * as path from 'path';
 import {
   PropsSyntaxBase,
