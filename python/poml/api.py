@@ -438,7 +438,7 @@ def poml(
                 if format != "dict":
                     # Continue to validate the format.
                     if chat:
-                        pydantic_result = [PomlMessage(**item) for item in result]
+                        pydantic_result = [PomlMessage(**item) if item["speaker"] != "ai" else PomlMessage(speaker="assistant", content=item["content"]) for item in result]
                     else:
                         # TODO: Make it a RichContent object
                         pydantic_result = [PomlMessage(speaker="human", content=result)]
