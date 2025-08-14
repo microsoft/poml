@@ -192,7 +192,7 @@ class ContentMultiMedia(BaseModel):
 
 RichContent = Union[str, List[Union[str, ContentMultiMedia]]]
 
-Speaker = Literal["human", "assistant", "system"]
+Speaker = Literal["human", "ai", "assistant", "system"]
 
 
 class PomlMessage(BaseModel):
@@ -205,6 +205,7 @@ def _poml_response_to_openai_chat(messages: List[PomlMessage]) -> List[Dict[str,
     openai_messages = []
     speaker_to_role = {
         "human": "user",
+        "ai": "assistant",
         "assistant": "assistant",
         "system": "system",
     }
@@ -438,7 +439,7 @@ def poml(
                 if format != "dict":
                     # Continue to validate the format.
                     if chat:
-                        pydantic_result = [PomlMessage(**item) if item["speaker"] != "ai" else PomlMessage(speaker="assistant", content=item["content"]) for item in result]
+                        pydantic_result = [PomlMessage(**item) for item in result]
                     else:
                         # TODO: Make it a RichContent object
                         pydantic_result = [PomlMessage(speaker="human", content=result)]
