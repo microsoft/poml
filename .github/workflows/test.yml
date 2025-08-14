@@ -15,7 +15,17 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+          - os: windows-latest
+            platform: win32-x64
+          - os: macos-13
+            platform: darwin-x64
+          - os: macos-latest
+            platform: darwin-arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -34,7 +44,10 @@ jobs:
       - run: npm run build-webview
       - run: npm run build-cli
       - run: npm run lint
-      - run: npm run package
+      - run: npm run package:win
+        if: matrix.platform == 'win32-x64'
+      - run: npm run package -- --target ${{ matrix.platform }}
+        if: matrix.platform != 'win32-x64'
       - run: python -m pip install -e .[dev]
       - run: xvfb-run -a npm test
         if: runner.os == 'Linux'

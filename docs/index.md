@@ -22,3 +22,7 @@ Welcome to the Prompt Orchestration Markup Language (POML) documentation.
 - [VS Code Extension](./vscode/index.md): Enhance your development experience with the POML Visual Studio Code extension.
 - [TypeScript SDK](./typescript/index.md): Use the POML TypeScript API for building applications.
 - [Python SDK](./python/index.md): Integrate POML into your Python projects.
+
+## Community
+
+Join our Discord community: Connect with the team and other users on our [Discord server](https://discord.gg/kSzTeMn9Vb).

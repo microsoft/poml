@@ -6,6 +6,7 @@
 [![npm (latest)](https://img.shields.io/npm/v/pomljs)](https://www.npmjs.com/package/pomljs)
 [![Test Status](https://github.com/microsoft/poml/actions/workflows/test.yml/badge.svg)](https://github.com/microsoft/poml/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/kSzTeMn9Vb)
 
 **POML (Prompt Orchestration Markup Language)** is a novel markup language designed to bring structure, maintainability, and versatility to advanced prompt engineering for Large Language Models (LLMs). It addresses common challenges in prompt development, such as lack of structure, complex data integration, format sensitivity, and inadequate tooling. POML provides a systematic way to organize prompt components, integrate diverse data types seamlessly, and manage presentation variations, empowering developers to create more sophisticated and reliable LLM applications.
 
@@ -81,6 +82,7 @@ For detailed information on POML syntax, components, styling, templating, SDKs, 
 ## Learn More
 
 * **Watch our Demo Video on YouTube:** [POML Introduction & Demo](https://youtu.be/b9WDcFsKixo)
+* **Join our Discord community:** Connect with the team and other users on our [Discord server](https://discord.gg/kSzTeMn9Vb).
 * **Read the Research Paper (coming soon):** For an in-depth understanding of POML's design, implementation, and evaluation, check out our paper: [Paper link TBD](TBD).
 
 ## Contributing
