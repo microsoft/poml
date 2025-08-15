@@ -92,7 +92,7 @@ The `<let>` tag allows you to define variables, import data from external files,
 
 ```xml
 <poml>
-  <let name="greeting" value="Hello, world!" />
+  <let name="greeting">Hello, world!</let>
   <p>{{greeting}}</p>
 </poml>
 ```
