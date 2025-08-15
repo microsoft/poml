@@ -23,7 +23,7 @@ Given the stock ticker, provide a full and up-to-date financial analysis coverin
 
 <img src="assets/104_chart_price.png" syntax="multimedia" />
 
-<img src="assets/104_chart_normalized_price.png" syntax="multimedia" />
+<img src="https://raw.githubusercontent.com/microsoft/poml/refs/heads/main/examples/assets/104_chart_normalized_price.png" syntax="multimedia" />
 
 <Hint>
 The table contains stock tickers of 7 companies. Please analyze and give financial analysis and comparison for them.

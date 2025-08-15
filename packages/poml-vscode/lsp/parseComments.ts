@@ -260,7 +260,7 @@ ${paramsString},
 
 function generatePythonFile(jsonData: ComponentSpec[]): string {
   let pythonCode = `# This file is auto-generated from component documentation.
-# Do not edit manually. Run \`npm run build-comment\` to regenerate.
+# Do not edit manually. Run \`npm run docs:build\` to regenerate.
 
 from typing import Optional, Any, Union, List, Dict
 # from numbers import Number # For more specific number types if needed
