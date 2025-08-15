@@ -667,7 +667,7 @@ interface ImageProps extends PropsSyntaxBase, MultiMedia.ImageProps {
  *
  * @see {@link Inline} for other props available.
  *
- * @param {string} src - The path to the image file.
+ * @param {string} src - The path or URL to the image file.
  * @param {string} alt - The alternative text to show when the image cannot be displayed.
  * @param {string} base64 - The base64 encoded image data. It can not be specified together with `src`.
  * @param {string} type - The MIME type of the image **to be shown**. If not specified, it will be inferred from the file extension.
