@@ -368,7 +368,7 @@ export namespace Serialize {
    * if it's unnamed.
    */
   export const Environment = component('Serialize.Environment')((
-    props: React.PropsWithChildren<PropsSerializeBase>,
+    props: React.PropsWithChildren<PropsSerializeBase & InlineProps>,
   ) => {
     const parentPresentation = React.useContext(PresentationApproach);
 
@@ -382,6 +382,7 @@ export namespace Serialize {
       originalEndIndex,
       writerOptions,
       sourcePath,
+      inline,
       ...others
     } = props;
 
@@ -421,9 +422,9 @@ export namespace Serialize {
       );
     if (parentPresentation?.presentation === 'markup') {
       // If the parent is in markup mode, we need a wrapper (e.g., ```json...```).
-      // TODO: support inline = true
+      // Support inline rendering when requested; default remains block fence.
       elem = (
-        <Markup.EncloseSerialize inline={false} lang={serializer} {...others}>
+        <Markup.EncloseSerialize inline={inline ?? false} lang={serializer} {...others}>
           {elem}
         </Markup.EncloseSerialize>
       );
@@ -493,7 +494,9 @@ export namespace Free {
    * The free environment marks the content as free-form text,
    * which will be kept as is without any processing.
    */
-  export const Environment = component('Free.Environment')((props: React.PropsWithChildren<PropsFreeBase>) => {
+  export const Environment = component('Free.Environment')((
+    props: React.PropsWithChildren<PropsFreeBase & InlineProps>,
+  ) => {
     const parentPresentation = React.useContext(PresentationApproach);
 
     // presentation is extracted but not used here. We are already in serialize mode.
@@ -506,6 +509,7 @@ export namespace Free {
       writerOptions,
       sourcePath,
       whiteSpace = 'pre',
+      inline,
       ...others
     } = props;
 
@@ -528,9 +532,9 @@ export namespace Free {
       );
     if (parentPresentation?.presentation === 'markup') {
       // If the parent is in markup mode, we need a wrapper (e.g., ```...```).
-      // TODO: support inline = true
+      // Support inline rendering when requested; default remains block fence.
       elem = (
-        <Markup.EncloseSerialize inline={false} {...others}>
+        <Markup.EncloseSerialize inline={inline ?? false} {...others}>
           {elem}
         </Markup.EncloseSerialize>
       );
