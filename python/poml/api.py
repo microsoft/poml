@@ -29,7 +29,7 @@ _trace_log: List[Dict[str, Any]] = []
 _trace_dir: Optional[Path] = None
 
 Backend = Literal["local", "weave", "agentops", "mlflow"]
-OutputFormat = Literal["raw", "dict", "openai_chat", "langchain", "pydantic"]
+OutputFormat = Literal["raw", "dict", "openai_chat", "langchain", "llamaindex", "pydantic"]
 
 
 def set_trace(
@@ -265,6 +265,64 @@ def _poml_response_to_langchain(messages: List[PomlMessage]) -> List[Dict[str, A
     return langchain_messages
 
 
+def _poml_response_to_llamaindex(messages: List[PomlMessage]) -> List[Dict[str, Any]]:
+    """Convert PomlMessage objects to LlamaIndex ChatMessage format."""
+    llamaindex_messages = []
+    for msg in messages:
+        # LlamaIndex uses MessageRole enum or string roles
+        if msg.speaker == "human":
+            role = "user"
+        elif msg.speaker == "ai":
+            role = "assistant"
+        elif msg.speaker == "system":
+            role = "system"
+        else:
+            role = "user"  # fallback
+            
+        if isinstance(msg.content, str):
+            llamaindex_messages.append({
+                "role": role,
+                "content": msg.content
+            })
+        elif isinstance(msg.content, list):
+            # For multi-modal content, LlamaIndex has similar structure to OpenAI
+            content_parts = []
+            for content_part in msg.content:
+                if isinstance(content_part, str):
+                    content_parts.append(content_part)
+                elif isinstance(content_part, ContentMultiMedia):
+                    # LlamaIndex supports multi-modal content similarly to OpenAI
+                    content_parts.append({
+                        "type": "image_url",
+                        "image_url": {"url": f"data:{content_part.type};base64,{content_part.base64}"}
+                    })
+                else:
+                    raise ValueError(f"Unexpected content part: {content_part}")
+            
+            # If mixed content, LlamaIndex expects structured format
+            if len(content_parts) == 1 and isinstance(content_parts, str):
+                llamaindex_messages.append({
+                    "role": role,
+                    "content": content_parts
+                })
+            else:
+                # Multi-modal or mixed content
+                formatted_content = []
+                for part in content_parts:
+                    if isinstance(part, str):
+                        formatted_content.append({"type": "text", "text": part})
+                    else:
+                        formatted_content.append(part)
+                llamaindex_messages.append({
+                    "role": role,
+                    "content": formatted_content
+                })
+        else:
+            raise ValueError(f"Unexpected content type: {type(msg.content)}")
+    
+    return llamaindex_messages
+
+
 def poml(
     markup: str | Path,
     context: dict | str | Path | None = None,
@@ -297,6 +355,7 @@ def poml(
             - "dict": Return the core LLM prompt as a dict or list
             - "openai_chat": Return OpenAI chat completion format
             - "langchain": Return LangChain message format
+            - "llamaindex": Return LlamaIndex ChatMessage format
             - "pydantic": Return list of PomlMessage objects
         extra_args: Additional command-line arguments to pass to the POML processor.
 
@@ -304,7 +363,7 @@ def poml(
         The processed result in the specified format:
         - str: When format="raw"
         - dict/list: When format="dict"
-        - List[Dict[str, Any]]: When format="openai_chat" or "langchain"
+        - List[Dict[str, Any]]: When format="openai_chat", "langchain", or "llamaindex"
         - List[PomlMessage]: When format="pydantic"
 
     Raises:
@@ -452,6 +511,8 @@ def poml(
                         return _poml_response_to_openai_chat(pydantic_result)
                     elif format == "langchain":
                         return _poml_response_to_langchain(pydantic_result)
+                    elif format == "llamaindex":
+                        return _poml_response_to_llamaindex(pydantic_result)
                     else:
                         raise ValueError(f"Unknown output format: {format}")
 
