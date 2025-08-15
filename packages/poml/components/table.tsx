@@ -4,7 +4,7 @@ import { PropsSyntaxBase, computeSyntaxContext } from 'poml/essentials';
 import { component, expandRelative } from 'poml/base';
 import { parseText, guessStringType, AnyValue } from 'poml/util';
 import { csvParse, tsvParse, DSVRowArray } from 'd3-dsv';
-import { readFileSync } from '../util/fs';
+import { readFileSync } from 'fs';
 import * as XLSX from 'xlsx';
 import { parsePythonStyleSlice } from './utils';
 

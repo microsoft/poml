@@ -3,7 +3,7 @@ import * as React from 'react';
 import { describe, expect, test } from '@jest/globals';
 import { MarkdownWriter, JsonWriter, MultiMediaWriter, YamlWriter, XmlWriter } from 'poml/writer';
 import * as cheerio from 'cheerio';
-import { readFileSync } from '../util/fs';
+import { readFileSync } from 'fs';
 import { ErrorCollection, richContentFromSourceMap } from 'poml/base';
 
 describe('markdown', () => {

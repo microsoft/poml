@@ -131,10 +131,10 @@ function scanComponentDocs(folderPath: string) {
       dataDisplays.push(...names.filter(name => name === 'Image' || name === 'Object'));
     } else if (filePath.endsWith('instructions.tsx')) {
       intentions.push(...names);
-    } else if (filePath.endsWith('document.tsx') || filePath.endsWith('table.tsx')) {
-      dataDisplays.push(...names);
-    } else {
+    } else if (filePath.endsWith('message.tsx')) {
       utilities.push(...names);
+    } else {
+      dataDisplays.push(...names);
     }
   }
   return allComments;

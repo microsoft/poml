@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { describe, expect, test } from '@jest/globals';
-import { readFileSync } from '../util/fs';
+import { readFileSync } from 'fs';
 import { component } from 'poml/base';
 import { Writable } from 'stream';
 import { parseText, readSource } from 'poml/util';
