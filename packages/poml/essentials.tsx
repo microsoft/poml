@@ -697,9 +697,12 @@ export const Image = component('Image', { aliases: ['img'], asynchorous: true })
       if (base64) {
         throw ReadError.fromProps('Cannot specify both `src` and `base64`.', others);
       }
-      src = expandRelative(src);
-      if (!fs.existsSync(src)) {
-        throw ReadError.fromProps(`Image file not found: ${src}`, others);
+      const isUrl = /^https?:\/\//i.test(src);
+      if (!isUrl) {
+        src = expandRelative(src);
+        if (!fs.existsSync(src)) {
+          throw ReadError.fromProps(`Image file not found: ${src}`, others);
+        }
       }
     } else if (!base64) {
       throw ReadError.fromProps('Either `src` or `base64` must be specified.', others);
