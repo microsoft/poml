@@ -171,6 +171,18 @@
         "title": "Edit Prompt",
         "category": "POML",
         "icon": "$(pencil)"
+      },
+      {
+        "command": "poml.detectVSCodeModels",
+        "title": "Detect VS Code Language Models",
+        "category": "POML",
+        "icon": "$(search)"
+      },
+      {
+        "command": "poml.autoConfigureLM",
+        "title": "Auto-Configure Language Model",
+        "category": "POML",
+        "icon": "$(settings-gear)"
       }
     ],
     "chatParticipants": [
@@ -246,12 +258,14 @@
           "type": "string",
           "description": "Language Model Provider",
           "enum": [
+            "vscode",
             "openai",
             "microsoft",
             "anthropic",
             "google"
           ],
           "enumItemLabels": [
+            "VS Code LM (GitHub Copilot)",
             "OpenAI",
             "Azure OpenAI",
             "Anthropic",

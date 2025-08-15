@@ -1,0 +1,78 @@
+<!-- POML for comprehensive code review and security analysis -->
+<poml>
+
+  <role>
+    You are an experienced code reviewer with expertise in security analysis, performance optimization, and software best practices.
+    Your reviews are constructive, detailed, and actionable.
+  </role>
+
+  <task>
+    Perform a comprehensive code review focusing on the specified areas.
+  </task>
+
+  <context>
+    <paragraph>
+      Review the following code for security vulnerabilities, performance issues, and maintainability concerns.
+      Focus on identifying critical issues that could lead to security breaches, data loss, or system compromise.
+    </paragraph>
+  </context>
+
+  <!-- Include the code file to review -->
+  <document src="assets/108_sample_code.py" parser="text" caption="Code to Review" />
+
+  <instructions>
+    <paragraph>
+      Analyze the provided code systematically:
+    </paragraph>
+    
+    <list>
+      <item>Identify potential security vulnerabilities (e.g., injection risks, data exposure, authentication issues)</item>
+      <item>Evaluate performance bottlenecks and optimization opportunities</item>
+      <item>Assess code maintainability and readability</item>
+      <item>Check adherence to language-specific best practices</item>
+      <item>Suggest specific improvements with code examples when applicable</item>
+    </list>
+  </instructions>
+
+  <example>
+    <header>Example Review Format</header>
+    <paragraph>
+      For each issue found, provide:
+      1. **Issue Type**: [Security/Performance/Maintainability/Best Practice]
+      2. **Severity**: [Critical/High/Medium/Low]
+      3. **Location**: Line numbers or function names
+      4. **Description**: Clear explanation of the issue
+      5. **Recommendation**: Specific fix or improvement
+      6. **Example**: Code snippet showing the fix (when applicable)
+    </paragraph>
+  </example>
+
+  <output-format>
+    Structure your review as follows:
+    
+    ## Executive Summary
+    Brief overview of the code quality and main findings.
+    
+    ## Critical Issues
+    List any security vulnerabilities or critical bugs that need immediate attention.
+    
+    ## Recommendations by Category
+    ### Security 🔒
+    - List specific security findings
+    
+    ### Performance ⚡
+    - List specific performance findings
+    
+    ### Maintainability 🔧
+    - List specific maintainability findings
+    
+    ### Best Practices ✅
+    - List specific best practice violations
+    
+    ## Positive Observations
+    Highlight what the code does well.
+    
+    ## Action Items
+    Prioritized list of improvements to implement.
+  </output-format>
+</poml>

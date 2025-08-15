@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-export type LanguageModelProvider = 'openai' | 'microsoft' | 'anthropic' | 'google';
+export type LanguageModelProvider = 'openai' | 'microsoft' | 'anthropic' | 'google' | 'vscode';
 
 export interface LanguageModelSetting {
   provider: LanguageModelProvider;

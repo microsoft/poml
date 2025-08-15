@@ -1,0 +1,81 @@
+import sqlite3
+import hashlib
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+# Database connection
+def get_db():
+    conn = sqlite3.connect('users.db')
+    return conn
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    
+    # Security issue: SQL injection vulnerability
+    query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(query)
+    user = cursor.fetchone()
+    
+    if user:
+        # Security issue: password stored in plain text
+        return f"Welcome {username}!"
+    else:
+        return "Invalid credentials"
+
+@app.route('/search')
+def search():
+    query = request.args.get('q', '')
+    
+    # Security issue: XSS vulnerability
+    template = f"<h1>Search Results for: {query}</h1>"
+    return render_template_string(template)
+
+@app.route('/admin')
+def admin_panel():
+    # Security issue: No authentication check
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users")
+    users = cursor.fetchall()
+    
+    # Performance issue: Loading all users at once
+    return str(users)
+
+def process_data(data):
+    result = []
+    # Performance issue: Inefficient nested loops
+    for i in range(len(data)):
+        for j in range(len(data)):
+            if data[i] == data[j] and i != j:
+                result.append(data[i])
+    return result
+
+class UserManager:
+    def __init__(self):
+        self.users = []
+    
+    def add_user(self, name, email, password):
+        # Maintainability issue: No input validation
+        user = {
+            'name': name,
+            'email': email,
+            'password': password  # Security issue: storing plain password
+        }
+        self.users.append(user)
+    
+    def find_user(self, email):
+        # Performance issue: Linear search
+        for user in self.users:
+            if user['email'] == email:
+                return user
+        return None
+
+if __name__ == '__main__':
+    # Security issue: Debug mode in production
+    app.run(debug=True, host='0.0.0.0')

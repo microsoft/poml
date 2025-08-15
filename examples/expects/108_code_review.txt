@@ -1,0 +1,143 @@
+===== human =====
+
+You are an experienced code reviewer with expertise in security analysis, performance optimization, and software best practices.
+Your reviews are constructive, detailed, and actionable.
+
+Perform a comprehensive code review focusing on the specified areas.
+
+Review the following code for:
+- security
+- performance
+- maintainability
+
+# Code to Review
+
+```python
+import sqlite3
+import hashlib
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+# Database connection
+def get_db():
+    conn = sqlite3.connect('users.db')
+    return conn
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    
+    # Security issue: SQL injection vulnerability
+    query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(query)
+    user = cursor.fetchone()
+    
+    if user:
+        # Security issue: password stored in plain text
+        return f"Welcome {username}!"
+    else:
+        return "Invalid credentials"
+
+@app.route('/search')
+def search():
+    query = request.args.get('q', '')
+    
+    # Security issue: XSS vulnerability
+    template = f"<h1>Search Results for: {query}</h1>"
+    return render_template_string(template)
+
+@app.route('/admin')
+def admin_panel():
+    # Security issue: No authentication check
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users")
+    users = cursor.fetchall()
+    
+    # Performance issue: Loading all users at once
+    return str(users)
+
+def process_data(data):
+    result = []
+    # Performance issue: Inefficient nested loops
+    for i in range(len(data)):
+        for j in range(len(data)):
+            if data[i] == data[j] and i != j:
+                result.append(data[i])
+    return result
+
+class UserManager:
+    def __init__(self):
+        self.users = []
+    
+    def add_user(self, name, email, password):
+        # Maintainability issue: No input validation
+        user = {
+            'name': name,
+            'email': email,
+            'password': password  # Security issue: storing plain password
+        }
+        self.users.append(user)
+    
+    def find_user(self, email):
+        # Performance issue: Linear search
+        for user in self.users:
+            if user['email'] == email:
+                return user
+        return None
+
+if __name__ == '__main__':
+    # Security issue: Debug mode in production
+    app.run(debug=True, host='0.0.0.0')
+```
+
+Analyze the provided code systematically:
+
+- Identify potential security vulnerabilities (e.g., injection risks, data exposure, authentication issues)
+- Evaluate performance bottlenecks and optimization opportunities
+- Assess code maintainability and readability
+- Check adherence to language-specific best practices
+- Suggest specific improvements with code examples when applicable
+
+## Example Review Format
+
+For each issue found, provide:
+1. **Issue Type**: [Security/Performance/Maintainability/Best Practice]
+2. **Severity**: [Critical/High/Medium/Low]
+3. **Location**: Line numbers or function names
+4. **Description**: Clear explanation of the issue
+5. **Recommendation**: Specific fix or improvement
+6. **Example**: Code snippet showing the fix (when applicable)
+
+Structure your review as follows:
+
+## Executive Summary
+Brief overview of the code quality and main findings.
+
+## Critical Issues
+List any security vulnerabilities or critical bugs that need immediate attention.
+
+## Recommendations by Category
+
+### Security 🔒
+- List specific findings for this category
+
+### Performance ⚡
+- List specific findings for this category
+
+### Maintainability 🔧
+- List specific findings for this category
+
+### Best Practices ✅
+- List specific findings for this category
+
+## Positive Observations
+Highlight what the code does well.
+
+## Action Items
+Prioritized list of improvements to implement.
