@@ -25,15 +25,19 @@ _trace_enabled: bool = False
 _weave_enabled: bool = False
 _agentops_enabled: bool = False
 _mlflow_enabled: bool = False
+_langfuse_enabled: bool = False
 _trace_log: List[Dict[str, Any]] = []
 _trace_dir: Optional[Path] = None
 
-Backend = Literal["local", "weave", "agentops", "mlflow"]
+Backend = Literal["local", "weave", "agentops", "mlflow", "langfuse"]
 OutputFormat = Literal["raw", "dict", "openai_chat", "langchain", "pydantic"]
 
 
 def set_trace(
-    enabled: bool | List[Backend] | Backend = True, /, *, trace_dir: Optional[str | Path] = None
+    enabled: bool | List[Backend] | Backend = True,
+    /,
+    *,
+    trace_dir: Optional[str | Path] = None,
 ) -> Optional[Path]:
     """Enable or disable tracing of ``poml`` calls with optional backend integrations.
 
@@ -41,7 +45,7 @@ def set_trace(
         enabled: Controls which tracing backends to enable. Can be:
             - True: Enable local tracing only (equivalent to ["local"])
             - False: Disable all tracing (equivalent to [])
-            - str: Enable a single backend ("local", "weave", "agentops", "mlflow")
+            - str: Enable a single backend ("local", "weave", "agentops", "mlflow", "langfuse")
             - List[str]: Enable multiple backends. "local" is auto-enabled if any backends are specified.
         trace_dir: Optional directory for local trace files. If provided when local
             tracing is enabled, a subdirectory named by the current timestamp
@@ -57,6 +61,7 @@ def set_trace(
         - "weave": Log to Weights & Biases Weave (requires local tracing)
         - "agentops": Log to AgentOps (requires local tracing)
         - "mlflow": Log to MLflow (requires local tracing)
+        - "langfuse": Log to Langfuse (requires local tracing)
     """
 
     if enabled is True:
@@ -67,7 +72,7 @@ def set_trace(
     if isinstance(enabled, str):
         enabled = [enabled]
 
-    global _trace_enabled, _trace_dir, _weave_enabled, _agentops_enabled, _mlflow_enabled
+    global _trace_enabled, _trace_dir, _weave_enabled, _agentops_enabled, _mlflow_enabled, _langsmith_enabled, _langfuse_enabled
     if enabled or "local" in enabled:
         # When enabled is non-empty, we always enable local tracing.
         _trace_enabled = True
@@ -103,6 +108,11 @@ def set_trace(
         _mlflow_enabled = True
     else:
         _mlflow_enabled = False
+
+    if "langfuse" in enabled:
+        _langfuse_enabled = True
+    else:
+        _langfuse_enabled = False
 
     return _trace_dir
 
@@ -225,7 +235,9 @@ def _poml_response_to_openai_chat(messages: List[PomlMessage]) -> List[Dict[str,
                     contents.append(
                         {
                             "type": "image_url",
-                            "image_url": {"url": f"data:{content_part.type};base64,{content_part.base64}"},
+                            "image_url": {
+                                "url": f"data:{content_part.type};base64,{content_part.base64}"
+                            },
                         }
                     )
                 else:
@@ -242,7 +254,9 @@ def _poml_response_to_langchain(messages: List[PomlMessage]) -> List[Dict[str, A
     langchain_messages = []
     for msg in messages:
         if isinstance(msg.content, str):
-            langchain_messages.append({"type": msg.speaker, "data": {"content": msg.content}})
+            langchain_messages.append(
+                {"type": msg.speaker, "data": {"content": msg.content}}
+            )
         elif isinstance(msg.content, list):
             content_parts = []
             for content_part in msg.content:
@@ -259,7 +273,9 @@ def _poml_response_to_langchain(messages: List[PomlMessage]) -> List[Dict[str, A
                     )
                 else:
                     raise ValueError(f"Unexpected content part: {content_part}")
-            langchain_messages.append({"type": msg.speaker, "data": {"content": content_parts}})
+            langchain_messages.append(
+                {"type": msg.speaker, "data": {"content": content_parts}}
+            )
         else:
             raise ValueError(f"Unexpected content type: {type(msg.content)}")
     return langchain_messages
@@ -434,24 +450,24 @@ def poml(
                 # Do nothing
                 pass
             else:
-                result = json.loads(result)
-                if isinstance(result, dict) and "messages" in result:
+                result_dict = json.loads(result)
+                if isinstance(result_dict, dict) and "messages" in result_dict:
                     # The new versions will always return a dict with "messages" key.
-                    result = result["messages"]
+                    result_dict = result_dict["messages"]
                 if format != "dict":
                     # Continue to validate the format.
                     if chat:
-                        pydantic_result = [PomlMessage(**item) for item in result]
+                        pydantic_result = [PomlMessage(**item) for item in result_dict]
                     else:
                         # TODO: Make it a RichContent object
-                        pydantic_result = [PomlMessage(speaker="human", content=result)]
+                        pydantic_result = [PomlMessage(speaker="human", content=result_dict)]  # type: ignore
 
                     if format == "pydantic":
-                        return pydantic_result
+                        result = pydantic_result
                     elif format == "openai_chat":
-                        return _poml_response_to_openai_chat(pydantic_result)
+                        result = _poml_response_to_openai_chat(pydantic_result)
                     elif format == "langchain":
-                        return _poml_response_to_langchain(pydantic_result)
+                        result = _poml_response_to_langchain(pydantic_result)
                     else:
                         raise ValueError(f"Unknown output format: {format}")
 
@@ -461,7 +477,9 @@ def poml(
                 trace_prefix = _latest_trace_prefix()
                 current_version = _current_trace_version()
                 if trace_prefix is None or current_version is None:
-                    raise RuntimeError("Weave tracing requires local tracing to be enabled.")
+                    raise RuntimeError(
+                        "Weave tracing requires local tracing to be enabled."
+                    )
                 poml_content = _read_latest_traced_file(".poml")
                 context_content = _read_latest_traced_file(".context.json")
                 stylesheet_content = _read_latest_traced_file(".stylesheet.json")
@@ -480,7 +498,9 @@ def poml(
                 trace_prefix = _latest_trace_prefix()
                 current_version = _current_trace_version()
                 if trace_prefix is None or current_version is None:
-                    raise RuntimeError("AgentOps tracing requires local tracing to be enabled.")
+                    raise RuntimeError(
+                        "AgentOps tracing requires local tracing to be enabled."
+                    )
                 poml_content = _read_latest_traced_file(".poml")
                 context_content = _read_latest_traced_file(".context.json")
                 stylesheet_content = _read_latest_traced_file(".stylesheet.json")
@@ -498,7 +518,9 @@ def poml(
                 trace_prefix = _latest_trace_prefix()
                 current_version = _current_trace_version()
                 if trace_prefix is None or current_version is None:
-                    raise RuntimeError("MLflow tracing requires local tracing to be enabled.")
+                    raise RuntimeError(
+                        "MLflow tracing requires local tracing to be enabled."
+                    )
                 poml_content = _read_latest_traced_file(".poml")
                 context_content = _read_latest_traced_file(".context.json")
                 stylesheet_content = _read_latest_traced_file(".stylesheet.json")
@@ -510,8 +532,28 @@ def poml(
                     result,
                 )
 
+            if _langfuse_enabled:
+                from .integration import langfuse
+
+                trace_prefix = _latest_trace_prefix()
+                current_version = _current_trace_version()
+                if trace_prefix is None or current_version is None:
+                    raise RuntimeError(
+                        "Langfuse tracing requires local tracing to be enabled."
+                    )
+                poml_content = _read_latest_traced_file(".poml")
+                context_content = _read_latest_traced_file(".context.json")
+                stylesheet_content = _read_latest_traced_file(".stylesheet.json")
+                langfuse.log_poml_call(
+                    trace_prefix.name,
+                    poml_content or str(markup),
+                    json.loads(context_content) if context_content else None,
+                    json.loads(stylesheet_content) if stylesheet_content else None,
+                    result,
+                )
+
             if trace_record is not None:
-                trace_record["result"] = result
+                trace_record["result"] = result_dict
             return result
     finally:
         if temp_input_file:
