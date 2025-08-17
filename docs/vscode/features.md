@@ -26,7 +26,7 @@ Diagnostics are updated automatically as you edit:
 2. **Incremental Updates**: Basic syntax checking happens as you type
 3. **Context-aware**: Validation considers your context files and stylesheets for more accurate error reporting
 
-The diagnostics system can validate references across multiple files. It vlidates that referenced `.context.json` files exist and are properly formatted. It also checks `.stylesheet.json` files for syntax and structure issues.
+The diagnostics system can validate references across multiple files. It validates that referenced `.context.json` files exist and are properly formatted. It also checks `.stylesheet.json` files for syntax and structure issues.
 
 ### Hover Tooltips
 
