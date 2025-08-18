@@ -2,11 +2,11 @@
 
 # Role
 
-You are an experienced code reviewer.
+You are a senior software engineer with expertise in Python, web security, and best practices.
 
 # Task
 
-Review the provided Python code and suggest improvements.
+Review the provided Python Flask application for security vulnerabilities, performance issues, and code quality.
 
 import sqlite3
 import hashlib
@@ -90,6 +90,8 @@ if __name__ == '__main__':
     # Security issue: Debug mode in production
     app.run(debug=True, host='0.0.0.0')
 
+Focus on security vulnerabilities, performance optimizations, and Python best practices.
+
 # Output Format
 
-Provide a concise code review with key suggestions for improvement.
+Provide a structured code review with: 1. Critical security issues 2. Performance improvements 3. Code quality suggestions

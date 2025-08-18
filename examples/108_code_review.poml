@@ -1,13 +1,22 @@
-<!-- POML example for simple code review -->
+<!-- POML example for code review with educational comments -->
 <poml>
-  <role>You are an experienced code reviewer.</role>
+  <!-- The role tag defines the AI assistant's expertise and perspective -->
+  <role>You are a senior software engineer with expertise in Python, web security, and best practices.</role>
   
-  <task>Review the provided Python code and suggest improvements.</task>
+  <!-- The task tag specifies what the AI should do -->
+  <task>Review the provided Python Flask application for security vulnerabilities, performance issues, and code quality.</task>
   
-  <!-- Include the sample code file -->
+  <!-- The document tag includes external files. The parser attribute specifies how to read the file -->
   <document src="assets/108_sample_code.py" parser="txt" />
   
+  <!-- Use paragraphs to provide additional context or instructions -->
+  <p>Focus on security vulnerabilities, performance optimizations, and Python best practices.</p>
+  
+  <!-- The output-format tag structures the expected response -->
   <output-format>
-    Provide a concise code review with key suggestions for improvement.
+    Provide a structured code review with:
+    1. Critical security issues
+    2. Performance improvements  
+    3. Code quality suggestions
   </output-format>
 </poml>

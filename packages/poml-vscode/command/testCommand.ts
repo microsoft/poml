@@ -5,7 +5,6 @@ import { PanelSettings } from 'poml-vscode/panel/types';
 import { PreviewMethodName, PreviewParams, PreviewResponse } from '../panel/types';
 import { getClient } from '../extension';
 import { Message } from 'poml';
-import { VSCodeLMIntegration, VSCodeLMProvider } from '../providers/vscodeLMProvider';
 
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
@@ -120,10 +119,10 @@ export class TestCommand implements Command {
     if (useVSCodeLM) {
       this.log('info', 'Using VS Code Language Model API');
       // Validate VS Code LM is available
-      const validation = await VSCodeLMIntegration.validate();
-      if (!validation.valid) {
-        vscode.window.showErrorMessage(validation.message || 'VS Code Language Model API is not available');
-        this.log('error', `VS Code LM validation failed: ${validation.message}`);
+      const models = await this.getVSCodeModels();
+      if (!models.length) {
+        vscode.window.showErrorMessage('No VS Code Language Models available. Please ensure GitHub Copilot is enabled.');
+        this.log('error', 'No VS Code LM models found');
         return;
       }
     } else {
@@ -189,9 +188,8 @@ export class TestCommand implements Command {
       if (useVSCodeLM) {
         // Use VS Code LM API
         cancellationToken = GenerationController.getNewCancellationToken();
-        stream = VSCodeLMIntegration.createStream(
+        stream = this.createVSCodeLMStream(
           prompt.content as Message[],
-          setting || { provider: 'vscode' as any, model: 'copilot/gpt-4o' },
           cancellationToken.token
         );
       } else {
@@ -246,6 +244,90 @@ export class TestCommand implements Command {
   }
 
   /**
+   * Check if VS Code LM API is available
+   */
+  private isVSCodeLMAvailable(): boolean {
+    return 'lm' in vscode && typeof vscode.lm?.selectChatModels === 'function';
+  }
+
+  /**
+   * Get available VS Code language models
+   */
+  private async getVSCodeModels(): Promise<vscode.LanguageModelChat[]> {
+    if (!this.isVSCodeLMAvailable()) {
+      return [];
+    }
+
+    // Extended list of known model families for GitHub Copilot (August 2025)
+    const families = [
+      // GPT models
+      'gpt-5', 'gpt-4o', 'gpt-4o-mini', 'gpt-4', 'gpt-4-turbo', 'gpt-4.1', 'gpt-3.5-turbo',
+      // Claude models  
+      'claude-opus-4.1', 'claude-3.5-sonnet', 'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku',
+      // O1 reasoning models
+      'o1', 'o1-mini', 'o1-preview',
+      // Gemini models
+      'gemini-2.0-flash', 'gemini-pro', 'gemini',
+      // Generic copilot identifiers
+      'copilot', 'copilot-gpt-5', 'copilot-gpt-4', 'copilot-gpt-3.5'
+    ];
+    
+    const models: vscode.LanguageModelChat[] = [];
+    
+    for (const family of families) {
+      try {
+        const familyModels = await vscode.lm.selectChatModels({ family });
+        models.push(...familyModels);
+      } catch {}
+    }
+    
+    // Also try vendor/family combinations
+    const vendors = ['copilot', 'claude', 'openai'];
+    for (const vendor of vendors) {
+      for (const family of families) {
+        try {
+          const vendorModels = await vscode.lm.selectChatModels({ 
+            vendor, 
+            family 
+          });
+          models.push(...vendorModels);
+        } catch {}
+      }
+    }
+    
+    // Deduplicate models
+    const uniqueModels = Array.from(new Map(models.map(m => [m.id, m])).values());
+    return uniqueModels;
+  }
+
+  /**
+   * Create a stream from VS Code LM API
+   */
+  private async *createVSCodeLMStream(
+    messages: Message[],
+    cancellationToken: vscode.CancellationToken
+  ): AsyncGenerator<string> {
+    const models = await this.getVSCodeModels();
+    if (!models.length) {
+      throw new Error('No VS Code language models available');
+    }
+
+    const model = models[0];
+    const vsMessages = messages.map(msg => {
+      const role = msg.speaker === 'human' ? vscode.LanguageModelChatMessageRole.User :
+                   vscode.LanguageModelChatMessageRole.Assistant;
+      
+      return new vscode.LanguageModelChatMessage(role, msg.content as string);
+    });
+
+    const response = await model.sendRequest(vsMessages, {}, cancellationToken);
+    
+    for await (const chunk of response.text) {
+      yield chunk;
+    }
+  }
+
+  /**
    * Determine if VS Code LM API should be used
    */
   private async shouldUseVSCodeLM(setting: LanguageModelSetting | undefined): Promise<boolean> {
@@ -260,7 +342,7 @@ export class TestCommand implements Command {
     
     if (!setting || !setting.apiKey) {
       // Check if VS Code LM is available as fallback
-      return VSCodeLMProvider.isAvailable();
+      return this.isVSCodeLMAvailable();
     }
     
     return false;
