@@ -50,10 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
   commandManager.register(new command.AddPromptCommand(galleryProvider));
   commandManager.register(new command.DeletePromptCommand(galleryProvider));
   commandManager.register(new command.EditPromptCommand(galleryProvider));
-  
-  // VS Code LM API commands
-  commandManager.register(new command.DetectModelsCommand());
-  commandManager.register(new command.AutoConfigureCommand());
 
   registerPomlChatParticipant(context, galleryProvider);
 

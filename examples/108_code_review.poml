@@ -1,25 +1,13 @@
-<!-- POML example for code review and security analysis -->
+<!-- POML example for simple code review -->
 <poml>
-  <role>You are an experienced code reviewer specializing in security, performance, and best practices.</role>
+  <role>You are an experienced code reviewer.</role>
   
-  <task>Review the provided Python code for security vulnerabilities and improvement opportunities.</task>
+  <task>Review the provided Python code and suggest improvements.</task>
   
   <!-- Include the sample code file -->
   <document src="assets/108_sample_code.py" />
   
-  <instructions>
-    Focus on:
-    - SQL injection and XSS vulnerabilities
-    - Authentication and authorization issues
-    - Performance bottlenecks
-    - Code maintainability
-  </instructions>
-  
   <output-format>
-    Provide a structured code review with:
-    1. Critical security issues
-    2. Performance improvements
-    3. Best practice recommendations
-    4. Positive observations
+    Provide a concise code review with key suggestions for improvement.
   </output-format>
 </poml>

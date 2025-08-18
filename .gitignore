@@ -18,6 +18,3 @@ poml-*.tgz
 /mlartifacts
 /site
 /docs/typescript/reference/**/*.md
-test-examples/
-*.vsix
-test-*.js
