@@ -23,6 +23,11 @@ Welcome to the Prompt Orchestration Markup Language (POML) documentation.
 - [TypeScript SDK](./typescript/index.md): Use the POML TypeScript API for building applications.
 - [Python SDK](./python/index.md): Integrate POML into your Python projects.
 
+## Ecosystem & Community Projects
+
+- [mini-poml-rs](https://github.com/linmx0130/mini-poml-rs) – Experimental Rust-based POML renderer for environments without JavaScript or Python interpreters.
+- [poml-ruby](https://github.com/GhennadiiMir/poml) – Ruby gem implementation of POML for Ruby applications.
+
 ## Community
 
 Join our Discord community: Connect with the team and other users on our [Discord server](https://discord.gg/FhMCqWzAn6).

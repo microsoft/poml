@@ -348,6 +348,7 @@
     "build-webview": "webpack-cli --config webpack.config.webview.js",
     "build-cli": "webpack-cli --config webpack.config.cli.js",
     "generate-component-spec": "npm run compile && node ./out/poml-vscode/lsp/parseComments.js && npm run compile && node ./out/poml-vscode/lsp/parseComments.js",
+    "validate-component-spec": "npm run compile && node ./out/poml-vscode/lsp/parseComments.js --check && npm run compile && node ./out/poml-vscode/lsp/parseComments.js --check",
     "generate-vscodeignore": "node ./vscodeignore.js",
     "compile": "tspc -p ./",
     "watch": "tspc -watch -p ./",

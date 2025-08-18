@@ -31,6 +31,29 @@ describe('Schema', () => {
       expect(schema).toBeDefined();
       expect(schema.toOpenAPI()).toBe(openApiSchema);
     });
+
+    test('should accept valid JSON schema types', () => {
+      const stringSchema = { type: 'string' };
+      const numberSchema = { type: 'number' };
+      const booleanSchema = { type: 'boolean' };
+      const arraySchema = { type: 'array', items: { type: 'string' } };
+      
+      expect(() => Schema.fromOpenAPI(stringSchema)).not.toThrow();
+      expect(() => Schema.fromOpenAPI(numberSchema)).not.toThrow();
+      expect(() => Schema.fromOpenAPI(booleanSchema)).not.toThrow();
+      expect(() => Schema.fromOpenAPI(arraySchema)).not.toThrow();
+    });
+
+    test('should handle schemas without type property', () => {
+      const schemaWithoutType = {
+        properties: {
+          name: { type: 'string' }
+        }
+      };
+      
+      // This should not throw - JSON Schema allows schemas without explicit type
+      expect(() => Schema.fromOpenAPI(schemaWithoutType)).not.toThrow();
+    });
   });
 
   describe('toZod', () => {
