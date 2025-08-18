@@ -504,6 +504,9 @@ export class TestCommand implements Command {
 
   private getActiveVercelModel(settings: LanguageModelSetting) {
     const provider = this.getActiveVercelModelProvider(settings);
+    if (!provider) {
+      throw new Error(`Unsupported provider: ${settings.provider}`);
+    }
     return provider(settings.model);
   }
 

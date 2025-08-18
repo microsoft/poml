@@ -17,3 +17,4 @@ export {
   DeletePromptCommand,
   EditPromptCommand,
 } from './promptGallery';
+export { DetectModelsCommand, AutoConfigureCommand } from './detectModelsCommand';
