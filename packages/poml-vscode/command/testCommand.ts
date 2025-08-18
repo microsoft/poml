@@ -5,6 +5,7 @@ import { PanelSettings } from 'poml-vscode/panel/types';
 import { PreviewMethodName, PreviewParams, PreviewResponse } from '../panel/types';
 import { getClient } from '../extension';
 import { Message } from 'poml';
+import { VSCodeLMIntegration, VSCodeLMProvider } from '../providers/vscodeLMProvider';
 
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
@@ -25,9 +26,11 @@ let _globalGenerationController: GenerationController | undefined = undefined;
 
 class GenerationController {
   private readonly abortControllers: AbortController[];
+  private readonly cancellationTokens: vscode.CancellationTokenSource[];
 
   private constructor() {
     this.abortControllers = [];
+    this.cancellationTokens = [];
   }
 
   public static getNewAbortController() {
@@ -39,12 +42,25 @@ class GenerationController {
     return controller;
   }
 
+  public static getNewCancellationToken() {
+    if (!_globalGenerationController) {
+      _globalGenerationController = new GenerationController();
+    }
+    const tokenSource = new vscode.CancellationTokenSource();
+    _globalGenerationController.cancellationTokens.push(tokenSource);
+    return tokenSource;
+  }
+
   public static abortAll() {
     if (_globalGenerationController) {
       for (const controller of _globalGenerationController.abortControllers) {
         controller.abort();
       }
+      for (const tokenSource of _globalGenerationController.cancellationTokens) {
+        tokenSource.cancel();
+      }
       _globalGenerationController.abortControllers.length = 0;
+      _globalGenerationController.cancellationTokens.length = 0;
     }
   }
 }
@@ -97,28 +113,44 @@ export class TestCommand implements Command {
 
     // Check if language model settings are configured
     const setting = this.getLanguageModelSettings(uri);
-    if (!setting) {
-      vscode.window.showErrorMessage('Language model settings are not configured. Please configure your language model settings first.');
-      this.log('error', 'Prompt test aborted: Language model settings not found.');
-      return;
-    }
     
-    if (!setting.provider) {
-      vscode.window.showErrorMessage('Language model provider is not configured. Please set your provider in the extension settings.');
-      this.log('error', 'Prompt test aborted: setting.provider is not configured.');
-      return;
-    }
+    // Check if we should use VS Code LM API
+    const useVSCodeLM = await this.shouldUseVSCodeLM(setting);
     
-    if (!setting.model) {
-      vscode.window.showErrorMessage('Language model is not configured. Please set your model in the extension settings.');
-      this.log('error', 'Prompt test aborted: setting.model is not configured.');
-      return;
-    }
-    
-    if (!setting.apiKey) {
-      vscode.window.showErrorMessage('API key is not configured. Please set your API key in the extension settings.');
-      this.log('error', 'Prompt test aborted: setting.apiKey not configured.');
-      return;
+    if (useVSCodeLM) {
+      this.log('info', 'Using VS Code Language Model API');
+      // Validate VS Code LM is available
+      const validation = await VSCodeLMIntegration.validate();
+      if (!validation.valid) {
+        vscode.window.showErrorMessage(validation.message || 'VS Code Language Model API is not available');
+        this.log('error', `VS Code LM validation failed: ${validation.message}`);
+        return;
+      }
+    } else {
+      // Traditional validation for other providers
+      if (!setting) {
+        vscode.window.showErrorMessage('Language model settings are not configured. Please configure your language model settings first.');
+        this.log('error', 'Prompt test aborted: Language model settings not found.');
+        return;
+      }
+      
+      if (!setting.provider) {
+        vscode.window.showErrorMessage('Language model provider is not configured. Please set your provider in the extension settings.');
+        this.log('error', 'Prompt test aborted: setting.provider is not configured.');
+        return;
+      }
+      
+      if (!setting.model) {
+        vscode.window.showErrorMessage('Language model is not configured. Please set your model in the extension settings.');
+        this.log('error', 'Prompt test aborted: setting.model is not configured.');
+        return;
+      }
+      
+      if (!setting.apiKey) {
+        vscode.window.showErrorMessage('API key is not configured. Please set your API key in the extension settings.');
+        this.log('error', 'Prompt test aborted: setting.apiKey not configured.');
+        return;
+      }
     }
 
     if (!setting.apiUrl) {
@@ -140,16 +172,32 @@ export class TestCommand implements Command {
 
     let timer = setTimeout(showProgress, nextInterval * 1000);
     let result: string[] = [];
+    let cancellationToken: vscode.CancellationTokenSource | undefined;
+    
     try {
       const prompt = await this.renderPrompt(uri);
       const setting = this.getLanguageModelSettings(uri);
       reporter?.reportTelemetry(TelemetryEvent.PromptTestingStart, {
         ...reportParams,
         languageModel: JSON.stringify(setting),
-        rendered: JSON.stringify(prompt)
+        rendered: JSON.stringify(prompt),
+        usingVSCodeLM: String(useVSCodeLM)
       });
 
-      const stream = this.routeStream(prompt, setting);
+      let stream: AsyncGenerator<string>;
+      
+      if (useVSCodeLM) {
+        // Use VS Code LM API
+        cancellationToken = GenerationController.getNewCancellationToken();
+        stream = VSCodeLMIntegration.createStream(
+          prompt.content as Message[],
+          setting || { provider: 'vscode' as any, model: 'copilot/gpt-4o' },
+          cancellationToken.token
+        );
+      } else {
+        // Use traditional provider stream
+        stream = this.routeStream(prompt, setting);
+      }
       let hasChunk = false;
       for await (const chunk of stream) {
         clearTimeout(timer);
@@ -169,7 +217,8 @@ export class TestCommand implements Command {
         reporter.reportTelemetry(TelemetryEvent.PromptTestingEnd, {
           ...reportParams,
           result: result.join(''),
-          timeElapsed: timeElapsed
+          timeElapsed: timeElapsed,
+          usingVSCodeLM: String(useVSCodeLM)
         });
       }
     } catch (e) {
@@ -179,7 +228,8 @@ export class TestCommand implements Command {
         reporter.reportTelemetry(TelemetryEvent.PromptTestingError, {
           ...reportParams,
           error: e ? e.toString() : '',
-          partialResult: result.join('')
+          partialResult: result.join(''),
+          usingVSCodeLM: String(useVSCodeLM)
         });
       }
 
@@ -188,7 +238,32 @@ export class TestCommand implements Command {
       } else {
         this.log('error', String(e));
       }
+    } finally {
+      if (cancellationToken) {
+        cancellationToken.dispose();
+      }
     }
+  }
+
+  /**
+   * Determine if VS Code LM API should be used
+   */
+  private async shouldUseVSCodeLM(setting: LanguageModelSetting | undefined): Promise<boolean> {
+    // Priority order:
+    // 1. If provider is explicitly set to 'vscode', use VS Code LM
+    // 2. If no settings or no API key, try VS Code LM if available
+    // 3. Otherwise use traditional provider
+    
+    if (setting?.provider === 'vscode' as any) {
+      return true;
+    }
+    
+    if (!setting || !setting.apiKey) {
+      // Check if VS Code LM is available as fallback
+      return VSCodeLMProvider.isAvailable();
+    }
+    
+    return false;
   }
 
   protected get isChatting() {

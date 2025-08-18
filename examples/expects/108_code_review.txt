@@ -1,16 +1,8 @@
 ===== human =====
 
-You are an experienced code reviewer with expertise in security analysis, performance optimization, and software best practices.
-Your reviews are constructive, detailed, and actionable.
+You are an experienced code reviewer specializing in security, performance, and best practices.
 
-Perform a comprehensive code review focusing on the specified areas.
-
-Review the following code for:
-- security
-- performance
-- maintainability
-
-# Code to Review
+Review the provided Python code for security vulnerabilities and improvement opportunities.
 
 ```python
 import sqlite3
@@ -96,48 +88,14 @@ if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 ```
 
-Analyze the provided code systematically:
+Focus on:
+- SQL injection and XSS vulnerabilities
+- Authentication and authorization issues
+- Performance bottlenecks
+- Code maintainability
 
-- Identify potential security vulnerabilities (e.g., injection risks, data exposure, authentication issues)
-- Evaluate performance bottlenecks and optimization opportunities
-- Assess code maintainability and readability
-- Check adherence to language-specific best practices
-- Suggest specific improvements with code examples when applicable
-
-## Example Review Format
-
-For each issue found, provide:
-1. **Issue Type**: [Security/Performance/Maintainability/Best Practice]
-2. **Severity**: [Critical/High/Medium/Low]
-3. **Location**: Line numbers or function names
-4. **Description**: Clear explanation of the issue
-5. **Recommendation**: Specific fix or improvement
-6. **Example**: Code snippet showing the fix (when applicable)
-
-Structure your review as follows:
-
-## Executive Summary
-Brief overview of the code quality and main findings.
-
-## Critical Issues
-List any security vulnerabilities or critical bugs that need immediate attention.
-
-## Recommendations by Category
-
-### Security 🔒
-- List specific findings for this category
-
-### Performance ⚡
-- List specific findings for this category
-
-### Maintainability 🔧
-- List specific findings for this category
-
-### Best Practices ✅
-- List specific findings for this category
-
-## Positive Observations
-Highlight what the code does well.
-
-## Action Items
-Prioritized list of improvements to implement.
+Provide a structured code review with:
+1. Critical security issues
+2. Performance improvements
+3. Best practice recommendations
+4. Positive observations
