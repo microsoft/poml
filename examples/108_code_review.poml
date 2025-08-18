@@ -5,7 +5,7 @@
   <task>Review the provided Python code and suggest improvements.</task>
   
   <!-- Include the sample code file -->
-  <document src="assets/108_sample_code.py" />
+  <document src="assets/108_sample_code.py" parser="txt" />
   
   <output-format>
     Provide a concise code review with key suggestions for improvement.

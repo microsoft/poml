@@ -1,10 +1,13 @@
 ===== human =====
 
-You are an experienced code reviewer specializing in security, performance, and best practices.
+# Role
 
-Review the provided Python code for security vulnerabilities and improvement opportunities.
+You are an experienced code reviewer.
 
-```python
+# Task
+
+Review the provided Python code and suggest improvements.
+
 import sqlite3
 import hashlib
 from flask import Flask, request, render_template_string
@@ -86,16 +89,7 @@ class UserManager:
 if __name__ == '__main__':
     # Security issue: Debug mode in production
     app.run(debug=True, host='0.0.0.0')
-```
 
-Focus on:
-- SQL injection and XSS vulnerabilities
-- Authentication and authorization issues
-- Performance bottlenecks
-- Code maintainability
+# Output Format
 
-Provide a structured code review with:
-1. Critical security issues
-2. Performance improvements
-3. Best practice recommendations
-4. Positive observations
+Provide a concise code review with key suggestions for improvement.
