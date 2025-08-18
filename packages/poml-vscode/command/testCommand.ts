@@ -112,41 +112,51 @@ export class TestCommand implements Command {
 
     // Check if language model settings are configured
     const setting = this.getLanguageModelSettings(uri);
-    
+
     // Check if we should use VS Code LM API
     const useVSCodeLM = await this.shouldUseVSCodeLM(setting);
-    
+
     if (useVSCodeLM) {
       this.log('info', 'Using VS Code Language Model API');
       // Validate VS Code LM is available
       const models = await this.getVSCodeModels();
       if (!models.length) {
-        vscode.window.showErrorMessage('No VS Code Language Models available. Please ensure GitHub Copilot is enabled.');
+        vscode.window.showErrorMessage(
+          'No VS Code Language Models available. Please ensure GitHub Copilot is enabled.'
+        );
         this.log('error', 'No VS Code LM models found');
         return;
       }
     } else {
       // Traditional validation for other providers
       if (!setting) {
-        vscode.window.showErrorMessage('Language model settings are not configured. Please configure your language model settings first.');
+        vscode.window.showErrorMessage(
+          'Language model settings are not configured. Please configure your language model settings first.'
+        );
         this.log('error', 'Prompt test aborted: Language model settings not found.');
         return;
       }
-      
+
       if (!setting.provider) {
-        vscode.window.showErrorMessage('Language model provider is not configured. Please set your provider in the extension settings.');
+        vscode.window.showErrorMessage(
+          'Language model provider is not configured. Please set your provider in the extension settings.'
+        );
         this.log('error', 'Prompt test aborted: setting.provider is not configured.');
         return;
       }
-      
+
       if (!setting.model) {
-        vscode.window.showErrorMessage('Language model is not configured. Please set your model in the extension settings.');
+        vscode.window.showErrorMessage(
+          'Language model is not configured. Please set your model in the extension settings.'
+        );
         this.log('error', 'Prompt test aborted: setting.model is not configured.');
         return;
       }
-      
+
       if (!setting.apiKey) {
-        vscode.window.showErrorMessage('API key is not configured. Please set your API key in the extension settings.');
+        vscode.window.showErrorMessage(
+          'API key is not configured. Please set your API key in the extension settings.'
+        );
         this.log('error', 'Prompt test aborted: setting.apiKey not configured.');
         return;
       }
@@ -172,7 +182,7 @@ export class TestCommand implements Command {
     let timer = setTimeout(showProgress, nextInterval * 1000);
     let result: string[] = [];
     let cancellationToken: vscode.CancellationTokenSource | undefined;
-    
+
     try {
       const prompt = await this.renderPrompt(uri);
       const setting = this.getLanguageModelSettings(uri);
@@ -184,14 +194,11 @@ export class TestCommand implements Command {
       });
 
       let stream: AsyncGenerator<string>;
-      
+
       if (useVSCodeLM) {
         // Use VS Code LM API
         cancellationToken = GenerationController.getNewCancellationToken();
-        stream = this.createVSCodeLMStream(
-          prompt.content as Message[],
-          cancellationToken.token
-        );
+        stream = this.createVSCodeLMStream(prompt.content as Message[], cancellationToken.token);
       } else {
         // Use traditional provider stream
         stream = this.routeStream(prompt, setting);
@@ -209,7 +216,10 @@ export class TestCommand implements Command {
         this.outputChannel.appendLine('');
       }
       const timeElapsed = Date.now() - startTime;
-      this.log('info', `Test completed in ${Math.round(timeElapsed / 1000)} seconds. Language models can make mistakes. Check important info.`);
+      this.log(
+        'info',
+        `Test completed in ${Math.round(timeElapsed / 1000)} seconds. Language models can make mistakes. Check important info.`
+      );
 
       if (reporter) {
         reporter.reportTelemetry(TelemetryEvent.PromptTestingEnd, {
@@ -258,43 +268,48 @@ export class TestCommand implements Command {
       return [];
     }
 
-    // Extended list of known model families for GitHub Copilot (August 2025)
+    // Extended list of known model families for GitHub Copilot
     const families = [
-      // GPT models
-      'gpt-5', 'gpt-4o', 'gpt-4o-mini', 'gpt-4', 'gpt-4-turbo', 'gpt-4.1', 'gpt-3.5-turbo',
-      // Claude models  
-      'claude-opus-4.1', 'claude-3.5-sonnet', 'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku',
-      // O1 reasoning models
-      'o1', 'o1-mini', 'o1-preview',
-      // Gemini models
-      'gemini-2.0-flash', 'gemini-pro', 'gemini',
-      // Generic copilot identifiers
-      'copilot', 'copilot-gpt-5', 'copilot-gpt-4', 'copilot-gpt-3.5'
+      'gpt-4o',
+      'gpt-4o-mini',
+      'gpt-4',
+      'gpt-4-turbo',
+      'gpt-3.5-turbo',
+      'claude-3.5-sonnet',
+      'claude-3-opus',
+      'claude-3-sonnet',
+      'claude-3-haiku',
+      'o1',
+      'o1-mini',
+      'o1-preview',
+      'copilot',
+      'copilot-gpt-4',
+      'copilot-gpt-3.5'
     ];
-    
+
     const models: vscode.LanguageModelChat[] = [];
-    
+
     for (const family of families) {
       try {
         const familyModels = await vscode.lm.selectChatModels({ family });
         models.push(...familyModels);
       } catch {}
     }
-    
+
     // Also try vendor/family combinations
     const vendors = ['copilot', 'claude', 'openai'];
     for (const vendor of vendors) {
       for (const family of families) {
         try {
-          const vendorModels = await vscode.lm.selectChatModels({ 
-            vendor, 
-            family 
+          const vendorModels = await vscode.lm.selectChatModels({
+            vendor,
+            family
           });
           models.push(...vendorModels);
         } catch {}
       }
     }
-    
+
     // Deduplicate models
     const uniqueModels = Array.from(new Map(models.map(m => [m.id, m])).values());
     return uniqueModels;
@@ -314,14 +329,16 @@ export class TestCommand implements Command {
 
     const model = models[0];
     const vsMessages = messages.map(msg => {
-      const role = msg.speaker === 'human' ? vscode.LanguageModelChatMessageRole.User :
-                   vscode.LanguageModelChatMessageRole.Assistant;
-      
+      const role =
+        msg.speaker === 'human'
+          ? vscode.LanguageModelChatMessageRole.User
+          : vscode.LanguageModelChatMessageRole.Assistant;
+
       return new vscode.LanguageModelChatMessage(role, msg.content as string);
     });
 
     const response = await model.sendRequest(vsMessages, {}, cancellationToken);
-    
+
     for await (const chunk of response.text) {
       yield chunk;
     }
@@ -335,16 +352,16 @@ export class TestCommand implements Command {
     // 1. If provider is explicitly set to 'vscode', use VS Code LM
     // 2. If no settings or no API key, try VS Code LM if available
     // 3. Otherwise use traditional provider
-    
-    if (setting?.provider === 'vscode' as any) {
+
+    if (setting?.provider === ('vscode' as any)) {
       return true;
     }
-    
+
     if (!setting || !setting.apiKey) {
       // Check if VS Code LM is available as fallback
       return this.isVSCodeLMAvailable();
     }
-    
+
     return false;
   }
 
@@ -359,7 +376,7 @@ export class TestCommand implements Command {
       speakerMode: this.isChatting,
       displayFormat: 'rendered',
       contexts: options.contexts,
-      stylesheets: options.stylesheets,
+      stylesheets: options.stylesheets
     };
 
     const response: PreviewResponse = await getClient().sendRequest<PreviewResponse>(
@@ -374,7 +391,7 @@ export class TestCommand implements Command {
 
   private async *routeStream(
     prompt: PreviewResponse,
-    settings: LanguageModelSetting,
+    settings: LanguageModelSetting
   ): AsyncGenerator<string> {
     if (settings.provider === 'microsoft' && settings.apiUrl?.includes('.models.ai.azure.com')) {
       yield* this.azureAiStream(prompt.content as Message[], settings);
@@ -387,12 +404,13 @@ export class TestCommand implements Command {
 
   private async *handleResponseSchemaStream(
     prompt: PreviewResponse,
-    settings: LanguageModelSetting,
+    settings: LanguageModelSetting
   ): AsyncGenerator<string> {
     const model = this.getActiveVercelModel(settings);
-    const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
-      : prompt.content as string;
-    
+    const vercelPrompt = this.isChatting
+      ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
+      : (prompt.content as string);
+
     if (prompt.tools) {
       throw new Error('Tools are not supported when response schema is provided.');
     }
@@ -412,7 +430,7 @@ export class TestCommand implements Command {
       maxRetries: 0,
       temperature: settings.temperature,
       maxOutputTokens: settings.maxTokens,
-      ...prompt.runtime,
+      ...prompt.runtime
     });
 
     for await (const text of stream.textStream) {
@@ -422,11 +440,12 @@ export class TestCommand implements Command {
 
   private async *handleRegularTextStream(
     prompt: PreviewResponse,
-    settings: LanguageModelSetting,
+    settings: LanguageModelSetting
   ): AsyncGenerator<string> {
     const model = this.getActiveVercelModel(settings);
-    const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
-      : prompt.content as string;
+    const vercelPrompt = this.isChatting
+      ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
+      : (prompt.content as string);
 
     const stream = streamText({
       model: model,
@@ -439,7 +458,7 @@ export class TestCommand implements Command {
       maxRetries: 0,
       temperature: settings.temperature,
       maxOutputTokens: settings.maxTokens,
-      ...prompt.runtime,
+      ...prompt.runtime
     });
 
     let lastChunkEndline: boolean = false;
@@ -466,7 +485,9 @@ export class TestCommand implements Command {
       return `${newline}[Reasoning]`;
     } else if (chunk.type === 'reasoning-end') {
       return '\n[/Reasoning]';
-    } else if (['start', 'finish', 'start-step', 'finish-step', 'message-metadata'].includes(chunk.type)) {
+    } else if (
+      ['start', 'finish', 'start-step', 'finish-step', 'message-metadata'].includes(chunk.type)
+    ) {
       return null;
     } else if (chunk.type === 'abort') {
       return `${newline}[Aborted]`;
@@ -480,9 +501,10 @@ export class TestCommand implements Command {
 
   private formatUsageInfo(chunk: any, lastChunkEndline: boolean): string {
     const newline = lastChunkEndline ? '' : '\n';
-    let usageInfo = `${newline}[Usage: input=${chunk.totalUsage.inputTokens}, output=${chunk.totalUsage.outputTokens}, ` +
+    let usageInfo =
+      `${newline}[Usage: input=${chunk.totalUsage.inputTokens}, output=${chunk.totalUsage.outputTokens}, ` +
       `total=${chunk.totalUsage.totalTokens}`;
-    
+
     if (chunk.totalUsage.cachedInputTokens) {
       usageInfo += `, cached=${chunk.totalUsage.cachedInputTokens}`;
     }
@@ -490,7 +512,7 @@ export class TestCommand implements Command {
       usageInfo += `, reasoning=${chunk.totalUsage.reasoningTokens}`;
     }
     usageInfo += ']';
-    
+
     return usageInfo;
   }
 
@@ -564,7 +586,7 @@ export class TestCommand implements Command {
       case 'anthropic':
         return createAnthropic({
           baseURL: settings.apiUrl,
-          apiKey: settings.apiKey,
+          apiKey: settings.apiKey
         });
       case 'microsoft':
         return createAzure({
@@ -597,25 +619,30 @@ export class TestCommand implements Command {
       ai: 'assistant',
       human: 'user',
       system: 'system'
-    }
+    };
     const result: ModelMessage[] = [];
     for (const msg of messages) {
       if (!msg.speaker) {
         throw new Error(`Message must have a speaker, found: ${JSON.stringify(msg)}`);
       }
       const role = speakerToRole[msg.speaker];
-      const contents = typeof msg.content === 'string' ? msg.content : msg.content.map(part => {
-        if (typeof part === 'string') {
-          return { type: 'text', text: part };
-        } else if (part.type.startsWith('image/')) {
-          if (!part.base64) {
-            throw new Error(`Image content must have base64 data, found: ${JSON.stringify(part)}`);
-          }
-          return { type: 'image', image: part.base64 };
-        } else {
-          throw new Error(`Unsupported content type: ${part.type}`);
-        }
-      });
+      const contents =
+        typeof msg.content === 'string'
+          ? msg.content
+          : msg.content.map(part => {
+              if (typeof part === 'string') {
+                return { type: 'text', text: part };
+              } else if (part.type.startsWith('image/')) {
+                if (!part.base64) {
+                  throw new Error(
+                    `Image content must have base64 data, found: ${JSON.stringify(part)}`
+                  );
+                }
+                return { type: 'image', image: part.base64 };
+              } else {
+                throw new Error(`Unsupported content type: ${part.type}`);
+              }
+            });
       result.push({
         role: role as any,
         content: contents as any
@@ -638,7 +665,7 @@ export class TestCommand implements Command {
         description: t.description,
         inputSchema: schema
       });
-    };
+    }
     this.log('info', 'Registered tools: ' + Object.keys(result).join(', '));
     return result;
   }
@@ -705,7 +732,7 @@ export class TestRerunCommand implements Command {
 export class TestAbortCommand implements Command {
   public readonly id = 'poml.testAbort';
 
-  public constructor(private readonly previewManager: POMLWebviewPanelManager) { }
+  public constructor(private readonly previewManager: POMLWebviewPanelManager) {}
 
   public execute() {
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.PromptTestingAbort, {});
