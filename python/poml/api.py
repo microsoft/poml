@@ -381,7 +381,7 @@ def poml(
 
                 temp_input_file = write_file(markup)
                 markup = Path(temp_input_file.name)
-        with tempfile.NamedTemporaryFile("r") as temp_output_file:
+        with tempfile.NamedTemporaryFile("r", encoding="utf-8") as temp_output_file:
             if output_file is None:
                 output_file = temp_output_file.name
                 output_file_specified = False
