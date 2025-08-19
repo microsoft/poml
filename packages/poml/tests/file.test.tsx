@@ -243,6 +243,73 @@ describe('templateEngine', () => {
     const text = '<let>{ "object": { "complex": true } }</let><p>{{object}}</p>';
     expect(write(await read(text))).toBe('{"complex":true}');
   });
+
+  test('letValueString', async () => {
+    const text = '<let name="greeting" value="\'Hello, world!\'" /><p>{{greeting}}</p>';
+    expect(await poml(text)).toBe('Hello, world!');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueStringDoubleQuotes', async () => {
+    const text = '<let name="greeting" value=\'"Hello, world!"\' /><p>{{greeting}}</p>';
+    expect(await poml(text)).toBe('Hello, world!');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueNumber', async () => {
+    const text = '<let name="count" value="42" /><p>{{count}}</p>';
+    expect(await poml(text)).toBe('42');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueArray', async () => {
+    const text = '<let name="items" value="[1, 2, 3]" /><p>{{items[1]}}</p>';
+    expect(await poml(text)).toBe('2');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueObject', async () => {
+    const text = '<let name="person" value="{name: \'Alice\', age: 30}" /><p>{{person.name}}</p>';
+    expect(await poml(text)).toBe('Alice');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueExpression', async () => {
+    const text = '<let name="result" value="5 * 8 + 2" /><p>{{result}}</p>';
+    expect(await poml(text)).toBe('42');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueBooleanTrue', async () => {
+    const text = '<let name="flag" value="true" /><p if="flag">Visible</p>';
+    expect(await poml(text)).toBe('Visible');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueBooleanFalse', async () => {
+    const text = '<let name="flag" value="false" /><p if="flag">Hidden</p><p if="!flag">Visible</p>';
+    expect(await poml(text)).toBe('Visible');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueStringWithoutQuotes', async () => {
+    ErrorCollection.clear();
+    const text = '<let name="greeting" value="Hello, world!" /><p>{{greeting}}</p>';
+    try {
+      await poml(text);
+      // This should fail because Hello, world! is not a valid JavaScript expression
+      expect(true).toBe(false); // This should not be reached
+    } catch (error) {
+      expect(ErrorCollection.empty()).toBe(false);
+    }
+    ErrorCollection.clear();
+  });
+
+  test('letValueInChildren', async () => {
+    const text = '<let name="greeting">Hello, world!</let><p>{{greeting}}</p>';
+    expect(await poml(text)).toBe('Hello, world!');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
 });
 
 describe('expressionEvaluation', () => {

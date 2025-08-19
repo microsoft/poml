@@ -97,7 +97,18 @@ The `<let>` tag allows you to define variables, import data from external files,
 </poml>
 ```
 
-This will output "Hello, world!".  The `value` attribute can contain a string, number, or a POML expression.
+This will output "Hello, world!". When using the content approach (as shown above), the text is treated as a literal string.
+
+Alternatively, you can use the `value` attribute which must contain an evaluatable JavaScript expression:
+
+```xml
+<poml>
+  <let name="greeting" value="'Hello, world!'" />
+  <p>{{greeting}}</p>
+</poml>
+```
+
+Note that when using the `value` attribute, string literals must be properly quoted (e.g., `"'Hello, world!'"` or `'"Hello, world!"'`) since the value is evaluated as JavaScript. The `value` attribute can contain strings, numbers, arrays, objects, or any valid JavaScript expression.
 
 #### Syntax 2: Importing data from a file
 
