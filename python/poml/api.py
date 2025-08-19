@@ -294,7 +294,7 @@ def poml(
             output is returned directly without saving to disk.
         format: Output format for the result:
             - "raw": Return raw string output from POML processor
-            - "dict": Return parsed JSON as Python dict/list (default)
+            - "dict": Return the core LLM prompt as a dict or list
             - "openai_chat": Return OpenAI chat completion format
             - "langchain": Return LangChain message format
             - "pydantic": Return list of PomlMessage objects
@@ -435,6 +435,9 @@ def poml(
                 pass
             else:
                 result = json.loads(result)
+                if isinstance(result, dict) and "messages" in result:
+                    # The new versions will always return a dict with "messages" key.
+                    result = result["messages"]
                 if format != "dict":
                     # Continue to validate the format.
                     if chat:

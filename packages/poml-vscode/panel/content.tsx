@@ -44,7 +44,7 @@ function ToolBar(props: WebviewUserOptions) {
         </div>
 
         <div
-          className={`button onoff ${props.contexts.length + props.stylesheets.length ? 'active' : ''}`} 
+          className={`button onoff ${props.contexts.length + props.stylesheets.length ? 'active' : ''}`}
           id="context-stylesheet"
           role="button"
           tabIndex={0}
@@ -143,15 +143,15 @@ function Markdown(props: { content: RichContent }) {
     typeof props.content === 'string'
       ? props.content
       : props.content
-          .map(part => {
-            if (typeof part === 'string') {
-              return part;
-            } else {
-              const { type, base64, alt } = part;
-              return `![${alt ?? ''}](data:${type};base64,${base64})`;
-            }
-          })
-          .join('\n\n');
+        .map(part => {
+          if (typeof part === 'string') {
+            return part;
+          } else {
+            const { type, base64, alt } = part;
+            return `![${alt ?? ''}](data:${type};base64,${base64})`;
+          }
+        })
+        .join('\n\n');
 
   return <div dangerouslySetInnerHTML={{ __html: converter.makeHtml(concatenatedMarkdown) }} />;
 }
@@ -162,8 +162,11 @@ function ChatMessages(props: {
   tokens?: number[];
   mappings?: SourceMapMessage[];
   rawText?: string;
+  responseSchema?: { [key: string]: any };
+  tools?: { [key: string]: any }[];
+  runtime?: { [key: string]: any };
 }) {
-  const { messages, toRender, tokens, mappings, rawText } = props;
+  const { messages, toRender, tokens, mappings, rawText, responseSchema, tools, runtime } = props;
   const chatMessages = messages.map((message, idx) => {
     const map = mappings ? mappings[idx] : undefined;
     const line = map && rawText !== undefined ? lineFromIndex(rawText, map.startIndex) : undefined;
@@ -228,11 +231,46 @@ function ChatMessages(props: {
       </div>
     );
   });
-  return <div className="chat-messages">{chatMessages}</div>;
+  return <div className="chat-messages">
+    {chatMessages}
+    {(responseSchema || tools || runtime) && (
+      <div className="chat-message">
+        <div className="chat-message-header">
+          <div className="content">
+            <div className="avatar">
+              <div className="codicon codicon-symbol-keyword"></div>
+            </div>
+            <h3 className="name">
+              Meta information
+            </h3>
+          </div>
+        </div>
+        <div className="chat-message-content">
+          {responseSchema && (
+            <>
+              <h4>Response Schema</h4>
+              <CodeBlock content={JSON.stringify(responseSchema, null, 2)} />
+            </>
+          )}
+          {tools && (
+            <>
+              <h4>Tool Definitions</h4>
+              <CodeBlock content={JSON.stringify(tools, null, 2)} />
+            </>
+          )}
+          {runtime && (
+            <>
+              <h4>Runtime Parameters</h4>
+              <CodeBlock content={JSON.stringify(runtime, null, 2)} />
+            </>
+          )}
+        </div>
+      </div>)}
+  </div>;
 }
 
 function Content(props: WebviewUserOptions & PreviewResponse) {
-  let { displayFormat, ir, content, sourceMap, rawText, tokens } = props;
+  let { displayFormat, ir, content, sourceMap, rawText, tokens, responseSchema, tools, runtime } = props;
 
   let toCopy: string =
     typeof content === 'string'
@@ -251,10 +289,13 @@ function Content(props: WebviewUserOptions & PreviewResponse) {
           tokens={tokens?.perMessage}
           mappings={sourceMap as SourceMapMessage[]}
           rawText={rawText}
+          responseSchema={responseSchema}
+          tools={tools}
+          runtime={runtime}
         />
       );
     } else if (displayFormat === 'rendered') {
-      result = <ChatMessages messages={content} toRender={true} tokens={tokens?.perMessage} />;
+      result = <ChatMessages messages={content} toRender={true} tokens={tokens?.perMessage} responseSchema={responseSchema} tools={tools} runtime={runtime} />;
     } else {
       result = <div>Invalid display format</div>;
     }

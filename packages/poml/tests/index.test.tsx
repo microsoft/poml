@@ -35,7 +35,10 @@ describe('endToEnd', () => {
 
   test('customTruncationOptions', async () => {
     const element = await poml(
-      <Markup.Paragraph charLimit={3} writerOptions={{ truncateDirection: 'start', truncateMarker: '[cut]' }}>
+      <Markup.Paragraph
+        charLimit={3}
+        writerOptions={{ truncateDirection: 'start', truncateMarker: '[cut]' }}
+      >
         abcdef
       </Markup.Paragraph>
     );
@@ -43,13 +46,15 @@ describe('endToEnd', () => {
   });
 
   test('priorityEndToEnd', async () => {
-    const text = '<p charLimit="5"><span priority="1">hello</span><span priority="2">world</span></p>';
+    const text =
+      '<p charLimit="5"><span priority="1">hello</span><span priority="2">world</span></p>';
     const element = await poml(text);
     expect(element).toBe('world');
   });
 
   test('priorityTokenEndToEnd', async () => {
-    const text = '<p tokenLimit="1"><span priority="1">hello</span><span priority="2">world</span></p>';
+    const text =
+      '<p tokenLimit="1"><span priority="1">hello</span><span priority="2">world</span></p>';
     const element = await poml(text);
     expect(element).toBe('world');
   });
@@ -241,7 +246,7 @@ describe('diagnosis', () => {
         throw ErrorCollection.first();
       }
       return segments;
-    }
+    };
     const segments = await fn();
     const pStart = original.indexOf('<p>');
     const pEnd = original.indexOf('</p>') + 4 - 1;
@@ -305,20 +310,29 @@ describe('cli', () => {
   test('simple', async () => {
     const text = '<Markup.Paragraph>Hello, world!</Markup.Paragraph>';
     await commandLine({ input: text, speakerMode: false });
-    expect(process.stdout.write).toHaveBeenCalledWith('"Hello, world!"');
+    expect(process.stdout.write).toHaveBeenCalledWith('{"messages":"Hello, world!"}');
   });
 
   test('context', async () => {
     const text = '<Markup.Paragraph>{{name}}</Markup.Paragraph>';
     await commandLine({ input: text, context: ['name=world'], speakerMode: false });
-    expect(process.stdout.write).toHaveBeenCalledWith('"world"');
+    expect(process.stdout.write).toHaveBeenCalledWith('{"messages":"world"}');
   });
 
   test('contextSpeaker', async () => {
     const text = '<Markup.Paragraph>{{name}}</Markup.Paragraph>';
     await commandLine({ input: text, context: ['name=world'] });
     expect(process.stdout.write).toHaveBeenCalledWith(
-      '[{\"speaker\":\"human\",\"content\":\"world\"}]'
+      '{"messages":[{\"speaker\":\"human\",\"content\":\"world\"}]}'
+    );
+  });
+
+  test('contentWithResponseSchema', async () => {
+    const text =
+      '<poml>Hello, world!<meta type="responseSchema">z.object({ operation: z.enum(["add", "subtract"]), a: z.number(), b: z.number() })</meta></poml>';
+    await commandLine({ input: text, speakerMode: true });
+    expect(process.stdout.write).toHaveBeenCalledWith(
+      '{"messages":[{"speaker":"human","content":"Hello, world!"}],"responseSchema":{"type":"object","properties":{"operation":{"type":"string","enum":["add","subtract"]},"a":{"type":"number"},"b":{"type":"number"}},"required":["operation","a","b"],"additionalProperties":false}}'
     );
   });
 });
@@ -462,7 +476,9 @@ describe('examples correctness', () => {
     test(`${fileName} produces correct output`, async () => {
       // FIXME: Skip 301_generate_poml on Windows due to CRLF handling issue
       if (process.platform === 'win32' && fileName === '301_generate_poml.poml') {
-        console.warn('Skipping 301_generate_poml on Windows due to CRLF handling issue in txt files');
+        console.warn(
+          'Skipping 301_generate_poml on Windows due to CRLF handling issue in txt files'
+        );
         return;
       }
 
@@ -490,7 +506,7 @@ describe('examples correctness', () => {
         });
 
         const output = outputs.join('');
-        actualResult = JSON.parse(output);
+        actualResult = JSON.parse(output)['messages'];
       } finally {
         process.stdout.write = originalWrite;
       }

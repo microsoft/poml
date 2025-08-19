@@ -36,6 +36,36 @@ export const read = async (
   return await reactRender(readElement);
 };
 
+// Read and also returning the POML file
+// A hacky way to get the POML file from the React element
+// Do not use it in production code
+export const _readWithFile = async (
+  element: React.ReactElement | string,
+  options?: PomlReaderOptions,
+  context?: { [key: string]: any },
+  stylesheet?: { [key: string]: any },
+  sourcePath?: string,
+): Promise<[string, PomlFile | undefined]> => {
+  let readElement: React.ReactElement;
+  let pomlFile: PomlFile | undefined;
+  if (typeof element === 'string') {
+    pomlFile = new PomlFile(element, options, sourcePath);
+    readElement = pomlFile.react(context);
+  } else {
+    if (options || context) {
+      console.warn('Options and context are ignored when element is React.ReactElement');
+    }
+    readElement = element;
+  }
+  if (stylesheet) {
+    readElement = React.createElement(StyleSheetProvider, { stylesheet }, readElement);
+  }
+  return [
+    await reactRender(readElement),
+    pomlFile
+  ];
+};
+
 interface WriteOptions {
   speaker?: boolean;
 }
@@ -107,6 +137,13 @@ interface CliArgs {
   traceDir?: string;
 }
 
+interface CliResult {
+  messages: Message[] | RichContent;
+  responseSchema?: { [key: string]: any };
+  tools?: { [key: string]: any }[];
+  runtime?: { [key: string]: any };
+}
+
 export async function commandLine(args: CliArgs) {
   const readOptions = {
     trim: args.trim,
@@ -163,14 +200,25 @@ export async function commandLine(args: CliArgs) {
   }
 
   ErrorCollection.clear();
+
+  const pomlFile = new PomlFile(input, readOptions, sourcePath);
+  let reactElement = pomlFile.react(context);
+  reactElement = React.createElement(StyleSheetProvider, { stylesheet }, reactElement);
+
   const ir = await read(input, readOptions, context, stylesheet, sourcePath);
 
   const speakerMode = args.speakerMode === true || args.speakerMode === undefined;
   const prettyPrint = args.prettyPrint === true;
-  let result = write(ir, { speaker: speakerMode });
+  let resultMessages = write(ir, { speaker: speakerMode });
   const prettyOutput = speakerMode
-    ? (result as Message[]).map((message) => `===== ${message.speaker} =====\n\n${renderContent(message.content)}`).join('\n\n')
-    : renderContent(result as RichContent);
+    ? (resultMessages as Message[]).map((message) => `===== ${message.speaker} =====\n\n${renderContent(message.content)}`).join('\n\n')
+    : renderContent(resultMessages as RichContent);
+  const result: CliResult = {
+    messages: resultMessages,
+    responseSchema: pomlFile.getResponseSchema()?.toOpenAPI(),
+    tools: pomlFile.getToolsSchema()?.toOpenAI(),
+    runtime: pomlFile.getRuntimeParameters(),
+  }
   const output = prettyPrint ? prettyOutput : JSON.stringify(result);
 
   if (isTracing()) {

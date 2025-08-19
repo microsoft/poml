@@ -576,6 +576,4 @@ export class POMLWebviewPanel {
     this.editor.webview.postMessage({ type: WebviewMessage.UpdateUserOptions, options: this._userOptions, source: resource.toString() });
   }
 
-
-
 }

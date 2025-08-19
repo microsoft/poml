@@ -29,7 +29,7 @@ import {
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as crypto from 'crypto';
-import { Message, poml, read, writeWithSourceMap, SourceMapMessage, SourceMapRichContent, richContentFromSourceMap } from 'poml';
+import { Message, _readWithFile, writeWithSourceMap, SourceMapMessage, SourceMapRichContent, richContentFromSourceMap } from 'poml';
 import {
   ErrorCollection,
   BufferCollection,
@@ -359,6 +359,7 @@ class PomlLspServer {
 
     ErrorCollection.clear();
     let ir: string;
+    let pomlFile: PomlFile | undefined;
     try {
       let context: { [key: string]: any } = params.inlineContext ?? {};
       for (const c of params.contexts ?? []) {
@@ -376,7 +377,8 @@ class PomlLspServer {
           console.error(`Failed to parse stylesheet file ${s}: ${e}`);
         }
       }
-      ir = await read(documentContent, undefined, context, stylesheet, filePath);
+
+      [ir, pomlFile] = await _readWithFile(documentContent, undefined, context, stylesheet, filePath);
     } catch (e) {
       this.telemetryReporter.reportTelemetryError(TelemetryEvent.ReadUncaughtException, e);
       console.error(e);
@@ -436,6 +438,9 @@ class PomlLspServer {
       content: result,
       tokens,
       sourceMap,
+      responseSchema: pomlFile?.getResponseSchema()?.toOpenAPI(),
+      tools: pomlFile?.getToolsSchema()?.toOpenAI(),
+      runtime: pomlFile?.getRuntimeParameters(),
       error: params.returnAllErrors
         ? ErrorCollection.list()
         : ErrorCollection.empty()
@@ -542,6 +547,7 @@ class PomlLspServer {
       returnAllErrors: true,
       contexts: options.contexts,
       stylesheets: options.stylesheets,
+      returnTokenCounts: undefined
     });
     const errors = Array.isArray(response.error) ? response.error : response.error ? [response.error] : [];
 

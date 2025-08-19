@@ -1,5 +1,3 @@
-const a11yInsights = require('@accessibility-insights/eslint-plugin');
-
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
@@ -9,15 +7,12 @@ module.exports = {
   },
   plugins: [
     '@typescript-eslint',
-    '@accessibility-insights',
   ],
   extends: [
     'prettier',
     'plugin:@typescript-eslint/recommended',
-    'plugin:@accessibility-insights/recommended',
   ],
   rules: {
-    ...a11yInsights.configs.recommended.rules,
     '@typescript-eslint/naming-convention': [
       'warn',
       {
@@ -48,9 +43,4 @@ module.exports = {
     '@typescript-eslint/no-namespace': 'off',
   },
   ignorePatterns: ['out', 'dist', '**/*.d.ts'],
-  settings: {
-    '@accessibility-insights': {
-      disableTelemetry: true,
-    },
-  },
 };

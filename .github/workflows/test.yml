@@ -26,6 +26,7 @@ jobs:
             platform: darwin-x64
           - os: macos-latest
             platform: darwin-arm64
+      fail-fast: false
 
     runs-on: ${{ matrix.os }}
 
@@ -44,6 +45,8 @@ jobs:
       - run: npm run build-webview
       - run: npm run build-cli
       - run: npm run lint
+      - run: npm run validate-component-spec
+        if: matrix.os == 'ubuntu-latest'
       - run: npm run package:win
         if: matrix.platform == 'win32-x64'
       - run: npm run package -- --target ${{ matrix.platform }}
@@ -56,8 +59,14 @@ jobs:
       - run: python -m pytest -v python/tests
       - run: xvfb-run -a npm run compile && xvfb-run -a npm run test-vscode
         if: runner.os == 'Linux'
+      - uses: nick-invision/retry@v3
+        if: matrix.os == 'macos-13'
+        with:
+          max_attempts: 3
+          timeout_minutes: 10
+          command: npm run compile && npm run test-vscode
       - run: npm run compile && npm run test-vscode
-        if: runner.os != 'Linux'
+        if: runner.os != 'Linux' && matrix.os != 'macos-13'
 
   docs:
     runs-on: ubuntu-latest

@@ -1,0 +1,26 @@
+name: Use GitHub Models
+on:
+  workflow_dispatch:
+
+permissions:
+  models: read  # allow calling the Models inference API
+
+jobs:
+  call-llm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask a model
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS https://models.github.ai/inference/chat/completions \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{
+              "model": "openai/gpt-5",
+              "messages": [
+                {"role": "system", "content": "You are a concise assistant."},
+                {"role": "user", "content": "Explain recursion in 2 sentences."}
+              ],
+              "max_tokens": 300
+            }'

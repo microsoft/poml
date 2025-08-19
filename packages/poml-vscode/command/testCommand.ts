@@ -4,19 +4,14 @@ import { POMLWebviewPanelManager } from '../panel/manager';
 import { PanelSettings } from 'poml-vscode/panel/types';
 import { PreviewMethodName, PreviewParams, PreviewResponse } from '../panel/types';
 import { getClient } from '../extension';
-import { Message, RichContent } from 'poml';
-const { BaseChatModel } = require('@langchain/core/language_models/chat_models');  // eslint-disable-line
-const {
-  HumanMessage,
-  AIMessage,
-  SystemMessage,
-  BaseMessage,
-  MessageContent,
-  MessageContentComplex
-} = require('@langchain/core/messages');  // eslint-disable-line
-// import { ChatAnthropic } from "@langchain/anthropic";
-const { AzureChatOpenAI, ChatOpenAI, AzureOpenAI, OpenAI } = require('@langchain/openai');  // eslint-disable-line
-const { ChatGoogleGenerativeAI, GoogleGenerativeAI } = require('@langchain/google-genai');  // eslint-disable-line
+import { Message } from 'poml';
+
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createAzure } from '@ai-sdk/azure';
+import { ModelMessage, streamText, tool, jsonSchema, Tool, streamObject, TextStreamPart } from 'ai';
+
 import ModelClient from '@azure-rest/ai-inference';
 import { AzureKeyCredential } from '@azure/core-auth';
 import { createSseStream } from '@azure/core-sse';
@@ -102,12 +97,32 @@ export class TestCommand implements Command {
 
     // Check if language model settings are configured
     const setting = this.getLanguageModelSettings(uri);
-    if (!setting || !setting.provider || !setting.model || !setting.apiKey || !setting.apiUrl) {
-      vscode.window.showErrorMessage(
-        'Language model settings are not fully configured. Please set your provider, model, API key, and endpoint in the extension settings before testing prompts.'
-      );
-      this.log('error', 'Prompt test aborted: LLM settings not configured.');
+    if (!setting) {
+      vscode.window.showErrorMessage('Language model settings are not configured. Please configure your language model settings first.');
+      this.log('error', 'Prompt test aborted: Language model settings not found.');
       return;
+    }
+    
+    if (!setting.provider) {
+      vscode.window.showErrorMessage('Language model provider is not configured. Please set your provider in the extension settings.');
+      this.log('error', 'Prompt test aborted: setting.provider is not configured.');
+      return;
+    }
+    
+    if (!setting.model) {
+      vscode.window.showErrorMessage('Language model is not configured. Please set your model in the extension settings.');
+      this.log('error', 'Prompt test aborted: setting.model is not configured.');
+      return;
+    }
+    
+    if (!setting.apiKey) {
+      vscode.window.showErrorMessage('API key is not configured. Please set your API key in the extension settings.');
+      this.log('error', 'Prompt test aborted: setting.apiKey not configured.');
+      return;
+    }
+
+    if (!setting.apiUrl) {
+      this.log('info', 'No API URL configured, using default for the provider.');
     }
 
     this.log(
@@ -135,12 +150,18 @@ export class TestCommand implements Command {
       });
 
       const stream = this.routeStream(prompt, setting);
+      let hasChunk = false;
       for await (const chunk of stream) {
         clearTimeout(timer);
+        hasChunk = true;
         result.push(chunk);
         this.outputChannel.append(chunk);
       }
-      this.outputChannel.appendLine('');
+      if (!hasChunk) {
+        this.log('error', 'No response received from the language model.');
+      } else {
+        this.outputChannel.appendLine('');
+      }
       const timeElapsed = Date.now() - startTime;
       this.log('info', `Test completed in ${Math.round(timeElapsed / 1000)} seconds. Language models can make mistakes. Check important info.`);
 
@@ -191,18 +212,129 @@ export class TestCommand implements Command {
     if (response.error) {
       throw new Error(`Error rendering prompt: ${uri}\n${response.error}`);
     }
-    return response.content;
+    return response;
   }
 
   private async *routeStream(
-    prompt: Message[] | RichContent,
-    settings: LanguageModelSetting
+    prompt: PreviewResponse,
+    settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
     if (settings.provider === 'microsoft' && settings.apiUrl?.includes('.models.ai.azure.com')) {
-      yield* this.azureAiStream(prompt as Message[], settings);
+      yield* this.azureAiStream(prompt.content as Message[], settings);
+    } else if (prompt.responseSchema) {
+      yield* this.handleResponseSchemaStream(prompt, settings);
     } else {
-      yield* this.langchainStream(prompt, settings);
+      yield* this.handleRegularTextStream(prompt, settings);
     }
+  }
+
+  private async *handleResponseSchemaStream(
+    prompt: PreviewResponse,
+    settings: LanguageModelSetting,
+  ): AsyncGenerator<string> {
+    const model = this.getActiveVercelModel(settings);
+    const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
+      : prompt.content as string;
+    
+    if (prompt.tools) {
+      throw new Error('Tools are not supported when response schema is provided.');
+    }
+
+    if (!prompt.responseSchema) {
+      throw new Error('Response schema is required but not provided.');
+    }
+
+    const stream = streamObject({
+      model: model,
+      prompt: vercelPrompt,
+      onError: ({ error }) => {
+        // Immediately throw the error
+        throw error;
+      },
+      schema: this.toVercelResponseSchema(prompt.responseSchema),
+      maxRetries: 0,
+      temperature: settings.temperature,
+      maxOutputTokens: settings.maxTokens,
+      ...prompt.runtime,
+    });
+
+    for await (const text of stream.textStream) {
+      yield text;
+    }
+  }
+
+  private async *handleRegularTextStream(
+    prompt: PreviewResponse,
+    settings: LanguageModelSetting,
+  ): AsyncGenerator<string> {
+    const model = this.getActiveVercelModel(settings);
+    const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
+      : prompt.content as string;
+
+    const stream = streamText({
+      model: model,
+      prompt: vercelPrompt,
+      onError: ({ error }) => {
+        // Immediately throw the error
+        throw error;
+      },
+      tools: prompt.tools ? this.toVercelTools(prompt.tools) : undefined,
+      maxRetries: 0,
+      temperature: settings.temperature,
+      maxOutputTokens: settings.maxTokens,
+      ...prompt.runtime,
+    });
+
+    let lastChunkEndline: boolean = false;
+    for await (const chunk of stream.fullStream) {
+      const result = this.processStreamChunk(chunk, lastChunkEndline);
+      if (result !== null) {
+        yield result;
+        lastChunkEndline = result.endsWith('\n');
+      }
+    }
+  }
+
+  private processStreamChunk(chunk: TextStreamPart<any>, lastChunkEndline: boolean): string | null {
+    const newline = lastChunkEndline ? '' : '\n';
+    if (chunk.type === 'text-delta' || chunk.type === 'reasoning-delta') {
+      return chunk.text;
+    } else if (chunk.type === 'finish') {
+      return this.formatUsageInfo(chunk, lastChunkEndline);
+    } else if (chunk.type === 'tool-call') {
+      return `${newline}Tool call (${chunk.toolCallId}) ${chunk.toolName}  Input: ${JSON.stringify(chunk.input)}`;
+    } else if (chunk.type.startsWith('tool-input')) {
+      return null;
+    } else if (chunk.type === 'reasoning-start') {
+      return `${newline}[Reasoning]`;
+    } else if (chunk.type === 'reasoning-end') {
+      return '\n[/Reasoning]';
+    } else if (['start', 'finish', 'start-step', 'finish-step', 'message-metadata'].includes(chunk.type)) {
+      return null;
+    } else if (chunk.type === 'abort') {
+      return `${newline}[Aborted]`;
+    } else if (chunk.type === 'error') {
+      // errors will be thrown, so we don't need to handle them here
+      return null;
+    } else {
+      return `${newline}[${chunk.type} chunk: ${JSON.stringify(chunk)}]`;
+    }
+  }
+
+  private formatUsageInfo(chunk: any, lastChunkEndline: boolean): string {
+    const newline = lastChunkEndline ? '' : '\n';
+    let usageInfo = `${newline}[Usage: input=${chunk.totalUsage.inputTokens}, output=${chunk.totalUsage.outputTokens}, ` +
+      `total=${chunk.totalUsage.totalTokens}`;
+    
+    if (chunk.totalUsage.cachedInputTokens) {
+      usageInfo += `, cached=${chunk.totalUsage.cachedInputTokens}`;
+    }
+    if (chunk.totalUsage.reasoningTokens) {
+      usageInfo += `, reasoning=${chunk.totalUsage.reasoningTokens}`;
+    }
+    usageInfo += ']';
+    
+    return usageInfo;
   }
 
   private async *azureAiStream(
@@ -270,93 +402,89 @@ export class TestCommand implements Command {
     }
   }
 
-  private async *langchainStream(
-    prompt: Message[] | RichContent,
-    settings: LanguageModelSetting
-  ): AsyncGenerator<string> {
-    const lm = this.getActiveLangchainModel(settings);
-    const lcPrompt = this.isChatting
-      ? this.toLangchainMessages(
-          prompt as Message[],
-          settings.provider === 'google' ? 'google' : 'openai'
-        )
-      : this.toLangchainString(prompt as RichContent);
-    GenerationController.abortAll();
-    const stream = await lm.stream(lcPrompt, {
-      signal: GenerationController.getNewAbortController().signal
-    });
-    for await (const chunk of stream) {
-      if (typeof chunk === 'string') {
-        yield chunk;
-      } else if (typeof chunk.content === 'string') {
-        yield chunk.content;
-      } else {
-        for (const complex of chunk.content) {
-          yield `[not displayable ${complex.type}]`;
-        }
-      }
-    }
-  }
-
-  private getActiveLangchainModel(settings: LanguageModelSetting) {
+  private getActiveVercelModelProvider(settings: LanguageModelSetting) {
     switch (settings.provider) {
       case 'anthropic':
-        // return new ChatAnthropic({
-        //   model: settings.model,
-        //   anthropicApiKey: settings.apiKey,
-        //   anthropicApiUrl: settings.apiUrl,
-        //   maxTokens: settings.maxTokens,
-        //   temperature: settings.temperature
-        // });
-        throw new Error('Anthropic is currently not supported');
+        return createAnthropic({
+          baseURL: settings.apiUrl,
+          apiKey: settings.apiKey,
+        });
       case 'microsoft':
-        return new (this.isChatting ? AzureChatOpenAI : AzureOpenAI)({
-          azureOpenAIApiDeploymentName: settings.model,
-          azureOpenAIApiKey: settings.apiKey,
-          azureOpenAIEndpoint: settings.apiUrl,
-          azureOpenAIApiVersion: settings.apiVersion,
-          maxTokens: settings.maxTokens,
-          temperature: settings.temperature
+        return createAzure({
+          baseURL: settings.apiUrl,
+          apiKey: settings.apiKey
         });
       case 'openai':
-        return new (this.isChatting ? ChatOpenAI : OpenAI)({
-          model: settings.model,
-          maxTokens: settings.maxTokens,
-          temperature: settings.temperature,
-          apiKey: settings.apiKey,
-          configuration: {
-            apiKey: settings.apiKey,
-            baseURL: settings.apiUrl
-          }
+        return createOpenAI({
+          baseURL: settings.apiUrl,
+          apiKey: settings.apiKey
         });
       case 'google':
-        return new (this.isChatting ? ChatGoogleGenerativeAI : GoogleGenerativeAI)({
-          model: settings.model,
-          maxOutputTokens: settings.maxTokens,
-          temperature: settings.temperature,
-          apiKey: settings.apiKey,
-          apiVersion: settings.apiVersion,
-          baseUrl: settings.apiUrl
+        return createGoogleGenerativeAI({
+          baseURL: settings.apiUrl,
+          apiKey: settings.apiKey
         });
-      default:
-        throw new Error(`Unsupported language model provider: ${settings.provider}`);
     }
   }
 
-  private toLangchainMessages(messages: Message[], style: 'openai' | 'google') {
-    return messages.map(msg => {
-      const content = this.messageToContentObject(msg, style);
-      switch (msg.speaker) {
-        case 'ai':
-          return new AIMessage({ content });
-        case 'human':
-          return new HumanMessage({ content });
-        case 'system':
-          return new SystemMessage({ content });
-        default:
-          throw new Error(`Invalid speaker: ${msg.speaker}`);
+  private getActiveVercelModel(settings: LanguageModelSetting) {
+    const provider = this.getActiveVercelModelProvider(settings);
+    return provider(settings.model);
+  }
+
+  private pomlMessagesToVercelMessage(messages: Message[]): ModelMessage[] {
+    const speakerToRole = {
+      ai: 'assistant',
+      human: 'user',
+      system: 'system'
+    }
+    const result: ModelMessage[] = [];
+    for (const msg of messages) {
+      if (!msg.speaker) {
+        throw new Error(`Message must have a speaker, found: ${JSON.stringify(msg)}`);
       }
-    });
+      const role = speakerToRole[msg.speaker];
+      const contents = typeof msg.content === 'string' ? msg.content : msg.content.map(part => {
+        if (typeof part === 'string') {
+          return { type: 'text', text: part };
+        } else if (part.type.startsWith('image/')) {
+          if (!part.base64) {
+            throw new Error(`Image content must have base64 data, found: ${JSON.stringify(part)}`);
+          }
+          return { type: 'image', image: part.base64 };
+        } else {
+          throw new Error(`Unsupported content type: ${part.type}`);
+        }
+      });
+      result.push({
+        role: role as any,
+        content: contents as any
+      });
+    }
+    return result;
+  }
+
+  private toVercelTools(tools: { [key: string]: any }[]) {
+    const result: { [key: string]: Tool } = {};
+    for (const t of tools) {
+      if (!t.name || !t.description || !t.parameters) {
+        throw new Error(`Tool must have name, description, and parameters: ${JSON.stringify(t)}`);
+      }
+      if (t.type !== 'function') {
+        throw new Error(`Unsupported tool type: ${t.type}. Only 'function' type is supported.`);
+      }
+      const schema = jsonSchema(t.parameters);
+      result[t.name] = tool({
+        description: t.description,
+        inputSchema: schema
+      });
+    };
+    this.log('info', 'Registered tools: ' + Object.keys(result).join(', '));
+    return result;
+  }
+
+  private toVercelResponseSchema(responseSchema: { [key: string]: any }) {
+    return jsonSchema(responseSchema);
   }
 
   private toMessageObjects(messages: Message[], style: 'openai' | 'google') {
@@ -371,57 +499,6 @@ export class TestCommand implements Command {
         content: msg.content
       };
     });
-  }
-
-  private toLangchainString(content: RichContent): string {
-    if (typeof content === 'string') {
-      return content;
-    }
-    return content
-      .map(part => {
-        if (typeof part === 'string') {
-          return part;
-        } else {
-          return `[not displayable ${part.type}]`;
-        }
-      })
-      .join('');
-  }
-
-  private messageToContentObject(msg: Message, style: 'openai' | 'google') {
-    if (typeof msg.content === 'string') {
-      return [
-        {
-          type: 'text',
-          text: msg.content
-        }
-      ];
-    } else {
-      return msg.content.map(part => {
-        if (typeof part === 'string') {
-          return {
-            type: 'text',
-            text: part
-          };
-        } else if (part.type.startsWith('image/')) {
-          if (style === 'google') {
-            return {
-              type: 'image_url',
-              image_url: `data:${part.type};base64,${part.base64}`
-            };
-          } else {
-            return {
-              type: 'image_url',
-              image_url: {
-                url: `data:${part.type};base64,${part.base64}`
-              }
-            };
-          }
-        } else {
-          throw new Error(`Unsupported content type: ${part.type}`);
-        }
-      });
-    }
   }
 
   private getLanguageModelSettings(uri: vscode.Uri) {
@@ -468,7 +545,7 @@ export class TestRerunCommand implements Command {
 export class TestAbortCommand implements Command {
   public readonly id = 'poml.testAbort';
 
-  public constructor(private readonly previewManager: POMLWebviewPanelManager) {}
+  public constructor(private readonly previewManager: POMLWebviewPanelManager) { }
 
   public execute() {
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.PromptTestingAbort, {});

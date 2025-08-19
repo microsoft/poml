@@ -68,6 +68,9 @@ export interface PreviewResponse {
     perMessage?: number[];
     total: number;
   };
+  responseSchema?: { [key: string]: any };
+  tools?: { [key: string]: any }[];
+  runtime?: { [key: string]: any };
 }
 
 /**

@@ -26,7 +26,7 @@ Diagnostics are updated automatically as you edit:
 2. **Incremental Updates**: Basic syntax checking happens as you type
 3. **Context-aware**: Validation considers your context files and stylesheets for more accurate error reporting
 
-The diagnostics system can validate references across multiple files. It vlidates that referenced `.context.json` files exist and are properly formatted. It also checks `.stylesheet.json` files for syntax and structure issues.
+The diagnostics system can validate references across multiple files. It validates that referenced `.context.json` files exist and are properly formatted. It also checks `.stylesheet.json` files for syntax and structure issues.
 
 ### Hover Tooltips
 
@@ -58,6 +58,51 @@ While editing a `.poml` file in VSCode:
 - **Attribute Value Completion:**  For some attributes, POML can suggest possible values. For example, if you type `<question speaker="`, you might see suggestions like `"human"` or `"ai"`.
 
 This feature significantly improves the efficiency and accuracy of writing POML code.
+
+### Expression Evaluation with CodeLens
+
+![Expression Evaluation](../media/vscode-evaluate.png)
+
+The POML extension provides CodeLens buttons that allow you to evaluate template variables directly in your editor. This powerful debugging feature helps you understand what values your expressions produce locally.
+
+#### How to Use Expression Evaluation
+
+1. **CodeLens Buttons**: When you open a `.poml` file, you'll see "▶️ Evaluate" buttons appearing above expressions and variables.
+2. **Click to Evaluate**: Click any "▶️ Evaluate" button to execute the expression and see its result.
+3. **View Output**: Go to View → Output in VS Code. Results are displayed in the **POML Language Server** output channel.
+
+#### What Gets Evaluated
+
+The CodeLens evaluation feature works with:
+
+- **Template Expressions**: Any `{{ expression }}` in your POML content
+- **Variable Definitions**: `<let>` element value attributes
+- **Control Flow**: Expressions in `for` and `if` attributes
+- **Schema Expressions**: Expressions in meta elements with `lang="expr"`
+
+#### Example
+
+```xml
+<poml>
+  <let name="items" value='["apple", "banana", "cherry"]' />
+  <let name="count" value="items.length" />
+  
+  <p>We have {{ count }} items: {{ items.join(', ') }}</p>
+  
+  <meta type="responseSchema" lang="expr">
+    z.object({
+      total: z.number().max(count),
+      items: z.array(z.enum(items))
+    })
+  </meta>
+</poml>
+```
+
+In this example, you can evaluate:
+- The `items` array definition to see `["apple", "banana", "cherry"]`
+- The `count` calculation to see `3`
+- The template expressions to see `"3"` and `"apple, banana, cherry"`
+- The schema expression to see the generated Zod schema object
 
 ## Testing Prompts
 

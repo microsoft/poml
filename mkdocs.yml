@@ -63,6 +63,7 @@ nav:
     - Getting Started: index.md
     - Quick Start: language/quickstart.md
     - Write .poml Files: language/standalone.md
+    - Meta: language/meta.md
     - References:
       - Components: language/components.md
     - Deep Dive:
