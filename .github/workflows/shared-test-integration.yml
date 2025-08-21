@@ -51,7 +51,7 @@ jobs:
         run: npm run build-cli
         shell: bash
 
-      - name: Install POML from source
+      - name: Install POML Python
         run: python -m pip install -e .[agent]
         shell: bash
 
