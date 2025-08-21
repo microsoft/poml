@@ -320,10 +320,10 @@ Response schemas define the expected structure of AI-generated responses, ensuri
 
 ### JSON Schema Format
 
-Use the `lang="json"` attribute to specify JSON Schema format:
+Use the `parser="json"` attribute to specify JSON Schema format:
 
 ```xml
-<output-schema lang="json">
+<output-schema parser="json">
   {
     "type": "object",
     "properties": {
@@ -337,10 +337,10 @@ Use the `lang="json"` attribute to specify JSON Schema format:
 
 ### Expression Format
 
-Use the `lang="expr"` attribute (or omit it for auto-detection) to evaluate JavaScript expressions that return schemas:
+Use the `parser="eval"` attribute (or omit it for auto-detection) to evaluate JavaScript expressions that return schemas:
 
 ```xml
-<output-schema lang="expr">
+<output-schema parser="eval">
   z.object({
     name: z.string(),
     age: z.number().optional()
@@ -348,7 +348,7 @@ Use the `lang="expr"` attribute (or omit it for auto-detection) to evaluate Java
 </output-schema>
 ```
 
-When `lang` is omitted, POML auto-detects the format:
+When `parser` is omitted, POML auto-detects the format:
 - If the content starts with `{`, it's treated as JSON
 - Otherwise, it's treated as an expression
 
@@ -360,7 +360,7 @@ JSON schemas support template expressions using `{{ }}` syntax:
 
 ```xml
 <let name="maxAge" value="100" />
-<output-schema lang="json">
+<output-schema parser="json">
   {
     "type": "object",
     "properties": {
@@ -381,7 +381,7 @@ Expression schemas are evaluated as JavaScript code with access to context varia
 
 ```xml
 <let name="fields" value='["name", "email", "age"]' />
-<output-schema lang="expr">
+<output-schema parser="eval">
   z.object(
     Object.fromEntries(fields.map(f => [f, z.string()]))
   )
@@ -423,7 +423,7 @@ Tool registration enables AI models to interact with external functions during c
 ### Expression Format
 
 ```xml
-<tool-definition name="calculate" description="Perform calculation" lang="expr">
+<tool-definition name="calculate" description="Perform calculation" parser="eval">
   z.object({
     operation: z.enum(['add', 'subtract', 'multiply', 'divide']),
     a: z.number(),
@@ -440,7 +440,7 @@ Tool schemas support the same evaluation modes as response schemas:
 
 ```xml
 <let name="maxValue" value="1000" />
-<tool-definition name="calculator" description="Calculate values" lang="json">
+<tool-definition name="calculator" description="Calculate values" parser="json">
   {
     "type": "object",
     "properties": {
@@ -457,7 +457,7 @@ Tool schemas support the same evaluation modes as response schemas:
 
 ```xml
 <let name="supportedOperations" value='["add", "subtract", "multiply", "divide"]' />
-<tool-definition name="calculator" description="Perform mathematical operations" lang="expr">
+<tool-definition name="calculator" description="Perform mathematical operations" parser="eval">
   z.object({
     operation: z.enum(supportedOperations),
     a: z.number(),
@@ -471,7 +471,7 @@ In expression mode, the `z` variable is automatically available for constructing
 **Required attributes for tools:**
 - **name**: Tool identifier (required)
 - **description**: Tool description (optional but recommended)
-- **lang**: Schema language, either "json" or "expr" (optional, auto-detected based on content)
+- **parser**: Schema parser, either "json" or "eval" (optional, auto-detected based on content)
 
 ### Template Expressions in Attributes
 
@@ -480,9 +480,9 @@ Both schemas and tools support template expressions in their attributes:
 ```xml
 <let name="toolName">calculate</let>
 <let name="toolDesc">Perform mathematical calculations</let>
-<let name="schemaLang">json</let>
+<let name="schemaParser">json</let>
 
-<tool-definition name="{{toolName}}" description="{{toolDesc}}" lang="{{schemaLang}}">
+<tool-definition name="{{toolName}}" description="{{toolDesc}}" parser="{{schemaParser}}">
   {
     "type": "object",
     "properties": {
@@ -503,7 +503,7 @@ Similarly for output schemas:
   }
 }
 </let>
-<output-schema lang="json">
+<output-schema parser="json">
 {{ schemaJson }}
 </output-schema>
 ```
