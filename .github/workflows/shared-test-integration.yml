@@ -61,7 +61,7 @@ jobs:
       - name: Setup MLflow tracking server
         if: inputs.integration == 'mlflow'
         run: |
-          mlflow server --host 127.0.0.1 --port 5000 --default-artifact-root ./mlartifacts &
+          mlflow server --host 127.0.0.1 --port 5000 &
           sleep 10  # Wait for server to start
         shell: bash
 
