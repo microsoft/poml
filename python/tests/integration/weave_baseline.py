@@ -34,5 +34,7 @@ if __name__ == "__main__":
 
     print("Response:", response.choices[0].message.content)
 
-    # Verify traces from this run
+    prompt_ref = weave.get("emotion_prompt")
+    print(f"Prompt reference: {prompt_ref}")
+
     check_trace(["openai.chat.completions.create"], time_cutoff=time_cutoff)

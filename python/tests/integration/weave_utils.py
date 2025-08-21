@@ -97,3 +97,19 @@ def check_trace(must_have_ops, time_cutoff=None, delay_seconds=2, limit=10):
             print(f"{Colors.GREEN}{Colors.BOLD}All required operations found!{Colors.ENDC}")
 
     print_separator("WEAVE TRACE VERIFICATION COMPLETED", Colors.GREEN)
+
+
+def check_prompt(prompt_name):
+    """
+    Check the prompt details and content.
+
+    Args:
+        prompt_name: The name of the prompt to check
+    """
+    print_separator("PROMPT VERIFICATION", Colors.GREEN)
+    prompt = weave.get(prompt_name)
+
+    print_section("Prompt content", prompt)
+    assert prompt.startswith("<poml>"), "Prompt content does not start with '<poml>'"
+
+    print_separator("PROMPT VERIFICATION COMPLETED", Colors.GREEN)

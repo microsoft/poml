@@ -22,12 +22,14 @@ def check_trace(trace_id, must_have, delay_seconds=2):
     assert trace_id is not None, "No trace ID found after invocation"
     full_trace = mlflow.get_trace(trace_id)
     assert full_trace is not None, "No trace details found for the given trace ID"
-    
+
     print_section("Retrieved trace info", full_trace.info)
-    
+
     print_separator("SPAN ANALYSIS", Colors.HEADER)
     for i, span in enumerate(full_trace.data.spans, 1):
-        print(f"{Colors.YELLOW}{Colors.BOLD}Span {i}/{len(full_trace.data.spans)} - {span.name} ({span.span_id}){Colors.ENDC}")
+        print(
+            f"{Colors.YELLOW}{Colors.BOLD}Span {i}/{len(full_trace.data.spans)} - {span.name} ({span.span_id}){Colors.ENDC}"
+        )
         print_section("Span Details", span.to_dict())
         print_separator("", Colors.BLUE)
 
@@ -36,7 +38,7 @@ def check_trace(trace_id, must_have, delay_seconds=2):
         print_separator("REQUIRED SPAN VERIFICATION", Colors.HEADER)
         span_names = [span.name for span in full_trace.data.spans]
         print_section("Found span names", span_names)
-        
+
         missing_spans = []
         for required_span in must_have:
             if required_span in span_names:
@@ -44,7 +46,7 @@ def check_trace(trace_id, must_have, delay_seconds=2):
             else:
                 print(f"{Colors.RED}✗ Missing required span: {required_span}{Colors.ENDC}")
                 missing_spans.append(required_span)
-        
+
         if missing_spans:
             raise AssertionError(f"Missing required spans: {missing_spans}")
         else:
@@ -65,7 +67,7 @@ def check_prompt(prompt_name):
     # But it's a little difficult to get the correct version
     prompt = mlflow.genai.load_prompt(prompt_name, version=1)
     print_section("Retrieved prompt info", prompt)
-    
+
     print_section("Prompt content", prompt.template)
     assert prompt.template.startswith("<poml>"), "Prompt content does not start with '<poml>'"
 
