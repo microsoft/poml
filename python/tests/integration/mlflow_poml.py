@@ -1,33 +1,33 @@
 import mlflow
 import mlflow.openai
-import openai
 from openai import OpenAI
 import os
 import poml
+from mlflow_utils import check_trace, check_prompt
 
-# Set up MLflow experiment
-mlflow.set_experiment("openai-tracing-quickstart")
+if __name__ == "__main__":
+    poml.set_trace("mlflow", trace_dir="pomlruns")
 
-# Enable automatic tracing for all OpenAI API calls
-mlflow.openai.autolog()
+    mlflow.set_experiment("poml_integration")
+    mlflow.set_tracking_uri("http://localhost:5000")
 
-poml.set_trace("mlflow", trace_dir="logs")
+    mlflow.openai.autolog()
 
-client = OpenAI(
-    base_url=os.environ["OPENAI_API_BASE"],
-    api_key=os.environ["OPENAI_API_KEY"],
-)
+    client = OpenAI(
+        base_url=os.environ["OPENAI_API_BASE"],
+        api_key=os.environ["OPENAI_API_KEY"],
+    )
 
-messages = poml.poml("example_poml.poml", context={"code_path": "example_agentops_original.py"}, format="openai_chat")
+    messages = poml.poml("../assets/explain_code.poml", context={"code_path": "sample.py"}, format="openai_chat")
+    print("POML messages:", messages)
 
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=messages,
-    temperature=0.7,
-)
-response = client.chat.completions.create(
-    model="gpt-4.1-mini",
-    messages=messages,
-    temperature=0.7,
-)
-print(response)
+    trace_id = mlflow.get_last_active_trace_id()
+    check_trace(trace_id, ["poml"])
+
+    response = client.chat.completions.create(model="gpt-4.1-nano", **messages)
+
+    print("Response:", response.choices[0].message.content)
+
+    trace_id = mlflow.get_last_active_trace_id()
+    check_trace(trace_id, ["Completions"])
+    check_prompt("0001.explain_code")

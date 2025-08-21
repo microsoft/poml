@@ -19,7 +19,7 @@ if __name__ == "__main__":
     print(messages)
 
     response = client.chat.completions.create(
-        model="gpt-5-nano",
+        model="gpt-4.1-nano",
         **messages
     )
 

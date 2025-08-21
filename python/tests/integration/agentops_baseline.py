@@ -16,7 +16,7 @@ if __name__ == "__main__":
     )
 
     response = client.chat.completions.create(
-        model="gpt-5-nano", messages=[{"role": "user", "content": "Write a haiku about AI and humans working together"}]
+        model="gpt-4.1-nano", messages=[{"role": "user", "content": "Write a haiku about AI and humans working together"}]
     )
 
     print(response.choices[0].message.content)

@@ -7,18 +7,16 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
 from mlflow_utils import check_trace, check_prompt
 
-poml.set_trace("mlflow", trace_dir="logs")
 
 if __name__ == "__main__":
-    # Enabling autolog for LangChain will enable trace logging.
+    poml.set_trace("mlflow", trace_dir="pomlruns")
     mlflow.langchain.autolog()
 
-    # Optional: Set a tracking URI and an experiment
-    mlflow.set_experiment("poml_integration")
+    mlflow.set_experiment("poml_integration_langchain")
     mlflow.set_tracking_uri("http://localhost:5000")
 
     llm = ChatOpenAI(
-        model="gpt-5-nano",
+        model="gpt-4.1-nano",
         base_url=os.environ["OPENAI_API_BASE"],
         api_key=os.environ["OPENAI_API_KEY"],
         max_tokens=128

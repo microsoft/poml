@@ -3,5 +3,5 @@
   <code inline="false">
     <document src="{{ code_path }}" parser="txt" />
   </code>
-  <runtime temperature="0.7" max_tokens="256"/>
+  <runtime temperature="0.7" max-tokens="256"/>
 </poml>
