@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from common_utils import print_section, print_separator, Colors
 
 
-def check_trace(must_have_ops, time_cutoff=None, delay_seconds=2, limit=10):
+def check_trace(must_have_ops, time_cutoff=None, delay_seconds=10, limit=10):
     """
     Check the trace details and verify required operations are present.
 
@@ -75,6 +75,11 @@ def check_trace(must_have_ops, time_cutoff=None, delay_seconds=2, limit=10):
         if call.exception:
             print(f"{Colors.RED}Exception: {call.exception}{Colors.ENDC}")
         print_separator("", Colors.BLUE)
+
+        if op_name.startswith("poml"):
+            # Check for POML-specific format
+            assert "prompt" in call.inputs, "POML call does not contain 'prompt' in inputs"
+            assert "messages" in call.output, "POML call does not contain 'messages' in output"
 
     # Check for required operations
     if must_have_ops:

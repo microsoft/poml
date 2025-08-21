@@ -685,7 +685,7 @@ def poml(
                     poml_content or str(markup),
                     json.loads(context_content) if context_content else None,
                     json.loads(stylesheet_content) if stylesheet_content else None,
-                    result,
+                    trace_result,
                 )
 
             if _agentops_enabled:
@@ -703,7 +703,7 @@ def poml(
                     str(markup),
                     json.loads(context_content) if context_content else None,
                     json.loads(stylesheet_content) if stylesheet_content else None,
-                    result,
+                    trace_result,
                 )
 
             if _mlflow_enabled:
@@ -721,7 +721,7 @@ def poml(
                     poml_content or str(markup),
                     json.loads(context_content) if context_content else None,
                     json.loads(stylesheet_content) if stylesheet_content else None,
-                    result,
+                    trace_result,
                 )
 
             if trace_record is not None:
