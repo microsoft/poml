@@ -15,9 +15,9 @@ def print_separator(title="", color=Colors.CYAN):
     """Print a colorized separator with optional title"""
     separator = "=" * 80
     if title:
-        print(f"{color}{Colors.BOLD}{separator}")
-        print(f"  {title}")
-        print(f"{separator}{Colors.ENDC}")
+        print(f"{color}{Colors.BOLD}{separator}{Colors.ENDC}")
+        print(f"{color}{Colors.BOLD}    {title}{Colors.ENDC}")
+        print(f"{color}{Colors.BOLD}{separator}{Colors.ENDC}")
     else:
         print(f"{color}{separator}{Colors.ENDC}")
 

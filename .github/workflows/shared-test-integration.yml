@@ -1,4 +1,4 @@
-name: 'Shared Integration Test Workflow'
+name: Shared Integration Test Workflow
 
 on:
   workflow_call:
@@ -26,12 +26,12 @@ on:
         required: true
 
 jobs:
-  test:
+  sub-test-integration:
     runs-on: ${{ inputs.os }}
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:

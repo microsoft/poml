@@ -12,7 +12,7 @@ on:
 jobs:
   check-version:
     if: startsWith(github.ref, 'refs/tags/')
-    uses: ./.github/workflows/check-version.yml
+    uses: ./.github/workflows/shared-check-version.yml
 
   generate-timestamp:
     runs-on: ubuntu-latest
