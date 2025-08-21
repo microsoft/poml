@@ -22,6 +22,12 @@ dev = [
   "mkdocstrings[python]",
   "mike",
 ]
+agent = [
+  "langchain",
+  "mlflow",
+  "agentops",
+  "weave"
+]
 
 [build-system]
 requires = ["hatchling"]
