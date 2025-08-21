@@ -38,9 +38,6 @@ jobs:
           node-version: 22.x
           cache: 'npm'
 
-      - name: Use Python 3.11
-        uses: actions/setup-python@v5
-        with:
       - name: Use Python 3.12
         uses: actions/setup-python@v5
         with:
