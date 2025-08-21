@@ -2670,9 +2670,9 @@ output is returned directly without saving to disk.</p>
 <a id="__codelineno-0-602" name="__codelineno-0-602"></a>
 <a id="__codelineno-0-603" name="__codelineno-0-603"></a>            <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
 <a id="__codelineno-0-604" name="__codelineno-0-604"></a>                <span class="c1"># Do nothing</span>
-<a id="__codelineno-0-605" name="__codelineno-0-605"></a>                <span class="k">pass</span>
+<a id="__codelineno-0-605" name="__codelineno-0-605"></a>                <span class="n">return_result</span> <span class="o">=</span> <span class="n">trace_result</span> <span class="o">=</span> <span class="n">result</span>
 <a id="__codelineno-0-606" name="__codelineno-0-606"></a>            <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-607" name="__codelineno-0-607"></a>                <span class="n">parsed_result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<a id="__codelineno-0-607" name="__codelineno-0-607"></a>                <span class="n">parsed_result</span> <span class="o">=</span> <span class="n">trace_result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 <a id="__codelineno-0-608" name="__codelineno-0-608"></a>
 <a id="__codelineno-0-609" name="__codelineno-0-609"></a>                <span class="c1"># Handle the new CLI result format with messages, schema, tools, runtime</span>
 <a id="__codelineno-0-610" name="__codelineno-0-610"></a>                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parsed_result</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;messages&quot;</span> <span class="ow">in</span> <span class="n">parsed_result</span><span class="p">:</span>
@@ -2685,10 +2685,10 @@ output is returned directly without saving to disk.</p>
 <a id="__codelineno-0-617" name="__codelineno-0-617"></a>
 <a id="__codelineno-0-618" name="__codelineno-0-618"></a>                <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;message_dict&quot;</span><span class="p">:</span>
 <a id="__codelineno-0-619" name="__codelineno-0-619"></a>                    <span class="c1"># Legacy behavior - return just the messages</span>
-<a id="__codelineno-0-620" name="__codelineno-0-620"></a>                    <span class="k">return</span> <span class="n">messages_data</span>
+<a id="__codelineno-0-620" name="__codelineno-0-620"></a>                    <span class="n">return_result</span> <span class="o">=</span> <span class="n">messages_data</span>
 <a id="__codelineno-0-621" name="__codelineno-0-621"></a>                <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;dict&quot;</span><span class="p">:</span>
 <a id="__codelineno-0-622" name="__codelineno-0-622"></a>                    <span class="c1"># Return the full CLI result structure</span>
-<a id="__codelineno-0-623" name="__codelineno-0-623"></a>                    <span class="k">return</span> <span class="n">cli_result</span>
+<a id="__codelineno-0-623" name="__codelineno-0-623"></a>                    <span class="n">return_result</span> <span class="o">=</span> <span class="n">cli_result</span>
 <a id="__codelineno-0-624" name="__codelineno-0-624"></a>                <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-625" name="__codelineno-0-625"></a>                    <span class="c1"># Convert to pydantic messages for other formats</span>
 <a id="__codelineno-0-626" name="__codelineno-0-626"></a>                    <span class="k">if</span> <span class="n">chat</span><span class="p">:</span>
@@ -2706,7 +2706,7 @@ output is returned directly without saving to disk.</p>
 <a id="__codelineno-0-638" name="__codelineno-0-638"></a>                    <span class="p">)</span>
 <a id="__codelineno-0-639" name="__codelineno-0-639"></a>
 <a id="__codelineno-0-640" name="__codelineno-0-640"></a>                    <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;pydantic&quot;</span><span class="p">:</span>
-<a id="__codelineno-0-641" name="__codelineno-0-641"></a>                        <span class="k">return</span> <span class="n">poml_frame</span>
+<a id="__codelineno-0-641" name="__codelineno-0-641"></a>                        <span class="n">return_result</span> <span class="o">=</span> <span class="n">poml_frame</span>
 <a id="__codelineno-0-642" name="__codelineno-0-642"></a>                    <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;openai_chat&quot;</span><span class="p">:</span>
 <a id="__codelineno-0-643" name="__codelineno-0-643"></a>                        <span class="c1"># Return OpenAI-compatible format</span>
 <a id="__codelineno-0-644" name="__codelineno-0-644"></a>                        <span class="n">openai_messages</span> <span class="o">=</span> <span class="n">_poml_response_to_openai_chat</span><span class="p">(</span><span class="n">pydantic_messages</span><span class="p">)</span>
@@ -2727,10 +2727,10 @@ output is returned directly without saving to disk.</p>
 <a id="__codelineno-0-659" name="__codelineno-0-659"></a>                                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">poml_frame</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
 <a id="__codelineno-0-660" name="__codelineno-0-660"></a>                            <span class="p">})</span>
 <a id="__codelineno-0-661" name="__codelineno-0-661"></a>
-<a id="__codelineno-0-662" name="__codelineno-0-662"></a>                        <span class="k">return</span> <span class="n">openai_result</span>
+<a id="__codelineno-0-662" name="__codelineno-0-662"></a>                        <span class="n">return_result</span> <span class="o">=</span> <span class="n">openai_result</span>
 <a id="__codelineno-0-663" name="__codelineno-0-663"></a>                    <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;langchain&quot;</span><span class="p">:</span>
 <a id="__codelineno-0-664" name="__codelineno-0-664"></a>                        <span class="n">messages_data</span> <span class="o">=</span> <span class="n">_poml_response_to_langchain</span><span class="p">(</span><span class="n">pydantic_messages</span><span class="p">)</span>
-<a id="__codelineno-0-665" name="__codelineno-0-665"></a>                        <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-665" name="__codelineno-0-665"></a>                        <span class="n">return_result</span> <span class="o">=</span> <span class="p">{</span>
 <a id="__codelineno-0-666" name="__codelineno-0-666"></a>                            <span class="s2">&quot;messages&quot;</span><span class="p">:</span> <span class="n">messages_data</span><span class="p">,</span>
 <a id="__codelineno-0-667" name="__codelineno-0-667"></a>                            <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">cli_result</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;messages&quot;</span><span class="p">},</span>
 <a id="__codelineno-0-668" name="__codelineno-0-668"></a>                        <span class="p">}</span>
@@ -2753,7 +2753,7 @@ output is returned directly without saving to disk.</p>
 <a id="__codelineno-0-685" name="__codelineno-0-685"></a>                    <span class="n">poml_content</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">markup</span><span class="p">),</span>
 <a id="__codelineno-0-686" name="__codelineno-0-686"></a>                    <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">context_content</span><span class="p">)</span> <span class="k">if</span> <span class="n">context_content</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-687" name="__codelineno-0-687"></a>                    <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">stylesheet_content</span><span class="p">)</span> <span class="k">if</span> <span class="n">stylesheet_content</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-688" name="__codelineno-0-688"></a>                    <span class="n">result</span><span class="p">,</span>
+<a id="__codelineno-0-688" name="__codelineno-0-688"></a>                    <span class="n">trace_result</span><span class="p">,</span>
 <a id="__codelineno-0-689" name="__codelineno-0-689"></a>                <span class="p">)</span>
 <a id="__codelineno-0-690" name="__codelineno-0-690"></a>
 <a id="__codelineno-0-691" name="__codelineno-0-691"></a>            <span class="k">if</span> <span class="n">_agentops_enabled</span><span class="p">:</span>
@@ -2771,7 +2771,7 @@ output is returned directly without saving to disk.</p>
 <a id="__codelineno-0-703" name="__codelineno-0-703"></a>                    <span class="nb">str</span><span class="p">(</span><span class="n">markup</span><span class="p">),</span>
 <a id="__codelineno-0-704" name="__codelineno-0-704"></a>                    <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">context_content</span><span class="p">)</span> <span class="k">if</span> <span class="n">context_content</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-705" name="__codelineno-0-705"></a>                    <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">stylesheet_content</span><span class="p">)</span> <span class="k">if</span> <span class="n">stylesheet_content</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-706" name="__codelineno-0-706"></a>                    <span class="n">result</span><span class="p">,</span>
+<a id="__codelineno-0-706" name="__codelineno-0-706"></a>                    <span class="n">trace_result</span><span class="p">,</span>
 <a id="__codelineno-0-707" name="__codelineno-0-707"></a>                <span class="p">)</span>
 <a id="__codelineno-0-708" name="__codelineno-0-708"></a>
 <a id="__codelineno-0-709" name="__codelineno-0-709"></a>            <span class="k">if</span> <span class="n">_mlflow_enabled</span><span class="p">:</span>
@@ -2789,12 +2789,12 @@ output is returned directly without saving to disk.</p>
 <a id="__codelineno-0-721" name="__codelineno-0-721"></a>                    <span class="n">poml_content</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">markup</span><span class="p">),</span>
 <a id="__codelineno-0-722" name="__codelineno-0-722"></a>                    <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">context_content</span><span class="p">)</span> <span class="k">if</span> <span class="n">context_content</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-723" name="__codelineno-0-723"></a>                    <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">stylesheet_content</span><span class="p">)</span> <span class="k">if</span> <span class="n">stylesheet_content</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-724" name="__codelineno-0-724"></a>                    <span class="n">result</span><span class="p">,</span>
+<a id="__codelineno-0-724" name="__codelineno-0-724"></a>                    <span class="n">trace_result</span><span class="p">,</span>
 <a id="__codelineno-0-725" name="__codelineno-0-725"></a>                <span class="p">)</span>
 <a id="__codelineno-0-726" name="__codelineno-0-726"></a>
 <a id="__codelineno-0-727" name="__codelineno-0-727"></a>            <span class="k">if</span> <span class="n">trace_record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-728" name="__codelineno-0-728"></a>                <span class="n">trace_record</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
-<a id="__codelineno-0-729" name="__codelineno-0-729"></a>            <span class="k">return</span> <span class="n">result</span>
+<a id="__codelineno-0-728" name="__codelineno-0-728"></a>                <span class="n">trace_record</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">trace_result</span>
+<a id="__codelineno-0-729" name="__codelineno-0-729"></a>            <span class="k">return</span> <span class="n">return_result</span>
 <a id="__codelineno-0-730" name="__codelineno-0-730"></a>    <span class="k">finally</span><span class="p">:</span>
 <a id="__codelineno-0-731" name="__codelineno-0-731"></a>        <span class="k">if</span> <span class="n">temp_input_file</span><span class="p">:</span>
 <a id="__codelineno-0-732" name="__codelineno-0-732"></a>            <span class="n">temp_input_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
