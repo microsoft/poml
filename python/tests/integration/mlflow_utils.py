@@ -42,15 +42,15 @@ def check_trace(trace_id, must_have, delay_seconds=5):
         missing_spans = []
         for required_span in must_have:
             if required_span in span_names:
-                print(f"{Colors.GREEN}✓ Found required span: {required_span}{Colors.ENDC}")
+                print(f"{Colors.GREEN}[OK] Found required span: {required_span}{Colors.ENDC}")
             else:
-                print(f"{Colors.RED}✗ Missing required span: {required_span}{Colors.ENDC}")
+                print(f"{Colors.RED}[ERROR] Missing required span: {required_span}{Colors.ENDC}")
                 missing_spans.append(required_span)
 
         if missing_spans:
             raise AssertionError(f"Missing required spans: {missing_spans}")
         else:
-            print(f"{Colors.GREEN}{Colors.BOLD}All required spans found!{Colors.ENDC}")
+            print(f"{Colors.GREEN}{Colors.BOLD}[SUCCESS] All required spans found!{Colors.ENDC}")
 
     print_separator("TRACE VERIFICATION COMPLETED", Colors.GREEN)
 

@@ -91,15 +91,15 @@ def check_trace(must_have_ops, time_cutoff=None, delay_seconds=10, limit=10):
             # Check for partial matches (e.g., "openai.chat.completions.create" matches patterns)
             found = any(required_op in op for op in found_operations)
             if found:
-                print(f"{Colors.GREEN}✓ Found required operation: {required_op}{Colors.ENDC}")
+                print(f"{Colors.GREEN}[OK] Found required operation: {required_op}{Colors.ENDC}")
             else:
-                print(f"{Colors.RED}✗ Missing required operation: {required_op}{Colors.ENDC}")
+                print(f"{Colors.RED}[ERROR] Missing required operation: {required_op}{Colors.ENDC}")
                 missing_ops.append(required_op)
 
         if missing_ops:
             raise AssertionError(f"Missing required operations: {missing_ops}")
         else:
-            print(f"{Colors.GREEN}{Colors.BOLD}All required operations found!{Colors.ENDC}")
+            print(f"{Colors.GREEN}{Colors.BOLD}[SUCCESS] All required operations found!{Colors.ENDC}")
 
     print_separator("WEAVE TRACE VERIFICATION COMPLETED", Colors.GREEN)
 
