@@ -1,4 +1,5 @@
 import mlflow
+import mlflow.genai
 import time
 from common_utils import print_section, print_separator, Colors
 
@@ -50,3 +51,22 @@ def check_trace(trace_id, must_have, delay_seconds=2):
             print(f"{Colors.GREEN}{Colors.BOLD}All required spans found!{Colors.ENDC}")
 
     print_separator("TRACE VERIFICATION COMPLETED", Colors.GREEN)
+
+
+def check_prompt(prompt_name):
+    """
+    Check the prompt details and content.
+
+    Args:
+        prompt_name: The name of the prompt to check
+    """
+    print_separator("PROMPT VERIFICATION", Colors.GREEN)
+    # It's always version 1 on CI, but it's not always on local
+    # But it's a little difficult to get the correct version
+    prompt = mlflow.genai.load_prompt(prompt_name, version=1)
+    print_section("Retrieved prompt info", prompt)
+    
+    print_section("Prompt content", prompt.template)
+    assert prompt.template.startswith("<poml>"), "Prompt content does not start with '<poml>'"
+
+    print_separator("PROMPT VERIFICATION COMPLETED", Colors.GREEN)

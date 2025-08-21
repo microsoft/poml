@@ -13,9 +13,10 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
 
     llm = ChatOpenAI(
-        model="gpt-4.1-nano",
+        model="gpt-5-nano",
         base_url=os.environ["OPENAI_API_BASE"],
-        api_key=os.environ["OPENAI_API_KEY"]
+        api_key=os.environ["OPENAI_API_KEY"],
+        max_tokens=128
     )
 
     prompt_template = PromptTemplate.from_template(

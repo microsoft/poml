@@ -9,14 +9,14 @@ from agentops_utils import get_trace_id, check_trace
 if __name__ == "__main__":
     api_key = os.environ["AGENTOPS_API_KEY"]
     agentops.init(auto_start_session=False, api_key=api_key)
-    trace = agentops.start_trace("poml_baseline_trace")
+    trace = agentops.start_trace("poml_baseline")
     client = OpenAI(
         base_url=os.environ["OPENAI_API_BASE"],
         api_key=os.environ["OPENAI_API_KEY"],
     )
 
     response = client.chat.completions.create(
-        model="gpt-4.1-nano", messages=[{"role": "user", "content": "Write a haiku about AI and humans working together"}]
+        model="gpt-5-nano", messages=[{"role": "user", "content": "Write a haiku about AI and humans working together"}]
     )
 
     print(response.choices[0].message.content)
