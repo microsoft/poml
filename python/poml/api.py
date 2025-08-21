@@ -602,9 +602,9 @@ def poml(
 
             if format == "raw":
                 # Do nothing
-                pass
+                return_result = trace_result = result
             else:
-                parsed_result = json.loads(result)
+                parsed_result = trace_result = json.loads(result)
                 
                 # Handle the new CLI result format with messages, schema, tools, runtime
                 if isinstance(parsed_result, dict) and "messages" in parsed_result:
@@ -617,10 +617,10 @@ def poml(
 
                 if format == "message_dict":
                     # Legacy behavior - return just the messages
-                    return messages_data
+                    return_result = messages_data
                 elif format == "dict":
                     # Return the full CLI result structure
-                    return cli_result
+                    return_result = cli_result
                 else:
                     # Convert to pydantic messages for other formats
                     if chat:
@@ -638,7 +638,7 @@ def poml(
                     )
 
                     if format == "pydantic":
-                        return poml_frame
+                        return_result = poml_frame
                     elif format == "openai_chat":
                         # Return OpenAI-compatible format
                         openai_messages = _poml_response_to_openai_chat(pydantic_messages)
@@ -659,10 +659,10 @@ def poml(
                                 for k, v in poml_frame.runtime.items()
                             })
 
-                        return openai_result
+                        return_result = openai_result
                     elif format == "langchain":
                         messages_data = _poml_response_to_langchain(pydantic_messages)
-                        return {
+                        return_result = {
                             "messages": messages_data,
                             **{k: v for k, v in cli_result.items() if k != "messages"},
                         }
@@ -725,8 +725,8 @@ def poml(
                 )
 
             if trace_record is not None:
-                trace_record["result"] = result
-            return result
+                trace_record["result"] = trace_result
+            return return_result
     finally:
         if temp_input_file:
             temp_input_file.close()
