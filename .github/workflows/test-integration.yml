@@ -14,6 +14,8 @@ jobs:
       fail-fast: false
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Run integration tests
         uses: ./.github/actions/test-integration
         with:
@@ -33,6 +35,8 @@ jobs:
       fail-fast: false
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Run integration tests
         uses: ./.github/actions/test-integration
         with:
