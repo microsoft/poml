@@ -8,7 +8,7 @@ if __name__ == "__main__":
     weave.init("poml_baseline")
 
     # Set time cutoff to current time (timezone-aware) to capture only this run's traces
-    time_cutoff = datetime.now(timezone.utc)
+    time_cutoff = datetime.now(timezone.utc) - timedelta(seconds=30)
     print(f"Time cutoff (UTC): {time_cutoff.isoformat()}")
 
     prompt = weave.MessagesPrompt(
@@ -35,4 +35,4 @@ if __name__ == "__main__":
     print("Response:", response.choices[0].message.content)
 
     # Verify traces from this run
-    check_trace(["openai.chat.completions.create"])
+    check_trace(["openai.chat.completions.create"], time_cutoff=time_cutoff)
