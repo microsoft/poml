@@ -342,14 +342,14 @@ export class PomlFile {
     const regex = /{{\s*(.+?)\s*}}(?!})/gm;
 
     const visit = (element: XMLElement) => {
-      // Special handling for schema and tool definition elements with lang="expr"
+      // Special handling for schema and tool definition elements with parser="expr"
       const elementName = element.name?.toLowerCase();
       if (elementName === 'output-schema' || elementName === 'outputschema' || elementName === 'tool-definition' || elementName === 'tool-def' || elementName === 'tooldef' || elementName === 'tool') {
-        const langAttr = xmlAttribute(element, 'lang');
+        const parserAttr = xmlAttribute(element, 'parser');
         const text = xmlElementText(element).trim();
 
-        // Check if it's an expression (either explicit lang="expr" or auto-detected)
-        if (langAttr?.value === 'expr' || (!langAttr && !text.trim().startsWith('{'))) {
+        // Check if it's an expression (either explicit parser="expr" or auto-detected)
+        if (parserAttr?.value === 'expr' || (!parserAttr && !text.trim().startsWith('{'))) {
           const position = this.xmlElementRange(element.textContents[0]);
           tokens.push({
             type: 'expression',
@@ -719,10 +719,10 @@ export class PomlFile {
   };
 
   private handleSchema = (element: XMLElement, context?: { [key: string]: any }): Schema | undefined => {
-    const langAttr = xmlAttribute(element, 'lang');
-    let lang: 'json' | 'expr' | undefined = langAttr?.value 
-      ? this.handleTextAsString(langAttr.value, context || {},
-                                this.xmlAttributeValueRange(langAttr)) as 'json' | 'expr'
+    const parserAttr = xmlAttribute(element, 'parser');
+    let parser: 'json' | 'expr' | undefined = parserAttr?.value
+      ? this.handleTextAsString(parserAttr.value, context || {},
+                                this.xmlAttributeValueRange(parserAttr)) as 'json' | 'expr'
       : undefined;
     const text = xmlElementText(element).trim();
     
@@ -731,23 +731,23 @@ export class PomlFile {
       ? this.xmlElementRange(element.textContents[0])
       : this.xmlElementRange(element);
     
-    // Auto-detect language if not specified
-    if (!lang) {
+    // Auto-detect parser if not specified
+    if (!parser) {
       if (text.startsWith('{')) {
-        lang = 'json';
+        parser = 'json';
       } else {
-        lang = 'expr';
+        parser = 'expr';
       }
-    } else if (lang !== 'json' && lang !== 'expr') {
+    } else if (parser !== 'json' && parser !== 'expr') {
       this.reportError(
-        `Invalid lang attribute: ${lang}. Expected "json" or "expr"`,
-        this.xmlAttributeValueRange(xmlAttribute(element, 'lang')!)
+        `Invalid parser attribute: ${parser}. Expected "json" or "expr"`,
+        this.xmlAttributeValueRange(xmlAttribute(element, 'parser')!)
       );
       return undefined;
     }
     
     try {
-      if (lang === 'json') {
+      if (parser === 'json') {
         // Process template expressions in JSON text
         const processedText = this.handleText(text, context || {}, textRange);
         // handleText returns an array, join if all strings
@@ -756,7 +756,7 @@ export class PomlFile {
           : processedText.map(p => typeof p === 'string' ? p : JSON.stringify(p)).join('');
         const jsonSchema = JSON.parse(jsonText);
         return Schema.fromOpenAPI(jsonSchema);
-      } else if (lang === 'expr') {
+      } else if (parser === 'expr') {
         // Evaluate expression directly with z in context
         const contextWithZ = { z, ...context };
         const result = this.evaluateExpression(text, contextWithZ, textRange);

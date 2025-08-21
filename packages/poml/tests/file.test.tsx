@@ -313,10 +313,10 @@ describe('templateEngine', () => {
 });
 
 describe('expressionEvaluation', () => {
-  test('captures expression tokens for meta lang="expr"', () => {
+  test('captures expression tokens for meta parser="expr"', () => {
     const text = `<poml>
       <let name="fields" value='["name", "age"]' />
-      <output-schema lang="expr">
+      <output-schema parser="expr">
         z.object({
           name: z.string(),
           age: z.number()
@@ -357,7 +357,7 @@ describe('expressionEvaluation', () => {
     ErrorCollection.clear();
     const text = `<poml>
       <let name="num" value="42" />
-      <output-schema lang="expr">
+      <output-schema parser="expr">
         z.object({ value: z.number().max(num) })
       </output-schema>
     </poml>`;
@@ -566,7 +566,7 @@ describe('lspFeatures', () => {
 describe('meta elements', () => {
   test('responseSchema with JSON', () => {
     const text = `<poml>
-      <output-schema lang="json">
+      <output-schema parser="json">
         {
           "type": "object",
           "properties": {
@@ -662,8 +662,8 @@ describe('meta elements', () => {
   test('multiple responseSchema error', () => {
     ErrorCollection.clear();
     const text = `<poml>
-      <output-schema lang="json">{"type": "string"}</output-schema>
-      <output-schema lang="json">{"type": "number"}</output-schema>
+      <output-schema parser="json">{"type": "string"}</output-schema>
+      <output-schema parser="json">{"type": "number"}</output-schema>
     </poml>`;
     const file = new PomlFile(text);
     file.react();
@@ -853,8 +853,8 @@ describe('meta elements', () => {
     const text = `<poml>
       <let name="fieldName" value="{{ 'username' }}" />
       <let name="maxLength" value="50" />
-      <let name="lang">json</let>
-      <output-schema lang="{{ lang }}">
+      <let name="parser">json</let>
+      <output-schema parser="{{ parser }}">
         {
           "type": "object",
           "properties": {
@@ -901,7 +901,7 @@ describe('meta elements', () => {
       <let name="toolName">calculate</let>
       <let name="toolDescription">Perform mathematical calculations</let>
       <let name="operations" value='["add", "subtract", "multiply", "divide"]' />
-      <tool-definition name="{{toolName}}" description="{{toolDescription}}" lang="json">
+      <tool-definition name="{{toolName}}" description="{{toolDescription}}" parser="json">
         {
           "type": "object",
           "properties": {
@@ -955,9 +955,9 @@ describe('meta elements', () => {
     const text = `<poml>
       <let name="toolName">calculate</let>
       <let name="toolDesc">Perform mathematical calculations</let>
-      <let name="schemaLang">json</let>
-      
-      <tool-definition name="{{toolName}}" description="{{toolDesc}}" lang="{{schemaLang}}">
+      <let name="schemaParser">json</let>
+
+      <tool-definition name="{{toolName}}" description="{{toolDesc}}" parser="{{schemaParser}}">
         {
           "type": "object",
           "properties": {
@@ -996,7 +996,7 @@ describe('meta elements', () => {
         }
       }
       </let>
-      <output-schema lang="json">
+      <output-schema parser="json">
       {{ schemaJson }}
       </output-schema>
     </poml>`;
@@ -1019,7 +1019,7 @@ describe('meta elements', () => {
     ErrorCollection.clear();
     const text = `<poml>
       <let name="maxAge" value="100" />
-      <output-schema lang="json">
+      <output-schema parser="json">
         {
           "type": "object",
           "properties": {
@@ -1056,7 +1056,7 @@ describe('meta elements', () => {
     ErrorCollection.clear();
     const text = `<poml>
       <let name="operations" value='["add", "subtract", "multiply", "divide"]' />
-      <tool-definition name="calculator" description="Math operations" lang="expr">
+      <tool-definition name="calculator" description="Math operations" parser="expr">
         z.object({
           operation: z.enum(operations),
           a: z.number(),
@@ -1081,7 +1081,7 @@ describe('meta elements', () => {
     ErrorCollection.clear();
     const text = `<poml>
       <let name="fields" value='{ "name": "string", "age": "number" }' />
-      <output-schema lang="expr">
+      <output-schema parser="expr">
         z.object({
           name: z.string(),
           age: z.number(),
@@ -1102,7 +1102,7 @@ describe('meta elements', () => {
   test('malformed JSON syntax error', () => {
     ErrorCollection.clear();
     const text = `<poml>
-      <output-schema lang="json">
+      <output-schema parser="json">
         {
           "type": "object",
           "properties": {
@@ -1123,7 +1123,7 @@ describe('meta elements', () => {
   test('invalid expression evaluation error', () => {
     ErrorCollection.clear();
     const text = `<poml>
-      <output-schema lang="expr">
+      <output-schema parser="expr">
         z.object({
           name: z.nonexistent(),
           age: z.number()
@@ -1141,7 +1141,7 @@ describe('meta elements', () => {
   test('invalid OpenAPI schema structure', () => {
     ErrorCollection.clear();
     const text = `<poml>
-      <output-schema lang="json">
+      <output-schema parser="json">
         "not an object"
       </output-schema>
     </poml>`;

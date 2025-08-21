@@ -78,7 +78,7 @@ The CodeLens evaluation feature works with:
 - **Template Expressions**: Any `{{ expression }}` in your POML content
 - **Variable Definitions**: `<let>` element value attributes
 - **Control Flow**: Expressions in `for` and `if` attributes
-- **Schema Expressions**: Expressions in meta elements with `lang="expr"`
+- **Schema Expressions**: Expressions in meta elements with `parser="expr"`
 
 #### Example
 
@@ -89,7 +89,7 @@ The CodeLens evaluation feature works with:
   
   <p>We have {{ count }} items: {{ items.join(', ') }}</p>
   
-  <output-schema lang="expr">
+  <output-schema parser="expr">
     z.object({
       total: z.number().max(count),
       items: z.array(z.enum(items))
