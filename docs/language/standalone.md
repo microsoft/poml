@@ -320,7 +320,7 @@ Response schemas define the expected structure of AI-generated responses, ensuri
 
 ### JSON Schema Format
 
-Use the `parser="json"` attribute to specify JSON Schema format:
+Use the `parser="json"` attribute to specify JSON Schema format. The schema must be a valid [OpenAPI JSON Schema](https://spec.openapis.org/) object.
 
 ```xml
 <output-schema parser="json">
@@ -337,7 +337,7 @@ Use the `parser="json"` attribute to specify JSON Schema format:
 
 ### Expression Format
 
-Use the `parser="eval"` attribute (or omit it for auto-detection) to evaluate JavaScript expressions that return schemas:
+Use the `parser="eval"` attribute (or omit it for auto-detection) to evaluate JavaScript expressions that return schemas. It should return a [Zod](https://zod.dev/) schema objects or a JavaScript object that complies with [OpenAPI JSON Schema standards](https://spec.openapis.org/):
 
 ```xml
 <output-schema parser="eval">
