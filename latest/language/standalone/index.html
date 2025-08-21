@@ -2413,8 +2413,8 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 <h2 id="response-schema">Response Schema<a class="headerlink" href="#response-schema" title="Permanent link">&para;</a></h2>
 <p>Response schemas define the expected structure of AI-generated responses, ensuring that language models return data in a predictable, parsable format. This transforms free-form text generation into structured data generation.</p>
 <h3 id="json-schema-format">JSON Schema Format<a class="headerlink" href="#json-schema-format" title="Permanent link">&para;</a></h3>
-<p>Use the <code>lang="json"</code> attribute to specify JSON Schema format:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
+<p>Use the <code>parser="json"</code> attribute to specify JSON Schema format. The schema must be a valid <a href="https://spec.openapis.org/">OpenAPI JSON Schema</a> object.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span>{
 <a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span>&quot;type&quot;:<span class="w"> </span>&quot;object&quot;,
 <a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">    </span>&quot;properties&quot;:<span class="w"> </span>{
@@ -2426,22 +2426,22 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 <a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="nt">&lt;/output-schema&gt;</span>
 </code></pre></div>
 <h3 id="expression-format">Expression Format<a class="headerlink" href="#expression-format" title="Permanent link">&para;</a></h3>
-<p>Use the <code>lang="expr"</code> attribute (or omit it for auto-detection) to evaluate JavaScript expressions that return schemas:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;expr&quot;</span><span class="nt">&gt;</span>
+<p>Use the <code>parser="eval"</code> attribute (or omit it for auto-detection) to evaluate JavaScript expressions that return schemas. It should return a <a href="https://zod.dev/">Zod</a> schema objects or a JavaScript object that complies with <a href="https://spec.openapis.org/">OpenAPI JSON Schema standards</a>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;eval&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span>z.object({
 <a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">    </span>name:<span class="w"> </span>z.string(),
 <a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">    </span>age:<span class="w"> </span>z.number().optional()
 <a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">  </span>})
 <a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="nt">&lt;/output-schema&gt;</span>
 </code></pre></div>
-<p>When <code>lang</code> is omitted, POML auto-detects the format:
+<p>When <code>parser</code> is omitted, POML auto-detects the format:
 - If the content starts with <code>{</code>, it's treated as JSON
 - Otherwise, it's treated as an expression</p>
 <h3 id="expression-evaluation-in-schemas">Expression Evaluation in Schemas<a class="headerlink" href="#expression-evaluation-in-schemas" title="Permanent link">&para;</a></h3>
 <h4 id="json-schema-with-template-expressions">JSON Schema with Template Expressions<a class="headerlink" href="#json-schema-with-template-expressions" title="Permanent link">&para;</a></h4>
 <p>JSON schemas support template expressions using <code>{{ }}</code> syntax:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;maxAge&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;100&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
-<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span>{
 <a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">    </span>&quot;type&quot;:<span class="w"> </span>&quot;object&quot;,
 <a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="w">    </span>&quot;properties&quot;:<span class="w"> </span>{
@@ -2458,7 +2458,7 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 <h4 id="expression-format-with-javascript-evaluation">Expression Format with JavaScript Evaluation<a class="headerlink" href="#expression-format-with-javascript-evaluation" title="Permanent link">&para;</a></h4>
 <p>Expression schemas are evaluated as JavaScript code with access to context variables and the <code>z</code> (Zod) variable:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;fields&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&#39;[&quot;name&quot;, &quot;email&quot;, &quot;age&quot;]&#39;</span><span class="w"> </span><span class="nt">/&gt;</span>
-<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;expr&quot;</span><span class="nt">&gt;</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;eval&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span>z.object(
 <a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">    </span>Object.fromEntries(fields.map(f<span class="w"> </span>=&gt;<span class="w"> </span>[f,<span class="w"> </span>z.string()]))
 <a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">  </span>)
@@ -2489,7 +2489,7 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 <a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a><span class="nt">&lt;/tool-definition&gt;</span>
 </code></pre></div>
 <h3 id="expression-format_1">Expression Format<a class="headerlink" href="#expression-format_1" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="nt">&lt;tool-definition</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;calculate&quot;</span><span class="w"> </span><span class="na">description=</span><span class="s">&quot;Perform calculation&quot;</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;expr&quot;</span><span class="nt">&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="nt">&lt;tool-definition</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;calculate&quot;</span><span class="w"> </span><span class="na">description=</span><span class="s">&quot;Perform calculation&quot;</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;eval&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">  </span>z.object({
 <a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span>operation:<span class="w"> </span>z.enum([&#39;add&#39;,<span class="w"> </span>&#39;subtract&#39;,<span class="w"> </span>&#39;multiply&#39;,<span class="w"> </span>&#39;divide&#39;]),
 <a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">    </span>a:<span class="w"> </span>z.number(),
@@ -2501,7 +2501,7 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 <p>Tool schemas support the same evaluation modes as response schemas:</p>
 <h4 id="json-with-template-expressions">JSON with Template Expressions<a class="headerlink" href="#json-with-template-expressions" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;maxValue&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&quot;1000&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
-<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="nt">&lt;tool-definition</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;calculator&quot;</span><span class="w"> </span><span class="na">description=</span><span class="s">&quot;Calculate values&quot;</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="nt">&lt;tool-definition</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;calculator&quot;</span><span class="w"> </span><span class="na">description=</span><span class="s">&quot;Calculate values&quot;</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">  </span>{
 <a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="w">    </span>&quot;type&quot;:<span class="w"> </span>&quot;object&quot;,
 <a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="w">    </span>&quot;properties&quot;:<span class="w"> </span>{
@@ -2515,7 +2515,7 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 </code></pre></div>
 <h4 id="expression-format_2">Expression Format<a class="headerlink" href="#expression-format_2" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;supportedOperations&quot;</span><span class="w"> </span><span class="na">value=</span><span class="s">&#39;[&quot;add&quot;, &quot;subtract&quot;, &quot;multiply&quot;, &quot;divide&quot;]&#39;</span><span class="w"> </span><span class="nt">/&gt;</span>
-<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nt">&lt;tool-definition</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;calculator&quot;</span><span class="w"> </span><span class="na">description=</span><span class="s">&quot;Perform mathematical operations&quot;</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;expr&quot;</span><span class="nt">&gt;</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nt">&lt;tool-definition</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;calculator&quot;</span><span class="w"> </span><span class="na">description=</span><span class="s">&quot;Perform mathematical operations&quot;</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;eval&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">  </span>z.object({
 <a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">    </span>operation:<span class="w"> </span>z.enum(supportedOperations),
 <a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="w">    </span>a:<span class="w"> </span>z.number(),
@@ -2527,14 +2527,14 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 <p><strong>Required attributes for tools:</strong>
 - <strong>name</strong>: Tool identifier (required)
 - <strong>description</strong>: Tool description (optional but recommended)
-- <strong>lang</strong>: Schema language, either "json" or "expr" (optional, auto-detected based on content)</p>
+- <strong>parser</strong>: Schema parser, either "json" or "eval" (optional, auto-detected based on content)</p>
 <h3 id="template-expressions-in-attributes">Template Expressions in Attributes<a class="headerlink" href="#template-expressions-in-attributes" title="Permanent link">&para;</a></h3>
 <p>Both schemas and tools support template expressions in their attributes:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;toolName&quot;</span><span class="nt">&gt;</span>calculate<span class="nt">&lt;/let&gt;</span>
 <a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;toolDesc&quot;</span><span class="nt">&gt;</span>Perform<span class="w"> </span>mathematical<span class="w"> </span>calculations<span class="nt">&lt;/let&gt;</span>
-<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;schemaLang&quot;</span><span class="nt">&gt;</span>json<span class="nt">&lt;/let&gt;</span>
+<a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;schemaParser&quot;</span><span class="nt">&gt;</span>json<span class="nt">&lt;/let&gt;</span>
 <a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>
-<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="nt">&lt;tool-definition</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;{{toolName}}&quot;</span><span class="w"> </span><span class="na">description=</span><span class="s">&quot;{{toolDesc}}&quot;</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;{{schemaLang}}&quot;</span><span class="nt">&gt;</span>
+<a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="nt">&lt;tool-definition</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;{{toolName}}&quot;</span><span class="w"> </span><span class="na">description=</span><span class="s">&quot;{{toolDesc}}&quot;</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;{{schemaParser}}&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="w">  </span>{
 <a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="w">    </span>&quot;type&quot;:<span class="w"> </span>&quot;object&quot;,
 <a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="w">    </span>&quot;properties&quot;:<span class="w"> </span>{
@@ -2552,7 +2552,7 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 <a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a><span class="w">  </span>}
 <a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>}
 <a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="nt">&lt;/let&gt;</span>
-<a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">lang=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
+<a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="nt">&lt;output-schema</span><span class="w"> </span><span class="na">parser=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
 <a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a>{{<span class="w"> </span>schemaJson<span class="w"> </span>}}
 <a id="__codelineno-29-11" name="__codelineno-29-11" href="#__codelineno-29-11"></a><span class="nt">&lt;/output-schema&gt;</span>
 </code></pre></div>
