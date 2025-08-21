@@ -45,7 +45,7 @@ jobs:
           set -ex
           for poml_file in examples/*.poml; do
             echo "Testing $poml_file"
-            npx poml "$poml_file"
+            npx poml -f "$poml_file"
           done
         shell: bash
 
