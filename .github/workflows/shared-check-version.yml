@@ -1,4 +1,4 @@
-name: Check Version
+name: Shared Check Version Workflow
 
 on:
   workflow_call:

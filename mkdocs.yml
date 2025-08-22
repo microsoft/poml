@@ -4,35 +4,44 @@ repo_url: https://github.com/microsoft/poml
 repo_name: microsoft/poml
 edit_uri: edit/main/docs/
 
+exclude_docs: |
+  typescript/reference/README.md
 
 theme:
   name: material
   logo: media/logo-64-white.png
   favicon: media/logo-16-purple.png
   features:
-    - navigation.tabs
     - navigation.sections
     - navigation.expand
-    - navigation.top
+    - navigation.instant
+    - navigation.tracking
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.tooltips
   palette:
     - scheme: default
-      primary: deep purple
-      accent: deep purple
+      primary: poml
+      accent: poml
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: deep purple
-      accent: deep purple
+      primary: poml
+      accent: poml
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+  - git-authors
   - mkdocstrings:
       handlers:
         python:
@@ -59,19 +68,15 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Language:
-    - Getting Started: index.md
-    - Quick Start: language/quickstart.md
+  - Getting Started: index.md
+  - Tutorial:
+    - Quick Start: tutorial/quickstart.md
+  - Language Spec:
     - Write .poml Files: language/standalone.md
     - Meta: language/meta.md
-    - References:
-      - Components: language/components.md
-    - Deep Dive:
-      - IR Specification: language/ir.md
-    - Proposals:
-      - Extended POML: language/proposals/poml_extended.md
+    - Components: language/components.md
   - Visual Studio Code:
-    - Extension Overview: vscode/index.md
+    - Overview: vscode/index.md
     - Features: vscode/features.md
     - Configuration: vscode/configuration.md
   - TypeScript:
@@ -87,8 +92,12 @@ nav:
   - Python:
     - Overview: python/index.md
     - References:
-      - Core: python/core.md
-      - Integration: python/integration.md
+      - Core: python/reference/core.md
+      - Integration: python/reference/integration.md
+  - Deep Dive:
+    - IR Specification: deep-dive/ir.md
+    - Proposals:
+      - Extended POML: deep-dive/proposals/poml_extended.md
 
 extra:
   version:

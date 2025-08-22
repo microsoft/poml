@@ -22,7 +22,7 @@
   "name": "POML TypeScript API",
   "hideBreadcrumbs": true,
   "hidePageTitle": true,
-  "cleanOutputDir": false,
+  "cleanOutputDir": true,
   "outputFileStrategy": "modules",
   "mergeReadme": false,
   "indexFormat": "table",
