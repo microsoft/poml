@@ -5,7 +5,7 @@ import * as path from 'path';
 import { beforeAll, afterAll, describe, expect, test, jest } from '@jest/globals';
 import { spyOn } from 'jest-mock';
 
-import { read, write, writeWithSourceMap, poml, commandLine } from 'poml';
+import { read, write, writeWithSourceMap, poml, commandLine, _readWithFile } from 'poml';
 import { Markup } from 'poml/presentation';
 import { ErrorCollection, ReadError, WriteError } from 'poml/base';
 
@@ -674,7 +674,7 @@ describe('message components', () => {
 
   test('tool with runtime parameters and template variables', async () => {
     const tool_name = 'get_weather';
-    const tool_schema = `{
+    const tool_schema = {
       "type": "object",
       "properties": {
         "location": {
@@ -688,7 +688,7 @@ describe('message components', () => {
         }
       },
       "required": ["location"]
-    }`;
+    };
     
     const text = `<poml>
 <p>What is the weather in San Francisco?</p>
@@ -699,9 +699,11 @@ describe('message components', () => {
 </poml>`;
     
     ErrorCollection.clear();
-    const ir = await read(text, undefined, { tool_name, tool_schema });
-    const runtime = ir.runtime;
-    const tools = ir.tools;
+    const [ir, file] = await _readWithFile(text, undefined, { tool_name, tool_schema });
+    const result = write(ir, { speaker: true });
+    const runtime = file?.getRuntimeParameters();
+    const tools = file?.getToolsSchema()?.toOpenAI();
+    expect(ErrorCollection.empty()).toBe(true);
     
     // Check runtime parameters
     expect(runtime).toBeDefined();
