@@ -1,6 +1,12 @@
 # TypeScript API Reference
 
-This documentation is auto-generated from the TypeScript source code using TypeDoc.
+!!! warning
+
+    The TypeScript API is currently in rapid development and may change frequently. Please do not consider it a stable API. Use at your own risk.
+
+!!! note
+
+    This documentation is auto-generated from the TypeScript source code using TypeDoc.
 
 ## Installation
 
@@ -36,4 +42,4 @@ const markdown = write(ir);
 ## Links
 
 - [Components Documentation](../language/components.md): detailed component specifications with examples and parameters.
-- [TypeScript API Reference](./reference/README.md): auto-generated API reference for TypeScript components and utilities.
+- [TypeScript API Reference](./reference/index.md): auto-generated API reference for TypeScript components and utilities.

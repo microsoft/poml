@@ -19,6 +19,8 @@ dev = [
   "twine",
   "mkdocs",
   "mkdocs-material",
+  "mkdocs-git-revision-date-localized-plugin",
+  "mkdocs-git-authors-plugin",
   "mkdocstrings[python]",
   "mike",
 ]
