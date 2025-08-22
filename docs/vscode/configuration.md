@@ -137,7 +137,7 @@ The API URL can be:
 
 !!! warning
 
-    If you are using Azure OpenAI and encounter a `Resource not found` error, you may want to change the configuration from `https://xxx.cognitiveservices.azure.com/` to https://xxx.cognitiveservices.azure.com/openai` or vice versa. Refer to [Vercel AI Azure Provider](https://ai-sdk.dev/providers/ai-sdk-providers/azure) for more details.
+    If you are using Azure OpenAI and encounter a `Resource not found` error, you may want to change the configuration from `https://xxx.cognitiveservices.azure.com/` to `https://xxx.cognitiveservices.azure.com/openai` or vice versa. Refer to [Vercel AI Azure Provider](https://ai-sdk.dev/providers/ai-sdk-providers/azure) for more details.
 
 ### API Version
 

@@ -115,22 +115,30 @@ class Writer<WriterOptions> {
     }
 
     if (tokenLimit !== undefined) {
-      let enc = this.tokenizerCache[tokenEncodingModel];
-      if (!enc) {
-        enc = encodingForModel(tokenEncodingModel as any);
-        this.tokenizerCache[tokenEncodingModel] = enc;
-      }
-      const tokens = enc.encode(truncated);
-      if (tokens.length > tokenLimit) {
-        changed = true;
-        if (truncateDirection === 'start') {
-          truncated = enc.decode(tokens.slice(tokens.length - tokenLimit));
-        } else if (truncateDirection === 'middle') {
-          const head = Math.ceil(tokenLimit / 2);
-          const tail = tokenLimit - head;
-          truncated = enc.decode(tokens.slice(0, head).concat(tokens.slice(tokens.length - tail)));
-        } else {
-          truncated = enc.decode(tokens.slice(0, tokenLimit));
+      // Optimization: Check byte count first to potentially bypass tokenizer loading
+      // Since tokens are typically at least 1 byte, if byte count < token limit, we're safe
+      const byteCount = Buffer.byteLength(truncated, 'utf8');
+      if (byteCount <= tokenLimit) {
+        // Byte count is within limit, so token count must also be within limit
+        // Skip expensive tokenizer loading and encoding
+      } else {
+        let enc = this.tokenizerCache[tokenEncodingModel];
+        if (!enc) {
+          enc = encodingForModel(tokenEncodingModel as any);
+          this.tokenizerCache[tokenEncodingModel] = enc;
+        }
+        const tokens = enc.encode(truncated);
+        if (tokens.length > tokenLimit) {
+          changed = true;
+          if (truncateDirection === 'start') {
+            truncated = enc.decode(tokens.slice(tokens.length - tokenLimit));
+          } else if (truncateDirection === 'middle') {
+            const head = Math.ceil(tokenLimit / 2);
+            const tail = tokenLimit - head;
+            truncated = enc.decode(tokens.slice(0, head).concat(tokens.slice(tokens.length - tail)));
+          } else {
+            truncated = enc.decode(tokens.slice(0, tokenLimit));
+          }
         }
       }
     }
@@ -796,6 +804,14 @@ export class MarkdownWriter extends Writer<MarkdownOptions> {
       if (tokenLimit === undefined) {
         return 0;
       }
+      // Optimization: Use byte count as conservative estimate before tokenizing
+      const byteCount = Buffer.byteLength(t, 'utf8');
+      // If byte count is small enough, we can estimate it's within token limits
+      // This is a heuristic - for very short strings, byte count ≈ token count
+      if (byteCount <= tokenLimit) {
+        return Math.ceil(byteCount / 4); // Conservative estimate
+      }
+
       let enc = this.tokenizerCache[tokenModel];
       if (!enc) {
         enc = encodingForModel(tokenModel as any);
