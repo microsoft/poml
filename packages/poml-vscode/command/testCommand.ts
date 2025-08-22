@@ -236,12 +236,13 @@ export class TestCommand implements Command {
   }
 
   private vercelRequestParameters(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
+    const { model, provider, ...runtimeWithoutModelProvider } = runtime || {};
     const parameters = {
       model: this.getActiveVercelModel(settings, runtime),
       maxRetries: 0,
       temperature: settings.temperature,
       maxOutputTokens: settings.maxTokens,
-      ...runtime, // This can override model temperature, max output tokens, etc.
+      ...runtimeWithoutModelProvider, // This can override temperature, max output tokens, etc.
     };
     this.log('info', '[Request parameters] ' + JSON.stringify(parameters));
     return parameters;
@@ -301,7 +302,7 @@ export class TestCommand implements Command {
       ...this.vercelRequestParameters(settings, prompt.runtime),
     });
 
-    let lastChunkEndline: boolean = false;
+    let lastChunkEndline: boolean = true;
     for await (const chunk of stream.fullStream) {
       const result = this.processStreamChunk(chunk, lastChunkEndline);
       if (result !== null) {
@@ -428,7 +429,8 @@ export class TestCommand implements Command {
     
     if (runtime?.provider && runtime.provider !== settings.provider) {
       this.log('info', `Provider overridden from '${settings.provider}' to '${runtime.provider}' by runtime`);
-      
+      this.log('info', `Using ${apiUrl} as the API endpoint.`);
+
       // Warn if apiKey or apiUrl are plain strings when provider is overridden
       if (typeof settings.apiKey === 'string' && settings.apiKey) {
         this.log('warn', `API key is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`);
@@ -437,7 +439,7 @@ export class TestCommand implements Command {
         this.log('warn', `API URL is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`);
       }
     }
-    
+
     switch (provider) {
       case 'anthropic':
         return createAnthropic({
@@ -460,16 +462,17 @@ export class TestCommand implements Command {
           apiKey: apiKey
         });
     }
+    throw new Error(`Unsupported provider: ${provider}. Supported providers are: openai, anthropic, microsoft, google.`);
   }
 
   private getActiveVercelModel(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
     const provider = this.getActiveVercelModelProvider(settings, runtime);
     const model = runtime?.model || settings.model;
-    
+
     if (runtime?.model && runtime.model !== settings.model) {
       this.log('info', `Model overridden from '${settings.model}' to '${runtime.model}' by runtime`);
     }
-    
+
     return provider(model);
   }
 

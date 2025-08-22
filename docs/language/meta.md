@@ -353,8 +353,11 @@ All attributes are passed as runtime parameters with automatic type conversion:
 - **presencePenalty**: Reduces repetition based on presence (-2 to 2)
 - **seed**: For deterministic outputs (integer value)
 
-The full parameter list depends on whether you're using standard text generation or structured data generation:
+What parameters are available does not really matter, unless you are passing them to an LLM SDK. POML's built-in VS Code runner is based on the [Vercel AI SDK](https://ai-sdk.dev/). Therefore, the full parameter list depends on whether you're using standard text generation or structured data generation:
+
 - [Text generation parameters](https://ai-sdk.dev/docs/ai-sdk-core/generating-text) - Standard text generation
 - [Structured data parameters](https://ai-sdk.dev/docs/ai-sdk-core/generating-structured-data) - When using response schemas
 
 The [Vercel AI SDK](https://ai-sdk.dev/) automatically handles parameter validation and conversion for different model providers.
+
+If you are using the POML Python SDK, the runtime parameters are converted to snake case and returned as a dictionary. For example, `maxOutputTokens` becomes `max_output_tokens`, and `topP` becomes `top_p`.

@@ -128,12 +128,16 @@ Or use provider-specific URLs:
 
 **Examples:**
 - OpenAI: `https://api.openai.com/v1/`
-- Azure OpenAI: `https://westeurope.api.cognitive.microsoft.com/`
+- Azure OpenAI: `https://westeurope.api.cognitive.microsoft.com/openai`
 - Custom OpenAI-compatible: `https://api.example.com/v2/`
 
 The API URL can be:
 - A **string** for a single URL used across all providers
 - An **object** with provider-specific URLs, useful when different providers require different endpoints
+
+!!! warning
+
+    If you are using Azure OpenAI and encounter a `Resource not found` error, you may want to change the configuration from `https://xxx.cognitiveservices.azure.com/` to https://xxx.cognitiveservices.azure.com/openai` or vice versa. Refer to [Vercel AI Azure Provider](https://ai-sdk.dev/providers/ai-sdk-providers/azure) for more details.
 
 ### API Version
 
