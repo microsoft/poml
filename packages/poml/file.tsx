@@ -356,7 +356,6 @@ export class PomlFile {
             range: position,
             expression: text.trim(),
           });
-          return;
         }
       }
 
@@ -759,7 +758,7 @@ export class PomlFile {
       } else if (parser === 'eval') {
         // Evaluate expression directly with z in context
         const contextWithZ = { z, ...context };
-        const result = this.evaluateExpression(text, contextWithZ, textRange);
+        const result = this.evaluateExpression(text, contextWithZ, textRange, true);
         
         // If evaluation failed, result will be empty string
         if (!result) {

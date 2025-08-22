@@ -672,6 +672,62 @@ describe('message components', () => {
     expect(element[3].speaker).toBe('ai');
   });
 
+  test('tool with runtime parameters and template variables', async () => {
+    const tool_name = 'get_weather';
+    const tool_schema = `{
+      "type": "object",
+      "properties": {
+        "location": {
+          "type": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["celsius", "fahrenheit"],
+          "description": "The unit of temperature"
+        }
+      },
+      "required": ["location"]
+    }`;
+    
+    const text = `<poml>
+<p>What is the weather in San Francisco?</p>
+<tool parser="eval" name="{{ tool_name }}" description="Get the current weather in a specified location.">
+{{ tool_schema }}
+</tool>
+<runtime model="gpt-4.1" provider="microsoft" />
+</poml>`;
+    
+    ErrorCollection.clear();
+    const ir = await read(text, undefined, { tool_name, tool_schema });
+    const runtime = ir.runtime;
+    const tools = ir.tools;
+    
+    // Check runtime parameters
+    expect(runtime).toBeDefined();
+    expect(runtime?.model).toBe('gpt-4.1');
+    expect(runtime?.provider).toBe('microsoft');
+    
+    // Check tool definition
+    expect(tools).toHaveLength(1);
+    expect(tools?.[0].name).toBe('get_weather');
+    expect(tools?.[0].description).toBe('Get the current weather in a specified location.');
+    expect(tools?.[0].parameters).toBeDefined();
+    
+    // Verify the schema was properly parsed
+    const schema = tools?.[0].parameters;
+    expect(schema?.type).toBe('object');
+    expect(schema?.properties?.location).toBeDefined();
+    expect(schema?.properties?.location?.type).toBe('string');
+    expect(schema?.properties?.unit?.enum).toEqual(['celsius', 'fahrenheit']);
+    expect(schema?.required).toEqual(['location']);
+    
+    // Check the rendered message
+    const messages = write(ir, { speaker: true });
+    expect(messages).toHaveLength(1);
+    expect(messages[0].content).toBe('What is the weather in San Francisco?');
+  });
+
   test('pomlMessagesToVercelMessage conversion', () => {
     // Mock helper function for rich content conversion
     const richContentToToolResult = (content: any) => {
