@@ -21,6 +21,41 @@ describe('endToEnd', () => {
     expect(element).toBe('Hello, world!');
   });
 
+  test('whiteSpace', async () => {
+    const text = `<poml>
+  <!-- Preserve exact formatting with 'pre' -->
+  <p whiteSpace="pre">This text    has multiple
+  spaces and
+      indentation preserved.
+
+
+      You can also include endless new lines.</p>
+
+  <!-- Normalize whitespace with 'filter' -->
+  <p whiteSpace="filter">This text    will have
+  normalized    spacing.
+
+  New lines will also be reduced to a space.
+  </p>
+
+  <!-- Trim whitespace with 'trim' -->
+  <p whiteSpace="trim">   This text will have leading    and trailing spaces removed.   </p>
+</poml>`;
+    const element = await poml(text);
+    expect(element).toBe(
+      `This text    has multiple
+  spaces and
+      indentation preserved.
+
+
+      You can also include endless new lines.
+
+This text will have normalized spacing. New lines will also be reduced to a space.
+
+This text will have leading    and trailing spaces removed.`
+    );
+  });
+
   test('charLimitEndToEnd', async () => {
     const text = '<p charLimit="4">abcdefg</p>';
     const element = await poml(text);

@@ -212,11 +212,14 @@ export function trimChildrenWhiteSpace(children: React.ReactNode, props: PropsBa
         } else if (props.whiteSpace === 'filter' || props.whiteSpace === undefined) {
           return trimText(child, index === 0, index === flattenedChildren.length - 1);
         } else if (props.whiteSpace === 'trim') {
-          return index === 0
-            ? child.trimStart()
-            : index === flattenedChildren.length - 1
-              ? child.trimEnd()
-              : child;
+          let trimmed = child;
+          if (index === 0) {
+            trimmed = trimmed.trimStart();
+          }
+          if (index === flattenedChildren.length - 1) {
+            trimmed = trimmed.trimEnd();
+          }
+          return trimmed;
         } else {
           ErrorCollection.add(
             ReadError.fromProps(`"${props.whiteSpace}" is not a valid whiteSpace option.`, props)
