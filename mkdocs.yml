@@ -22,17 +22,19 @@ theme:
     - content.tooltips
   palette:
     - scheme: default
-      primary: deep purple
-      accent: deep purple
+      primary: poml
+      accent: poml
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: deep purple
-      accent: deep purple
+      primary: poml
+      accent: poml
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
