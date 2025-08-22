@@ -18,6 +18,23 @@ Configure POML in VS Code settings (`Ctrl+,` or `Cmd+,`).
 }
 ```
 
+For multiple providers with different API keys, which is useful when overriding the default provider setting in POML files:
+```json
+{
+  "poml.languageModel.provider": "openai",
+  "poml.languageModel.model": "gpt-4o",
+  "poml.languageModel.apiKey": {
+    "openai": "sk-your-openai-key",
+    "anthropic": "sk-ant-your-anthropic-key",
+    "google": "your-google-key"
+  },
+  "poml.languageModel.apiUrl": {
+    "openai": "https://api.openai.com/v1/",
+    "microsoft": "https://your-resource.openai.azure.com/"
+  }
+}
+```
+
 ## Language Model Configuration
 
 The following settings mainly control the language model used for POML testing feature within VSCode.
@@ -71,7 +88,24 @@ Maximum number of completion tokens to generate.
   "poml.languageModel.apiKey": "your-api-key-here"
 }
 ```
+
+Or use provider-specific keys:
+```json
+{
+  "poml.languageModel.apiKey": {
+    "openai": "sk-your-openai-key",
+    "anthropic": "sk-ant-your-anthropic-key",
+    "google": "your-google-key",
+    "microsoft": "your-azure-key"
+  }
+}
+```
+
 **Required** for most providers. Keep this secure and never commit to version control.
+
+The API key can be:
+- A **string** for a single key used across all providers
+- An **object** with provider-specific keys, useful when switching between providers or when prompts override the provider at runtime
 
 ### API URL
 
@@ -80,10 +114,26 @@ Maximum number of completion tokens to generate.
   "poml.languageModel.apiUrl": "https://api.openai.com/v1/"
 }
 ```
+
+Or use provider-specific URLs:
+```json
+{
+  "poml.languageModel.apiUrl": {
+    "openai": "https://api.openai.com/v1/",
+    "microsoft": "https://westeurope.api.cognitive.microsoft.com/",
+    "anthropic": "https://api.anthropic.com/"
+  }
+}
+```
+
 **Examples:**
 - OpenAI: `https://api.openai.com/v1/`
 - Azure OpenAI: `https://westeurope.api.cognitive.microsoft.com/`
 - Custom OpenAI-compatible: `https://api.example.com/v2/`
+
+The API URL can be:
+- A **string** for a single URL used across all providers
+- An **object** with provider-specific URLs, useful when different providers require different endpoints
 
 ### API Version
 

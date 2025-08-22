@@ -3,12 +3,14 @@ import * as fs from 'fs';
 
 export type LanguageModelProvider = 'openai' | 'microsoft' | 'anthropic' | 'google';
 
+export type ApiConfigValue = string | { [provider: string]: string };
+
 export interface LanguageModelSetting {
   provider: LanguageModelProvider;
   model: string;
   temperature?: number;
-  apiKey?: string;
-  apiUrl?: string;
+  apiKey?: ApiConfigValue;
+  apiUrl?: ApiConfigValue;
   apiVersion?: string;
   maxTokens?: number;
 }
@@ -61,8 +63,8 @@ export class Settings {
       provider: pomlSettings.get<LanguageModelProvider>('languageModel.provider', 'openai'),
       model: pomlSettings.get<string>('languageModel.model', ''),
       temperature: pomlSettings.get<number>('languageModel.temperature', 0.5),
-      apiKey: pomlSettings.get<string>('languageModel.apiKey', '') || undefined,
-      apiUrl: pomlSettings.get<string>('languageModel.apiUrl', '') || undefined,
+      apiKey: pomlSettings.get<ApiConfigValue>('languageModel.apiKey', '') || undefined,
+      apiUrl: pomlSettings.get<ApiConfigValue>('languageModel.apiUrl', '') || undefined,
       apiVersion: pomlSettings.get<string>('languageModel.apiVersion', '') || undefined,
       maxTokens: pomlSettings.get<number>('languageModel.maxTokens', 0) || undefined,
     }

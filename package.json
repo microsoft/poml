@@ -281,16 +281,40 @@
           "markdownDescription": "The maximum number of completion tokens. Use 0 for unlimited number of tokens."
         },
         "poml.languageModel.apiKey": {
-          "type": "string",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "A single API key for all providers"
+            },
+            {
+              "type": "object",
+              "description": "Provider-specific API keys",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          ],
           "description": "Language Model API Key",
           "default": "",
-          "markdownDescription": "The API token for the language model provider."
+          "markdownDescription": "The API token for the language model provider. Can be a string for a single key, or an object with provider-specific keys like `{\"openai\": \"sk-...\", \"anthropic\": \"sk-ant-...\"}`."
         },
         "poml.languageModel.apiUrl": {
-          "type": "string",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "A single API URL for all providers"
+            },
+            {
+              "type": "object",
+              "description": "Provider-specific API URLs",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          ],
           "description": "Language Model API URL",
           "default": "",
-          "markdownDescription": "The API endpoint for the language model provider. When using Azure OpenAI, this should be the endpoint of the deployment, e.g., `https://westeurope.api.cognitive.microsoft.com/`. Or it can be `https://api.example.com/v2/` for OpenAI-like providers."
+          "markdownDescription": "The API endpoint for the language model provider. Can be a string for a single URL, or an object with provider-specific URLs like `{\"openai\": \"https://api.openai.com/v1\", \"microsoft\": \"https://westeurope.api.cognitive.microsoft.com/\"}`. When using Azure OpenAI, this should be the endpoint of the deployment."
         },
         "poml.languageModel.apiVersion": {
           "type": "string",

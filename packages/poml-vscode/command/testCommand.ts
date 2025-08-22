@@ -17,7 +17,7 @@ import ModelClient from '@azure-rest/ai-inference';
 import { AzureKeyCredential } from '@azure/core-auth';
 import { createSseStream } from '@azure/core-sse';
 import { fileURLToPath } from 'url';
-import { LanguageModelSetting } from 'poml-vscode/settings';
+import { LanguageModelSetting, ApiConfigValue } from 'poml-vscode/settings';
 import { IncomingMessage } from 'node:http';
 import { getTelemetryReporter } from 'poml-vscode/util/telemetryClient';
 import { TelemetryEvent } from 'poml-vscode/util/telemetryServer';
@@ -117,13 +117,14 @@ export class TestCommand implements Command {
       return;
     }
     
-    if (!setting.apiKey) {
-      vscode.window.showErrorMessage('API key is not configured. Please set your API key in the extension settings.');
-      this.log('error', 'Prompt test aborted: setting.apiKey not configured.');
-      return;
+    const apiKey = this.getProviderApiKey(setting);
+    if (!apiKey) {
+      vscode.window.showWarningMessage('API key is not configured. Please set your API key in the extension settings.');
+      this.log('warn', 'API key is not configured for the provider.');
     }
 
-    if (!setting.apiUrl) {
+    const apiUrl = this.getProviderApiUrl(setting);
+    if (!apiUrl) {
       this.log('info', 'No API URL configured, using default for the provider.');
     }
 
@@ -221,8 +222,12 @@ export class TestCommand implements Command {
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
-    if (settings.provider === 'microsoft' && settings.apiUrl?.includes('.models.ai.azure.com')) {
-      yield* this.azureAiStream(prompt.content as Message[], settings);
+    const runtime = prompt.runtime;
+    const provider = runtime?.provider || settings.provider;
+    const apiUrl = this.getProviderApiUrl(settings, runtime);
+    
+    if (provider === 'microsoft' && apiUrl?.includes('.models.ai.azure.com')) {
+      yield* this.azureAiStream(prompt.content as Message[], settings, runtime);
     } else if (prompt.responseSchema && (!prompt.tools || prompt.tools.length === 0)) {
       yield* this.handleResponseSchemaStream(prompt, settings);
     } else {
@@ -232,7 +237,7 @@ export class TestCommand implements Command {
 
   private vercelRequestParameters(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
     const parameters = {
-      model: this.getActiveVercelModel(settings),
+      model: this.getActiveVercelModel(settings, runtime),
       maxRetries: 0,
       temperature: settings.temperature,
       maxOutputTokens: settings.maxTokens,
@@ -350,15 +355,18 @@ export class TestCommand implements Command {
 
   private async *azureAiStream(
     prompt: Message[],
-    settings: LanguageModelSetting
+    settings: LanguageModelSetting,
+    runtime?: { [key: string]: any }
   ): AsyncGenerator<string> {
-    if (!settings.apiUrl || !settings.apiKey) {
+    const apiUrl = this.getProviderApiUrl(settings, runtime);
+    const apiKey = this.getProviderApiKey(settings, runtime);
+    if (!apiUrl || !apiKey) {
       throw new Error('Azure AI API URL or API key is not configured.');
     }
     if (!this.isChatting) {
       throw new Error('Azure AI is only supported for chat models.');
     }
-    const client = ModelClient(settings.apiUrl, new AzureKeyCredential(settings.apiKey));
+    const client = ModelClient(apiUrl, new AzureKeyCredential(apiKey));
 
     const args: any = {};
     if (settings.maxTokens) {
@@ -413,34 +421,56 @@ export class TestCommand implements Command {
     }
   }
 
-  private getActiveVercelModelProvider(settings: LanguageModelSetting) {
-    switch (settings.provider) {
+  private getActiveVercelModelProvider(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
+    const provider = runtime?.provider || settings.provider;
+    const apiKey = this.getProviderApiKey(settings, runtime);
+    const apiUrl = this.getProviderApiUrl(settings, runtime);
+    
+    if (runtime?.provider && runtime.provider !== settings.provider) {
+      this.log('info', `Provider overridden from '${settings.provider}' to '${runtime.provider}' by runtime`);
+      
+      // Warn if apiKey or apiUrl are plain strings when provider is overridden
+      if (typeof settings.apiKey === 'string' && settings.apiKey) {
+        this.log('warn', `API key is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`);
+      }
+      if (typeof settings.apiUrl === 'string' && settings.apiUrl) {
+        this.log('warn', `API URL is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`);
+      }
+    }
+    
+    switch (provider) {
       case 'anthropic':
         return createAnthropic({
-          baseURL: settings.apiUrl,
-          apiKey: settings.apiKey,
+          baseURL: apiUrl,
+          apiKey: apiKey,
         });
       case 'microsoft':
         return createAzure({
-          baseURL: settings.apiUrl,
-          apiKey: settings.apiKey
+          baseURL: apiUrl,
+          apiKey: apiKey
         });
       case 'openai':
         return createOpenAI({
-          baseURL: settings.apiUrl,
-          apiKey: settings.apiKey
+          baseURL: apiUrl,
+          apiKey: apiKey
         });
       case 'google':
         return createGoogleGenerativeAI({
-          baseURL: settings.apiUrl,
-          apiKey: settings.apiKey
+          baseURL: apiUrl,
+          apiKey: apiKey
         });
     }
   }
 
-  private getActiveVercelModel(settings: LanguageModelSetting) {
-    const provider = this.getActiveVercelModelProvider(settings);
-    return provider(settings.model);
+  private getActiveVercelModel(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
+    const provider = this.getActiveVercelModelProvider(settings, runtime);
+    const model = runtime?.model || settings.model;
+    
+    if (runtime?.model && runtime.model !== settings.model) {
+      this.log('info', `Model overridden from '${settings.model}' to '${runtime.model}' by runtime`);
+    }
+    
+    return provider(model);
   }
 
   private richContentToVercelToolResult(content: RichContent) {
@@ -563,6 +593,30 @@ export class TestCommand implements Command {
   private getLanguageModelSettings(uri: vscode.Uri) {
     const settings = this.previewManager.previewConfigurations;
     return settings.loadAndCacheSettings(uri).languageModel;
+  }
+
+  private extractProviderValue(value: ApiConfigValue | undefined, provider: string): string | undefined {
+    if (!value) return undefined;
+    
+    if (typeof value === 'string') {
+      return value || undefined;
+    }
+    
+    // It's an object, so extract the provider-specific value
+    const extracted = value[provider];
+    return extracted || undefined;
+  }
+
+  private getProviderApiKey(settings: LanguageModelSetting, runtime?: { [key: string]: any }): string | undefined {
+    // Runtime can override the provider
+    const provider = runtime?.provider || settings.provider;
+    return this.extractProviderValue(settings.apiKey, provider);
+  }
+
+  private getProviderApiUrl(settings: LanguageModelSetting, runtime?: { [key: string]: any }): string | undefined {
+    // Runtime can override the provider
+    const provider = runtime?.provider || settings.provider;
+    return this.extractProviderValue(settings.apiUrl, provider);
   }
 
   private log(level: 'error' | 'warn' | 'info', message: string) {
