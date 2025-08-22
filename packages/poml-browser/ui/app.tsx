@@ -1,3 +1,4 @@
+import '@mantine/core/styles.css';
 import React, { useState, useEffect } from 'react';
 import {
   MantineProvider,
@@ -15,6 +16,7 @@ import CardModal from './components/CardModal';
 import Settings from './components/Settings';
 import { ExtractedContent } from '@functions/types';
 import { CardModel, createCard, isTextContent } from '@functions/cardModel';
+import { shadcnCssVariableResolver } from './themes/cssVariableResolver';
 import { shadcnTheme } from './themes/zinc';
 import { googleDocsManager } from '@functions/gdoc';
 import {
@@ -29,9 +31,9 @@ import { NotificationProvider, useNotifications } from './contexts/NotificationC
 import { ThemeProvider } from './contexts/ThemeContext';
 import TopNotifications from './components/TopNotifications';
 import BottomNotifications from './components/BottomNotifications';
-
-import '@mantine/core/styles.css';
 import pomlHelper from '@functions/pomlHelper';
+
+import './themes/style.css';
 
 // Inner component that uses the notification system
 const AppContent: React.FC = () => {
@@ -373,7 +375,6 @@ const AppContent: React.FC = () => {
         <Button
           fullWidth
           variant="outline"
-          color="primary"
           fz="md"
           loading={loading}
           onClick={handleExtractContent}
@@ -383,7 +384,6 @@ const AppContent: React.FC = () => {
         <Button
           fullWidth
           variant="filled"
-          color="primary"
           fz="md"
           leftSection={<IconClipboard />}
           disabled={cards.length === 0}
@@ -410,7 +410,11 @@ const AppContent: React.FC = () => {
 // Main App component with providers
 const App: React.FC = () => {
   return (
-    <MantineProvider theme={shadcnTheme} defaultColorScheme="auto">
+    <MantineProvider
+      theme={shadcnTheme}
+      cssVariablesResolver={shadcnCssVariableResolver}
+      defaultColorScheme="auto"
+    >
       <ThemeProvider>
         <NotificationProvider>
           <AppContent />

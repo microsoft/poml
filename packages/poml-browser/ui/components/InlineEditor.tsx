@@ -39,10 +39,10 @@ export const InlineEditor: React.FC<InlineEditorProps> = ({
         autoFocus
       />
       <Group justify="flex-end">
-        <Button variant="outline" color="primary" size="xs" onClick={handleCancel}>
+        <Button variant="outline" size="xs" onClick={handleCancel}>
           Cancel
         </Button>
-        <Button variant="filled" color="primary" size="xs" onClick={handleOk}>
+        <Button variant="filled" size="xs" onClick={handleOk}>
           OK
         </Button>
       </Group>

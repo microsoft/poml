@@ -101,14 +101,13 @@ export const CardModal: React.FC<CardModalProps> = ({ content, opened, onClose, 
           </Text>
 
           <Group>
-            <Button variant="outline" color="primary" onClick={handleClose}>
+            <Button variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button
               onClick={handleSave}
               disabled={!hasChanges}
               variant={hasChanges ? 'filled' : 'light'}
-              color="primary"
             >
               {hasChanges ? 'Save Changes' : 'Close'}
             </Button>
