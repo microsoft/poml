@@ -11,7 +11,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAzure } from '@ai-sdk/azure';
-import { ModelMessage, streamText, tool, jsonSchema, Tool, TextStreamPart, TextPart, ImagePart, ToolCallPart, ToolResultPart } from 'ai';
+import { ModelMessage, streamText, streamObject, tool, Output, jsonSchema, Tool, TextStreamPart, TextPart, ImagePart, ToolCallPart, ToolResultPart } from 'ai';
 
 import ModelClient from '@azure-rest/ai-inference';
 import { AzureKeyCredential } from '@azure/core-auth';
@@ -223,18 +223,59 @@ export class TestCommand implements Command {
   ): AsyncGenerator<string> {
     if (settings.provider === 'microsoft' && settings.apiUrl?.includes('.models.ai.azure.com')) {
       yield* this.azureAiStream(prompt.content as Message[], settings);
+    } else if (prompt.responseSchema && (!prompt.tools || prompt.tools.length === 0)) {
+      yield* this.handleResponseSchemaStream(prompt, settings);
     } else {
-      yield* this.handleTextStream(prompt, settings);
+      yield* this.handleRegularTextStream(prompt, settings);
     }
   }
 
-  private async *handleTextStream(
+  private async *handleResponseSchemaStream(
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
     const model = this.getActiveVercelModel(settings);
     const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
       : prompt.content as string;
+
+    if (prompt.tools) {
+      throw new Error('Tools are not supported when response schema is provided.');
+    }
+
+    if (!prompt.responseSchema) {
+      throw new Error('Response schema is required but not provided.');
+    }
+
+    const stream = streamObject({
+      model: model,
+      prompt: vercelPrompt,
+      onError: ({ error }) => {
+        // Immediately throw the error
+        throw error;
+      },
+      schema: this.toVercelResponseSchema(prompt.responseSchema),
+      maxRetries: 0,
+      temperature: settings.temperature,
+      maxOutputTokens: settings.maxTokens,
+      ...prompt.runtime,
+    });
+
+    for await (const text of stream.textStream) {
+      yield text;
+    }
+  }
+
+  private async *handleRegularTextStream(
+    prompt: PreviewResponse,
+    settings: LanguageModelSetting,
+  ): AsyncGenerator<string> {
+    const model = this.getActiveVercelModel(settings);
+    const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
+      : prompt.content as string;
+
+    if (prompt.responseSchema) {
+      this.log('warn', 'Output schema and tools are both provided. This is experimental and is only supported for some models.');
+    }
 
     const stream = streamText({
       model: model,
@@ -244,24 +285,9 @@ export class TestCommand implements Command {
         throw error;
       },
       tools: prompt.tools ? this.toVercelTools(prompt.tools) : undefined,
-      experimental_output: prompt.responseSchema
-        ? {
-            type: 'object',
-            responseFormat: { type: 'json', schema: prompt.responseSchema },
-            parsePartial: async ({ text }) => {
-              try {
-                return { partial: JSON.parse(text) };
-              } catch {
-                return undefined;
-              }
-            },
-            parseOutput: async ({ text }) => JSON.parse(text),
-          }
-        : undefined,
-      maxRetries: 0,
-      temperature: settings.temperature,
-      maxOutputTokens: settings.maxTokens,
-      ...prompt.runtime,
+      experimental_output: prompt.responseSchema && Output.object({
+        schema: this.toVercelResponseSchema(prompt.responseSchema),
+      })
     });
 
     let lastChunkEndline: boolean = false;
@@ -509,6 +535,10 @@ export class TestCommand implements Command {
     return result;
   }
 
+  private toVercelResponseSchema(responseSchema: { [key: string]: any }) {
+    return jsonSchema(responseSchema);
+  }
+
   private toMessageObjects(messages: Message[], style: 'openai' | 'google') {
     const speakerMapping = {
       ai: 'assistant',
@@ -529,7 +559,7 @@ export class TestCommand implements Command {
     return settings.loadAndCacheSettings(uri).languageModel;
   }
 
-  private log(level: 'error' | 'info', message: string) {
+  private log(level: 'error' | 'warn' | 'info', message: string) {
     const tzOffset = new Date().getTimezoneOffset() * 60000;
     const time = new Date(Date.now() - tzOffset).toISOString().replace('T', ' ').replace('Z', '');
     this.outputChannel.appendLine(`${time} [${level}] ${message}`);

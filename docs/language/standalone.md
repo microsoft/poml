@@ -399,7 +399,9 @@ The expression can return either:
 
 Tool registration enables AI models to interact with external functions during conversation. Tools are function definitions that tell the AI model what functions are available, what parameters they expect, and what they do. Tool registration is done using the `<tool-definition>` or `<tool>` tag (both are equivalent).
 
-**Note:** Tools can be used alongside response schemas.
+!!! note
+
+    Using tools together with response schema is only supported for some models, e.g., those from OpenAI.
 
 ### JSON Schema Format
 
