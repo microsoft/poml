@@ -140,7 +140,14 @@ export const AnyOrFree = component('AnyOrFree')((
  * @param {'human'|'ai'|'system'} speaker - The speaker of the content. By default, it's determined by the context and the content.
  * @param name - The name of the content, used in serialization.
  * @param type - The type of the content, used in serialization.
- * @param {object} writerOptions - An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {object} writerOptions - **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {'pre'|'filter'|'trim'} whiteSpace - **Experimental.** Controls how whitespace is handled in text content. 
+ *   `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+ *   `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+ *   `'trim'`: Trims whitespace from the beginning and end.
+ * @param {number} charLimit - **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} tokenLimit - **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} priority - **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
  *
  * @example
  * ```xml
@@ -158,6 +165,15 @@ export const AnyOrFree = component('AnyOrFree')((
  * <poml syntax="markdown" speaker="human">
  *   <p>You are a helpful assistant.</p>
  *   <p>What is the capital of France?</p>
+ * </poml>
+ * ```
+ * 
+ * **Experimental usage with limits and priority:**
+ * 
+ * ```xml
+ * <poml syntax="markdown" tokenLimit="10">
+ *   <p priority="1">This has lower priority and may be truncated first.</p>
+ *   <p priority="3">This has higher priority and will be preserved longer.</p>
  * </poml>
  * ```
  */
@@ -241,7 +257,14 @@ export const Paragraph = component('Paragraph', ['p'])((
  * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'text'} syntax - The syntax of the content.
  * @param className - A class name for quickly styling the current block with stylesheets.
  * @param {'human'|'ai'|'system'} speaker - The speaker of the content. By default, it's determined by the context and the content.
- * @param {object} writerOptions - An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {object} writerOptions - **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {'pre'|'filter'|'trim'} whiteSpace - **Experimental.** Controls how whitespace is handled in text content. 
+ *   `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+ *   `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+ *   `'trim'`: Trims whitespace from the beginning and end.
+ * @param {number} charLimit - **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} tokenLimit - **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} priority - **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
  *
  * @example
  * ```xml

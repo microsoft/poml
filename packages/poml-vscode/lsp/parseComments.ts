@@ -238,7 +238,7 @@ function generatePythonMethod(tag: ComponentSpec): string {
     paramsSignatureList.push(`        ${paramName}: ${typeHint} = None`);
     callArgsList.push(`${paramName}=${paramName}`);
 
-    let paramDesc = param.description.replace(/\n/g, '\n            ');
+    let paramDesc = param.description.replace(/\n/g, '\n                ');
     if (param.defaultValue !== undefined) {
       const defValStr =
         typeof param.defaultValue === 'string' ? `"${param.defaultValue}"` : param.defaultValue;

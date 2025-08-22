@@ -42,7 +42,14 @@ Bold (`<b>`) emphasizes text in a bold style when using markup syntaxes.
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### CaptionedParagraph
 
@@ -75,7 +82,14 @@ CaptionedParagraph (`<cp>` for short) creates a paragraph with a customized capt
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Code
 
@@ -103,7 +117,14 @@ const x = 42;
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Header
 
@@ -126,7 +147,14 @@ Use SubContent (`<section>`) for nested content.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Inline
 
@@ -147,7 +175,14 @@ One might notice problematic renderings (e.g., speaker not applied) when using i
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Italic
 
@@ -164,7 +199,14 @@ Your <i>italicized</i> text.
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### List
 
@@ -189,7 +231,14 @@ When used with markup syntaxes, a bullet or numbering is added.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### ListItem
 
@@ -213,7 +262,14 @@ In markup mode, it is rendered with the specified bullet or numbering style.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Newline
 
@@ -232,7 +288,14 @@ In serializer syntaxes, it's ignored.
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Paragraph
 
@@ -253,7 +316,14 @@ It's mostly used for text contents.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Strikethrough
 
@@ -270,7 +340,14 @@ Strikethrough (`<s>`, `<strike>`) indicates removed or invalid text in markup sy
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### SubContent
 
@@ -295,7 +372,14 @@ The headers within the section will be automatically adjusted to a lower level.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Text
 
@@ -327,6 +411,15 @@ To render the whole prompt in markdown syntax with a "human" speaker:
 </poml>
 ```
 
+**Experimental usage with limits and priority:**
+
+```xml
+<poml syntax="markdown" tokenLimit="10">
+  <p priority="1">This has lower priority and may be truncated first.</p>
+  <p priority="3">This has higher priority and will be preserved longer.</p>
+</poml>
+```
+
 #### Parameters
 
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
@@ -334,7 +427,14 @@ To render the whole prompt in markdown syntax with a "human" speaker:
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Underline
 
@@ -351,7 +451,14 @@ This text is <u>underlined</u>.
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ## Intentions
 
@@ -396,7 +503,14 @@ It can also be used to demonstrate the desired output style, clarifying the stru
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### ExampleInput
 
@@ -430,7 +544,14 @@ When used with a template:
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### ExampleOutput
 
@@ -464,7 +585,14 @@ When used with a template:
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### ExampleSet
 
@@ -507,7 +635,14 @@ You can also choose to use `<example>` purely without example set.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Hint
 
@@ -535,7 +670,14 @@ It is usually a short and concise statement that guides the LLM in the right dir
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Introducer
 
@@ -563,7 +705,14 @@ It serves as a context introducing what is expected to follow.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### OutputFormat
 
@@ -594,7 +743,14 @@ such as a PDF file or a video.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Question
 
@@ -624,7 +780,14 @@ The question is followed by a prompt for answer (e.g., `Answer:`) to guide the m
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Role
 
@@ -653,7 +816,14 @@ such as a scientist, poet, child, or any other persona you choose.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### StepwiseInstructions
 
@@ -687,7 +857,14 @@ Each step should be concise and clear, and the list should be easy to follow.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Task
 
@@ -729,7 +906,14 @@ When including a list of steps:
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ## Data Displays
 
@@ -757,7 +941,14 @@ To display a Word document without including the real multimedia:
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Image
 
@@ -786,7 +977,14 @@ Note that syntax must be specified as `multimedia` to show the image.
     Otherwise, the alt text will be shown. By default, it's `multimedia` when `alt` is not specified. Otherwise, it's undefined (inherit from parent).
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Object
 
@@ -805,7 +1003,14 @@ When in serialize mode, it's serialized according to the given serializer.
 - **data**: Object. The data object to render.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Table
 
@@ -842,7 +1047,14 @@ To import an excel file, and display the first 10 records in csv syntax:
 - **maxColumns**: Number. The maximum number of columns to display. If not provided, all columns will be displayed.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ## Utilities
 
@@ -863,7 +1075,14 @@ Wrap the contents in a AI message.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### Conversation
 
@@ -922,7 +1141,14 @@ Wrap the contents in a user message.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### MessageContent
 
@@ -955,7 +1181,14 @@ Wrap the contents in a system message.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
 - **name**: The name of the content, used in serialization.
 - **type**: The type of the content, used in serialization.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ### ToolRequest
 
@@ -1049,4 +1282,11 @@ Convert HTML to structured POML components:
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.

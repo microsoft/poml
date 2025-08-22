@@ -72,16 +72,21 @@ nav:
   - Tutorial:
     - Quick Start: tutorial/quickstart.md
   - Language Spec:
-    - Write .poml Files: language/standalone.md
+    - Basic Syntax: language/basic.md
+    - Template Engine: language/template.md
     - Meta: language/meta.md
-    - Components: language/components.md
+    - Fine-grained Control:
+      - White Space Control: language/white_space.md
+      - Token Control: language/token.md
+    - References:
+      - Components: language/components.md
   - Visual Studio Code:
     - Overview: vscode/index.md
     - Features: vscode/features.md
     - Configuration: vscode/configuration.md
   - TypeScript:
     - Overview: typescript/index.md
-    - Modules:
+    - References:
       - index: typescript/reference/index.md
       - base: typescript/reference/base.md
       - cli: typescript/reference/cli.md
@@ -94,6 +99,7 @@ nav:
     - References:
       - Core: python/reference/core.md
       - Integration: python/reference/integration.md
+      - Prompt: python/reference/prompt.md
   - Deep Dive:
     - IR Specification: deep-dive/ir.md
     - Proposals:

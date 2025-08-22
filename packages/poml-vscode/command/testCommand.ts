@@ -599,8 +599,10 @@ export class TestCommand implements Command {
   }
 
   private extractProviderValue(value: ApiConfigValue | undefined, provider: string): string | undefined {
-    if (!value) return undefined;
-    
+    if (!value) {
+      return undefined;
+    }
+
     if (typeof value === 'string') {
       return value || undefined;
     }

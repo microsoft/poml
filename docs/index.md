@@ -18,7 +18,6 @@ Welcome to the Prompt Orchestration Markup Language (POML) documentation.
 ## Sitemap
 
 - [Language Basics](./tutorial/quickstart.md): Get started with POML syntax and structure.
-- [Write .poml Files](./language/standalone.md): Learn how to create
 - [VS Code Extension](./vscode/index.md): Enhance your development experience with the POML Visual Studio Code extension.
 - [TypeScript SDK](./typescript/index.md): Use the POML TypeScript API for building applications.
 - [Python SDK](./python/index.md): Integrate POML into your Python projects.
