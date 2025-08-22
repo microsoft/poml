@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { MantineProvider, Stack, Button, Group, ActionIcon } from '@mantine/core';
+import {
+  MantineProvider,
+  Stack,
+  Button,
+  Group,
+  ActionIcon,
+  Title,
+  useMantineTheme
+} from '@mantine/core';
 import { useListState } from '@mantine/hooks';
-import { IconClipboard, IconSettings } from '@tabler/icons-react';
+import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
 import EditableCardList from './components/EditableCardList';
 import CardModal from './components/CardModal';
 import Settings from './components/Settings';
@@ -34,7 +42,7 @@ const AppContent: React.FC = () => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isDraggingOverDivider, setIsDraggingOverDivider] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  
+
   // Use the notification system
   const { showError, showSuccess, showWarning } = useNotifications();
 
@@ -65,30 +73,31 @@ const AppContent: React.FC = () => {
       // Always reset the drag state on drop
       setIsDraggingOver(false);
       setIsDraggingOverDivider(false);
-      
+
       // Only handle drops if not over a divider (dividers handle their own drops)
       if (!isDraggingOverDivider) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         try {
           const dropData = await handleDropEvent(e);
           const newCards: CardModel[] = [];
-          
+
           // Create cards for dropped files
           for (const file of dropData.files) {
             const card = createCard({
-              content: file.content instanceof ArrayBuffer 
-                ? {
-                    type: 'binary',
-                    value: file.content,
-                    mimeType: file.type,
-                    encoding: 'binary'
-                  }
-                : {
-                    type: 'text',
-                    value: file.content as string
-                  },
+              content:
+                file.content instanceof ArrayBuffer
+                  ? {
+                      type: 'binary',
+                      value: file.content,
+                      mimeType: file.type,
+                      encoding: 'binary'
+                    }
+                  : {
+                      type: 'text',
+                      value: file.content as string
+                    },
               title: file.name,
               metadata: {
                 source: 'file'
@@ -96,7 +105,7 @@ const AppContent: React.FC = () => {
             });
             newCards.push(card);
           }
-          
+
           // Create card for text content if no files
           if (dropData.files.length === 0 && dropData.plainText) {
             const card = createCard({
@@ -110,11 +119,16 @@ const AppContent: React.FC = () => {
             });
             newCards.push(card);
           }
-          
+
           if (newCards.length > 0) {
             // Add all new cards at the end
             cardsHandlers.append(...newCards);
-            showSuccess(`Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`, 'Content Added', undefined, 'top');
+            showSuccess(
+              `Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`,
+              'Content Added',
+              undefined,
+              'top'
+            );
           }
         } catch (error) {
           console.error('Failed to handle drop:', error);
@@ -159,7 +173,7 @@ const AppContent: React.FC = () => {
         extractedCards.forEach(card => {
           cardsHandlers.append(card);
         });
-        
+
         hideLoading();
         showSuccess(`Extracted ${extractedCards.length} content cards successfully`);
       } else {
@@ -193,7 +207,12 @@ const AppContent: React.FC = () => {
 
       // Copy to clipboard with support for images and text
       await writeRichContentToClipboard(pomlContent);
-      showSuccess(`Copied ${cards.length} cards to clipboard`, 'POML Content Copied', undefined, 'bottom');
+      showSuccess(
+        `Copied ${cards.length} cards to clipboard`,
+        'POML Content Copied',
+        undefined,
+        'bottom'
+      );
     } catch (error) {
       showError(`Failed to copy cards: ${(error as Error).message}`, 'Copy Failed');
     }
@@ -211,7 +230,7 @@ const AppContent: React.FC = () => {
       isManual: card.metadata?.source === 'manual',
       debug: card.metadata?.debug
     };
-    
+
     setSelectedCard(extractedContent);
     setModalOpened(true);
   };
@@ -233,7 +252,7 @@ const AppContent: React.FC = () => {
         return;
       }
 
-      const createCardHelper = (title: string, content: string, metadata: any = {}): CardModel => 
+      const createCardHelper = (title: string, content: string, metadata: any = {}): CardModel =>
         createCard({
           title,
           content: { type: 'text', value: content },
@@ -259,8 +278,8 @@ const AppContent: React.FC = () => {
               const dataUrl = await arrayBufferToDataUrl(await file.arrayBuffer(), file.type);
               const card = createCard({
                 title: file.name,
-                content: { 
-                  type: 'binary', 
+                content: {
+                  type: 'binary',
                   value: dataUrl.split(',')[1], // Remove data:image/...;base64, prefix
                   mimeType: file.type,
                   encoding: 'base64'
@@ -292,32 +311,47 @@ const AppContent: React.FC = () => {
     return <Settings onBack={() => setShowSettings(false)} />;
   }
 
+  const theme = useMantineTheme();
   return (
     <Stack
+      p="md"
       style={{
         width: '100%',
         minWidth: '200px',
         height: '100vh',
-        padding: '16px',
         overflow: 'auto',
         position: 'relative',
-        ...(isDraggingOver ? {
-          backgroundColor: 'rgba(34, 139, 230, 0.05)',
-          border: '2px dashed rgba(34, 139, 230, 0.3)',
-          borderRadius: '8px'
-        } : {})
+        ...(isDraggingOver
+          ? {
+              backgroundColor: `${theme.colors.purple[5]}20`,
+              border: `2px dashed ${theme.colors.purple[8]}50`,
+              borderRadius: theme.radius.sm
+            }
+          : {})
       }}
     >
-      {/* Header with settings button */}
-      <Group justify="space-between" style={{ marginBottom: '8px' }}>
-        <div></div>
-        <ActionIcon
-          variant="subtle"
-          onClick={() => setShowSettings(true)}
-          aria-label="Settings"
-        >
-          <IconSettings size={18} />
-        </ActionIcon>
+      {/* Header with title and action buttons */}
+      <Group justify="space-between" mb="md">
+        <Title order={4}>POMPad</Title>
+        <Group gap="xs">
+          <ActionIcon
+            variant="subtle"
+            onClick={() => console.log('Open history')}
+            aria-label="History"
+          >
+            <IconHistory fontSize={theme.fontSizes.lg} />
+          </ActionIcon>
+          <ActionIcon
+            variant="subtle"
+            onClick={() => console.log('Open notifications')}
+            aria-label="Notifications"
+          >
+            <IconBell fontSize={theme.fontSizes.lg} />
+          </ActionIcon>
+          <ActionIcon variant="subtle" onClick={() => setShowSettings(true)} aria-label="Settings">
+            <IconSettings fontSize={theme.fontSizes.lg} />
+          </ActionIcon>
+        </Group>
       </Group>
 
       <EditableCardList
@@ -340,6 +374,7 @@ const AppContent: React.FC = () => {
           fullWidth
           variant="outline"
           color="primary"
+          fz="md"
           loading={loading}
           onClick={handleExtractContent}
         >
@@ -349,11 +384,12 @@ const AppContent: React.FC = () => {
           fullWidth
           variant="filled"
           color="primary"
-          leftSection={<IconClipboard size={16} />}
+          fz="md"
+          leftSection={<IconClipboard />}
           disabled={cards.length === 0}
           onClick={handleCopyAllCards}
         >
-          Copy All Cards ({cards.length})
+          Export to Clipboard
         </Button>
       </Group>
 
