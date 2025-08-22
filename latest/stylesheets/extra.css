@@ -1,0 +1,11 @@
+[data-md-color-primary="poml"] {
+  --md-primary-fg-color:        #C43B99;
+  --md-primary-fg-color--light: #EAACD2;
+  --md-primary-fg-color--dark:  #780059;
+}
+
+[data-md-color-accent="poml"] {
+  --md-accent-fg-color:         #FFD15D;
+  --md-accent-fg-color--light:  #FDDCAA;
+  --md-accent-fg-color--dark:   #8A200F;
+}
