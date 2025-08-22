@@ -230,11 +230,22 @@ export class TestCommand implements Command {
     }
   }
 
+  private vercelRequestParameters(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
+    const parameters = {
+      model: this.getActiveVercelModel(settings),
+      maxRetries: 0,
+      temperature: settings.temperature,
+      maxOutputTokens: settings.maxTokens,
+      ...runtime, // This can override model temperature, max output tokens, etc.
+    };
+    this.log('info', '[Request parameters] ' + JSON.stringify(parameters));
+    return parameters;
+  }
+
   private async *handleResponseSchemaStream(
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
-    const model = this.getActiveVercelModel(settings);
     const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
       : prompt.content as string;
 
@@ -247,17 +258,13 @@ export class TestCommand implements Command {
     }
 
     const stream = streamObject({
-      model: model,
       prompt: vercelPrompt,
       onError: ({ error }) => {
         // Immediately throw the error
         throw error;
       },
       schema: this.toVercelResponseSchema(prompt.responseSchema),
-      maxRetries: 0,
-      temperature: settings.temperature,
-      maxOutputTokens: settings.maxTokens,
-      ...prompt.runtime,
+      ...this.vercelRequestParameters(settings, prompt.runtime),
     });
 
     for await (const text of stream.textStream) {
@@ -269,7 +276,6 @@ export class TestCommand implements Command {
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
-    const model = this.getActiveVercelModel(settings);
     const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
       : prompt.content as string;
 
@@ -278,7 +284,6 @@ export class TestCommand implements Command {
     }
 
     const stream = streamText({
-      model: model,
       prompt: vercelPrompt,
       onError: ({ error }) => {
         // Immediately throw the error
@@ -287,7 +292,8 @@ export class TestCommand implements Command {
       tools: prompt.tools ? this.toVercelTools(prompt.tools) : undefined,
       experimental_output: prompt.responseSchema && Output.object({
         schema: this.toVercelResponseSchema(prompt.responseSchema),
-      })
+      }),
+      ...this.vercelRequestParameters(settings, prompt.runtime),
     });
 
     let lastChunkEndline: boolean = false;
