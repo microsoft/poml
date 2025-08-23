@@ -86,6 +86,7 @@ nav:
     - Configuration: vscode/configuration.md
   - Python:
     - Overview: python/index.md
+    - Tracing: python/trace.md
     - Integrations:
       - OpenAI: python/integration/openai.md
       - LangChain: python/integration/langchain.md
