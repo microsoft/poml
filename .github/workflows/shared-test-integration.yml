@@ -62,6 +62,14 @@ jobs:
           sleep 10  # Wait for server to start
         shell: bash
 
+      - name: Setup MCP server
+        if: inputs.integration == 'mcp'
+        run: |
+          cd python/tests/integration
+          python mcp_server.py &
+          sleep 10  # Wait for server to start
+        shell: bash
+
       - name: Run ${{ inputs.integration }} baseline test
         if: inputs.integration != 'openai'
         env:

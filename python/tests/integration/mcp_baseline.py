@@ -15,7 +15,7 @@ client = OpenAI(
 
 
 async def main():
-    server_url = "https://dmcp-server.deno.dev/sse"
+    server_url = "http://127.0.0.1:8090/sse"
     async with sse_client(server_url) as (read, write):
         async with ClientSession(read, write) as mcp_session:
             await mcp_session.initialize()
