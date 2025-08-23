@@ -175,8 +175,11 @@ def test_openai_chat_with_schema():
         "messages": [{"role": "user", "content": "Summarize this text"}],
         "response_format": {
             "type": "json_schema",
-            "schema": {"type": "object", "properties": {"summary": {"type": "string"}}, "required": ["summary"]},
-            "strict": True
+            "json_schema": {
+                "name": "schema",
+                "schema": {"type": "object", "properties": {"summary": {"type": "string"}}, "required": ["summary"]},
+                "strict": True
+            }
         }
     }
     assert result == expected
@@ -219,14 +222,16 @@ def test_openai_chat_with_tools():
         "messages": [{"role": "user", "content": "What's the weather?"}],
         "tools": [{
             "type": "function",
-            "name": "get_weather",
-            "description": "Get weather information",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {"type": "string"}
-                },
-                "required": ["location"]
+            "function": {
+                "name": "get_weather",
+                "description": "Get weather information",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {"type": "string"}
+                    },
+                    "required": ["location"]
+                }
             }
         }]
     }

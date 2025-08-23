@@ -646,7 +646,14 @@ def poml(
                         
                         # Add tools if present
                         if poml_frame.tools:
-                            openai_result["tools"] = poml_frame.tools
+                            openai_result["tools"] = [{
+                                "type": "function",
+                                "function": {
+                                    "name": tool.get("name", ""),
+                                    "description": tool.get("description", ""),
+                                    "parameters": tool.get("parameters", {})
+                                }  # FIXME: hot-fix for the wrong format at node side
+                            } for tool in poml_frame.tools]
                         if poml_frame.output_schema:
                             openai_result["response_format"] = {
                                 "type": "json_schema",
