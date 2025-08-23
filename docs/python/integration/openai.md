@@ -46,20 +46,21 @@ POML supports runtime parameters through the `<runtime>` tag. These parameters a
   <runtime 
     model="gpt-4.1"
     temperature="0.7"
-    max_tokens="150"
-    top_p="1.0"
-    frequency_penalty="0.5"
-    presence_penalty="0.0"
+    max-tokens="150"
+    top-p="1.0"
+    frequency-penalty="0.5"
+    presencePenalty="0.0"
   />
+  <!-- can be camelCase -->
 </poml>
 ```
 
 The runtime parameters are automatically converted:
-- `max_tokens` ’ `max_tokens`
-- `temperature` ’ `temperature`
-- `top_p` ’ `top_p`
-- `frequency_penalty` ’ `frequency_penalty`
-- `presence_penalty` ’ `presence_penalty`
+- `max_tokens` -> `max_tokens`
+- `temperature` -> `temperature`
+- `top_p` -> `top_p`
+- `frequency_penalty` -> `frequency_penalty`
+- `presence_penalty` -> `presence_penalty`
 
 ## Response Format (Structured Output)
 
