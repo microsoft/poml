@@ -10,10 +10,12 @@
   </div>
 
   <div for="i in interactions">
-    <tool-request for="req in i.tool_request" id="{{ req.id }}" name="{{ req.name }}" parameters="{{ req.parameters }}" />
-    <tool-response for="res in i.tool_response" id="{{ res.id }}" name="{{ res.name }}">
-      <object data="{{ res.result }}"/>
+    <tool-request for="res in i" id="{{ res.id }}" name="{{ res.name }}" parameters="{{ res.input }}" />
+    <tool-response for="res in i" id="{{ res.id }}" name="{{ res.name }}">
+      <object data="{{ res.output }}"/>
     </tool-response>
   </div>
+
+  <runtime model="gpt-4.1-nano"/>
 
 </poml>

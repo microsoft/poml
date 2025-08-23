@@ -6,13 +6,14 @@ from openai import OpenAI
 from mcp import ClientSession, types
 from mcp.client.sse import sse_client
 
+from common_utils import print_section
+
 client = OpenAI(
     base_url=os.environ["OPENAI_API_BASE"],
     api_key=os.environ["OPENAI_API_KEY"],
 )
 
 async def main():
-    # Connect to your remote MCP server (the DnD dice-roller in your example)
     server_url = "https://dmcp-server.deno.dev/sse"
     async with sse_client(server_url) as (read, write):
         async with ClientSession(read, write) as mcp_session:
@@ -58,6 +59,8 @@ async def main():
 
                         # Call the MCP server tool
                         result = await mcp_session.call_tool(fn.name, args)
+
+                        print("Tool result:", result)
 
                         # Convert result content into text
                         text_result = ""
