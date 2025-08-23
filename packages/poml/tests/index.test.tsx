@@ -94,6 +94,77 @@ This text will have leading    and trailing spaces removed.`
     expect(element).toBe('world');
   });
 
+  test('tokenControlDocExample1', async () => {
+    const text = `<poml>
+  <!-- Limit content to 100 characters -->
+  <p charLimit="100">This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add a marker to indicate that content was cut off.</p>
+  
+  <!-- Limit content to 50 tokens -->
+  <p tokenLimit="10">This paragraph will be truncated based on token count rather than character count, which is more accurate for AI model processing.</p>
+</poml>`;
+    const element = await poml(text);
+    expect(element).toBe(`This is a very long paragraph that will be truncated if it exceeds the character limit. The truncati (...truncated)
+
+This paragraph will be truncated based on token count rather (...truncated)`);
+  });
+
+  test('tokenControlDocExample2', async () => {
+    const element = await poml(
+      <Markup.Paragraph
+        charLimit={20}
+        writerOptions={{ truncateMarker: ' [...] ', truncateDirection: 'middle' }}
+      >
+        This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add a marker to indicate that content was cut off.
+      </Markup.Paragraph>
+    );
+    expect(element).toBe('This is a  [...] s cut off.');
+  });
+
+  test('tokenControlDocExample3', async () => {
+    const text = `<poml tokenLimit="40">
+  <p priority="1">This content has low priority and may be removed first to save space.</p>
+  
+  <p priority="3">This content has high priority and will be preserved longer.</p>
+  
+  <p priority="2">This content has medium priority.</p>
+  
+  <!-- Content without priority defaults to priority 0 (lowest) -->
+  <p>This content will be truncated first since it has no explicit priority.</p>
+</poml>`;
+    const element = await poml(text);
+    const expected = `This content has low priority and may be removed first to save space.
+
+This content has high priority and will be preserved longer.
+
+This content has medium priority.`;
+    expect(element).toBe(expected);
+  })
+
+  test('tokenControlDocExample4', async () => {
+    const text = `<poml tokenLimit="40">
+  <h priority="5">Critical Section Header</h>
+  
+  <p priority="4" charLimit="10">
+    Important introduction that should be preserved but can be shortened individually.
+  </p>
+  
+  <list priority="2">
+    <item priority="3">High priority item</item>
+    <item priority="1">Lower priority item</item>
+    <item>Lowest priority item (no explicit priority)</item>
+  </list>
+
+  <p priority="3" tokenLimit="5">Optional additional context that can be truncated aggressively.</p>
+</poml>`;
+    const element = await poml(text);
+    const expected = `# Critical Section Header
+
+Important  (...truncated)
+
+Optional additional context that can (...truncated)`;
+    expect(element).toBe(expected);
+  });
+
   test('speakerWithStylesheet', async () => {
     const markup = '<p><p className="myClass">hello</p><p className="myClassB">world</p></p>';
     const stylesheet = {

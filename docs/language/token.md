@@ -34,13 +34,28 @@ This is a very long paragraph that will be truncated if it exceeds the character
 This paragraph will be truncated based on token count rather (...truncated)
 ```
 
-// Add explanation for writerOptions here, which is another experimental feature.
+You can customize truncation behavior using `writerOptions` to control how content is shortened when it exceeds limits:
+
+- **`truncateMarker`**: The string to append when content is truncated (default: ` (...truncated)`)
+- **`truncateDirection`**: Where to truncate the content:
+  - `"end"` (default): Keep the beginning, truncate the end
+  - `"start"`: Keep the end, truncate the beginning  
+  - `"middle"`: Keep both beginning and end, truncate the middle
+- **`tokenEncodingModel`**: The model to use for token counting (default: `"gpt-4o"` which uses `o200k_base` encoding)
 
 ```xml
 <p charLimit="20" writerOptions='{ "truncateMarker": " [...] ", "truncateDirection": "middle"}'>This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add a marker to indicate that content was cut off.</p>
 ```
 
- The default tokenizer to count tokens is based on `js-tiktoken` with `o200k_base` (used in `gpt-4o` and `o3` models). You can customize it by specifying the model name (not tokenizer name) in `tokenEncodingModel` in `writerOptions`.
+Renders to:
+
+```text
+This is a  [...] s cut off.
+```
+
+!!! note
+
+    The default tokenizer for counting tokens is based on `js-tiktoken` with `o200k_base` encoding (used in `gpt-4o` through `o3` models). You can customize it by specifying the model name in `tokenEncodingModel` within `writerOptions`.
 
 ### Priority-Based Truncation
 
@@ -77,7 +92,18 @@ This content has high priority and will be (...truncated)
 
 ### Combining Limits and Priority
 
-You can combine different types of limits with priority settings for sophisticated content management. Please note that the tokens are calculated from the bottom up. so the whole list will not be kepted in the following example .// please explain this better.
+You can combine different types of limits with priority settings for sophisticated content management.
+
+!!! important "Token Calculation Order"
+
+    Token limits are applied hierarchically from parent to child components. When a parent component has a token limit:
+
+    1. Children are processed first with their limits and priorities taken into account.
+    2. Sort children by priority. Low priority children are removed entirely if they exceed the limit
+    3. Remaining content (including the cases of equal priority) is truncated if still over the limit
+    4. charLimit/tokenLimit are applied after priority-based removal
+
+    This means in the example below, the entire list component might be removed if higher priority content consumes the available tokens.
 
 ```xml
 <poml tokenLimit="40">
