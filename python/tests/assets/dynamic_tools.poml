@@ -1,6 +1,6 @@
 <poml>
   <system-msg>{{ system }}</system-msg>
-  <p>{{ input }}</p>
+  <human-msg>{{ input }}</human-msg>
 
   <!-- The for loop in external div will be merged into tool-definition in future. -->
   <div for="tool in tools">

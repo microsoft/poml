@@ -315,6 +315,113 @@ Optional additional context that can (...truncated)`;
       }
     ]);
   });
+
+  test('dynamicTools', async () => {
+    const text = `<poml>
+  <system-msg>{{ system }}</system-msg>
+  <p>{{ input }}</p>
+
+  <div for="tool in tools">
+    <tool-definition name="{{ tool.name }}" description="{{ tool.description }}">
+      {{ tool.schema }}
+    </tool-definition>
+  </div>
+
+  <div for="i in interactions">
+    <tool-request for="res in i" id="{{ res.id }}" name="{{ res.name }}" parameters="{{ res.input }}" />
+    <tool-response for="res in i" id="{{ res.id }}" name="{{ res.name }}">
+      <object data="{{ res.output }}"/>
+    </tool-response>
+  </div>
+
+  <runtime model="gpt-5"/>
+
+</poml>`;
+    const context = {
+      "system": "You are a helpful DM assistant. Use the dice-rolling tool when needed.",
+      "input": "Roll 2d4+1",
+      "tools": [
+        {
+          "name": "roll",
+          "description": "\n  Given a string of text describing a dice roll in \n  Dungeons and Dragons, provide a result of the roll.\n\n  Example input: 2d6 + 1d4\n  Example output: 14\n",
+          "schema": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "type": "object",
+            "properties": {
+              "diceRollExpression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "diceRollExpression"
+            ],
+            "additionalProperties": false
+          }
+        }
+      ],
+      "interactions": [] as any
+    };
+    ErrorCollection.clear();
+    const result = await write(await read(text, undefined, context), { speaker: true });
+    expect(ErrorCollection.empty()).toBe(true);
+    expect(result).toStrictEqual( [
+      {
+        speaker: 'system',
+        content: 'You are a helpful DM assistant. Use the dice-rolling tool when needed.\n' +
+          '\n' +
+          'Roll 2d4+1'
+      }
+    ]);
+
+    context.interactions.push([
+      {
+        "id": "call_FFzB6ZTXqOsaKeSN5x6KyXyC",
+        "name": "roll",
+        "input": {
+          "diceRollExpression": "2d4+1"
+        },
+        "output": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "5",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        }
+      }
+    ]);
+    ErrorCollection.clear();
+    const result2 = await write(await read(text, undefined, context), { speaker: true });
+    expect(ErrorCollection.empty()).toBe(true);
+    expect(result2.slice(-2)).toStrictEqual([{
+        speaker: 'ai',
+        content: [
+          {
+            type: 'application/vnd.poml.toolrequest',
+            content: { diceRollExpression: '2d4+1' },
+            id: 'call_FFzB6ZTXqOsaKeSN5x6KyXyC',
+            name: 'roll'
+          }
+        ]
+      },
+      {
+        speaker: 'tool',
+        content: [
+          {
+            type: 'application/vnd.poml.toolresponse',
+            content: '{"meta":null,"content":[{"type":"text","text":"5","annotations":null,"meta":null}],"structuredContent":null,"isError":false}',
+            id: 'call_FFzB6ZTXqOsaKeSN5x6KyXyC',
+            name: 'roll'
+          }
+        ]
+      }
+    ]);
+  });
 });
 
 describe('diagnosis', () => {
