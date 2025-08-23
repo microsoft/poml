@@ -806,10 +806,11 @@ export class MarkdownWriter extends Writer<MarkdownOptions> {
       }
       // Optimization: Use byte count as conservative estimate before tokenizing
       const byteCount = Buffer.byteLength(t, 'utf8');
+      const BYTES_PER_TOKEN_ESTIMATE = 4;
       // If byte count is small enough, we can estimate it's within token limits
       // This is a heuristic - for very short strings, byte count ≈ token count
       if (byteCount <= tokenLimit) {
-        return Math.ceil(byteCount / 4); // Conservative estimate
+        return Math.ceil(byteCount / BYTES_PER_TOKEN_ESTIMATE); // Conservative estimate
       }
 
       let enc = this.tokenizerCache[tokenModel];
