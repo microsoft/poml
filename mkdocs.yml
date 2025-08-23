@@ -13,7 +13,6 @@ theme:
   favicon: media/logo-16-purple.png
   features:
     - navigation.sections
-    - navigation.expand
     - navigation.instant
     - navigation.tracking
     - search.suggest
@@ -91,7 +90,7 @@ nav:
       - OpenAI: python/integration/openai.md
       - LangChain: python/integration/langchain.md
       - MCP: python/integration/mcp.md
-      - MLFlow: python/integration/mlflow.md
+      - MLflow: python/integration/mlflow.md
       - AgentOps: python/integration/agentops.md
       - Weave: python/integration/weave.md
     - References:

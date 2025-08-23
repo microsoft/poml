@@ -116,4 +116,4 @@ A symbolic link to the original POML source file, allowing quick navigation and 
 
 ## Integration with Observability Frameworks
 
-POML tracing is designed to integrate seamlessly with popular observability and monitoring frameworks such as AgentOps, Weave, and MLFlow. Trace data can be exported to these platforms for centralized monitoring, analysis, and alerting in production environments.
+POML tracing is designed to integrate seamlessly with popular observability and monitoring frameworks such as [AgentOps](./integration/agentops.md), [Weave](./integration/weave.md), and [MLflow](./integration/mlflow.md). Trace data can be exported to these platforms for centralized monitoring, analysis, and alerting in production environments.
