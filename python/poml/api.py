@@ -650,8 +650,11 @@ def poml(
                         if poml_frame.output_schema:
                             openai_result["response_format"] = {
                                 "type": "json_schema",
-                                "schema": poml_frame.output_schema,
-                                "strict": True,  # Ensure strict validation
+                                "json_schema": {
+                                    "name": "schema",  # TODO: support schema name
+                                    "schema": poml_frame.output_schema,
+                                    "strict": True,  # Ensure strict validation
+                                }
                             }
                         if poml_frame.runtime:
                             openai_result.update({

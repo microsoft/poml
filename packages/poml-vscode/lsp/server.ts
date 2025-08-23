@@ -217,28 +217,39 @@ class PomlLspServer {
     }
     const text = document.getText();
     const pomlFile = new PomlFile(text);
-    const tokens = pomlFile.getExpressionTokens();
+    let tokens: PomlToken[];
+    try {
+      tokens = pomlFile.getExpressionTokens();
+    } catch (e) {
+      console.error(`Failed to parse document for code lenses: ${e}`);
+      return [];
+    }
     const lenses: CodeLens[] = [];
-    for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i];
-      if (token.expression === undefined) {
-        continue;
+    try {
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (token.expression === undefined) {
+          continue;
+        }
+        const expr = token.expression;
+        let titleExpr = expr;
+        if (titleExpr.length > 20) {
+          titleExpr = `${titleExpr.slice(0, 10)}...${titleExpr.slice(-10)}`;
+        }
+        const command: Command = {
+          title: `▶️ Evaluate ${titleExpr}`,
+          command: 'poml.evaluateExpression',
+          arguments: [params.textDocument.uri, text, token.range.start, token.range.end]
+        };
+        const vscodeRange: Range = {
+          start: document.positionAt(token.range.start),
+          end: document.positionAt(token.range.end + 1)
+        }
+        lenses.push({ range: vscodeRange, command });
       }
-      const expr = token.expression;
-      let titleExpr = expr;
-      if (titleExpr.length > 20) {
-        titleExpr = `${titleExpr.slice(0, 10)}...${titleExpr.slice(-10)}`;
-      }
-      const command: Command = {
-        title: `▶️ Evaluate ${titleExpr}`,
-        command: 'poml.evaluateExpression',
-        arguments: [params.textDocument.uri, text, token.range.start, token.range.end]
-      };
-      const vscodeRange: Range = {
-        start: document.positionAt(token.range.start),
-        end: document.positionAt(token.range.end + 1)
-      }
-      lenses.push({ range: vscodeRange, command });
+    } catch (e) {
+      console.error(`Failed to compute code lenses: ${e}`);
+      return lenses;
     }
     return lenses;
   }
