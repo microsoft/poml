@@ -1152,6 +1152,8 @@ describe('examples correctness', () => {
       const originalWrite = process.stdout.write;
       const outputs: string[] = [];
 
+      const contextFilePath = path.join(examplesDir, fileName.replace('.poml', '.context.json'));
+
       process.stdout.write = jest.fn((str: string) => {
         outputs.push(str);
         return true;
@@ -1160,7 +1162,8 @@ describe('examples correctness', () => {
       try {
         await commandLine({
           file: filePath,
-          speakerMode: true
+          speakerMode: true,
+          contextFile: fs.existsSync(contextFilePath) ? contextFilePath : undefined
         });
 
         const output = outputs.join('');

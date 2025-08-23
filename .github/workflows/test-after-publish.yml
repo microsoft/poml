@@ -45,7 +45,12 @@ jobs:
           set -ex
           for poml_file in examples/*.poml; do
             echo "Testing $poml_file"
-            npx poml -f "$poml_file"
+            # Check if context file exists
+            if [ -f "${poml_file%.poml}.context.json" ]; then
+              npx poml -f "$poml_file" --context-file "${poml_file%.poml}.context.json"
+            else
+              npx poml -f "$poml_file"
+            fi
           done
         shell: bash
 
@@ -85,6 +90,11 @@ jobs:
           set -ex
           for poml_file in examples/*.poml; do
             echo "Testing $poml_file"
-            poml-cli -f "$poml_file"
+            # Check if context file exists
+            if [ -f "${poml_file%.poml}.context.json" ]; then
+              poml-cli -f "$poml_file" --context-file "${poml_file%.poml}.context.json"
+            else
+              poml-cli -f "$poml_file"
+            fi
           done
         shell: bash

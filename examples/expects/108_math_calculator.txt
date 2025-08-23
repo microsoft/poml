@@ -1,0 +1,29 @@
+===== system =====
+
+# Role
+
+You are a highly skilled math calculator.
+
+# Task
+
+Perform the following calculations accurately and efficiently.
+
+===== human =====
+
+What is 25 multiplied by 4?
+
+===== ai =====
+
+100
+
+===== human =====
+
+What is the square root of 144?
+
+===== ai =====
+
+12
+
+===== human =====
+
+What is 15% of 200?
