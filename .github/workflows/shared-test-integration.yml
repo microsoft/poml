@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       integration:
-        description: 'Integration type (agentops, mlflow, weave)'
+        description: 'Integration type (agentops, mlflow, weave, mcp, openai)'
         required: true
         type: string
       os:
@@ -63,6 +63,7 @@ jobs:
         shell: bash
 
       - name: Run ${{ inputs.integration }} baseline test
+        if: inputs.integration != 'openai'
         env:
           # Common environment variables
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
@@ -79,6 +80,7 @@ jobs:
         shell: bash
 
       - name: Run ${{ inputs.integration }} integration tests
+        if: inputs.integration != 'openai'
         env:
           # Common environment variables
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
@@ -92,6 +94,26 @@ jobs:
         run: |
           cd python/tests/integration
           python ${{ inputs.integration }}_poml.py
+        shell: bash
+
+      - name: Run OpenAI response format test
+        if: inputs.integration == 'openai'
+        env:
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd python/tests/integration
+          python openai_response_format.py
+        shell: bash
+
+      - name: Run OpenAI tool call test
+        if: inputs.integration == 'openai'
+        env:
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd python/tests/integration
+          python openai_tool_call.py
         shell: bash
 
       - name: Run mlflow additional integration tests

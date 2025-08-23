@@ -9,7 +9,7 @@ jobs:
   test-linux:
     strategy:
       matrix:
-        integration: [agentops, mlflow, weave]
+        integration: [agentops, mlflow, weave, mcp, openai]
       fail-fast: false
     uses: ./.github/workflows/shared-test-integration.yml
     with:
@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
-        integration: [agentops, mlflow, weave]
+        integration: [agentops, mlflow, weave, mcp, openai]
       fail-fast: false
     uses: ./.github/workflows/shared-test-integration.yml
     with:
