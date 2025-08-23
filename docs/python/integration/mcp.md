@@ -25,6 +25,12 @@ The MCP workflow typically involves:
 - **Tool Execution**: When the LLM needs a tool, send the request to the MCP server
 - **Result Integration**: Incorporate tool results back into the conversation
 
+## Installation
+
+```bash
+pip install mcp
+```
+
 ## Dynamic Tools with MCP
 
 POML can work with MCP servers by dynamically loading tool definitions and handling tool interactions through context. This approach uses POML's templating capabilities to create a flexible integration.
