@@ -94,7 +94,7 @@ export default [
           'poml-browser/stubs/**/*',
           'poml/**/*'
         ],
-        exclude: ['poml/node_modules/**/*', 'poml/tests/**/*', 'poml-browser/ui/custom.js']
+        exclude: ['poml/node_modules/**/*', 'poml/tests/**/*', 'poml-browser/ui/custom.js', 'poml-browser/ui/theme/style.css']
       }),
       json(),
       replace({

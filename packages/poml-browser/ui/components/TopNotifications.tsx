@@ -29,22 +29,22 @@ const getNotificationConfig = (type: NotificationType) => {
     success: {
       icon: IconCheck,
       color: 'green',
-      variant: 'light' as const
+      variant: 'outline' as const
     },
     error: {
       icon: IconAlertCircle,
       color: 'red',
-      variant: 'light' as const
+      variant: 'outline' as const
     },
     warning: {
       icon: IconExclamationCircle,
       color: 'yellow',
-      variant: 'light' as const
+      variant: 'outline' as const
     },
     info: {
       icon: IconInfoCircle,
       color: 'blue',
-      variant: 'light' as const
+      variant: 'outline' as const
     }
   };
 
@@ -138,7 +138,7 @@ export const TopNotifications: React.FC = () => {
           {/* Header with clear all button if more than 2 notifications */}
           {topNotifications.length > 2 && (
             <Alert
-              variant="light"
+              variant="outline"
               color="gray"
               mb="sm"
             >
@@ -161,27 +161,16 @@ export const TopNotifications: React.FC = () => {
           {/* Notification list with transitions */}
           <Stack gap="xs">
             {topNotifications.slice(0, 8).map((notification) => (
-              <Transition
+              <NotificationItem
                 key={notification.id}
-                mounted={true}
-                transition="slide-right"
-                duration={300}
-                timingFunction="ease-out"
-              >
-                {(styles) => (
-                  <div style={styles}>
-                    <NotificationItem
-                      notification={notification}
-                      onRemove={removeNotification}
-                    />
-                  </div>
-                )}
-              </Transition>
+                notification={notification}
+                onRemove={removeNotification}
+              />
             ))}
             
             {/* Show indicator if there are more than 8 notifications */}
             {topNotifications.length > 8 && (
-              <Alert variant="light" color="gray">
+              <Alert variant="outline" color="gray">
                 <Text size="xs" ta="center">
                   ... and {topNotifications.length - 8} more notifications
                 </Text>
