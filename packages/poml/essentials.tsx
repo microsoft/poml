@@ -135,7 +135,7 @@ export const AnyOrFree = component('AnyOrFree')((
  * 1. If the first element is pure text contents, `<poml syntax="text">` will be added.
  * 2. If the first element is a POML component, `<poml syntax="markdown">` will be added.
  *
- * @param {'markdown'|'html'|'json'|'yaml|'xml'|'text'} syntax - The syntax of the content.
+ * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'text'} syntax - The syntax of the content. Note `xml` and `text` are experimental.
  * @param className - A class name for quickly styling the current block with stylesheets.
  * @param {'human'|'ai'|'system'} speaker - The speaker of the content. By default, it's determined by the context and the content.
  * @param name - The name of the content, used in serialization.

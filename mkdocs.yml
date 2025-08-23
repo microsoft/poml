@@ -76,7 +76,7 @@ nav:
     - Template Engine: language/template.md
     - Meta: language/meta.md
     - Fine-grained Control:
-      - White Space Control: language/white_space.md
+      - White Space Control: language/white-space.md
       - Token Control: language/token.md
     - References:
       - Components: language/components.md

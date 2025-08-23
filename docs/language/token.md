@@ -1,10 +1,16 @@
+# Token Control
+
 ## Controlling Characters and Tokens
 
 !!! warning
 
     This feature is experimental and may change in future releases. Use with caution.
 
-POML provides experimental features for controlling content length through character limits, token limits, and priority-based truncation. These features are particularly useful when working with AI models that have input constraints or when you need to ensure content fits within specific bounds.
+POML controls content length through character limits, token limits, and priority-based truncation. These features are particularly useful when working with AI models that have input constraints or when you need to ensure content fits within specific bounds.
+
+!!! note
+
+    Token control is only supported on components rendered with `syntax="text"` or `syntax="markdown"`.
 
 ### Character and Token Limits
 
@@ -16,16 +22,32 @@ You can set soft limits on content using `charLimit` and `tokenLimit` attributes
   <p charLimit="100">This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add a marker to indicate that content was cut off.</p>
   
   <!-- Limit content to 50 tokens -->
-  <p tokenLimit="50">This paragraph will be truncated based on token count rather than character count, which is more accurate for AI model processing.</p>
+  <p tokenLimit="10">This paragraph will be truncated based on token count rather than character count, which is more accurate for AI model processing.</p>
 </poml>
 ```
+
+Renders to:
+
+```text
+This is a very long paragraph that will be truncated if it exceeds the character limit. The truncati (...truncated)
+
+This paragraph will be truncated based on token count rather (...truncated)
+```
+
+// Add explanation for writerOptions here, which is another experimental feature.
+
+```xml
+<p charLimit="20" writerOptions='{ "truncateMarker": " [...] ", "truncateDirection": "middle"}'>This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add a marker to indicate that content was cut off.</p>
+```
+
+ The default tokenizer to count tokens is based on `js-tiktoken` with `o200k_base` (used in `gpt-4o` and `o3` models). You can customize it by specifying the model name (not tokenizer name) in `tokenEncodingModel` in `writerOptions`.
 
 ### Priority-Based Truncation
 
 The `priority` attribute allows you to control which content is preserved when space is limited. Lower priority content (lower numbers) will be truncated first.
 
 ```xml
-<poml tokenLimit="100">
+<poml tokenLimit="40">
   <p priority="1">This content has low priority and may be removed first to save space.</p>
   
   <p priority="3">This content has high priority and will be preserved longer.</p>
@@ -37,15 +59,31 @@ The `priority` attribute allows you to control which content is preserved when s
 </poml>
 ```
 
+Renders to:
+
+```text
+This content has low priority and may be removed first to save space.
+
+This content has high priority and will be preserved longer.
+
+This content has medium priority.
+```
+
+If the token limit is reduced further to 8, highest priority content is preserved, and also truncated with a marker:
+
+```text
+This content has high priority and will be (...truncated)
+```
+
 ### Combining Limits and Priority
 
-You can combine different types of limits with priority settings for sophisticated content management:
+You can combine different types of limits with priority settings for sophisticated content management. Please note that the tokens are calculated from the bottom up. so the whole list will not be kepted in the following example .// please explain this better.
 
 ```xml
-<poml tokenLimit="200">
+<poml tokenLimit="40">
   <h priority="5">Critical Section Header</h>
   
-  <p priority="4" charLimit="150">
+  <p priority="4" charLimit="10">
     Important introduction that should be preserved but can be shortened individually.
   </p>
   
@@ -54,17 +92,17 @@ You can combine different types of limits with priority settings for sophisticat
     <item priority="1">Lower priority item</item>
     <item>Lowest priority item (no explicit priority)</item>
   </list>
-  
-  <p priority="1" tokenLimit="30">
-    Optional additional context that can be truncated aggressively.
-  </p>
+
+  <p priority="3" tokenLimit="5">Optional additional context that can be truncated aggressively.</p>
 </poml>
 ```
 
-### Understanding Truncation Behavior
+Renders to:
 
-- **Character limits** count actual characters (including spaces and punctuation)
-- **Token limits** use AI tokenization, which is more accurate for model processing
-- **Priority-based truncation** removes entire elements, starting with the lowest priority
-- **Individual limits** apply to single elements, while document limits affect the entire content
-- **Truncation markers** (typically "(...truncated)") are automatically added to indicate cut content
+```text
+# Critical Section Header
+
+Important  (...truncated)
+
+Optional additional context that can (...truncated)
+```

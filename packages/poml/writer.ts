@@ -96,7 +96,7 @@ class Writer<WriterOptions> {
     const {
       truncateMarker = ' (...truncated)',
       truncateDirection = 'end',
-      tokenEncodingModel = 'gpt-3.5-turbo'
+      tokenEncodingModel = 'gpt-4o'
     } = options || (this.options as any);
     let truncated = text;
     let changed = false;
@@ -692,7 +692,7 @@ export class MarkdownWriter extends Writer<MarkdownOptions> {
       csvHeader: options.csvHeader ?? true,
       truncateMarker: options.truncateMarker ?? ' (...truncated)',
       truncateDirection: options.truncateDirection ?? 'end',
-      tokenEncodingModel: options.tokenEncodingModel ?? 'gpt-3.5-turbo'
+      tokenEncodingModel: options.tokenEncodingModel ?? 'gpt-4o'
     };
   }
 
@@ -799,7 +799,7 @@ export class MarkdownWriter extends Writer<MarkdownOptions> {
       return boxes;
     }
 
-    const tokenModel = (this.options as any).tokenEncodingModel || 'gpt-3.5-turbo';
+    const tokenModel = (this.options as any).tokenEncodingModel || 'gpt-4o';
     const getTokenLength = (t: string) => {
       if (tokenLimit === undefined) {
         return 0;
@@ -1839,7 +1839,7 @@ export class FreeWriter extends Writer<FreeOptions> {
     return {
       truncateMarker: options?.truncateMarker ?? ' (...truncated)',
       truncateDirection: options?.truncateDirection ?? 'end',
-      tokenEncodingModel: options?.tokenEncodingModel ?? 'gpt-3.5-turbo'
+      tokenEncodingModel: options?.tokenEncodingModel ?? 'gpt-4o'
     };
   }
 
