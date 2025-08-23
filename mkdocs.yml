@@ -84,6 +84,19 @@ nav:
     - Overview: vscode/index.md
     - Features: vscode/features.md
     - Configuration: vscode/configuration.md
+  - Python:
+    - Overview: python/index.md
+    - Integrations:
+      - OpenAI: python/integration/openai.md
+      - LangChain: python/integration/langchain.md
+      - MCP: python/integration/mcp.md
+      - MLFlow: python/integration/mlflow.md
+      - AgentOps: python/integration/agentops.md
+      - Weave: python/integration/weave.md
+    - References:
+      - Core: python/reference/core.md
+      - Integration: python/reference/integration.md
+      - Prompt: python/reference/prompt.md
   - TypeScript:
     - Overview: typescript/index.md
     - References:
@@ -94,12 +107,6 @@ nav:
       - file: typescript/reference/file.md
       - writer: typescript/reference/writer.md
       - components: typescript/reference/components.md
-  - Python:
-    - Overview: python/index.md
-    - References:
-      - Core: python/reference/core.md
-      - Integration: python/reference/integration.md
-      - Prompt: python/reference/prompt.md
   - Deep Dive:
     - IR Specification: deep-dive/ir.md
     - Proposals:

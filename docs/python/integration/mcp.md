@@ -183,6 +183,12 @@ if __name__ == "__main__":
 
 ## Comparison with Direct MCP Usage
 
+The key differences are:
+
+- **Message management**: Direct approach requires remembering `"role": "assistant"` vs `"role": "tool"` formats; POML manages this automatically through request/response pairs
+- **Content rendering**: Manual string conversion and formatting vs POML's `<object>` component handling all content types
+- **Tool formatting**: Manual OpenAI-specific formatting vs declarative template that handles the conversion
+
 ### Without POML (Direct Approach)
 
 ```python
@@ -203,7 +209,7 @@ oa_tools.append({
 })
 ```
 
-### With POML (Template Approach)
+### With POML (Structured Approach)
 
 ```python
 # Simply track tool request/response pairs
@@ -211,11 +217,6 @@ context["interactions"].append([
     {"id": tc.id, "name": fn.name, "input": args, "output": result.model_dump()}
 ])
 ```
-
-The key differences are:
-- **Message management**: Direct approach requires remembering `"role": "assistant"` vs `"role": "tool"` formats; POML manages this automatically through request/response pairs
-- **Content rendering**: Manual string conversion and formatting vs POML's `<object>` component handling all content types
-- **Tool formatting**: Manual OpenAI-specific formatting vs declarative template that handles the conversion
 
 ## Future Native Support
 

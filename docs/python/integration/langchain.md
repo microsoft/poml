@@ -49,7 +49,7 @@ template = LangchainPomlTemplate.from_file("summary.poml", speaker_mode=False)
 
 ## POML vs f-string, Jinja, and Other Templates
 
-You can harvest most features of POML by using `LangchainPomlTemplate`. However, some POML features are also available in other templating systems, and some features might not be compatible with LangChain (e.g., tool use). We thus summarize the key differences and advantages of using POML templates over traditional templating methods, to give you a clearer picture of when and why to choose POML.
+You can harvest most features of POML by using `LangchainPomlTemplate`. However, some POML features are also available in other templating systems, and some features might not be compatible with LangChain (e.g., tool use). We thus summarize the key differences and advantages of using POML templates over alternative templating methods, to give you a clearer picture of when and why to choose POML.
 
 ### Template Syntax and Capabilities
 
@@ -89,7 +89,7 @@ prompt_template.invoke({
 
 ### Rich Content and File Inclusion
 
-**Traditional approach with Jinja2/f-string:** Must manually read and process PDF with external libraries and include text in the template.
+**Alternative approach with Jinja2/f-string:** Must manually read and process PDF with external libraries and include text in the template.
 
 ```python
 import PyPDF2
@@ -180,7 +180,7 @@ Immediately gives you:
 
 ### Support for Conversational Formats
 
-**Traditional approach:** Multiple separate prompts or complex string concatenation.
+**Alternative approach:** Multiple separate prompts or complex string concatenation.
 
 ```python
 system_prompt = "You are a helpful assistant."
