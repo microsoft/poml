@@ -20,5 +20,28 @@
       }
     }
   ],
-  "interactions": []
+  "interactions": [
+    [
+      {
+        "id": "call_XOJaP5hQuaUo6PIDGARntlMx",
+        "name": "roll",
+        "input": {
+          "diceRollExpression": "2d4+1"
+        },
+        "output": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "3",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        }
+      }
+    ]
+  ]
 }
