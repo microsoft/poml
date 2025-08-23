@@ -55,6 +55,7 @@ import {
   TelemetryServer
 } from 'poml-vscode/util/telemetryServer';
 import { parseJsonWithBuffers } from 'poml/util/trace';
+import { EvaluationMessage, EvaluationNotification } from '../panel/types';
 import { getImageWidthHeight } from 'poml/util/image';
 import { estimateImageTokens } from 'poml/util/tokenCounterImage';
 
@@ -251,7 +252,11 @@ class PomlLspServer {
     const rangeStart = params.arguments?.[2] as number | undefined;
     const rangeEnd = params.arguments?.[3] as number | undefined;
     if (!uri || !text || rangeStart === undefined || rangeEnd === undefined) {
-      this.connection.console.error(`${new Date().toLocaleString()} Invalid arguments for poml.evaluateExpression command`);
+      const message: EvaluationMessage = {
+        type: 'error',
+        message: `${new Date().toLocaleString()} Invalid arguments for poml.evaluateExpression command`
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
       return;
     }
     const expression = text.slice(rangeStart, rangeEnd + 1);
@@ -274,12 +279,20 @@ class PomlLspServer {
 
     if (!ErrorCollection.empty()) {
       const err = ErrorCollection.first()?.toString() ?? 'Unknown error';
-      this.connection.console.error(`${new Date().toLocaleString()} Error during evaluation: ${expression} => ${err}`);
+      const message: EvaluationMessage = {
+        type: 'error',
+        message: `${new Date().toLocaleString()} Error during evaluation: ${expression} => ${err}`
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
     }
 
     const evaluations = file.getExpressionEvaluations({ start: rangeStart, end: rangeEnd });
     if (evaluations.length === 0) {
-      this.connection.console.warn(`${new Date().toLocaleString()} No evaluations found for expression: ${expression} (${rangeStart}-${rangeEnd})`);
+      const message: EvaluationMessage = {
+        type: 'warning',
+        message: `${new Date().toLocaleString()} No evaluations found for expression: ${expression} (${rangeStart}-${rangeEnd})`
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
       return;
     }
     for (let i = 0; i < evaluations.length; i++) {
@@ -290,7 +303,11 @@ class PomlLspServer {
       if (result.length > 1024) {
         result = `${result.slice(0, 1024)} ...[truncated]`;
       }
-      this.connection.console.log(`${new Date().toLocaleString()} [Eval ${i + 1}] ${expression} => ${result}`);
+      const message: EvaluationMessage = {
+        type: 'info',
+        message: `${new Date().toLocaleString()} [Eval ${i + 1}] ${expression} => ${result}`
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
     }
   }
 

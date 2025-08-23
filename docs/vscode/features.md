@@ -69,7 +69,7 @@ The POML extension provides CodeLens buttons that allow you to evaluate template
 
 1. **CodeLens Buttons**: When you open a `.poml` file, you'll see "▶️ Evaluate" buttons appearing above expressions and variables.
 2. **Click to Evaluate**: Click any "▶️ Evaluate" button to execute the expression and see its result.
-3. **View Output**: Go to View → Output in VS Code. Results are displayed in the **POML Language Server** output channel.
+3. **View Output**: Go to View → Output in VS Code. Results are displayed in the **POML Debug** output channel.
 
 #### What Gets Evaluated
 
@@ -132,6 +132,10 @@ Before testing prompts, make sure you have configured your [language model setti
 - Choose your preferred model name
 
 ## Prompt Gallery
+
+!!! warning
+
+    The Prompt Gallery is an experimental feature. It is likely to be removed after we find a replacement to use models from GitHub Copilot. Related discussions: [#102](https://github.com/microsoft/poml/pull/102).
 
 The Prompt Gallery provides access to pre-built prompt templates and allows you to manage your own custom prompts. Access it from the POML activity bar in VS Code.
 
