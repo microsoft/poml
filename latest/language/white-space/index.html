@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://microsoft.github.io/poml/latest/vscode/">
+        <link rel="canonical" href="https://microsoft.github.io/poml/latest/language/white-space/">
       
       
-        <link rel="prev" href="../language/components/">
+        <link rel="prev" href="../meta/">
       
       
-        <link rel="next" href="features/">
+        <link rel="next" href="../token/">
       
       
-      <link rel="icon" href="../media/logo-16-purple.png">
+      <link rel="icon" href="../../media/logo-16-purple.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
     
     
       
-        <title>Overview - POML Documentation</title>
+        <title>White Space Control - POML Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.7e37652d.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -48,13 +48,13 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../css/timeago.css">
+      <link rel="stylesheet" href="../../css/timeago.css">
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#poml-visual-code-extension" class="md-skip">
+        <a href="#controlling-white-space" class="md-skip">
           Skip to content
         </a>
       
@@ -100,9 +100,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="POML Documentation" class="md-header__button md-logo" aria-label="POML Documentation" data-md-component="logo">
+    <a href="../.." title="POML Documentation" class="md-header__button md-logo" aria-label="POML Documentation" data-md-component="logo">
       
-  <img src="../media/logo-64-white.png" alt="logo">
+  <img src="../../media/logo-64-white.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              White Space Control
             
           </span>
         </div>
@@ -237,9 +237,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="POML Documentation" class="md-nav__button md-logo" aria-label="POML Documentation" data-md-component="logo">
+    <a href="../.." title="POML Documentation" class="md-nav__button md-logo" aria-label="POML Documentation" data-md-component="logo">
       
-  <img src="../media/logo-64-white.png" alt="logo">
+  <img src="../../media/logo-64-white.png" alt="logo">
 
     </a>
     POML Documentation
@@ -266,7 +266,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tutorial/quickstart/" class="md-nav__link">
+      <a href="../../tutorial/quickstart/" class="md-nav__link">
         
   
   
@@ -360,8 +360,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -372,13 +374,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -394,7 +394,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Language Spec
@@ -408,7 +408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../language/basic/" class="md-nav__link">
+      <a href="../basic/" class="md-nav__link">
         
   
   
@@ -431,7 +431,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../language/template/" class="md-nav__link">
+      <a href="../template/" class="md-nav__link">
         
   
   
@@ -454,7 +454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../language/meta/" class="md-nav__link">
+      <a href="../meta/" class="md-nav__link">
         
   
   
@@ -474,6 +474,8 @@
                 
   
   
+    
+  
   
   
     
@@ -483,13 +485,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" checked>
         
           
           <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
@@ -505,7 +505,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_4">
             <span class="md-nav__icon md-icon"></span>
             Fine-grained Control
@@ -516,10 +516,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../language/white-space/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    White Space Control
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -530,6 +552,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#white-space-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      White Space Options
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#white-space-related-to-syntax" class="md-nav__link">
+    <span class="md-ellipsis">
+      White Space Related to Syntax
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -542,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../language/token/" class="md-nav__link">
+      <a href="../token/" class="md-nav__link">
         
   
   
@@ -615,7 +690,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../language/components/" class="md-nav__link">
+      <a href="../components/" class="md-nav__link">
         
   
   
@@ -650,8 +725,6 @@
       
   
   
-    
-  
   
   
     
@@ -664,11 +737,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -684,7 +759,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Visual Studio Code
@@ -695,32 +770,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Overview
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../vscode/" class="md-nav__link">
         
   
   
@@ -731,68 +784,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Features
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Installation
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Installation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#stable-release" class="md-nav__link">
-    <span class="md-ellipsis">
-      Stable Release
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#nightly-build" class="md-nav__link">
-    <span class="md-ellipsis">
-      Nightly Build
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -805,7 +796,7 @@
   
   
     <li class="md-nav__item">
-      <a href="features/" class="md-nav__link">
+      <a href="../../vscode/features/" class="md-nav__link">
         
   
   
@@ -828,7 +819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="configuration/" class="md-nav__link">
+      <a href="../../vscode/configuration/" class="md-nav__link">
         
   
   
@@ -903,7 +894,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../typescript/" class="md-nav__link">
+      <a href="../../typescript/" class="md-nav__link">
         
   
   
@@ -968,7 +959,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../typescript/reference/" class="md-nav__link">
+      <a href="../../typescript/reference/" class="md-nav__link">
         
   
   
@@ -991,7 +982,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../typescript/reference/base/" class="md-nav__link">
+      <a href="../../typescript/reference/base/" class="md-nav__link">
         
   
   
@@ -1014,7 +1005,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../typescript/reference/cli/" class="md-nav__link">
+      <a href="../../typescript/reference/cli/" class="md-nav__link">
         
   
   
@@ -1037,7 +1028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../typescript/reference/essentials/" class="md-nav__link">
+      <a href="../../typescript/reference/essentials/" class="md-nav__link">
         
   
   
@@ -1060,7 +1051,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../typescript/reference/file/" class="md-nav__link">
+      <a href="../../typescript/reference/file/" class="md-nav__link">
         
   
   
@@ -1083,7 +1074,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../typescript/reference/writer/" class="md-nav__link">
+      <a href="../../typescript/reference/writer/" class="md-nav__link">
         
   
   
@@ -1106,7 +1097,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../typescript/reference/components/" class="md-nav__link">
+      <a href="../../typescript/reference/components/" class="md-nav__link">
         
   
   
@@ -1189,7 +1180,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../python/" class="md-nav__link">
+      <a href="../../python/" class="md-nav__link">
         
   
   
@@ -1254,7 +1245,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../python/reference/core/" class="md-nav__link">
+      <a href="../../python/reference/core/" class="md-nav__link">
         
   
   
@@ -1277,7 +1268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../python/reference/integration/" class="md-nav__link">
+      <a href="../../python/reference/integration/" class="md-nav__link">
         
   
   
@@ -1300,7 +1291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../python/reference/prompt/" class="md-nav__link">
+      <a href="../../python/reference/prompt/" class="md-nav__link">
         
   
   
@@ -1383,7 +1374,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../deep-dive/ir/" class="md-nav__link">
+      <a href="../../deep-dive/ir/" class="md-nav__link">
         
   
   
@@ -1448,7 +1439,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../deep-dive/proposals/poml_extended/" class="md-nav__link">
+      <a href="../../deep-dive/proposals/poml_extended/" class="md-nav__link">
         
   
   
@@ -1506,37 +1497,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#features" class="md-nav__link">
+  <a href="#white-space-options" class="md-nav__link">
     <span class="md-ellipsis">
-      Features
+      White Space Options
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#example-usage" class="md-nav__link">
     <span class="md-ellipsis">
-      Installation
+      Example Usage
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Installation">
+    <nav class="md-nav" aria-label="Example Usage">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#stable-release" class="md-nav__link">
+  <a href="#white-space-related-to-syntax" class="md-nav__link">
     <span class="md-ellipsis">
-      Stable Release
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#nightly-build" class="md-nav__link">
-    <span class="md-ellipsis">
-      Nightly Build
+      White Space Related to Syntax
     </span>
   </a>
   
@@ -1566,25 +1548,80 @@
   
 
 
-<h1 id="poml-visual-code-extension">POML Visual Code Extension<a class="headerlink" href="#poml-visual-code-extension" title="Permanent link">&para;</a></h1>
-<p>The POML Visual Studio Code extension provides comprehensive support for working with POML files.</p>
-<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<h1 id="controlling-white-space">Controlling White Space<a class="headerlink" href="#controlling-white-space" title="Permanent link">&para;</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This feature is experimental and may change in future releases. Use with caution.</p>
+</div>
+<p>POML provides experimental whitespace control options that allow you to fine-tune how white spaces in texts get processed. This is particularly useful when working with different content types or when you need precise control over spacing.</p>
+<h2 id="white-space-options">White Space Options<a class="headerlink" href="#white-space-options" title="Permanent link">&para;</a></h2>
+<p>The <code>whiteSpace</code> attribute (or <code>white-space</code>) can be applied to most POML components and accepts three values:</p>
 <ul>
-<li><strong>Syntax Highlighting</strong>: Full syntax highlighting for <code>.poml</code> files</li>
-<li><strong>IntelliSense</strong>: Auto-completion and suggestions</li>
-<li><strong>Preview Panel</strong>: Live preview of POML rendering</li>
-<li><strong>Model Testing</strong>: Test prompts directly in VS Code</li>
-<li><strong>Gallery</strong>: Built-in prompt gallery for common patterns</li>
+<li><strong><code>pre</code></strong> (default for <code>syntax="text"</code>): Preserves all whitespace exactly as written, including spaces, tabs, and line breaks.</li>
+<li><strong><code>filter</code></strong> (default for other syntaxes): Removes leading and trailing whitespace, and normalizes internal whitespace in the gaps between elements.</li>
+<li><strong><code>trim</code></strong>: Trims whitespace from the beginning and end of the content.</li>
 </ul>
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<h3 id="stable-release">Stable Release<a class="headerlink" href="#stable-release" title="Permanent link">&para;</a></h3>
-<p>Install from <a href="https://marketplace.visualstudio.com/items?itemName=poml-team.poml">Visual Studio Code Marketplace</a>.</p>
-<p>You can also install the extension manually by downloading the <code>.vsix</code> file from our <a href="https://github.com/microsoft/poml/releases">GitHub releases page</a> and installing it in VS Code via the Extensions view.</p>
-<h3 id="nightly-build">Nightly Build<a class="headerlink" href="#nightly-build" title="Permanent link">&para;</a></h3>
-<p>Download the nightly build from this <a href="https://poml-vscode-nightly.scottyugochang.workers.dev/">index</a></p>
-<p>Install the downloaded <code>.vsix</code> file in VS Code via the Extensions view (thanks <a href="https://stackoverflow.com/questions/42017617/how-to-install-vs-code-extension-manually">stackoverflow</a> for the image below).</p>
-<p><img alt="Manual installation instructions" src="../media/vscode-manual-install.png" /></p>
-<p>Before testing prompts with the POML toolkit, make sure you have configured your preferred LLM model, API key, and endpoint. If these are not set, prompt testing will not work. <a href="configuration/">Configuration instructions</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>whiteSpace</code> only applies to the current component, not its children. If you are applying to multiple components, consider using <a href="../meta/">stylesheets</a>.</p>
+</div>
+<h2 id="example-usage">Example Usage<a class="headerlink" href="#example-usage" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">&lt;poml&gt;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="cm">&lt;!-- Preserve exact formatting with &#39;pre&#39; --&gt;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&lt;p</span><span class="w"> </span><span class="na">whiteSpace=</span><span class="s">&quot;pre&quot;</span><span class="w"> </span><span class="na">syntax=</span><span class="s">&quot;markdown&quot;</span><span class="nt">&gt;</span>This<span class="w"> </span>text<span class="w">    </span>has<span class="w"> </span>multiple
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span>spaces<span class="w"> </span>and
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span>indentation<span class="w"> </span>preserved.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span>You<span class="w"> </span>can<span class="w"> </span>also<span class="w"> </span>include<span class="w"> </span>endless<span class="w"> </span>new<span class="w"> </span>lines.<span class="nt">&lt;/p&gt;</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="cm">&lt;!-- Normalize whitespace with &#39;filter&#39; --&gt;</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="nt">&lt;p</span><span class="w"> </span><span class="na">whiteSpace=</span><span class="s">&quot;filter&quot;</span><span class="nt">&gt;</span>This<span class="w"> </span>text<span class="w">    </span>will<span class="w"> </span>have
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span>normalized<span class="w">    </span>spacing.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span>New<span class="w"> </span>lines<span class="w"> </span>will<span class="w"> </span>also<span class="w"> </span>be<span class="w"> </span>reduced<span class="w"> </span>to<span class="w"> </span>a<span class="w"> </span>space.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">  </span><span class="nt">&lt;/p&gt;</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="cm">&lt;!-- Trim whitespace with &#39;trim&#39; --&gt;</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">  </span><span class="nt">&lt;p</span><span class="w"> </span><span class="na">whiteSpace=</span><span class="s">&quot;trim&quot;</span><span class="nt">&gt;</span><span class="w">   </span>This<span class="w"> </span>text<span class="w"> </span>will<span class="w"> </span>have<span class="w"> </span>leading<span class="w">    </span>and<span class="w"> </span>trailing<span class="w"> </span>spaces<span class="w"> </span>removed.<span class="w">   </span><span class="nt">&lt;/p&gt;</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="nt">&lt;/poml&gt;</span>
+</code></pre></div>
+<p>The POML above renders to:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>This text    has multiple
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  spaces and
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>      indentation preserved.
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>      You can also include endless new lines.
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>This text will have normalized spacing. New lines will also be reduced to a space.
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>This text will have leading    and trailing spaces removed.
+</code></pre></div>
+<h3 id="white-space-related-to-syntax">White Space Related to Syntax<a class="headerlink" href="#white-space-related-to-syntax" title="Permanent link">&para;</a></h3>
+<p>The <code>whiteSpace</code> attribute only controls how whitespace is handled when rendering to the <a href="../../deep-dive/ir/">IR</a>. When converting the IR to specific formats like Markdown, JSON or XML, the whitespace could still be affected by the syntax rules of that format. For example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">&lt;poml</span><span class="w"> </span><span class="na">syntax=</span><span class="s">&quot;markdown&quot;</span><span class="w"> </span><span class="na">whiteSpace=</span><span class="s">&quot;pre&quot;</span><span class="nt">&gt;</span>Marker<span class="w"> </span>0
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Marker<span class="w"> </span>1<span class="nt">&lt;p&gt;</span><span class="w">   </span>The<span class="w"> </span>first<span class="w"> </span>paragraph.<span class="w">   </span><span class="nt">&lt;/p&gt;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Marker<span class="w"> </span>2<span class="nt">&lt;p&gt;</span><span class="w">   </span>The<span class="w"> </span>second<span class="w"> </span>paragraph.<span class="w">   </span><span class="nt">&lt;/p&gt;</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>Marker<span class="w"> </span>3<span class="nt">&lt;/poml&gt;</span>
+</code></pre></div>
+<p>Renders to:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Marker 0
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Marker 1
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>The first paragraph.
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>Marker 2
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>The second paragraph.
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>Marker 3
+</code></pre></div>
+<p>To keep the whitespace exactly as you want it, consider using <code>syntax="text"</code> with <code>whiteSpace="pre"</code> (but note that you cannot use <code>&lt;p&gt;</code> tags within <code>syntax="text"</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">&lt;poml</span><span class="w"> </span><span class="na">syntax=</span><span class="s">&quot;text&quot;</span><span class="w"> </span><span class="na">whiteSpace=</span><span class="s">&quot;pre&quot;</span><span class="nt">&gt;</span>
+</code></pre></div>
 
 
 
@@ -1607,7 +1644,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 13, 2025 05:02:40 UTC"><span class="timeago" datetime="2025-08-13T05:02:40+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 13, 2025 05:02:40 UTC">2025-08-13</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 23, 2025 06:53:10 UTC"><span class="timeago" datetime="2025-08-23T06:53:10+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 23, 2025 06:53:10 UTC">2025-08-23</span>
   </span>
 
     
@@ -1617,7 +1654,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 11, 2025 04:35:04 UTC"><span class="timeago" datetime="2025-08-11T04:35:04+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 11, 2025 04:35:04 UTC">2025-08-11</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 23, 2025 06:53:10 UTC"><span class="timeago" datetime="2025-08-23T06:53:10+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 23, 2025 06:53:10 UTC">2025-08-23</span>
   </span>
 
     
@@ -1680,14 +1717,14 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.tooltips"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.92b07e13.min.js"></script>
+      <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="../js/timeago.min.js"></script>
+        <script src="../../js/timeago.min.js"></script>
       
-        <script src="../js/timeago_mkdocs_material.js"></script>
+        <script src="../../js/timeago_mkdocs_material.js"></script>
       
     
   </body>

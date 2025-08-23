@@ -2,86 +2,102 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://microsoft.github.io/poml/latest/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/deep-dive/ir/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/deep-dive/proposals/poml_extended/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/language/basic/</loc>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/language/components/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/language/meta/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
-         <loc>https://microsoft.github.io/poml/latest/language/standalone/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <loc>https://microsoft.github.io/poml/latest/language/template/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/language/token/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/language/white-space/</loc>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/python/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/python/reference/core/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/python/reference/integration/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/python/reference/prompt/</loc>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/tutorial/quickstart/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/typescript/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/typescript/reference/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/typescript/reference/base/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/typescript/reference/cli/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/typescript/reference/components/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/typescript/reference/essentials/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/typescript/reference/file/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/typescript/reference/writer/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/vscode/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/vscode/configuration/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
     <url>
          <loc>https://microsoft.github.io/poml/latest/vscode/features/</loc>
-         <lastmod>2025-08-22</lastmod>
+         <lastmod>2025-08-23</lastmod>
     </url>
 </urlset>

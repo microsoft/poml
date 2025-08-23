@@ -408,12 +408,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../language/standalone/" class="md-nav__link">
+      <a href="../../language/basic/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Write .poml Files
+    Basic Syntax
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../language/template/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Template Engine
     
   </span>
   
@@ -453,6 +476,144 @@
   
   
   
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Fine-grained Control
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            Fine-grained Control
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../language/white-space/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    White Space Control
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../language/token/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Token Control
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    References
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            References
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../language/components/" class="md-nav__link">
         
@@ -465,6 +626,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -930,7 +1099,7 @@
   
   
   <span class="md-ellipsis">
-    Modules
+    References
     
   </span>
   
@@ -941,7 +1110,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5_2">
             <span class="md-nav__icon md-icon"></span>
-            Modules
+            References
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1267,6 +1436,29 @@
   
   <span class="md-ellipsis">
     Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python/reference/prompt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Prompt
     
   </span>
   
@@ -1733,7 +1925,7 @@
 <ol>
 <li><strong>CodeLens Buttons</strong>: When you open a <code>.poml</code> file, you'll see "▶️ Evaluate" buttons appearing above expressions and variables.</li>
 <li><strong>Click to Evaluate</strong>: Click any "▶️ Evaluate" button to execute the expression and see its result.</li>
-<li><strong>View Output</strong>: Go to View → Output in VS Code. Results are displayed in the <strong>POML Language Server</strong> output channel.</li>
+<li><strong>View Output</strong>: Go to View → Output in VS Code. Results are displayed in the <strong>POML Debug</strong> output channel.</li>
 </ol>
 <h4 id="what-gets-evaluated">What Gets Evaluated<a class="headerlink" href="#what-gets-evaluated" title="Permanent link">&para;</a></h4>
 <p>The CodeLens evaluation feature works with:</p>
@@ -1779,6 +1971,10 @@
 - Configure your API key and endpoint URL
 - Choose your preferred model name</p>
 <h2 id="prompt-gallery">Prompt Gallery<a class="headerlink" href="#prompt-gallery" title="Permanent link">&para;</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The Prompt Gallery is an experimental feature. It is likely to be removed after we find a replacement to use models from GitHub Copilot. Related discussions: <a href="https://github.com/microsoft/poml/pull/102">#102</a>.</p>
+</div>
 <p>The Prompt Gallery provides access to pre-built prompt templates and allows you to manage your own custom prompts. Access it from the POML activity bar in VS Code.</p>
 <h3 id="built-in-templates">Built-in Templates<a class="headerlink" href="#built-in-templates" title="Permanent link">&para;</a></h3>
 <p>The gallery includes several built-in prompt templates covering common use cases:
@@ -1891,7 +2087,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 21, 2025 11:05:22 UTC"><span class="timeago" datetime="2025-08-21T11:05:22+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 21, 2025 11:05:22 UTC">2025-08-21</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 23, 2025 06:53:10 UTC"><span class="timeago" datetime="2025-08-23T06:53:10+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 23, 2025 06:53:10 UTC">2025-08-23</span>
   </span>
 
     
