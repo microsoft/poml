@@ -862,7 +862,7 @@ class _TagLib:
         2. If the first element is a POML component, `<poml syntax="markdown">` will be added.
 
         Args:
-            syntax (Optional[str]): The syntax of the content. Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"text"`.
+            syntax (Optional[str]): The syntax of the content. Note `xml` and `text` are experimental. Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"text"`.
             className (Optional[str]): A class name for quickly styling the current block with stylesheets.
             speaker (Optional[str]): The speaker of the content. By default, it's determined by the context and the content. Choices: `"human"`, `"ai"`, `"system"`.
             name (Optional[str]): The name of the content, used in serialization.

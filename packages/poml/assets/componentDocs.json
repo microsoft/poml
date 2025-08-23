@@ -1155,7 +1155,7 @@
           "xml",
           "text"
         ],
-        "description": "The syntax of the content.",
+        "description": "The syntax of the content. Note `xml` and `text` are experimental.",
         "required": false
       },
       {
