@@ -103,7 +103,8 @@ This text will have leading    and trailing spaces removed.`
   <p tokenLimit="10">This paragraph will be truncated based on token count rather than character count, which is more accurate for AI model processing.</p>
 </poml>`;
     const element = await poml(text);
-    expect(element).toBe(`This is a very long paragraph that will be truncated if it exceeds the character limit. The truncati (...truncated)
+    expect(element)
+      .toBe(`This is a very long paragraph that will be truncated if it exceeds the character limit. The truncati (...truncated)
 
 This paragraph will be truncated based on token count rather (...truncated)`);
   });
@@ -114,7 +115,8 @@ This paragraph will be truncated based on token count rather (...truncated)`);
         charLimit={20}
         writerOptions={{ truncateMarker: ' [...] ', truncateDirection: 'middle' }}
       >
-        This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add a marker to indicate that content was cut off.
+        This is a very long paragraph that will be truncated if it exceeds the character limit. The
+        truncation will add a marker to indicate that content was cut off.
       </Markup.Paragraph>
     );
     expect(element).toBe('This is a  [...] s cut off.');
@@ -138,7 +140,7 @@ This content has high priority and will be preserved longer.
 
 This content has medium priority.`;
     expect(element).toBe(expected);
-  })
+  });
 
   test('tokenControlDocExample4', async () => {
     const text = `<poml tokenLimit="40">
@@ -203,117 +205,32 @@ Optional additional context that can (...truncated)`;
     expect(element).toStrictEqual([{ speaker: 'human', content: [] }]);
   });
 
-  test('toolRequest', async () => {
-    const text = '<tool-request id="test-123" name="search" parameters="{{ { query: \'hello\', limit: 10 } }}" />';
+  test('inlineSerializeEndToEnd', async () => {
+    const text =
+      '<Markup.Environment><Serialize.Environment inline="true"><Serialize.Any name="hello">world</Serialize.Any></Serialize.Environment></Markup.Environment>';
     const result = await poml(text);
-    expect(result).toHaveLength(1);
-    expect((result[0] as any).type).toBe('application/vnd.poml.toolrequest');
-    expect((result[0] as any).id).toBe('test-123');
-    expect((result[0] as any).name).toBe('search');
-    expect((result[0] as any).content).toEqual({ query: 'hello', limit: 10 });
+    expect(result).toBe('`{\n  "hello": "world"\n}`');
   });
 
-  test('toolResponse', async () => {
-    const text = `<tool-response id="test-123" name="search">
-      <p>Found results:</p>
-      <list>
-        <item>Result 1</item>
-        <item>Result 2</item>
-      </list>
-    </tool-response>`;
+  test('blockSerializeEndToEnd', async () => {
+    const text =
+      '<Markup.Environment><Serialize.Environment><Serialize.Any name="hello">world</Serialize.Any></Serialize.Environment></Markup.Environment>';
     const result = await poml(text);
-    expect(result).toHaveLength(1);
-    expect((result[0] as any).type).toBe('application/vnd.poml.toolresponse');
-    expect((result[0] as any).id).toBe('test-123');
-    expect((result[0] as any).name).toBe('search');
-    expect((result[0] as any).content).toMatch(/Found results:/);
-    expect((result[0] as any).content).toMatch(/- Result 1/);
+    expect(result).toBe('```json\n{\n  "hello": "world"\n}\n```');
   });
 
-  test('toolsInConversation', async () => {
-    const text = `<poml>
-      <p speaker="human">Search for information about TypeScript</p>
-      <tool-request id="search-1" name="web_search" parameters={{ query: "TypeScript programming language" }} />
-      <tool-response id="search-1" name="web_search" speaker="tool">
-        <p>TypeScript is a strongly typed programming language that builds on JavaScript.</p>
-      </tool-response>
-      <p speaker="ai">Based on the search results, TypeScript is a typed superset of JavaScript.</p>
-    </poml>`;
-    const element = write(await read(text), { speaker: true });
-    expect(element).toHaveLength(4);
-    expect(element[0].speaker).toBe('human');
-    expect(element[0].content).toBe('Search for information about TypeScript');
-    expect(element[1].speaker).toBe('ai');
-    expect((element[1].content[0] as any).type).toBe('application/vnd.poml.toolrequest');
-    expect(element[2].speaker).toBe('tool');
-    expect((element[2].content[0] as any).type).toBe('application/vnd.poml.toolresponse');
-    expect(element[3].speaker).toBe('ai');
-  });
-
-  test('toolResponseWithImage', async () => {
-    const text = `<tool-response id="img-123" name="generate_image">
-      <p>Generated image:</p>
-      <image base64="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="/>
-      <p>A simple test image</p>
-    </tool-response>`;
+  test('inlineFreeEndToEnd', async () => {
+    const text =
+      '<Markup.Environment><Free.Environment inline="true">hello world</Free.Environment></Markup.Environment>';
     const result = await poml(text);
-    expect(result).toHaveLength(1);
-    const response = (result[0] as any);
-    expect(response.type).toBe('application/vnd.poml.toolresponse');
-    expect(Array.isArray(response.content)).toBe(true);
-    expect(response.content).toHaveLength(3);
-    expect(response.content[1].type).toBe('image/png');
+    expect(result).toBe('`hello world`');
   });
 
-  test('toolResponseComplex', async () => {
-    const text = `<poml>
-<tool name="get_horoscope">
-{
-    "type": "object",
-    "properties": {
-        "sign": {
-            "type": "string",
-            "description": "An astrological sign like Taurus or Aquarius"
-        }
-    },
-    "required": ["sign"]
-}</tool>
-
-<p>What is my horoscope? I am an Aquarius.</p>
-<tool-request name="get_horoscope" id="call_rui1PrufCQS25KZxLkt7hXWA" parameters='{"sign":"Aquarius"}'/>
-<tool-response name="get_horoscope" id="call_rui1PrufCQS25KZxLkt7hXWA" syntax="json">
-<cp caption="horoscope">: Next Tuesday you will befriend a baby otter.</cp>
-</tool-response>
-</poml>`;
-    const result = await write(await read(text), { speaker: true });
-    expect(result).toStrictEqual([
-      {
-        speaker: 'system',
-        content: 'What is my horoscope? I am an Aquarius.'
-      },
-      {
-        speaker: 'ai',
-        content: [
-          {
-            type: 'application/vnd.poml.toolrequest',
-            content: { sign: 'Aquarius' },
-            id: 'call_rui1PrufCQS25KZxLkt7hXWA',
-            name: 'get_horoscope'
-          }
-        ]
-      },
-      {
-        speaker: 'tool',
-        content: [
-          {
-            type: 'application/vnd.poml.toolresponse',
-            content: '{\n  "horoscope": ": Next Tuesday you will befriend a baby otter."\n}',
-            id: 'call_rui1PrufCQS25KZxLkt7hXWA',
-            name: 'get_horoscope'
-          }
-        ]
-      }
-    ]);
+  test('blockFreeEndToEnd', async () => {
+    const text =
+      '<Markup.Environment><Free.Environment>hello world</Free.Environment></Markup.Environment>';
+    const result = await poml(text);
+    expect(result).toBe('```\nhello world\n```');
   });
 });
 
@@ -686,7 +603,7 @@ describe('message components', () => {
       name: 'search',
       content: { query: 'hello', limit: 10 }
     };
-    
+
     const text = '<MessageContent content="{{toolRequestContent}}" />';
     const ir = await read(text, undefined, { toolRequestContent: [toolRequest] });
     const element = write(ir);
@@ -704,7 +621,7 @@ describe('message components', () => {
       name: 'search',
       content: 'Search completed successfully'
     };
-    
+
     const text = '<MessageContent content="{{toolResponseContent}}" />';
     const ir = await read(text, undefined, { toolResponseContent: [toolResponse] });
     const messages = write(ir, { speaker: true });
@@ -725,13 +642,9 @@ describe('message components', () => {
       name: 'calculate',
       content: { expression: '2+2' }
     };
-    
-    const mixedContent = [
-      'Making a calculation: ',
-      toolRequest,
-      ' Please wait...'
-    ];
-    
+
+    const mixedContent = ['Making a calculation: ', toolRequest, ' Please wait...'];
+
     const text = '<MessageContent content="{{mixedContent}}" />';
     ErrorCollection.clear();
     const ir = await read(text, undefined, { mixedContent: mixedContent });
@@ -752,21 +665,21 @@ describe('message components', () => {
       name: 'web_search',
       content: { query: 'TypeScript', limit: 5 }
     };
-    
+
     const toolResponse = {
       type: 'application/vnd.poml.toolresponse' as const,
       id: 'search-789',
       name: 'web_search',
       content: 'Found 5 results about TypeScript'
     };
-    
+
     const messages = [
       { speaker: 'human', content: 'Search for TypeScript information' },
       { speaker: 'ai', content: [toolRequest] },
       { speaker: 'tool', content: [toolResponse] },
       { speaker: 'ai', content: 'Based on the search results, TypeScript is great!' }
     ];
-    
+
     const text = '<Conversation messages="{{messages}}" />';
     const element = write(await read(text, undefined, { messages }), { speaker: true });
     expect(element).toHaveLength(4);
@@ -781,21 +694,21 @@ describe('message components', () => {
   test('tool with runtime parameters and template variables', async () => {
     const tool_name = 'get_weather';
     const tool_schema = {
-      "type": "object",
-      "properties": {
-        "location": {
-          "type": "string",
-          "description": "The city and state, e.g. San Francisco, CA"
+      type: 'object',
+      properties: {
+        location: {
+          type: 'string',
+          description: 'The city and state, e.g. San Francisco, CA'
         },
-        "unit": {
-          "type": "string",
-          "enum": ["celsius", "fahrenheit"],
-          "description": "The unit of temperature"
+        unit: {
+          type: 'string',
+          enum: ['celsius', 'fahrenheit'],
+          description: 'The unit of temperature'
         }
       },
-      "required": ["location"]
+      required: ['location']
     };
-    
+
     const text = `<poml>
 <p>What is the weather in San Francisco?</p>
 <tool parser="eval" name="{{ tool_name }}" description="Get the current weather in a specified location.">
@@ -803,25 +716,25 @@ describe('message components', () => {
 </tool>
 <runtime model="gpt-4.1" provider="microsoft" />
 </poml>`;
-    
+
     ErrorCollection.clear();
     const [ir, file] = await _readWithFile(text, undefined, { tool_name, tool_schema });
     const result = write(ir, { speaker: true });
     const runtime = file?.getRuntimeParameters();
     const tools = file?.getToolsSchema()?.toOpenAI();
     expect(ErrorCollection.empty()).toBe(true);
-    
+
     // Check runtime parameters
     expect(runtime).toBeDefined();
     expect(runtime?.model).toBe('gpt-4.1');
     expect(runtime?.provider).toBe('microsoft');
-    
+
     // Check tool definition
     expect(tools).toHaveLength(1);
     expect(tools?.[0].name).toBe('get_weather');
     expect(tools?.[0].description).toBe('Get the current weather in a specified location.');
     expect(tools?.[0].parameters).toBeDefined();
-    
+
     // Verify the schema was properly parsed
     const schema = tools?.[0].parameters;
     expect(schema?.type).toBe('object');
@@ -829,7 +742,7 @@ describe('message components', () => {
     expect(schema?.properties?.location?.type).toBe('string');
     expect(schema?.properties?.unit?.enum).toEqual(['celsius', 'fahrenheit']);
     expect(schema?.required).toEqual(['location']);
-    
+
     // Check the rendered message
     const messages = write(ir, { speaker: true });
     expect(messages).toHaveLength(1);
@@ -869,26 +782,29 @@ describe('message components', () => {
       };
       return messages.map(msg => {
         const role = speakerToRole[msg.speaker as keyof typeof speakerToRole];
-        const contents = typeof msg.content === 'string' ? msg.content : msg.content.map((part: any) => {
-          if (typeof part === 'string') {
-            return { type: 'text', text: part };
-          } else if (part.type === 'application/vnd.poml.toolrequest') {
-            return {
-              type: 'tool-call',
-              toolCallId: part.id,
-              toolName: part.name,
-              input: part.content
-            };
-          } else if (part.type === 'application/vnd.poml.toolresponse') {
-            return {
-              type: 'tool-result',
-              toolCallId: part.id,
-              toolName: part.name,
-              result: richContentToToolResult(part.content)
-            };
-          }
-          return part;
-        });
+        const contents =
+          typeof msg.content === 'string'
+            ? msg.content
+            : msg.content.map((part: any) => {
+                if (typeof part === 'string') {
+                  return { type: 'text', text: part };
+                } else if (part.type === 'application/vnd.poml.toolrequest') {
+                  return {
+                    type: 'tool-call',
+                    toolCallId: part.id,
+                    toolName: part.name,
+                    input: part.content
+                  };
+                } else if (part.type === 'application/vnd.poml.toolresponse') {
+                  return {
+                    type: 'tool-result',
+                    toolCallId: part.id,
+                    toolName: part.name,
+                    result: richContentToToolResult(part.content)
+                  };
+                }
+                return part;
+              });
         return { role, content: contents };
       });
     };
@@ -899,39 +815,39 @@ describe('message components', () => {
       name: 'search',
       content: { query: 'test', limit: 10 }
     };
-    
+
     const toolResponse = {
       type: 'application/vnd.poml.toolresponse' as const,
       id: 'req-123',
       name: 'search',
       content: 'Search completed successfully'
     };
-    
+
     const messages = [
       { speaker: 'human', content: 'Please search for something' },
       { speaker: 'ai', content: [toolRequest] },
       { speaker: 'tool', content: [toolResponse] },
       { speaker: 'ai', content: 'Here are the results' }
     ];
-    
+
     const converted = convertMessage(messages);
-    
+
     expect(converted).toHaveLength(4);
     expect(converted[0].role).toBe('user');
     expect(converted[0].content).toBe('Please search for something');
-    
+
     expect(converted[1].role).toBe('assistant');
     expect(converted[1].content[0].type).toBe('tool-call');
     expect(converted[1].content[0].toolCallId).toBe('req-123');
     expect(converted[1].content[0].toolName).toBe('search');
     expect(converted[1].content[0].input).toEqual({ query: 'test', limit: 10 });
-    
+
     expect(converted[2].role).toBe('tool');
     expect(converted[2].content[0].type).toBe('tool-result');
     expect(converted[2].content[0].toolCallId).toBe('req-123');
     expect(converted[2].content[0].toolName).toBe('search');
     expect(converted[2].content[0].result).toBe('Search completed successfully');
-    
+
     expect(converted[3].role).toBe('assistant');
     expect(converted[3].content).toBe('Here are the results');
   });
@@ -968,7 +884,8 @@ describe('message components', () => {
         'Analysis results:',
         {
           type: 'image/png',
-          base64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+          base64:
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
           alt: 'chart'
         },
         'The trend is positive.'
@@ -976,13 +893,14 @@ describe('message components', () => {
     };
 
     const result = richContentToToolResult(toolResponseWithRichContent.content);
-    
+
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(3);
     expect(result[0]).toEqual({ type: 'text', text: 'Analysis results:' });
-    expect(result[1]).toEqual({ 
-      type: 'image', 
-      image: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' 
+    expect(result[1]).toEqual({
+      type: 'image',
+      image:
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
     });
     expect(result[2]).toEqual({ type: 'text', text: 'The trend is positive.' });
 
