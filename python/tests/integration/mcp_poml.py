@@ -6,42 +6,42 @@ from openai import OpenAI
 import poml
 from mcp import ClientSession, types
 from mcp.client.sse import sse_client
+from common_utils import print_section
 
 client = OpenAI(
     base_url=os.environ["OPENAI_API_BASE"],
     api_key=os.environ["OPENAI_API_KEY"],
 )
 
+
 async def main():
     context = {
         "system": "You are a helpful DM assistant. Use the dice-rolling tool when needed.",
         "input": "Roll 2d4+1",
         "tools": [],
-        "interactions": []
+        "interactions": [],
     }
     server_url = "https://dmcp-server.deno.dev/sse"
     async with sse_client(server_url) as (read, write):
         async with ClientSession(read, write) as mcp_session:
             await mcp_session.initialize()
             mcp_tools = (await mcp_session.list_tools()).tools
-            print("MCP tools:", mcp_tools)
+            print_section("MCP tools", str(mcp_tools))
 
             # Convert MCP tools into context need by POML
             for t in mcp_tools:
-                context["tools"].append({
-                    "name": t.name,
-                    "description": t.description,
-                    "schema": t.inputSchema
-                })
+                context["tools"].append({"name": t.name, "description": t.description, "schema": t.inputSchema})
 
             for _ in range(10):
-                print("Context:", json.dumps(context, indent=2))
+                print_section("Context", json.dumps(context, indent=2))
 
                 params = poml.poml("../assets/dynamic_tools.poml", context=context, format="openai_chat")
+                assert "tools" in params, "tools missing in params"
+                assert "model" in params, "model missing in params"
 
                 resp = client.chat.completions.create(**params)
 
-                print("Response:", resp)
+                print_section("Response", str(resp))
 
                 msg = resp.choices[0].message
                 if msg.tool_calls:
@@ -52,20 +52,16 @@ async def main():
 
                         # Call the MCP server tool
                         result = await mcp_session.call_tool(fn.name, args)
-                        print("Tool result:", result)
-                        responses.append({
-                            "id": tc.id,
-                            "name": fn.name,
-                            "input": args,
-                            "output": result.model_dump()
-                        })
+                        print_section("Tool result", str(result))
+                        responses.append({"id": tc.id, "name": fn.name, "input": args, "output": result.model_dump()})
                     context["interactions"].append(responses)
                     continue  # loop again to let the model process tool output
                 else:
                     # No tool calls => final output
-                    print("Assistant:", msg.content)
+                    print_section("Assistant", msg.content or "")
                     break
             else:
                 raise RuntimeError("Too many iterations")
+
 
 asyncio.run(main())

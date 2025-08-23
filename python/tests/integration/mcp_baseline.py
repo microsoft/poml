@@ -13,25 +13,24 @@ client = OpenAI(
     api_key=os.environ["OPENAI_API_KEY"],
 )
 
+
 async def main():
     server_url = "https://dmcp-server.deno.dev/sse"
     async with sse_client(server_url) as (read, write):
         async with ClientSession(read, write) as mcp_session:
             await mcp_session.initialize()
             mcp_tools = (await mcp_session.list_tools()).tools
-            print("MCP tools:", mcp_tools)
+            print_section("MCP tools", str(mcp_tools))
 
             # Convert MCP tools into OpenAI Chat Completions tools
             oa_tools = []
             for t in mcp_tools:
-                oa_tools.append({
-                    "type": "function",
-                    "function": {
-                        "name": t.name,
-                        "description": t.description,
-                        "parameters": t.inputSchema
+                oa_tools.append(
+                    {
+                        "type": "function",
+                        "function": {"name": t.name, "description": t.description, "parameters": t.inputSchema},
                     }
-                })
+                )
 
             # Start a chat with a user asking to roll dice
             messages = [
@@ -47,7 +46,7 @@ async def main():
                     tool_choice="auto",
                 )
 
-                print("Response:", resp)
+                print_section("Response", str(resp))
 
                 msg = resp.choices[0].message
                 messages.append({"role": "assistant", "content": msg.content or "", "tool_calls": msg.tool_calls})
@@ -60,7 +59,7 @@ async def main():
                         # Call the MCP server tool
                         result = await mcp_session.call_tool(fn.name, args)
 
-                        print("Tool result:", result)
+                        print_section("Tool result", str(result))
 
                         # Convert result content into text
                         text_result = ""
@@ -72,18 +71,21 @@ async def main():
                             )
 
                         # Feed tool result back to the chat
-                        messages.append({
-                            "role": "tool",
-                            "tool_call_id": tc.id,
-                            "name": fn.name,
-                            "content": text_result,
-                        })
+                        messages.append(
+                            {
+                                "role": "tool",
+                                "tool_call_id": tc.id,
+                                "name": fn.name,
+                                "content": text_result,
+                            }
+                        )
                     continue  # loop again to let the model process tool output
 
                 # No tool calls => final output
-                print("Assistant:", msg.content)
+                print_section("Assistant", msg.content or "")
                 break
             else:
                 raise RuntimeError("Too many iterations")
+
 
 asyncio.run(main())

@@ -2,6 +2,7 @@ import os
 from flask import json
 import poml
 from openai import OpenAI
+from common_utils import print_section
 
 
 def get_horoscope(sign):
@@ -21,19 +22,19 @@ if __name__ == "__main__":
     }
 
     params = poml.poml("../assets/tool_call.poml", context=context, format="openai_chat")
-    print(params)
+    print_section("Parameters", str(params))
     assert "tools" in params
     response = client.chat.completions.create(model="gpt-4.1-nano", **params)
 
     # Process tool call
-    print(response.choices[0])
+    print_section("Response Choice", str(response.choices[0]))
     tool_call = response.choices[0].message.tool_calls[0]
     context["tool_request"] = {
         "name": tool_call.function.name,
         "parameters": json.loads(tool_call.function.arguments),
         "id": tool_call.id,
     }
-    print("Tool request:", context["tool_request"])
+    print_section("Tool request", str(context["tool_request"]))
     result = {"horoscope": get_horoscope(**context["tool_request"]["parameters"])}
 
     # Request 2. Tool response
@@ -42,13 +43,13 @@ if __name__ == "__main__":
         "result": result,
         "id": tool_call.id,
     }
-    print("Context:", context)
+    print_section("Context", str(context))
     assert isinstance(context["tool_response"]["result"], dict)
     params = poml.poml("../assets/tool_call.poml", context=context, format="openai_chat")
-    print(params)
+    print_section("Updated Parameters", str(params))
     assert len(params["messages"]) == 3
     assert params["messages"][1]["role"] == "assistant"
     assert params["messages"][2]["role"] == "tool"
     assert params["messages"][2]["content"] == '{"horoscope":"Aquarius: Next Tuesday you will befriend a baby otter."}'
     response = client.chat.completions.create(model="gpt-4.1-nano", **params)
-    print(response.choices[0])
+    print_section("Final Response", str(response.choices[0]))
