@@ -41,6 +41,34 @@
          <lastmod>2025-08-23</lastmod>
     </url>
     <url>
+         <loc>https://microsoft.github.io/poml/latest/python/trace/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/python/integration/agentops/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/python/integration/langchain/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/python/integration/mcp/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/python/integration/mlflow/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/python/integration/openai/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
+         <loc>https://microsoft.github.io/poml/latest/python/integration/weave/</loc>
+         <lastmod>2025-08-23</lastmod>
+    </url>
+    <url>
          <loc>https://microsoft.github.io/poml/latest/python/reference/core/</loc>
          <lastmod>2025-08-23</lastmod>
     </url>

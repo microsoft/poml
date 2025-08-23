@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://microsoft.github.io/poml/latest/deep-dive/ir/">
+        <link rel="canonical" href="https://microsoft.github.io/poml/latest/python/integration/weave/">
       
       
-        <link rel="prev" href="../../typescript/reference/components/">
+        <link rel="prev" href="../agentops/">
       
       
-        <link rel="next" href="../proposals/poml_extended/">
+        <link rel="next" href="../../reference/core/">
       
       
-      <link rel="icon" href="../../media/logo-16-purple.png">
+      <link rel="icon" href="../../../media/logo-16-purple.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
     
     
       
-        <title>IR Specification - POML Documentation</title>
+        <title>Weave - POML Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -48,13 +48,13 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../css/timeago.css">
+      <link rel="stylesheet" href="../../../css/timeago.css">
     
-      <link rel="stylesheet" href="../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#intermediate-representation" class="md-skip">
+        <a href="#weave-integration" class="md-skip">
           Skip to content
         </a>
       
@@ -100,9 +100,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="POML Documentation" class="md-header__button md-logo" aria-label="POML Documentation" data-md-component="logo">
+    <a href="../../.." title="POML Documentation" class="md-header__button md-logo" aria-label="POML Documentation" data-md-component="logo">
       
-  <img src="../../media/logo-64-white.png" alt="logo">
+  <img src="../../../media/logo-64-white.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              IR Specification
+              Weave
             
           </span>
         </div>
@@ -237,9 +237,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="POML Documentation" class="md-nav__button md-logo" aria-label="POML Documentation" data-md-component="logo">
+    <a href="../../.." title="POML Documentation" class="md-nav__button md-logo" aria-label="POML Documentation" data-md-component="logo">
       
-  <img src="../../media/logo-64-white.png" alt="logo">
+  <img src="../../../media/logo-64-white.png" alt="logo">
 
     </a>
     POML Documentation
@@ -266,7 +266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -331,7 +331,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tutorial/quickstart/" class="md-nav__link">
+      <a href="../../../tutorial/quickstart/" class="md-nav__link">
         
   
   
@@ -404,7 +404,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../language/basic/" class="md-nav__link">
+      <a href="../../../language/basic/" class="md-nav__link">
         
   
   
@@ -427,7 +427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../language/template/" class="md-nav__link">
+      <a href="../../../language/template/" class="md-nav__link">
         
   
   
@@ -450,7 +450,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../language/meta/" class="md-nav__link">
+      <a href="../../../language/meta/" class="md-nav__link">
         
   
   
@@ -513,7 +513,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../language/white-space/" class="md-nav__link">
+      <a href="../../../language/white-space/" class="md-nav__link">
         
   
   
@@ -536,7 +536,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../language/token/" class="md-nav__link">
+      <a href="../../../language/token/" class="md-nav__link">
         
   
   
@@ -607,7 +607,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../language/components/" class="md-nav__link">
+      <a href="../../../language/components/" class="md-nav__link">
         
   
   
@@ -688,7 +688,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../vscode/" class="md-nav__link">
+      <a href="../../../vscode/" class="md-nav__link">
         
   
   
@@ -711,7 +711,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../vscode/features/" class="md-nav__link">
+      <a href="../../../vscode/features/" class="md-nav__link">
         
   
   
@@ -734,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../vscode/configuration/" class="md-nav__link">
+      <a href="../../../vscode/configuration/" class="md-nav__link">
         
   
   
@@ -761,8 +761,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -773,11 +775,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -793,7 +795,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Python
@@ -807,7 +809,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -830,7 +832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/trace/" class="md-nav__link">
+      <a href="../../trace/" class="md-nav__link">
         
   
   
@@ -850,6 +852,8 @@
                 
   
   
+    
+  
   
   
     
@@ -859,11 +863,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" checked>
         
           
           <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
@@ -879,7 +883,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5_3">
             <span class="md-nav__icon md-icon"></span>
             Integrations
@@ -893,7 +897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/integration/openai/" class="md-nav__link">
+      <a href="../openai/" class="md-nav__link">
         
   
   
@@ -916,7 +920,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/integration/langchain/" class="md-nav__link">
+      <a href="../langchain/" class="md-nav__link">
         
   
   
@@ -939,7 +943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/integration/mcp/" class="md-nav__link">
+      <a href="../mcp/" class="md-nav__link">
         
   
   
@@ -962,7 +966,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/integration/mlflow/" class="md-nav__link">
+      <a href="../mlflow/" class="md-nav__link">
         
   
   
@@ -985,7 +989,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/integration/agentops/" class="md-nav__link">
+      <a href="../agentops/" class="md-nav__link">
         
   
   
@@ -1005,10 +1009,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../python/integration/weave/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Weave
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1019,6 +1045,95 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation-and-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation and Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-traced" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Gets Traced
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What Gets Traced">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#poml-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      POML Operations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompt-publishing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prompt Publishing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-trace-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Trace Data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      See Also
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1079,7 +1194,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/reference/core/" class="md-nav__link">
+      <a href="../../reference/core/" class="md-nav__link">
         
   
   
@@ -1102,7 +1217,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/reference/integration/" class="md-nav__link">
+      <a href="../../reference/integration/" class="md-nav__link">
         
   
   
@@ -1125,7 +1240,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../python/reference/prompt/" class="md-nav__link">
+      <a href="../../reference/prompt/" class="md-nav__link">
         
   
   
@@ -1206,7 +1321,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../typescript/" class="md-nav__link">
+      <a href="../../../typescript/" class="md-nav__link">
         
   
   
@@ -1269,7 +1384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../typescript/reference/" class="md-nav__link">
+      <a href="../../../typescript/reference/" class="md-nav__link">
         
   
   
@@ -1292,7 +1407,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../typescript/reference/base/" class="md-nav__link">
+      <a href="../../../typescript/reference/base/" class="md-nav__link">
         
   
   
@@ -1315,7 +1430,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../typescript/reference/cli/" class="md-nav__link">
+      <a href="../../../typescript/reference/cli/" class="md-nav__link">
         
   
   
@@ -1338,7 +1453,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../typescript/reference/essentials/" class="md-nav__link">
+      <a href="../../../typescript/reference/essentials/" class="md-nav__link">
         
   
   
@@ -1361,7 +1476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../typescript/reference/file/" class="md-nav__link">
+      <a href="../../../typescript/reference/file/" class="md-nav__link">
         
   
   
@@ -1384,7 +1499,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../typescript/reference/writer/" class="md-nav__link">
+      <a href="../../../typescript/reference/writer/" class="md-nav__link">
         
   
   
@@ -1407,7 +1522,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../typescript/reference/components/" class="md-nav__link">
+      <a href="../../../typescript/reference/components/" class="md-nav__link">
         
   
   
@@ -1442,8 +1557,6 @@
       
   
   
-    
-  
   
   
     
@@ -1456,11 +1569,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
           <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
@@ -1476,7 +1589,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Deep Dive
@@ -1487,19 +1600,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../deep-dive/ir/" class="md-nav__link">
         
   
   
@@ -1510,7 +1614,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1563,7 +1666,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../proposals/poml_extended/" class="md-nav__link">
+      <a href="../../../deep-dive/proposals/poml_extended/" class="md-nav__link">
         
   
   
@@ -1614,6 +1717,83 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation-and-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation and Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-traced" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Gets Traced
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What Gets Traced">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#poml-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      POML Operations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompt-publishing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prompt Publishing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-trace-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Trace Data
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      See Also
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1631,109 +1811,92 @@
   
 
 
-<h1 id="intermediate-representation">Intermediate Representation<a class="headerlink" href="#intermediate-representation" title="Permanent link">&para;</a></h1>
-<p><strong>Attributes Applicable to All Tags:</strong>
-* speaker (ai/human/system) - The speaker of the current content
-* original-start-index (integer) - The start offset of the element corresponding to the current one in the original document
-* original-end-index (integer) - The end offset of the element corresponding to the current one in the original document</p>
+<h1 id="weave-integration">Weave Integration<a class="headerlink" href="#weave-integration" title="Permanent link">&para;</a></h1>
+<p>Weave is Weights &amp; Biases' lightweight AI observability framework for tracking and versioning LLM applications. The POML-Weave integration automatically traces your POML calls and publishes prompts as versioned Weave objects.</p>
+<p><img alt="Weave trace view showing POML operations" src="../../../media/integration-weave.png" /></p>
+<h2 id="installation-and-configuration">Installation and Configuration<a class="headerlink" href="#installation-and-configuration" title="Permanent link">&para;</a></h2>
+<p>Install POML with Weave support:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>poml<span class="o">[</span>agent<span class="o">]</span>
+</code></pre></div>
+<p>Or install Weave separately:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span>weave
+</code></pre></div>
+<p>Set up your Weights &amp; Biases API key:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">WANDB_API_KEY</span><span class="o">=</span><span class="s2">&quot;your-api-key-here&quot;</span>
+</code></pre></div>
+<p>You can obtain an API key from <a href="https://wandb.ai/settings">Weights &amp; Biases</a>.</p>
+<h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h2>
+<p>Enable POML tracing with Weave:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">poml</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">weave</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAI</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="c1"># Initialize Weave project</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">weave</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="s2">&quot;my_poml_project&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># Enable POML tracing with Weave</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">poml</span><span class="o">.</span><span class="n">set_trace</span><span class="p">(</span><span class="s2">&quot;weave&quot;</span><span class="p">,</span> <span class="n">trace_dir</span><span class="o">=</span><span class="s2">&quot;pomlruns&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># Use POML as usual</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">client</span> <span class="o">=</span> <span class="n">OpenAI</span><span class="p">()</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="n">messages</span> <span class="o">=</span> <span class="n">poml</span><span class="o">.</span><span class="n">poml</span><span class="p">(</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="s2">&quot;explain_code.poml&quot;</span><span class="p">,</span> 
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>    <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;code_path&quot;</span><span class="p">:</span> <span class="s2">&quot;sample.py&quot;</span><span class="p">},</span> 
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;openai_chat&quot;</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="p">)</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-5&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>    <span class="o">**</span><span class="n">messages</span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="what-gets-traced">What Gets Traced<a class="headerlink" href="#what-gets-traced" title="Permanent link">&para;</a></h2>
+<p>When Weave integration is enabled, POML automatically captures:</p>
+<h3 id="poml-operations">POML Operations<a class="headerlink" href="#poml-operations" title="Permanent link">&para;</a></h3>
+<p>Each POML call is logged as a Weave operation with:</p>
 <ul>
-<li><strong>any</strong> - Represents a generic container for arbitrary data values. Useful for storing dynamic or unstructured content.</li>
-<li>type (string) - The data type of the value ('string', 'integer', 'float', 'boolean', 'array', 'object', 'buffer', 'null', or 'undefined').</li>
-<li>
-<p>name (string) - An optional identifier for the data.</p>
-</li>
-<li>
-<p><strong>b</strong> - Represents text that should be displayed in boldface. Useful for highlighting important words or phrases.</p>
-</li>
-<li>
-<p><strong>code</strong> - Represents a block or inline fragment of code. It can optionally include language and formatting attributes.</p>
-</li>
-<li>inline (boolean) - Indicates whether the code is inline (true) or a block element (false).</li>
-<li>lang (string) - Specifies the programming language or syntax highlighting mode.</li>
-<li>
-<p>blank-line (boolean) - Inserts a blank line before and after the code block if inline = false.</p>
-</li>
-<li>
-<p><strong>env</strong> - Represents a formatting environment or container to specify how nested content should be output.</p>
-</li>
-<li>presentation (string) - The output style or format mode ('markup', 'serialize', 'free', or 'multimedia').</li>
-<li>markup-lang (string) - The specific markup language, required only if presentation = 'markup'.</li>
-<li>serializer (string) - The name of the serializer, required only if presentation = 'serialize'.</li>
-<li>
-<p>writer-options (object) - Optional parameters passed to the writer constructor for customizing output.</p>
-</li>
-<li>
-<p><strong>h</strong> - Represents a heading element.</p>
-</li>
-<li>
-<p>level (integer) - Indicates the heading level. Typically ranges from 1 (highest level) to 6 (lowest level).</p>
-</li>
-<li>
-<p><strong>i</strong> - Represents text that should be displayed in italics. Useful for emphasizing words or phrases.</p>
-</li>
-<li>
-<p><strong>img</strong> - Represents an image element.</p>
-</li>
-<li>base64 (string) - The base64-encoded image data.</li>
-<li>alt (string) - Alternative text describing the image.</li>
-<li>position (string) - The placement of the image relative to text, such as 'here', 'top', or 'bottom'.</li>
-<li>
-<p>type (string) - The image MIME type (e.g., 'image/jpeg', 'image/png').</p>
-</li>
-<li>
-<p><strong>item</strong> - Represents a single item within a list. Typically used as a child element of "list".</p>
-</li>
-<li>
-<p><strong>list</strong> - Represents an ordered or unordered list of items.</p>
-</li>
-<li>
-<p>list-style (string) - The style of the list bullets or enumeration (e.g., 'star', 'dash', 'decimal').</p>
-</li>
-<li>
-<p><strong>nl</strong> - Inserts newline characters.</p>
-</li>
-<li>
-<p>count (integer) - Specifies how many newline characters to insert.</p>
-</li>
-<li>
-<p><strong>obj</strong> - Represents a data object, typically stored in JSON format.</p>
-</li>
-<li>
-<p>data (object) - A valid JSON object containing the structured data.</p>
-</li>
-<li>
-<p><strong>p</strong> - Represents a paragraph of text. Useful for dividing content into readable blocks.</p>
-</li>
-<li>
-<p>blank-line (boolean) - Inserts a blank line before and after the paragraph when true.</p>
-</li>
-<li>
-<p><strong>s</strong> - Represents text that should be displayed with a strikethrough style.</p>
-</li>
-<li>
-<p><strong>span</strong> - Represents an inline container for text without additional formatting. Useful for applying attributes without changing display structure.</p>
-</li>
-<li>
-<p><strong>table</strong> - Represents a table structure containing rows and cells.</p>
-</li>
-<li>
-<p><strong>tbody</strong> - Represents the body section of a table, containing the majority of data rows.</p>
-</li>
-<li>
-<p><strong>tcell</strong> - Represents a single cell within a table row.</p>
-</li>
-<li>
-<p><strong>text</strong> - Represents raw or unformatted text content.</p>
-</li>
-<li>
-<p><strong>thead</strong> - Represents the header section of a table, typically containing column headings.</p>
-</li>
-<li>
-<p><strong>trow</strong> - Represents a single row within a table, containing one or more cells.</p>
-</li>
-<li>
-<p><strong>u</strong> - Represents text that should be displayed with an underline.</p>
-</li>
+<li><strong>Operation Name</strong>: "poml"</li>
+<li><strong>Prompt Content</strong>: The raw POML source</li>
+<li><strong>Context Variables</strong>: All context variables passed to the POML call</li>
+<li><strong>Stylesheet</strong>: Any stylesheet configuration  </li>
+<li><strong>Result</strong>: The processed prompt structure sent to the LLM</li>
+</ul>
+<h3 id="prompt-publishing">Prompt Publishing<a class="headerlink" href="#prompt-publishing" title="Permanent link">&para;</a></h3>
+<p>POML prompts are automatically published as versioned Weave objects:</p>
+<ul>
+<li><strong>Object Name</strong>: Automatically derived from the POML filename and sequential number (e.g., <code>0001.explain_code</code>), see <a href="../../trace/">trace documentation</a> for details</li>
+<li><strong>Object Content</strong>: The complete POML source template</li>
+<li><strong>Context Object</strong>: Published separately as <code>{name}.context</code> if context is provided</li>
+<li><strong>Stylesheet Object</strong>: Published separately as <code>{name}.stylesheet</code> if stylesheet is provided</li>
+<li><strong>Version Control</strong>: Weave automatically versions all published objects</li>
+</ul>
+<p><img alt="Weave prompt object showing POML template" src="../../../media/integration-weave-prompt.png" /></p>
+<h3 id="example-trace-data">Example Trace Data<a class="headerlink" href="#example-trace-data" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;inputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;weave://.../001.explain_code:v0&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;weave://.../0001.explain_code.context:v0&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">&quot;stylesheet&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">&quot;outputs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">&quot;messages&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">      </span><span class="p">{</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">        </span><span class="nt">&quot;speaker&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;human&quot;</span><span class="p">,</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">        </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;# Task\n\nYou are a senior Python developer. Please explain the code.\n\n```\ndef greet(name):\n    print(f\&quot;Hello, {name}!\&quot;)\n...&quot;</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="p">],</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="nt">&quot;runtime&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">      </span><span class="nt">&quot;temperature&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.7</span><span class="p">,</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">      </span><span class="nt">&quot;maxTokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">256</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../trace/">POML Tracing Guide</a></li>
+<li><a href="https://docs.wandb.ai/guides/weave/">Weave Documentation</a></li>
+<li><a href="https://wandb.ai">Weights &amp; Biases Platform</a></li>
 </ul>
 
 
@@ -1757,7 +1920,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 22, 2025 06:55:24 UTC"><span class="timeago" datetime="2025-08-22T06:55:24+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 22, 2025 06:55:24 UTC">2025-08-22</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 23, 2025 16:53:51 UTC"><span class="timeago" datetime="2025-08-23T16:53:51+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 23, 2025 16:53:51 UTC">2025-08-23</span>
   </span>
 
     
@@ -1767,7 +1930,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="April 22, 2025 03:31:12 UTC"><span class="timeago" datetime="2025-04-22T03:31:12+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="April 22, 2025 03:31:12 UTC">2025-04-22</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 23, 2025 16:53:51 UTC"><span class="timeago" datetime="2025-08-23T16:53:51+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 23, 2025 16:53:51 UTC">2025-08-23</span>
   </span>
 
     
@@ -1782,7 +1945,7 @@
     </span>
     <nav>
       
-        <a href="mailto:scottyugochang@gmail.com">Yuge Zhang</a>
+        <a href="mailto:yuge.zhang@microsoft.com">Yuge Zhang</a>
     </nav>
   </span>
 
@@ -1830,14 +1993,14 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.sections", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.tooltips"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
-        <script src="../../js/timeago.min.js"></script>
+        <script src="../../../js/timeago.min.js"></script>
       
-        <script src="../../js/timeago_mkdocs_material.js"></script>
+        <script src="../../../js/timeago_mkdocs_material.js"></script>
       
     
   </body>
