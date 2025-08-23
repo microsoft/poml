@@ -460,16 +460,16 @@ export class PomlFile {
   private handleForLoop(
     element: XMLElement,
     context: { [key: string]: any }
-  ): { [key: string]: any }[] {
+  ): { [key: string]: any }[] | undefined {
     const forLoop = element.attributes.find(attr => attr.key?.toLowerCase() === 'for');
     if (!forLoop) {
       // No for loop found.
-      return [];
+      return undefined;
     }
     const forLoopValue = forLoop.value;
     if (!forLoopValue) {
       this.reportError('for attribute value is expected.', this.xmlElementRange(element));
-      return [];
+      return undefined;
     }
     const [itemName, listName] = forLoopValue.match(/(.+)\s+in\s+(.+)/)?.slice(1) || [null, null];
     if (!itemName || !listName) {
@@ -477,13 +477,13 @@ export class PomlFile {
         'item in list syntax is expected in for attribute.',
         this.xmlAttributeValueRange(forLoop)
       );
-      return [];
+      return undefined;
     }
 
     const list = this.evaluateExpression(listName, context, this.xmlAttributeValueRange(forLoop));
     if (!Array.isArray(list)) {
       this.reportError('List is expected in for attribute.', this.xmlAttributeValueRange(forLoop));
-      return [];
+      return undefined;
     }
     return list.map((item: any, index: number) => {
       const loop = {
@@ -520,7 +520,7 @@ export class PomlFile {
     }
   };
 
-  private handleLet = (element: XMLElement, context: { [key: string]: any }): boolean => {
+  private handleLet = (element: XMLElement, contextIn: { [key: string]: any }, contextOut: { [key: string]: any }): boolean => {
     if (element.name?.toLowerCase() !== 'let') {
       return false;
     }
@@ -551,7 +551,7 @@ export class PomlFile {
       }
       if (!name) {
         if (content && typeof content === 'object') {
-          Object.assign(context, content);
+          Object.assign(contextOut, content);
         } else {
           this.reportError(
             'name attribute is expected when the source is not an object.',
@@ -559,7 +559,7 @@ export class PomlFile {
           );
         }
       } else {
-        context[name] = content;
+        contextOut[name] = content;
       }
       return true;
     }
@@ -575,11 +575,11 @@ export class PomlFile {
       }
       const evaluated = this.evaluateExpression(
         value,
-        context,
+        contextIn,
         this.xmlAttributeValueRange(xmlAttribute(element, 'value')!),
         true
       );
-      context[name] = evaluated;
+      contextOut[name] = evaluated;
       return true;
     }
 
@@ -602,7 +602,7 @@ export class PomlFile {
       }
       if (!name) {
         if (content && typeof content === 'object') {
-          Object.assign(context, content);
+          Object.assign(contextOut, content);
         } else {
           this.reportError(
             'name attribute is expected when the source is not an object.',
@@ -610,7 +610,7 @@ export class PomlFile {
           );
         }
       } else {
-        context[name] = content;
+        contextOut[name] = content;
       }
 
       return true;
@@ -1068,7 +1068,7 @@ export class PomlFile {
     localContext: { [key: string]: any }
   ): React.ReactElement {
     // Let. Always set the global.
-    if (this.handleLet(element, globalContext)) {
+    if (this.handleLet(element, {...globalContext, ...localContext}, globalContext)) {
       return <></>;
     }
 
@@ -1085,8 +1085,8 @@ export class PomlFile {
     const isRuntime = tagNameLower === 'runtime';
 
     // Common logic for handling for-loops
-    const forLoops = this.handleForLoop(element, globalContext);
-    const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
+    const forLoops = this.handleForLoop(element, {...globalContext, ...localContext});
+    const forLoopedContext = forLoops === undefined ? [{}] : forLoops;
     const resultElements: React.ReactElement[] = [];
 
     for (let i = 0; i < forLoopedContext.length; i++) {

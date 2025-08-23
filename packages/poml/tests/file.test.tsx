@@ -310,6 +310,13 @@ describe('templateEngine', () => {
     expect(await poml(text)).toBe('Hello, world!');
     expect(ErrorCollection.empty()).toBe(true);
   });
+
+  test('letLocal', async () => {
+    const text = '<poml><p for="i in [1,2]"><let name="j" value="i * 2"/><p>{{j}}</p></p></poml>';
+    const ir = await read(text);
+    expect(await poml(text)).toBe('2\n\n4');
+    expect(ErrorCollection.empty()).toBe(true);
+  })
 });
 
 describe('expressionEvaluation', () => {
