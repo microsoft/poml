@@ -1,0 +1,19 @@
+<poml>
+  <system-msg>{{ system }}</system-msg>
+  <p>{{ input }}</p>
+
+  <!-- The for loop in external div will be merged into tool-definition in future. -->
+  <div for="tool in tools">
+    <tool-definition name="{{ tool.name }}" description="{{ tool.description }}">
+      {{ tool.schema }}
+    </tool-definition>
+  </div>
+
+  <div for="i in interactions">
+    <tool-request for="req in i.tool_request" id="{{ req.id }}" name="{{ req.name }}" parameters="{{ req.parameters }}" />
+    <tool-response for="res in i.tool_response" id="{{ res.id }}" name="{{ res.name }}">
+      <object data="{{ res.result }}"/>
+    </tool-response>
+  </div>
+
+</poml>
