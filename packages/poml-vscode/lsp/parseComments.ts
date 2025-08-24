@@ -1,9 +1,31 @@
 import 'poml';
 import { ComponentSpec, Parameter } from 'poml/base';
 
-import { readFileSync, readdirSync, writeFile, writeFileSync } from 'fs';
+import { readFileSync, readdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { formatComponentDocumentation } from './documentFormatter';
+
+const checkMode = process.argv.includes('--check');
+let hasChanges = false;
+
+function writeOrCheck(filePath: string, content: string) {
+  let existing: string | undefined;
+  try {
+    existing = readFileSync(filePath, 'utf8');
+  } catch {
+    existing = undefined;
+  }
+
+  if (existing !== content) {
+    if (checkMode) {
+      console.error(`${filePath} is out of date.`);
+      hasChanges = true;
+    } else {
+      writeFileSync(filePath, content);
+      console.log(`Updated ${filePath}`);
+    }
+  }
+}
 
 const basicComponents: string[] = [];
 const intentions: string[] = [];
@@ -127,8 +149,9 @@ function scanComponentDocs(folderPath: string) {
     const names = components.map(c => c.name!);
     allComments.push(...components);
     if (filePath.endsWith('essentials.tsx') || filePath.endsWith('utils.tsx')) {
-      basicComponents.push(...names.filter(name => name !== 'Image' && name !== 'Object'));
+      basicComponents.push(...names.filter(name => name !== 'Image' && name !== 'Object' && !name.startsWith('Tool')));
       dataDisplays.push(...names.filter(name => name === 'Image' || name === 'Object'));
+      utilities.push(...names.filter(name => name.startsWith('Tool')));
     } else if (filePath.endsWith('instructions.tsx')) {
       intentions.push(...names);
     } else if (filePath.endsWith('document.tsx') || filePath.endsWith('table.tsx')) {
@@ -215,7 +238,7 @@ function generatePythonMethod(tag: ComponentSpec): string {
     paramsSignatureList.push(`        ${paramName}: ${typeHint} = None`);
     callArgsList.push(`${paramName}=${paramName}`);
 
-    let paramDesc = param.description.replace(/\n/g, '\n            ');
+    let paramDesc = param.description.replace(/\n/g, '\n                ');
     if (param.defaultValue !== undefined) {
       const defValStr =
         typeof param.defaultValue === 'string' ? `"${param.defaultValue}"` : param.defaultValue;
@@ -287,7 +310,17 @@ class _TagLib:
 
 const allDocs = scanComponentDocs('packages/poml');
 const pythonCode = generatePythonFile(allDocs);
-writeFileSync('packages/poml/assets/componentDocs.json', JSON.stringify(allDocs, null, 2));
-writeFileSync('docs/language/components.md', docsToMarkdown(allDocs));
-writeFileSync('python/poml/_tags.py', pythonCode);
-console.log('Component documentation generated successfully!');
+writeOrCheck('packages/poml/assets/componentDocs.json', JSON.stringify(allDocs, null, 2));
+writeOrCheck('docs/language/components.md', docsToMarkdown(allDocs));
+writeOrCheck('python/poml/_tags.py', pythonCode);
+
+if (checkMode) {
+  if (hasChanges) {
+    console.error('Component documentation is out of date. Run `npm run generate-component-spec` to update.');
+    process.exit(1);
+  } else {
+    console.log('Component documentation is up to date.');
+  }
+} else {
+  console.log('Component documentation generated successfully!');
+}

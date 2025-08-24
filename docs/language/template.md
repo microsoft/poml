@@ -1,47 +1,9 @@
-# POML Standalone File Mode
 
-## Introduction to Standalone File Mode
-
-POML (Prompting Markup Language) provides a convenient way to create prompts using a markup language that is easy to read and write. The standalone file mode is the most commonly used approach, where you create a file with a `.poml` extension. This file contains XML-like syntax that POML renders into a prompt. This mode is particularly useful for creating reusable templates and managing complex prompts without embedding POML directly in JSX files or using a Python SDK.
-
-In this mode, you wrap your content with a top-level `<poml>` tag, allowing POML to parse and render your markup correctly. Below is a guide on how to effectively use the standalone file mode.
-
-## Basic Usage
-
-To create a POML file, simply create a file with the `.poml` extension and wrap your content within the `<poml>` tag:
-
-```xml
-<poml>
-  <p>Hello, world!</p>
-</poml>
-```
-
-You can also type anything without a `poml` tag, and it will be treated as a string. It's called "free text mode" in POML. However, it has several limitations currently, including unabling to render any XML tags wrapped with `<>`, unabling to use many special characters, and unabling to use all the wonderful features of POML. So, it's always recommended to use the `poml` tag before everything.
-
-**Tip: Glossary for Beginners:**
-
-- **Tag:** A tag is a fundamental building block in XML (and POML). It's used to mark the beginning and end of an element. Tags are enclosed in angle brackets (`<` and `>`). For example, `<p>` is an opening tag, and `</p>` is a closing tag. Everything between the opening and closing tags is considered part of that element.
-- **Attribute:** An attribute provides additional information about an element. Attributes are placed inside the opening tag, and they consist of a name and a value (enclosed in double quotes). For example, in `<p speaker="human">`, `speaker` is the attribute name, and `"human"` is the attribute value.
-- **Content:** The content is the text or other elements that appear between the opening and closing tags of an element. For example, in `<p>Hello, world!</p>`, "Hello, world!" is the content of the `<p>` element.
-
-**Escape Characters:** In POML, you can use escape characters to include special characters in your content and attribute values. Due to an implementation issue, the escape syntax in POML is slightly different from what you would know in HTML or XML. For example, to include a double quote (`"`) in your content, you can use `#quot;` (rather than `&quot;`). Here are some common escape characters:
-
-1. `#quot;` for `"`
-2. `#apos;` for `'`
-3. `#amp;` for `&`
-4. `#lt;` for `<`
-5. `#gt;` for `>`
-6. `#hash;` for `#`
-7. `#lbrace;` for `{`
-8. `#rbrace;` for `}`
-
-It's not necessary to use the escape characters for most cases, but they can be helpful when you are having trouble displaying those characters in certain cases.
-
-## Template Engine
+# Template Engine
 
 The template engine of POML allows you to incorporate dynamic content and control structures. Here are some key features.
 
-### Expressions
+## Expressions
 
 You can use expressions enclosed in double curly brackets (`{{` `}}`) to evaluate variables or expressions dynamically:
 
@@ -53,7 +15,7 @@ You can use expressions enclosed in double curly brackets (`{{` `}}`) to evaluat
 
 In this example, if `name` is set to "Alice" (e.g., using a `<let>` tag, described below), the output will be "Hello, Alice!".
 
-#### Usage in Attributes
+### Usage in Attributes
 
 Expressions can also be used within attribute values:
 
@@ -71,7 +33,7 @@ This renders to the following when `index` is set to 1.
 This is task No. 1.
 ```
 
-#### Expression Usages
+### Expression Usages
 
 POML supports various JavaScript expressions within the double curly brackets. This includes but is not limited to:
 
@@ -84,22 +46,33 @@ POML supports various JavaScript expressions within the double curly brackets. T
 - **Ternary Operators:** `{{condition ? valueIfTrue : valueIfFalse}}`
 - **Accessing loop variables:** `{{loop.index}}` (explained in the "For Attribute" section)
 
-### Let Expressions
+## Let Expressions
 
 The `<let>` tag allows you to define variables, import data from external files, and set values within your POML template.
 
-#### Syntax 1: Setting a variable from a value
+### Syntax 1: Setting a variable from a value
 
 ```xml
 <poml>
-  <let name="greeting" value="Hello, world!" />
+  <let name="greeting">Hello, world!</let>
   <p>{{greeting}}</p>
 </poml>
 ```
 
-This will output "Hello, world!".  The `value` attribute can contain a string, number, or a POML expression.
+This will output "Hello, world!". When using the content approach (as shown above), the text is treated as a literal string.
 
-#### Syntax 2: Importing data from a file
+Alternatively, you can use the `value` attribute which must contain an evaluatable JavaScript expression:
+
+```xml
+<poml>
+  <let name="greeting" value="'Hello, world!'" />
+  <p>{{greeting}}</p>
+</poml>
+```
+
+Note that when using the `value` attribute, string literals must be properly quoted (e.g., `"'Hello, world!'"` or `'"Hello, world!"'`) since the value is evaluated as JavaScript. The `value` attribute can contain strings, numbers, arrays, objects, or any valid JavaScript expression.
+
+### Syntax 2: Importing data from a file
 
 ```xml
 <poml>
@@ -110,7 +83,7 @@ This will output "Hello, world!".  The `value` attribute can contain a string, n
 
 This imports the contents of `users.json` and assigns it to the `users` variable.  The `src` attribute specifies the path to the file (relative to the POML file). The optional `type` attribute can specify the file type (e.g., "json", "text", "csv"). If not provided, POML attempts to infer it from the file extension.
 
-#### Syntax 3: Importing data from a file without a name
+### Syntax 3: Importing data from a file without a name
 
 ```xml
 <poml>
@@ -120,7 +93,7 @@ This imports the contents of `users.json` and assigns it to the `users` variable
 ```
 If `config.json` contains `{ "apiKey": "your_api_key" }`, this will output "API Key: your_api_key". When you use `src` without `name`, and the file content is a JSON object, the properties of that object are directly added to the context.
 
-#### Syntax 4: Setting a variable using inline JSON
+### Syntax 4: Setting a variable using inline JSON
 
 ```xml
 <poml>
@@ -143,7 +116,7 @@ This defines a `person` variable with the given JSON object. You can also specif
 </poml>
 ```
 
-#### Syntax 5: Setting a variable from an expression
+### Syntax 5: Setting a variable from an expression
 
 ```xml
 <poml>
@@ -154,7 +127,7 @@ This defines a `person` variable with the given JSON object. You can also specif
 </poml>
 ```
 
-### Type-Autocasting in Attributes
+## Type-Autocasting in Attributes
 
 The attributes of components will be automatically cast based on their defined types in the component documentation. This means you don't have to worry about manually converting types in many cases.
 
@@ -177,7 +150,7 @@ In the following example, the first auto-casting happened at let, where `true` i
 
 If MyComponent is defined with `boolProp` as boolean, `numProp` as number, `objProp` as object, and `stringProp` as string, the values will be interpreted and auto-casted again when `MyComponent` is used.
 
-### For Attribute
+## For Attribute
 
 To loop over a list, use the `for` attribute. The syntax is `for="itemName in listName"`.
 
@@ -191,7 +164,7 @@ To loop over a list, use the `for` attribute. The syntax is `for="itemName in li
 
 This will render a list with "apple", "banana", and "cherry".
 
-#### Loop Variables
+### Loop Variables
 
 Inside the loop, you have access to special `loop` variables:
 
@@ -219,7 +192,7 @@ Example:
 
 This will generate two examples, with captions "Example 1" and "Example 2", displaying the input and output from each demo in the `all_demos` array. Note that we use `loop.index + 1` because `loop.index` starts from 0.
 
-### If Condition
+## If Condition
 
 You can conditionally render elements using the `if` attribute:
 
@@ -234,7 +207,7 @@ You can conditionally render elements using the `if` attribute:
 
 If `isVisible` is `true`, the first paragraph will be rendered. The second paragraph will not be rendered because isHidden is false. The value of `if` can be a simple variable name (which is treated as a boolean) or a POML expression.
 
-### Include Files
+## Include Files
 
 You can split prompts into multiple files and include them using the `<include>` tag.
 
@@ -252,53 +225,3 @@ The file specified in `src` is read and its contents are injected as if they wer
   <include src="footer.poml" if="showFooter" />
 </poml>
 ```
-
-## Stylesheet
-
-POML allows you to define styles for your elements using the `<stylesheet>` tag.  This enables you to apply CSS-like styles (or, more generally, component attributes) to your markup.
-
-### Using Stylesheet
-
-You can define styles within a `<stylesheet>` tag. The stylesheet must be a valid JSON object and must be placed directly under the root `<poml>` element.
-
-```xml
-<poml>
-  <stylesheet>
-    {
-      "p": {
-        "syntax": "json"
-      }
-    }
-  </stylesheet>
-  <p>This text will be rendered as JSON.</p>
-</poml>
-```
-
-In this example, all `<p>` elements will have their `syntax` attribute set to `"json"`. You can set any attribute of a component using the stylesheet.
-
-### ClassName Attribute
-
-Elements can be identified with a `className` attribute for styling.  The stylesheet can then target elements with specific class names using a CSS-like selector syntax (using a dot `.` before the class name).
-
-```xml
-<poml>
-  <table className="csv" records="[[1,2,3],[4,5,6]]"/>
-  <stylesheet>
-    {
-      ".csv": {
-        "syntax": "csv",
-        "writerOptions": "{\\"csvSeparator\\": \\";\\", \\"csvHeader\\": false}"
-      }
-    }
-  </stylesheet>
-</poml>
-```
-
-Here, the `<table>` element has the class name "csv".  The stylesheet targets elements with the class "csv" (using `.csv`) and sets their `syntax` to "csv" and `writerOptions` to a specific JSON string. Note the escaped backslashes (`\\`) in the `writerOptions` value, which are necessary because the stylesheet itself is a JSON string.  This example will render to:
-
-```
-1;2;3
-4;5;6
-```
-
-**NOTE:** *The writerOptions API is experimental and is subject to change.*

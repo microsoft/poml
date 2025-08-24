@@ -219,6 +219,14 @@ export class ToolsSchema {
   }
 
   /**
+   * Gets all tools in the collection.
+   * @returns An array of all tool schemas
+   */
+  public getTools(): ToolSchema[] {
+    return Array.from(this.tools.values());
+  }
+
+  /**
    * Removes a tool from the collection.
    * @param name The name of the tool to remove
    * @returns true if the tool was removed, false if it didn't exist

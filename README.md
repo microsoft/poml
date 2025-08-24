@@ -83,7 +83,29 @@ For detailed information on POML syntax, components, styling, templating, SDKs, 
 
 * **Watch our Demo Video on YouTube:** [POML Introduction & Demo](https://youtu.be/b9WDcFsKixo)
 * **Join our Discord community:** Connect with the team and other users on our [Discord server](https://discord.gg/FhMCqWzAn6).
-* **Read the Research Paper (coming soon):** For an in-depth understanding of POML's design, implementation, and evaluation, check out our paper: [Paper link TBD](TBD).
+* **Read the Prompt Orchestration Markup Language paper:** [Prompt Orchestration Markup Language](https://arxiv.org/abs/2508.13948) presents the design of POML and its impact on prompt engineering.
+* **Explore Content-Format Integrated Prompt Optimization:** [Beyond Prompt Content: Enhancing LLM Performance via Content-Format Integrated Prompt Optimization](https://arxiv.org/abs/2502.04295) proposes an iterative approach that jointly optimizes prompt content and formatting to improve LLM performance.
+
+## Citation
+
+If you find POML useful or related to your research, please cite the following paper:
+
+```bibtex
+@misc{zhang2025promptorchestrationmarkuplanguage,
+      title={Prompt Orchestration Markup Language}, 
+      author={Yuge Zhang and Nan Chen and Jiahang Xu and Yuqing Yang},
+      year={2025},
+      eprint={2508.13948},
+      archivePrefix={arXiv},
+      primaryClass={cs.HC},
+      url={https://arxiv.org/abs/2508.13948}, 
+}
+```
+
+## Ecosystem & Community Projects
+
+- [mini-poml-rs](https://github.com/linmx0130/mini-poml-rs) – Experimental Rust-based POML renderer for environments without JavaScript or Python interpreters.
+- [poml-ruby](https://github.com/GhennadiiMir/poml) – Ruby gem implementation of POML for Ruby applications.
 
 ## Contributing
 

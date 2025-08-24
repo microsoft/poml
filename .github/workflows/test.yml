@@ -45,6 +45,8 @@ jobs:
       - run: npm run build-webview
       - run: npm run build-cli
       - run: npm run lint
+      - run: npm run validate-component-spec
+        if: matrix.os == 'ubuntu-latest'
       - run: npm run package:win
         if: matrix.platform == 'win32-x64'
       - run: npm run package -- --target ${{ matrix.platform }}

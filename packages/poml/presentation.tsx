@@ -678,4 +678,35 @@ export namespace MultiMedia {
       </MultiMedia.Environment>
     );
   });
+
+  export interface ToolRequestProps {
+    id: string;
+    name: string;
+    parameters: any;
+  }
+
+  export interface ToolResponseProps {
+    id: string;
+    name: string;
+  }
+
+  export const ToolRequest = component('MultiMedia.ToolRequest')((props: PropsMultiMediaBase & ToolRequestProps) => {
+    const { id, name, parameters, ...others } = props;
+    return (
+      <MultiMedia.Environment {...others}>
+        {irElement('toolrequest', { id, name, content: parameters, ...others })}
+      </MultiMedia.Environment>
+    );
+  });
+
+  export const ToolResponse = component('MultiMedia.ToolResponse')((
+    props: React.PropsWithChildren<PropsMultiMediaBase & ToolResponseProps>
+  ) => {
+    const { id, name, children, ...others } = props;
+    return (
+      <MultiMedia.Environment {...others}>
+        {irElement('toolresponse', { id, name, ...others }, children)}
+      </MultiMedia.Environment>
+    );
+  });
 }

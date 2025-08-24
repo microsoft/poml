@@ -16,6 +16,7 @@ import { initializeReporter, getTelemetryReporter, TelemetryClient } from './uti
 import { TelemetryEvent } from './util/telemetryServer';
 import { registerPomlChatParticipant } from './chat/participant';
 import { registerPromptGallery, PromptGalleryProvider } from './chat/gallery';
+import { EvaluationMessage, EvaluationNotification } from './panel/types';
 
 let extensionPath = "";
 
@@ -72,6 +73,7 @@ export function deactivate() {
 }
 
 let client: LanguageClient;
+let evaluationOutputChannel: vscode.OutputChannel | undefined;
 
 export function activateClient(context: vscode.ExtensionContext, reporter?: TelemetryClient) {
   // The server is implemented in node
@@ -107,6 +109,19 @@ export function activateClient(context: vscode.ExtensionContext, reporter?: Tele
     client.onTelemetry(reporter.handleDataFromServer, reporter);
   }
 
+  // Create output channel for evaluation results
+  if (!evaluationOutputChannel) {
+    evaluationOutputChannel = vscode.window.createOutputChannel('POML Debug', 'log');
+  }
+
+  // Register handler for evaluation notifications
+  client.onNotification(EvaluationNotification, (message: EvaluationMessage) => {
+    if (evaluationOutputChannel) {
+      evaluationOutputChannel.appendLine(message.message);
+      evaluationOutputChannel.show(true);
+    }
+  });
+
   // Start the client. This will also launch the server
   client.start();
 }
@@ -118,6 +133,10 @@ export function getClient(): LanguageClient {
 export function deactivateClient(): Thenable<void> | undefined {
   if (!client) {
     return undefined;
+  }
+  if (evaluationOutputChannel) {
+    evaluationOutputChannel.dispose();
+    evaluationOutputChannel = undefined;
   }
   return client.stop();
 }

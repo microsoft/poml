@@ -24,7 +24,7 @@ We also recommend watching our [YouTube video](https://youtu.be/b9WDcFsKixo) for
 
 ## Next Steps
 
-- [Learn POML Syntax](./standalone.md): Understand the structure and syntax of POML files.
-- [Explore Components](./components.md): Discover the available components and how to use them.
+- [Learn POML Syntax](../language/basic.md): Understand the structure and syntax of POML files.
+- [Explore Components](../language/components.md): Discover the available components and how to use them.
 - [Install VS Code Extension](../vscode/index.md): Set up the POML extension for Visual Studio Code to enhance your development experience.
 - [Configure Python SDK](../python/index.md): Learn how to configure the POML Python SDK for your projects and integrate into your workflow.

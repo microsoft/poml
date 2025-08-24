@@ -1,0 +1,22 @@
+<poml>
+
+<p>What is my horoscope? I am an Aquarius.</p>
+<tool-definition name="get_horoscope" description="Get today's horoscope for an astrological sign.">
+{
+    "type": "object",
+    "properties": {
+        "sign": {
+            "type": "string",
+            "description": "An astrological sign like Taurus or Aquarius"
+        }
+    },
+    "required": ["sign"]
+}
+</tool-definition>
+
+<tool-request if="tool_request" id="{{ tool_request.id }}" name="{{ tool_request.name }}" parameters="{{ tool_request.parameters }}" />
+<tool-response if="tool_response" id="{{ tool_response.id }}" name="{{ tool_response.name }}">
+<object data="{{ tool_response.result }}"/>
+</tool-response>
+
+</poml>

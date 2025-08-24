@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this project, please cite the following paper."
+authors:
+  - family-names: Zhang
+    given-names: Yuge
+  - family-names: Chen
+    given-names: Nan
+  - family-names: Xu
+    given-names: Jiahang
+  - family-names: Yang
+    given-names: Yuqing
+title: Prompt Orchestration Markup Language
+year: 2025
+url: https://arxiv.org/abs/2508.13948
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Zhang
+      given-names: Yuge
+    - family-names: Chen
+      given-names: Nan
+    - family-names: Xu
+      given-names: Jiahang
+    - family-names: Yang
+      given-names: Yuqing
+  title: Prompt Orchestration Markup Language
+  year: 2025
+  archive-prefix: arXiv
+  eprint: 2508.13948
+  url: https://arxiv.org/abs/2508.13948

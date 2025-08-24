@@ -79,3 +79,10 @@ export interface PreviewResponse {
  * Synced with webview/state.ts
  */
 export type WebviewState = WebviewConfig & WebviewUserOptions;
+
+export interface EvaluationMessage {
+  type: 'info' | 'warning' | 'error';
+  message: string;
+}
+
+export const EvaluationNotification = 'poml/evaluationOutput';

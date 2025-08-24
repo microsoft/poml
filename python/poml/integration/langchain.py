@@ -8,8 +8,8 @@ from langchain_core.prompt_values import ChatPromptValue, StringPromptValue
 
 
 def poml_formatter(markup: Union[str, Path], speaker_mode: bool, context: dict | None = None):
-    messages = poml(markup, chat=speaker_mode, context=context, format="langchain")
-    return messages_from_dict(messages)
+    response = poml(markup, chat=speaker_mode, context=context, format="langchain")
+    return messages_from_dict(response["messages"])
 
 
 class LangchainPomlTemplate(PromptTemplate):

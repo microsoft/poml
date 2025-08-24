@@ -54,7 +54,6 @@ function blog_post() {
   </poml>;
 }
 
-
 /* Conduct in-depth research with AI, such as tackling academic papers, business analyses, or large investigative projects. */
 function research() {
   return <poml>
@@ -94,7 +93,6 @@ function research() {
   </stepwise-instructions>
   </poml>;
 }
-
 
 /* Test the ability of an LLM to perform a complex reasoning task -- ARC-AGI. The data is in `arc_agi_data.json`.
  */
@@ -137,7 +135,6 @@ function arc_agi() {
   </poml>;
 }
 
-
 /* Summarize a report, such as a research paper or a business report. */
 function read_report() {
   return <poml>
@@ -146,7 +143,6 @@ function read_report() {
   </poml>
   ;
 }
-
 
 /* Write a entertaining story that is engaging, imaginative and captivating for the audience. */
 function storyteller() {

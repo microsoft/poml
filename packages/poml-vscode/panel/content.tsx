@@ -2,6 +2,7 @@ import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { PreviewResponse, WebviewState, WebviewUserOptions } from './types';
 import { Message, RichContent, SourceMapMessage, SourceMapRichContent } from 'poml';
+import { ContentMultiMediaToolRequest, ContentMultiMediaToolResponse, ContentMultiMediaJson, ContentMultiMediaBinary } from 'poml/base';
 import { Converter as MarkdownConverter } from 'showdown';
 
 type HeadlessPomlVscodePanelContentProps = WebviewUserOptions & PreviewResponse;
@@ -139,19 +140,32 @@ function Markdown(props: { content: RichContent }) {
     underline: true
   });
 
-  const concatenatedMarkdown =
-    typeof props.content === 'string'
-      ? props.content
-      : props.content
+  const richContentToMarkdown = (content: RichContent): string => {
+    return typeof content === 'string'
+      ? content
+      : content
         .map(part => {
           if (typeof part === 'string') {
             return part;
-          } else {
-            const { type, base64, alt } = part;
+          } else if (part.type === 'application/json') {
+            return '```json\n' + JSON.stringify((part as ContentMultiMediaJson).content, null, 2) + '\n```';
+          } else if (part.type === 'application/vnd.poml.toolrequest') {
+            const requestPart = part as ContentMultiMediaToolRequest;
+            return `**Tool Request:** ${requestPart.name} (${requestPart.id})\n\nParameters:\n\`\`\`json\n${JSON.stringify(requestPart.content, null, 2)}\n\`\`\``;
+          } else if (part.type === 'application/vnd.poml.toolresponse') {
+            const responsePart = part as ContentMultiMediaToolResponse;
+            return `**Tool Response:** ${responsePart.name} (${responsePart.id})\n\n${richContentToMarkdown(responsePart.content)}`;
+          } else if (part.type.startsWith('image/')) {
+            const { type, base64, alt } = part as ContentMultiMediaBinary;
             return `![${alt ?? ''}](data:${type};base64,${base64})`;
+          } else {
+            return `[Unsupported content type: ${part.type}]`;
           }
         })
         .join('\n\n');
+  };
+
+  const concatenatedMarkdown = richContentToMarkdown(props.content);
 
   return <div dangerouslySetInnerHTML={{ __html: converter.makeHtml(concatenatedMarkdown) }} />;
 }
@@ -181,6 +195,9 @@ function ChatMessages(props: {
     } else if (role === 'ai') {
       role = 'AI';
       icon = 'robot';
+    } else if (role === 'tool') {
+      role = 'Tool';
+      icon = 'tools';
     }
     return (
       <div className={`chat-message chat-message-${message.speaker}`} key={`message-${idx}`} data-line={line}>
@@ -241,14 +258,14 @@ function ChatMessages(props: {
               <div className="codicon codicon-symbol-keyword"></div>
             </div>
             <h3 className="name">
-              Meta information
+              Prompt Configuration
             </h3>
           </div>
         </div>
         <div className="chat-message-content">
           {responseSchema && (
             <>
-              <h4>Response Schema</h4>
+              <h4>Output Schema</h4>
               <CodeBlock content={JSON.stringify(responseSchema, null, 2)} />
             </>
           )}

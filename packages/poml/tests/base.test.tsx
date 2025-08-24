@@ -43,7 +43,11 @@ test('parameters', () => {
     'maxColumns',
     'className',
     'speaker',
-    'writerOptions'
+    'writerOptions',
+    "whiteSpace",
+    "charLimit",
+    "tokenLimit",
+    "priority",
   ]);
 });
 

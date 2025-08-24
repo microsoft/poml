@@ -139,7 +139,7 @@ interface CliArgs {
 
 interface CliResult {
   messages: Message[] | RichContent;
-  responseSchema?: { [key: string]: any };
+  schema?: { [key: string]: any };
   tools?: { [key: string]: any }[];
   runtime?: { [key: string]: any };
 }
@@ -215,7 +215,7 @@ export async function commandLine(args: CliArgs) {
     : renderContent(resultMessages as RichContent);
   const result: CliResult = {
     messages: resultMessages,
-    responseSchema: pomlFile.getResponseSchema()?.toOpenAPI(),
+    schema: pomlFile.getResponseSchema()?.toOpenAPI(),
     tools: pomlFile.getToolsSchema()?.toOpenAI(),
     runtime: pomlFile.getRuntimeParameters(),
   }
