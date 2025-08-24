@@ -8,5 +8,6 @@ export const openSync = fs.openSync;
 export const closeSync = fs.closeSync;
 export const writeSync = fs.writeSync;
 export const symlinkSync = fs.symlinkSync;
+export const readdirSync = fs.readdirSync;
 
 export default fs;
