@@ -6,4 +6,6 @@
 
 ::: poml.integration.mlflow
 
+::: poml.integration.pydantic
+
 ::: poml.integration.weave

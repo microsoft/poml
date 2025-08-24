@@ -12,10 +12,40 @@ import pydantic
 
 PYDANTIC_V2 = pydantic.VERSION.startswith("2.")
 
-_T = TypeVar("_T")
-
 
 def to_strict_json_schema(model: type[pydantic.BaseModel] | pydantic.TypeAdapter[Any]) -> dict[str, Any]:
+    """
+    Convert a Pydantic model to a strict JSON schema suitable for OpenAI function calling and response format.
+
+    This function takes a Pydantic BaseModel class or TypeAdapter and converts it to a JSON schema
+    that conforms to the strict schema requirements for OpenAI's function calling API. The resulting
+    schema ensures all objects have `additionalProperties: false` and all properties are required.
+
+    Most of the implementation is adapted from [OpenAI Python SDK](https://github.com/openai/openai-python/blob/4e28a424e6afd60040e3bdf7c76eebb63bc0c407/src/openai/lib/_pydantic.py).
+
+    Args:
+        model: A Pydantic BaseModel class or TypeAdapter instance to convert to JSON schema
+
+    Returns:
+        A dictionary representing the strict JSON schema
+
+    Raises:
+        TypeError: If the model is not a BaseModel type and Pydantic v2 is not available,
+                  or if a non-BaseModel type is used with Pydantic v1
+                  
+    Example:
+        ```python
+        from pydantic import BaseModel, Field
+        from poml.integration.pydantic import to_strict_json_schema
+        
+        class Query(BaseModel):
+            name: str = Field(description="Query name")
+            limit: int = Field(description="Result limit", default=10)
+            
+        schema = to_strict_json_schema(Query)
+        # Returns a strict JSON schema with additionalProperties: false
+        ```
+    """
     if inspect.isclass(model) and is_basemodel_type(model):
         if PYDANTIC_V2:
             schema = model.model_json_schema()
