@@ -196,7 +196,8 @@ export class ToolsSchema {
    */
   public toOpenAI(): any {
     const openAITools: any[] = [];
-    
+
+    // FIXME: Handle error gracefully here.
     for (const [_, tool] of this.tools) {
       openAITools.push({
         type: 'function',

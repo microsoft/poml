@@ -473,7 +473,7 @@ class PomlLspServer {
       tokens,
       sourceMap,
       responseSchema: pomlFile?.getResponseSchema()?.toOpenAPI(),
-      tools: pomlFile?.getToolsSchema()?.toOpenAI(),
+      tools: pomlFile?.getToolsSchema()?.toOpenAI(),  // FIXME: handle errors gracefully here
       runtime: pomlFile?.getRuntimeParameters(),
       error: params.returnAllErrors
         ? ErrorCollection.list()
