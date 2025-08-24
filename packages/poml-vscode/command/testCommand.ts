@@ -263,12 +263,15 @@ export class TestCommand implements Command {
       throw new Error('Response schema is required but not provided.');
     }
 
+    const abortController = GenerationController.getNewAbortController();
+
     const stream = streamObject({
       prompt: vercelPrompt,
       onError: ({ error }) => {
         // Immediately throw the error
         throw error;
       },
+      abortSignal: abortController.signal,
       schema: this.toVercelResponseSchema(prompt.responseSchema),
       ...this.vercelRequestParameters(settings, prompt.runtime),
     });
@@ -288,6 +291,7 @@ export class TestCommand implements Command {
     if (prompt.responseSchema) {
       this.log('warn', 'Output schema and tools are both provided. This is experimental and is only supported for some models.');
     }
+    const abortController = GenerationController.getNewAbortController();
 
     const stream = streamText({
       prompt: vercelPrompt,
@@ -295,6 +299,7 @@ export class TestCommand implements Command {
         // Immediately throw the error
         throw error;
       },
+      abortSignal: abortController.signal,
       tools: prompt.tools ? this.toVercelTools(prompt.tools) : undefined,
       experimental_output: prompt.responseSchema && Output.object({
         schema: this.toVercelResponseSchema(prompt.responseSchema),
