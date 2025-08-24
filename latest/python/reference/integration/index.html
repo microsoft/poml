@@ -1228,6 +1228,48 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#poml.integration.pydantic" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;pydantic
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" pydantic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#poml.integration.pydantic.NotGiven" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;NotGiven
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poml.integration.pydantic.is_dataclass_like_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;is_dataclass_like_type
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poml.integration.pydantic.to_strict_json_schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;to_strict_json_schema
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#poml.integration.weave" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;weave
@@ -1823,6 +1865,48 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#poml.integration.pydantic" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;pydantic
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" pydantic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#poml.integration.pydantic.NotGiven" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;NotGiven
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poml.integration.pydantic.is_dataclass_like_type" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;is_dataclass_like_type
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#poml.integration.pydantic.to_strict_json_schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;to_strict_json_schema
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#poml.integration.weave" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;weave
@@ -2400,6 +2484,347 @@ Defaults to True.</p>
 
 
 
+<h2 id="poml.integration.pydantic" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>poml.integration.pydantic</code>
+
+
+<a href="#poml.integration.pydantic" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="poml.integration.pydantic.NotGiven" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <code>NotGiven</code>
+
+
+<a href="#poml.integration.pydantic.NotGiven" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>A sentinel singleton class used to distinguish omitted keyword arguments
+from those passed in with the value None (which may have different behavior).</p>
+
+
+
+
+
+
+
+              <details class="quote">
+                <summary>Source code in <code>python/poml/integration/pydantic.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="k">class</span><span class="w"> </span><span class="nc">NotGiven</span><span class="p">:</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">    A sentinel singleton class used to distinguish omitted keyword arguments</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">    from those passed in with the value None (which may have different behavior).</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]:</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="nd">@override</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>        <span class="k">return</span> <span class="s2">&quot;NOT_GIVEN&quot;</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="poml.integration.pydantic.is_dataclass_like_type" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">is_dataclass_like_type</span><span class="p">(</span><span class="n">typ</span><span class="p">)</span></code>
+
+<a href="#poml.integration.pydantic.is_dataclass_like_type" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Returns True if the given type likely used <code>@pydantic.dataclass</code></p>
+
+
+            <details class="quote">
+              <summary>Source code in <code>python/poml/integration/pydantic.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-190">190</a></span>
+<span class="normal"><a href="#__codelineno-0-191">191</a></span>
+<span class="normal"><a href="#__codelineno-0-192">192</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-190" name="__codelineno-0-190"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_dataclass_like_type</span><span class="p">(</span><span class="n">typ</span><span class="p">:</span> <span class="nb">type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the given type likely used `@pydantic.dataclass`&quot;&quot;&quot;</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>    <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="s2">&quot;__pydantic_config__&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="poml.integration.pydantic.to_strict_json_schema" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <code class="highlight language-python"><span class="n">to_strict_json_schema</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></code>
+
+<a href="#poml.integration.pydantic.to_strict_json_schema" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert a Pydantic model to a strict JSON schema suitable for OpenAI function calling and response format.</p>
+<p>This function takes a Pydantic BaseModel class or TypeAdapter and converts it to a JSON schema
+that conforms to the strict schema requirements for OpenAI's function calling API. The resulting
+schema ensures all objects have <code>additionalProperties: false</code> and all properties are required.</p>
+<p>Most of the implementation is adapted from <a href="https://github.com/openai/openai-python/blob/4e28a424e6afd60040e3bdf7c76eebb63bc0c407/src/openai/lib/_pydantic.py">OpenAI Python SDK</a>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="type">type</span>[<span title="pydantic.BaseModel">BaseModel</span>] | <span title="pydantic.TypeAdapter">TypeAdapter</span>[<span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A Pydantic BaseModel class or TypeAdapter instance to convert to JSON schema</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A dictionary representing the strict JSON schema</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If the model is not a BaseModel type and Pydantic v2 is not available,
+      or if a non-BaseModel type is used with Pydantic v1</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<details class="example" open>
+  <summary>Example</summary>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">poml.integration.pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_strict_json_schema</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">Query</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Query name&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Result limit&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">schema</span> <span class="o">=</span> <span class="n">to_strict_json_schema</span><span class="p">(</span><span class="n">Query</span><span class="p">)</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># Returns a strict JSON schema with additionalProperties: false</span>
+</code></pre></div>
+</details>
+
+            <details class="quote">
+              <summary>Source code in <code>python/poml/integration/pydantic.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_strict_json_schema</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">]</span> <span class="o">|</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">TypeAdapter</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="sd">    Convert a Pydantic model to a strict JSON schema suitable for OpenAI function calling and response format.</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="sd">    This function takes a Pydantic BaseModel class or TypeAdapter and converts it to a JSON schema</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">    that conforms to the strict schema requirements for OpenAI&#39;s function calling API. The resulting</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">    schema ensures all objects have `additionalProperties: false` and all properties are required.</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    Most of the implementation is adapted from [OpenAI Python SDK](https://github.com/openai/openai-python/blob/4e28a424e6afd60040e3bdf7c76eebb63bc0c407/src/openai/lib/_pydantic.py).</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">        model: A Pydantic BaseModel class or TypeAdapter instance to convert to JSON schema</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">        A dictionary representing the strict JSON schema</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    Raises:</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">        TypeError: If the model is not a BaseModel type and Pydantic v2 is not available,</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">                  or if a non-BaseModel type is used with Pydantic v1</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    Example:</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">        ```python</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">        from pydantic import BaseModel, Field</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a><span class="sd">        from poml.integration.pydantic import to_strict_json_schema</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">        class Query(BaseModel):</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">            name: str = Field(description=&quot;Query name&quot;)</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">            limit: int = Field(description=&quot;Result limit&quot;, default=10)</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">        schema = to_strict_json_schema(Query)</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">        # Returns a strict JSON schema with additionalProperties: false</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        ```</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="ow">and</span> <span class="n">is_basemodel_type</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>        <span class="k">if</span> <span class="n">PYDANTIC_V2</span><span class="p">:</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>            <span class="n">schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">()</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>            <span class="n">schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">schema</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">elif</span> <span class="n">PYDANTIC_V2</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pydantic</span><span class="o">.</span><span class="n">TypeAdapter</span><span class="p">):</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="n">schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">json_schema</span><span class="p">()</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Non BaseModel types are only supported with Pydantic v2 - </span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">return</span> <span class="n">_ensure_strict_json_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="p">(),</span> <span class="n">root</span><span class="o">=</span><span class="n">schema</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
 <h2 id="poml.integration.weave" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-module"></code>            <code>poml.integration.weave</code>
 
@@ -2512,7 +2937,7 @@ Defaults to True.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 22, 2025 06:55:24 UTC"><span class="timeago" datetime="2025-08-22T06:55:24+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 22, 2025 06:55:24 UTC">2025-08-22</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 24, 2025 16:32:08 UTC"><span class="timeago" datetime="2025-08-24T16:32:08+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 24, 2025 16:32:08 UTC">2025-08-24</span>
   </span>
 
     
