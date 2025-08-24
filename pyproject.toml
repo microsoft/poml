@@ -33,6 +33,8 @@ agent = [
   "openai",
   "mcp",
   "fastmcp",
+  "pydantic",
+  "typing-extensions",
 ]
 
 [build-system]
