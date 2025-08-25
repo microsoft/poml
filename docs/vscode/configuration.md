@@ -107,6 +107,8 @@ The API key can be:
 - A **string** for a single key used across all providers
 - An **object** with provider-specific keys, useful when switching between providers or when prompts override the provider at runtime
 
+**Note:** If you have GitHub Copilot enabled in VS Code, POML can automatically use VS Code's Language Model API when no API key is configured, providing seamless integration without additional setup.
+
 ### API URL
 
 ```json

@@ -246,12 +246,14 @@
           "type": "string",
           "description": "Language Model Provider",
           "enum": [
+            "vscode",
             "openai",
             "microsoft",
             "anthropic",
             "google"
           ],
           "enumItemLabels": [
+            "VS Code LM (GitHub Copilot)",
             "OpenAI",
             "Azure OpenAI",
             "Anthropic",
