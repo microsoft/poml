@@ -139,7 +139,9 @@ XY124 Sample Air London (LHR) New York (JFK) 10-Oct-2025 10:00 13:00
 **Hint:** For each file, return JSON per schema. If unknown, omit. Avoid hallucinating.
 ```
 
-The `poml.poml()` call renders our POML file with the provided context and formats it for OpenAI's API. Behind the scenes, POML takes the Pydantic schema converted to JSON, embeds it in the prompt, and includes it as a `response_format` parameter in the API call. While you could manually pass the `Document` model directly to `client.chat.completions.create`, using POML centralizes all prompt components in one place, making it easier to debug and maintain. We'll explore these debugging capabilities in [part 2](expense_part2.md).
+The `poml.poml()` call renders our POML file with the provided context and formats it for OpenAI's API. Behind the scenes, POML reads the PDF / images files from your file system, and formats them into the prompt, so that you do not need to worry about how to send multi-media contexts to LLMs at all.
+
+POML also takes the Pydantic schema converted to JSON, embeds it in the prompt, and includes it as a `response_format` parameter in the API call. While you could manually pass the `Document` model directly to `client.chat.completions.create`, using POML centralizes all prompt components in one place, making it easier to debug and maintain. We'll explore these debugging capabilities in [part 2](expense_part2.md).
 
 ```mermaid
 flowchart TD
