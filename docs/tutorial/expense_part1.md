@@ -116,7 +116,28 @@ Now let's create the POML file that handles the document extraction (and save it
 </poml>
 ```
 
-This POML demonstrates several powerful features. The `if` attribute on components allows conditional rendering based on file type. When the POML engine evaluates `if="{{ file.endsWith('.png') }}"`, it only includes that component if the condition is true. This lets us handle different document types with appropriate parsers - images are processed as visual content while PDFs are parsed to extract text and structure.
+!!! note
+
+    The `<task>` and `<hint>` components are both "intention components" that help organize your prompts. They serve to denote special parts of instructions. When rendered, the only difference between them is their caption - `<task>` renders with "# Task" while `<hint>` renders with `**Hint:**`. Using these semantic components is not necessary when using POML, but they help you maintain clean, understandable, optimizable prompt structures rather than mixing all instructions together.
+
+This POML demonstrates several powerful features. The `if` attribute on components allows conditional rendering based on file type. When the POML engine evaluates `if="{{ file.endsWith('.png') }}"`, it only includes that component if the condition is true. This lets us handle different document types with appropriate parsers - images are processed as visual content while PDFs are parsed to extract text and structure. With a PDF context available, this prompt renders to something like:
+
+```text
+# Task
+
+Classify travel docs and extract with high recall. Return numbers as numbers. Compute ONLY per-document subtotals_by_category (no combined totals).
+
+# File: assets/203_flight_itinerary.pdf
+
+Flight Itinerary
+Passenger Name John Doe
+Booking Reference ABC123
+Flight Airline From To Date Departure Arrival
+XY123 Sample Air New York (JFK) London (LHR) 01-Oct-2025 18:30 06:45
+XY124 Sample Air London (LHR) New York (JFK) 10-Oct-2025 10:00 13:00
+
+**Hint:** For each file, return JSON per schema. If unknown, omit. Avoid hallucinating.
+```
 
 The `poml.poml()` call renders our POML file with the provided context and formats it for OpenAI's API. Behind the scenes, POML takes the Pydantic schema converted to JSON, embeds it in the prompt, and includes it as a `response_format` parameter in the API call. While you could manually pass the `Document` model directly to `client.chat.completions.create`, using POML centralizes all prompt components in one place, making it easier to debug and maintain. We'll explore these debugging capabilities in [part 2](expense_part2.md).
 
@@ -155,16 +176,10 @@ The Python code follows the same pattern, but notice how we pass the results fro
 
 ```python
 class TripContext(BaseModel):
-    is_international: Optional[bool] = Field(..., description="Whether the trip is international")
-    trip_length_days: Optional[float] = Field(..., description="Number of days for the trip")
+    ... # omitted for brevity
 
 class Rule(BaseModel):
-    rule_id: int = Field(..., description="Unique identifier for the rule")
-    category: str = Field(..., description="Expense category: lodging, meals, transportation")
-    type: str = Field(..., description="Type: daily cap, receipt threshold, preapproval")
-    scope: str = Field(..., description="Applies to: domestic, international, or any trip")
-    value: Optional[Union[str, float, bool]] = Field(..., description="Limit or requirement")
-    # Additional fields for requirements and restrictions...
+    ... # omitted for brevity
 
 class RelevantRules(BaseModel):
     trip_context: TripContext
@@ -191,7 +206,7 @@ rules_response = client.chat.completions.create(**rules_prompt, model="gpt-5")
 relevant_rules = RelevantRules.model_validate_json(rules_response.choices[0].message.content)
 ```
 
-Now let's look at the POML file for rule extraction that considers the employee's email, company policy documents, budget tables, and the extracted documents from step 1:
+Now let's look at the POML file for rule extraction that considers the employee's email, company policy documents, budget tables, and the extracted documents from step 1. Save it as `expense_extract_rules.poml`:
 
 ```xml
 <poml>
@@ -219,7 +234,7 @@ Now let's look at the POML file for rule extraction that considers the employee'
 </poml>
 ```
 
-Notice how this file uses different component types to handle various data sources. The `<table>` component handles Excel files, `<document>` processes Word files, and `<object>` embeds our Python data structures (exported via `model_dump()` into a dict) directly into the prompt.
+Notice how this file uses different component types to handle various data sources. The `<table>` component handles Excel files with `syntax="csv"` to format the output as comma-separated values for better LLM readability. The `<document>` processes Word files. For the `<text>` component, `syntax="text"` preserves the plain text formatting of the email. The `<object>` component with `syntax="xml"` serializes our Python data structures (exported via `model_dump()` into a dict) as XML for structured representation in the prompt.
 
 This step demonstrates the power of POML's data flow capabilities. We're taking structured outputs from one step and using them as structured inputs to the next step, while also incorporating additional business context like policy documents and employee communications.
 
@@ -229,12 +244,7 @@ With our documents extracted and relevant rules identified, we need to validate 
 
 ```python
 class RuleCheck(BaseModel):
-    rule_id: int
-    satisfied: bool
-    evidence: str = Field(..., description="Evidence supporting the check result")
-    over_by: Optional[float] = Field(..., description="Amount exceeding the cap, if any")
-    severity: Literal["low", "medium", "high"]
-    suggested_fix: str
+    ... # omitted for brevity
 
 class ComplianceCheck(BaseModel):
     totals_by_category: List[TotalByCategory]
@@ -259,7 +269,7 @@ compliance_response = client.chat.completions.create(**compliance_prompt, model=
 compliance_check = ComplianceCheck.model_validate_json(compliance_response.choices[0].message.content)
 ```
 
-The compliance checking POML file brings together all our data sources:
+The compliance checking POML file brings together all our data sources. Save it as `expense_check_compliance.poml`:
 
 ```xml
 <poml>
@@ -320,7 +330,7 @@ email_args = json.loads(tool_call.function.arguments)
 send_email(**email_args)  # Your email implementation
 ```
 
-Our email generation POML needs to produce different types of responses depending on the compliance results:
+Our email generation POML needs to produce different types of responses depending on the compliance results. Save it as `expense_send_email.poml`:
 
 ```xml
 <poml>
@@ -368,16 +378,8 @@ python 404_travel_expense_agent.py
 
 This will process sample documents and walk through the complete workflow, showing you structured outputs at each step and the final email generation.
 
-## Understanding the Complete Workflow
+## Next Step
 
-Our travel expense agent demonstrates several key principles of building robust AI workflows with POML and Python:
-
-**Data Flow Architecture**: Each step takes structured inputs and produces structured outputs. This makes the system predictable and testable. You can run individual steps in isolation, which is crucial for debugging and improvement.
-
-**Type Safety Throughout**: Pydantic models ensure data consistency across the entire workflow. If the LLM returns unexpected data, you get clear validation errors rather than silent failures downstream.
-
-**Template Reusability**: Each POML template focuses on a specific business function and can be reused with different contexts. You could easily adapt the document extraction template for other types of business documents.
-
-**Multi-Modal Integration**: The system handles PDFs, images, Excel files, and Word documents seamlessly. POML's component system abstracts away the complexity of different file formats.
-
-**Business Logic Separation**: The compliance rules and email generation logic are separate from the document extraction logic. This separation makes it easy to update policies or change email formats without affecting other parts of the system.
+- Try the example file [404_travel_expense_agent.py](https://github.com/microsoft/poml/tree/HEAD/examples/404_travel_expense_agent.py).
+- Explore different options with `syntax`.
+- Go to [part 2](expense_part2.md) to learn how to debug and optimize your prompts using the VS Code extension.

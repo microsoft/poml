@@ -47,6 +47,7 @@ plugins:
       enable_creation_date: true
       type: timeago
   - git-authors
+  - timetoread
   - mkdocstrings:
       handlers:
         python:
