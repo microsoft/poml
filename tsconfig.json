@@ -27,5 +27,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": ["packages/**/*"]
+  "include": ["packages/**/*"],
+  "exclude": ["packages/poml-browser/**/*"],
 }

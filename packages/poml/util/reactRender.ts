@@ -13,7 +13,7 @@ const pipeableStreamToString = async (
         callback();
       },
       final(callback) {
-        resolve(Buffer.concat(chunks).toString());
+        resolve(Buffer.concat(chunks as readonly Uint8Array[]).toString());
         callback();
       },
       destroy(err, callback) {

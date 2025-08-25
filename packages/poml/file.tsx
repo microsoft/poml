@@ -18,7 +18,7 @@ import {
 import { AnyValue, deepMerge, parseText, readSource } from './util';
 import { StyleSheetProvider, ErrorCollection } from './base';
 import { getSuggestions } from './util/xmlContentAssist';
-import { existsSync, readFileSync } from './util/fs';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 import { POML_VERSION } from './version';
 import { Schema, ToolsSchema } from './util/schema';

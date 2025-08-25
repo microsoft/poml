@@ -1,0 +1,3 @@
+[submodule "test-fixtures"]
+	path = test-fixtures
+	url = https://github.com/ultmaster/poml-test-fixtures

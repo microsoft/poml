@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, openSync, closeSync, writeSync, symlinkSync, readdirSync } from './fs';
+import { mkdirSync, writeFileSync, openSync, closeSync, writeSync, symlinkSync, readdirSync } from 'fs';
 import path from 'path';
 
 interface Base64Wrapper { __base64__: string }

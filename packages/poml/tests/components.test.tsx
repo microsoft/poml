@@ -6,7 +6,7 @@ import { poml, read, write } from 'poml';
 import { readDocx, readDocxFromPath, readPdfFromPath, readTxtFromPath, Document } from 'poml/components/document';
 import { Tree, TreeItemData, Folder } from 'poml/components/tree';
 import { Webpage } from 'poml/components/webpage';
-import { readFileSync, mkdirSync, existsSync } from '../util/fs';
+import { readFileSync, mkdirSync, existsSync } from 'fs';
 import { ErrorCollection, BufferCollection } from 'poml/base';
 import * as path from 'path';
 

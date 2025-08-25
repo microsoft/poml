@@ -1,4 +1,4 @@
-import fs from '../util/fs';
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';

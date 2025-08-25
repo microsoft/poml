@@ -950,6 +950,29 @@ To display a Word document without including the real multimedia:
 - **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
 - **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
+### Folder
+
+Displays a directory structure as a tree.
+
+#### Usages
+
+To display a directory structure with a filter for Python files:
+```xml
+<folder src="project_dir" filter=".*\.py$" maxDepth="3" />
+```
+
+#### Parameters
+
+- **syntax**: Can be one of: markdown, html, json, yaml, text, xml. The output syntax of the content.
+- **src**: The source directory path to display.
+- **data**: TreeItemData[]. Alternative to src, directly provide tree data structure.
+- **filter**: RegExp. A regular expression to filter files.
+    The regex is applied to the folder names and file names (not the full path).
+    Directories are included by default unless all of their nested content is filtered out.
+    When filter is on, empty directories will not be shown.
+- **maxDepth**: Number. Maximum depth of directory traversal. Default is 3.
+- **showContent**: Boolean. Whether to show file contents. Default is false.
+
 ### Image
 
 Image (`<img>`) displays an image in the content.
@@ -1056,6 +1079,56 @@ To import an excel file, and display the first 10 records in csv syntax:
 - **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
 - **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
+### Tree
+
+Renders a tree structure in various formats.
+
+#### Usages
+
+```xml
+<Tree items={treeData} syntax="markdown" showContent={true} />
+```
+
+#### Parameters
+
+- **syntax**: Can be one of: markdown, html, json, yaml, text, xml. The output syntax to use for rendering the tree
+- **items**: TreeItemData[]. Array of tree items to render
+- **showContent**: Boolean. Whether to show content values of tree items
+
+### Webpage
+
+Displays content from a webpage.
+
+#### Usages
+
+Display content from a URL:
+```xml
+<webpage url="https://example.com" />
+```
+
+Extract only specific content using a selector:
+```xml
+<webpage url="https://example.com" selector="main article" />
+```
+
+Convert HTML to structured POML components:
+```xml
+<webpage url="https://example.com" extractText="false" />
+```
+
+#### Parameters
+
+- **url**: The URL of the webpage to fetch and display.
+- **src**: Local file path to an HTML file to display.
+- **buffer**: Buffer. HTML content as string or buffer.
+- **base64**: Base64 encoded HTML content.
+- **extractText**: Boolean. Whether to extract plain text content (true) or convert HTML to structured POML (false). Default is false.
+- **selector**: CSS selector to extract specific content from the page (e.g., "article", ".content", "#main"). Default is "body".
+- **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
+- **className**: A class name for quickly styling the current block with stylesheets.
+- **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
+- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+
 ## Utilities
 
 ### AiMessage
@@ -1100,29 +1173,6 @@ Display a conversation between system, human and AI.
 - **selectedMessages**: The messages to be selected. If not provided, all messages will be selected.
   You can use a string like `2` to specify a single message, or slice like `2:4` to specify a range of messages (2 inclusive, 4 exclusive).
   Or use `-6:` to select the last 6 messages.
-
-### Folder
-
-Displays a directory structure as a tree.
-
-#### Usages
-
-To display a directory structure with a filter for Python files:
-```xml
-<folder src="project_dir" filter=".*\.py$" maxDepth="3" />
-```
-
-#### Parameters
-
-- **syntax**: Can be one of: markdown, html, json, yaml, text, xml. The output syntax of the content.
-- **src**: The source directory path to display.
-- **data**: TreeItemData[]. Alternative to src, directly provide tree data structure.
-- **filter**: RegExp. A regular expression to filter files.
-    The regex is applied to the folder names and file names (not the full path).
-    Directories are included by default unless all of their nested content is filtered out.
-    When filter is on, empty directories will not be shown.
-- **maxDepth**: Number. Maximum depth of directory traversal. Default is 3.
-- **showContent**: Boolean. Whether to show file contents. Default is false.
 
 ### HumanMessage
 

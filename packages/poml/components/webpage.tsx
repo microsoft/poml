@@ -1,6 +1,6 @@
 import { PropsSyntaxBase } from 'poml/essentials';
 import * as React from 'react';
-import fs from '../util/fs';
+import * as fs from 'fs';
 import { component, expandRelative, useWithCatch } from 'poml/base';
 import { Text } from 'poml/essentials';
 import * as cheerio from 'cheerio';
