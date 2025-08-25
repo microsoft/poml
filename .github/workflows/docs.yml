@@ -74,5 +74,7 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             # Main branch - deploy as latest docs
             mike deploy --push latest
-            mike set-default --push latest
           fi
+          # Workaround before next release
+          # Always set stable to default
+          mike set-default --push stable

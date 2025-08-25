@@ -12,6 +12,7 @@ hooks:
 
 theme:
   name: material
+  custom_dir: docs/overrides
   logo: media/logo-64-white.png
   favicon: media/logo-16-purple.png
   features:
