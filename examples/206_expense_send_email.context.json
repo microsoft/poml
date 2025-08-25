@@ -320,12 +320,12 @@
         "evidence": "Rule 3 (ground_transportation per_day_cap): domestic cap 40/day for 4 days = 160. Recorded ground_transportation 50 (hotel pickup) as well as miles/tax/taxi total 24.5 in receipts? The explicit per-day subtotal shown is 50. Amount exceeds daily cap.",
         "over_by": 90,
         "severity": "medium",
-        "suggested_fix": "Consolidate or reduce daily ground transportation to ≤ $40/day or use a per-trip approach if permitted."
+        "suggested_fix": "Consolidate or reduce daily ground transportation to <= $40/day or use a per-trip approach if permitted."
       },
       {
         "rule_id": 4,
         "satisfied": true,
-        "evidence": "Rule 4 (ground_transportation per_trip_cap): domestic cap 250/trip. Current ground_transportation charges (including the taxi portion) total 50 (plus related lines) which is ≤ 250.",
+        "evidence": "Rule 4 (ground_transportation per_trip_cap): domestic cap 250/trip. Current ground_transportation charges (including the taxi portion) total 50 (plus related lines) which is <= 250.",
         "over_by": null,
         "severity": "low",
         "suggested_fix": "No action needed."
