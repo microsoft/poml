@@ -347,6 +347,100 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Travel Expense Agent
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Travel Expense Agent
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tutorial/expense_part1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Part 1 - Build Workflow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tutorial/expense_part2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Part 2 - Debug with VS Code Extension
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1793,7 +1887,8 @@
   
 
 
-<h1 id="python-poml-core-apis">Python POML Core APIs<a class="headerlink" href="#python-poml-core-apis" title="Permanent link">&para;</a></h1>
+<h1 id="python-poml-core-apis">Python POML Core APIs<a class="headerlink" href="#python-poml-core-apis" title="Permanent link">&para;</a></h1><p style="color:#bdbdbd"><i>Estimated time to read: 1 minute</i></p>
+
 
 
 <div class="doc doc-object doc-module">
@@ -3242,7 +3337,7 @@ tracing is enabled, a subdirectory named by the current timestamp
 
     <div class="doc doc-contents ">
 
-        <p>Write an additional artifact file for the most recent <code>poml</code> call.</p>
+        <p>Write an additional artifact file for the most recent <code>poml</code> call. This API is experimental.</p>
 
 
             <details class="quote">
@@ -3258,7 +3353,7 @@ tracing is enabled, a subdirectory named by the current timestamp
 <span class="normal"><a href="#__codelineno-0-175">175</a></span>
 <span class="normal"><a href="#__codelineno-0-176">176</a></span>
 <span class="normal"><a href="#__codelineno-0-177">177</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-167" name="__codelineno-0-167"></a><span class="k">def</span><span class="w"> </span><span class="nf">trace_artifact</span><span class="p">(</span><span class="n">file_suffix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">contents</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Write an additional artifact file for the most recent ``poml`` call.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Write an additional artifact file for the most recent ``poml`` call. This API is experimental.&quot;&quot;&quot;</span>
 <a id="__codelineno-0-169" name="__codelineno-0-169"></a>    <span class="n">prefix</span> <span class="o">=</span> <span class="n">_latest_trace_prefix</span><span class="p">()</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170"></a>    <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-171" name="__codelineno-0-171"></a>        <span class="k">return</span> <span class="kc">None</span>
@@ -3384,6 +3479,8 @@ tracing is enabled, a subdirectory named by the current timestamp
         <script src="../../../js/timeago.min.js"></script>
       
         <script src="../../../js/timeago_mkdocs_material.js"></script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
       
     
   </body>
