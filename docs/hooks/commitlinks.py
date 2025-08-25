@@ -25,5 +25,5 @@ def on_page_markdown(markdown, **kwargs):
     if _TOKEN in markdown:
         markdown = markdown.replace(_TOKEN, _SHA)
     pattern = re.compile(rf"({re.escape(_REPO)}/(?:blob|tree)/)HEAD(/[^)\s#]*)(#[^)]+)?")
-    markdown = pattern.sub(rf"\1{_SHA}\2\3", markdown)
+    markdown = pattern.sub(rf"\g<1>{_SHA}\g<2>\g<3>", markdown)
     return markdown
