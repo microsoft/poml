@@ -21,6 +21,7 @@ dev = [
   "mkdocs-material",
   "mkdocs-git-revision-date-localized-plugin",
   "mkdocs-git-authors-plugin",
+  "mkdocs-timetoread-plugin",
   "mkdocstrings[python]",
   "mike",
 ]

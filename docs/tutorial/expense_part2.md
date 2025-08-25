@@ -37,13 +37,13 @@ The trace `.result` files also show the complete rendered prompt with all templa
 
 ## Working with Context Files in VS Code
 
-One of the powerful features of the VS Code extension is automatic context detection and loading. If the trace directory, you can see a `.context.json` file next to your POML source file. The extension automatically detects and uses it as the "paired context file" for the POML file. In addition, the VS Code extension also provides a live preview that updates as you edit your POML files:
+One of the powerful features of the VS Code extension is automatic context detection and loading. In the trace directory, you can see a `.context.json` file next to your POML source file. The extension automatically detects and uses it as the "paired context file" for the POML file. In addition, the VS Code extension also provides a live preview that updates as you edit your POML files:
 
 ![Live Preview with Context](../media/example-expense-preview.png)
 
 The preview shows exactly how your prompt will render with the attached context, including conditional components, template variable substitutions, and formatted output schemas. This immediate feedback loop accelerates prompt development by showing you the results of your changes instantly. This also means that you can take a problematic interaction from production and immediately start iterating on the prompt locally. The context file contains all the runtime data, so you're working with exactly the same inputs that caused the issue.
 
-In case a `.context.json` file isn't automatically detected, do not worry. you can still manually attach it on the preview panel:
+In case a `.context.json` file isn't automatically detected, do not worry. You can still manually attach it on the preview panel:
 
 ![Context Attachment](../media/example-expense-attach-context.gif)
 
