@@ -7,6 +7,9 @@ edit_uri: edit/main/docs/
 exclude_docs: |
   typescript/reference/README.md
 
+hooks:
+  - docs/hooks/commitlinks.py
+
 theme:
   name: material
   logo: media/logo-64-white.png
@@ -70,6 +73,9 @@ nav:
   - Getting Started: index.md
   - Tutorial:
     - Quick Start: tutorial/quickstart.md
+    - Travel Expense Agent:
+      - Part 1 - Build Workflow: tutorial/expense_part1.md
+      - Part 2 - Debug with VS Code Extension: tutorial/expense_part2.md
   - Language Spec:
     - Basic Syntax: language/basic.md
     - Template Engine: language/template.md
