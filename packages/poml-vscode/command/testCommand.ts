@@ -4,22 +4,24 @@ import { POMLWebviewPanelManager } from '../panel/manager';
 import { PanelSettings } from 'poml-vscode/panel/types';
 import { PreviewMethodName, PreviewParams, PreviewResponse } from '../panel/types';
 import { getClient } from '../extension';
-import { Message } from 'poml';
+import { Message, RichContent } from 'poml';
+import { ContentMultiMediaToolRequest, ContentMultiMediaToolResponse } from 'poml/base';
 
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAzure } from '@ai-sdk/azure';
-import { ModelMessage, streamText, tool, jsonSchema, Tool, streamObject, TextStreamPart } from 'ai';
+import { ModelMessage, streamText, streamObject, tool, Output, jsonSchema, Tool, TextStreamPart, TextPart, ImagePart, ToolCallPart, ToolResultPart } from 'ai';
 
 import ModelClient from '@azure-rest/ai-inference';
 import { AzureKeyCredential } from '@azure/core-auth';
 import { createSseStream } from '@azure/core-sse';
 import { fileURLToPath } from 'url';
-import { LanguageModelSetting } from 'poml-vscode/settings';
+import { LanguageModelSetting, ApiConfigValue } from 'poml-vscode/settings';
 import { IncomingMessage } from 'node:http';
 import { getTelemetryReporter } from 'poml-vscode/util/telemetryClient';
 import { TelemetryEvent } from 'poml-vscode/util/telemetryServer';
+import { ContentMultiMediaBinary } from 'poml/base';
 
 let _globalGenerationController: GenerationController | undefined = undefined;
 
@@ -115,13 +117,14 @@ export class TestCommand implements Command {
       return;
     }
     
-    if (!setting.apiKey) {
-      vscode.window.showErrorMessage('API key is not configured. Please set your API key in the extension settings.');
-      this.log('error', 'Prompt test aborted: setting.apiKey not configured.');
-      return;
+    const apiKey = this.getProviderApiKey(setting);
+    if (!apiKey) {
+      vscode.window.showWarningMessage('API key is not configured. Please set your API key in the extension settings.');
+      this.log('warn', 'API key is not configured for the provider.');
     }
 
-    if (!setting.apiUrl) {
+    const apiUrl = this.getProviderApiUrl(setting);
+    if (!apiUrl) {
       this.log('info', 'No API URL configured, using default for the provider.');
     }
 
@@ -219,23 +222,39 @@ export class TestCommand implements Command {
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
-    if (settings.provider === 'microsoft' && settings.apiUrl?.includes('.models.ai.azure.com')) {
-      yield* this.azureAiStream(prompt.content as Message[], settings);
-    } else if (prompt.responseSchema) {
+    const runtime = prompt.runtime;
+    const provider = runtime?.provider || settings.provider;
+    const apiUrl = this.getProviderApiUrl(settings, runtime);
+    
+    if (provider === 'microsoft' && apiUrl?.includes('.models.ai.azure.com')) {
+      yield* this.azureAiStream(prompt.content as Message[], settings, runtime);
+    } else if (prompt.responseSchema && (!prompt.tools || prompt.tools.length === 0)) {
       yield* this.handleResponseSchemaStream(prompt, settings);
     } else {
       yield* this.handleRegularTextStream(prompt, settings);
     }
   }
 
+  private vercelRequestParameters(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
+    const { model, provider, ...runtimeWithoutModelProvider } = runtime || {};
+    const parameters = {
+      model: this.getActiveVercelModel(settings, runtime),
+      maxRetries: 0,
+      temperature: settings.temperature,
+      maxOutputTokens: settings.maxTokens,
+      ...runtimeWithoutModelProvider, // This can override temperature, max output tokens, etc.
+    };
+    this.log('info', '[Request parameters] ' + JSON.stringify(parameters));
+    return parameters;
+  }
+
   private async *handleResponseSchemaStream(
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
-    const model = this.getActiveVercelModel(settings);
     const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
       : prompt.content as string;
-    
+
     if (prompt.tools) {
       throw new Error('Tools are not supported when response schema is provided.');
     }
@@ -244,18 +263,17 @@ export class TestCommand implements Command {
       throw new Error('Response schema is required but not provided.');
     }
 
+    const abortController = GenerationController.getNewAbortController();
+
     const stream = streamObject({
-      model: model,
       prompt: vercelPrompt,
       onError: ({ error }) => {
         // Immediately throw the error
         throw error;
       },
+      abortSignal: abortController.signal,
       schema: this.toVercelResponseSchema(prompt.responseSchema),
-      maxRetries: 0,
-      temperature: settings.temperature,
-      maxOutputTokens: settings.maxTokens,
-      ...prompt.runtime,
+      ...this.vercelRequestParameters(settings, prompt.runtime),
     });
 
     for await (const text of stream.textStream) {
@@ -267,25 +285,29 @@ export class TestCommand implements Command {
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
-    const model = this.getActiveVercelModel(settings);
     const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
       : prompt.content as string;
 
+    if (prompt.responseSchema) {
+      this.log('warn', 'Output schema and tools are both provided. This is experimental and is only supported for some models.');
+    }
+    const abortController = GenerationController.getNewAbortController();
+
     const stream = streamText({
-      model: model,
       prompt: vercelPrompt,
       onError: ({ error }) => {
         // Immediately throw the error
         throw error;
       },
+      abortSignal: abortController.signal,
       tools: prompt.tools ? this.toVercelTools(prompt.tools) : undefined,
-      maxRetries: 0,
-      temperature: settings.temperature,
-      maxOutputTokens: settings.maxTokens,
-      ...prompt.runtime,
+      experimental_output: prompt.responseSchema && Output.object({
+        schema: this.toVercelResponseSchema(prompt.responseSchema),
+      }),
+      ...this.vercelRequestParameters(settings, prompt.runtime),
     });
 
-    let lastChunkEndline: boolean = false;
+    let lastChunkEndline: boolean = true;
     for await (const chunk of stream.fullStream) {
       const result = this.processStreamChunk(chunk, lastChunkEndline);
       if (result !== null) {
@@ -309,7 +331,7 @@ export class TestCommand implements Command {
       return `${newline}[Reasoning]`;
     } else if (chunk.type === 'reasoning-end') {
       return '\n[/Reasoning]';
-    } else if (['start', 'finish', 'start-step', 'finish-step', 'message-metadata'].includes(chunk.type)) {
+    } else if (['start', 'finish', 'text-start', 'text-end', 'start-step', 'finish-step', 'message-metadata'].includes(chunk.type)) {
       return null;
     } else if (chunk.type === 'abort') {
       return `${newline}[Aborted]`;
@@ -339,15 +361,18 @@ export class TestCommand implements Command {
 
   private async *azureAiStream(
     prompt: Message[],
-    settings: LanguageModelSetting
+    settings: LanguageModelSetting,
+    runtime?: { [key: string]: any }
   ): AsyncGenerator<string> {
-    if (!settings.apiUrl || !settings.apiKey) {
+    const apiUrl = this.getProviderApiUrl(settings, runtime);
+    const apiKey = this.getProviderApiKey(settings, runtime);
+    if (!apiUrl || !apiKey) {
       throw new Error('Azure AI API URL or API key is not configured.');
     }
     if (!this.isChatting) {
       throw new Error('Azure AI is only supported for chat models.');
     }
-    const client = ModelClient(settings.apiUrl, new AzureKeyCredential(settings.apiKey));
+    const client = ModelClient(apiUrl, new AzureKeyCredential(apiKey));
 
     const args: any = {};
     if (settings.maxTokens) {
@@ -402,42 +427,96 @@ export class TestCommand implements Command {
     }
   }
 
-  private getActiveVercelModelProvider(settings: LanguageModelSetting) {
-    switch (settings.provider) {
+  private getActiveVercelModelProvider(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
+    const provider = runtime?.provider || settings.provider;
+    const apiKey = this.getProviderApiKey(settings, runtime);
+    const apiUrl = this.getProviderApiUrl(settings, runtime);
+    
+    if (runtime?.provider && runtime.provider !== settings.provider) {
+      this.log('info', `Provider overridden from '${settings.provider}' to '${runtime.provider}' by runtime`);
+      this.log('info', `Using ${apiUrl} as the API endpoint.`);
+
+      // Warn if apiKey or apiUrl are plain strings when provider is overridden
+      if (typeof settings.apiKey === 'string' && settings.apiKey) {
+        this.log('warn', `API key is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`);
+      }
+      if (typeof settings.apiUrl === 'string' && settings.apiUrl) {
+        this.log('warn', `API URL is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`);
+      }
+    }
+
+    switch (provider) {
       case 'anthropic':
         return createAnthropic({
-          baseURL: settings.apiUrl,
-          apiKey: settings.apiKey,
+          baseURL: apiUrl,
+          apiKey: apiKey,
         });
       case 'microsoft':
         return createAzure({
-          baseURL: settings.apiUrl,
-          apiKey: settings.apiKey
+          baseURL: apiUrl,
+          apiKey: apiKey
         });
       case 'openai':
         return createOpenAI({
-          baseURL: settings.apiUrl,
-          apiKey: settings.apiKey
+          baseURL: apiUrl,
+          apiKey: apiKey
         });
       case 'google':
         return createGoogleGenerativeAI({
-          baseURL: settings.apiUrl,
-          apiKey: settings.apiKey
+          baseURL: apiUrl,
+          apiKey: apiKey
         });
     }
+    throw new Error(`Unsupported provider: ${provider}. Supported providers are: openai, anthropic, microsoft, google.`);
   }
 
-  private getActiveVercelModel(settings: LanguageModelSetting) {
-    const provider = this.getActiveVercelModelProvider(settings);
-    return provider(settings.model);
+  private getActiveVercelModel(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
+    const provider = this.getActiveVercelModelProvider(settings, runtime);
+    const model = runtime?.model || settings.model;
+
+    if (runtime?.model && runtime.model !== settings.model) {
+      this.log('info', `Model overridden from '${settings.model}' to '${runtime.model}' by runtime`);
+    }
+
+    return provider(model);
+  }
+
+  private richContentToVercelToolResult(content: RichContent) {
+    if (typeof content === 'string') {
+      return { type: 'text' as const, value: content };
+    }
+    
+    // If it's an array, we need to handle mixed content
+    const convertedContent = content.map(part => {
+      if (typeof part === 'string') {
+        return { type: 'text' as const, text: part };
+      } else if (part.type.startsWith('image/')) {
+        const imagePart = part as ContentMultiMediaBinary;
+        if (!imagePart.base64) {
+          throw new Error(`Image content must have base64 data, found: ${JSON.stringify(part)}`);
+        }
+        return { type: 'media' as const, data: imagePart.base64, mediaType: imagePart.type };
+      } else {
+        throw new Error(`Unsupported content type: ${part.type}`);
+      }
+    });
+
+    // If there's only one text item, return it as text type
+    if (convertedContent.length === 1 && convertedContent[0].type === 'text') {
+      return { type: 'text' as const, value: convertedContent[0].text };
+    }
+    
+    // Otherwise, return the structured content array
+    return { type: 'content' as const, value: convertedContent };
   }
 
   private pomlMessagesToVercelMessage(messages: Message[]): ModelMessage[] {
     const speakerToRole = {
       ai: 'assistant',
       human: 'user',
-      system: 'system'
-    }
+      system: 'system',
+      tool: 'tool'
+    };
     const result: ModelMessage[] = [];
     for (const msg of messages) {
       if (!msg.speaker) {
@@ -446,12 +525,29 @@ export class TestCommand implements Command {
       const role = speakerToRole[msg.speaker];
       const contents = typeof msg.content === 'string' ? msg.content : msg.content.map(part => {
         if (typeof part === 'string') {
-          return { type: 'text', text: part };
+          return { type: 'text', text: part } satisfies TextPart;
         } else if (part.type.startsWith('image/')) {
-          if (!part.base64) {
+          const binaryPart = part as ContentMultiMediaBinary;
+          if (!binaryPart.base64) {
             throw new Error(`Image content must have base64 data, found: ${JSON.stringify(part)}`);
           }
-          return { type: 'image', image: part.base64 };
+          return { type: 'image', image: binaryPart.base64 } satisfies ImagePart;
+        } else if (part.type === 'application/vnd.poml.toolrequest') {
+          const toolRequest = part as ContentMultiMediaToolRequest;
+          return {
+            type: 'tool-call',
+            toolCallId: toolRequest.id,
+            toolName: toolRequest.name,
+            input: toolRequest.content
+          } satisfies ToolCallPart;
+        } else if (part.type === 'application/vnd.poml.toolresponse') {
+          const toolResponse = part as ContentMultiMediaToolResponse;
+          return {
+            type: 'tool-result',
+            toolCallId: toolResponse.id,
+            toolName: toolResponse.name,
+            output: this.richContentToVercelToolResult(toolResponse.content)
+          } satisfies ToolResultPart;
         } else {
           throw new Error(`Unsupported content type: ${part.type}`);
         }
@@ -467,8 +563,8 @@ export class TestCommand implements Command {
   private toVercelTools(tools: { [key: string]: any }[]) {
     const result: { [key: string]: Tool } = {};
     for (const t of tools) {
-      if (!t.name || !t.description || !t.parameters) {
-        throw new Error(`Tool must have name, description, and parameters: ${JSON.stringify(t)}`);
+      if (!t.name || !t.parameters) {
+        throw new Error(`Tool must have name and parameters: ${JSON.stringify(t)}`);
       }
       if (t.type !== 'function') {
         throw new Error(`Unsupported tool type: ${t.type}. Only 'function' type is supported.`);
@@ -491,7 +587,8 @@ export class TestCommand implements Command {
     const speakerMapping = {
       ai: 'assistant',
       human: 'user',
-      system: 'system'
+      system: 'system',
+      tool: 'tool'
     };
     return messages.map(msg => {
       return {
@@ -506,7 +603,33 @@ export class TestCommand implements Command {
     return settings.loadAndCacheSettings(uri).languageModel;
   }
 
-  private log(level: 'error' | 'info', message: string) {
+  private extractProviderValue(value: ApiConfigValue | undefined, provider: string): string | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    if (typeof value === 'string') {
+      return value || undefined;
+    }
+    
+    // It's an object, so extract the provider-specific value
+    const extracted = value[provider];
+    return extracted || undefined;
+  }
+
+  private getProviderApiKey(settings: LanguageModelSetting, runtime?: { [key: string]: any }): string | undefined {
+    // Runtime can override the provider
+    const provider = runtime?.provider || settings.provider;
+    return this.extractProviderValue(settings.apiKey, provider);
+  }
+
+  private getProviderApiUrl(settings: LanguageModelSetting, runtime?: { [key: string]: any }): string | undefined {
+    // Runtime can override the provider
+    const provider = runtime?.provider || settings.provider;
+    return this.extractProviderValue(settings.apiUrl, provider);
+  }
+
+  private log(level: 'error' | 'warn' | 'info', message: string) {
     const tzOffset = new Date().getTimezoneOffset() * 60000;
     const time = new Date(Date.now() - tzOffset).toISOString().replace('T', ' ').replace('Z', '');
     this.outputChannel.appendLine(`${time} [${level}] ${message}`);

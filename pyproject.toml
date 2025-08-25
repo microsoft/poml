@@ -19,8 +19,22 @@ dev = [
   "twine",
   "mkdocs",
   "mkdocs-material",
+  "mkdocs-git-revision-date-localized-plugin",
+  "mkdocs-git-authors-plugin",
   "mkdocstrings[python]",
   "mike",
+]
+agent = [
+  "langchain",
+  "mlflow",
+  "agentops",
+  "weave",
+  "langchain-openai",
+  "openai",
+  "mcp",
+  "fastmcp",
+  "pydantic",
+  "typing-extensions",
 ]
 
 [build-system]

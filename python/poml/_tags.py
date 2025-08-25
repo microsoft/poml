@@ -31,8 +31,8 @@ class _TagLib:
             parser (Optional[str]): The parser to use for reading the data. If not provided, it will be inferred from the file extension. Choices: `"auto"`, `"pdf"`, `"docx"`, `"txt"`.
             multimedia (Optional[bool]): If true, the multimedias will be displayed. If false, the alt strings will be displayed at best effort. Default is `true`. Default is `"true"`.
             selectedPages (Optional[str]): The pages to be selected. This is only available **for PDF documents**. If not provided, all pages will be selected.
-            You can use a string like `2` to specify a single page, or slice like `2:4` to specify a range of pages (2 inclusive, 4 exclusive).
-            The pages selected are **0-indexed**. Negative indexes like `-1` is not supported here.
+                You can use a string like `2` to specify a single page, or slice like `2:4` to specify a range of pages (2 inclusive, 4 exclusive).
+                The pages selected are **0-indexed**. Negative indexes like `-1` is not supported here.
 
         Example:
             To display a Word document without including the real multimedia:
@@ -68,10 +68,10 @@ class _TagLib:
             caption (Optional[str]): The title or label for the role paragraph. Default is `Role`. Default is `"Role"`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `role`. Default is `"role"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionEnding (Optional[str]): A caption can ends with a colon, a newline or simply nothing.
-            If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
+                If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
 
         Example:
             ```xml
@@ -106,10 +106,10 @@ class _TagLib:
             caption (Optional[str]): The title or label for the task paragraph. Default is `Task`. Default is `"Task"`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `task`. Default is `"task"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionEnding (Optional[str]): A caption can ends with a colon, a newline or simply nothing.
-            If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
+                If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
 
         Example:
             ```xml
@@ -157,10 +157,10 @@ class _TagLib:
             caption (Optional[str]): The title or label for the output format paragraph. Default is `Output Format`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `outputFormat`. Default is `"outputFormat"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionEnding (Optional[str]): A caption can ends with a colon, a newline or simply nothing.
-            If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
+                If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
 
         Example:
             ```xml
@@ -193,10 +193,10 @@ class _TagLib:
             caption (Optional[str]): The title or label for the stepwise instructions paragraph. Default is `Stepwise Instructions`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `stepwiseInstructions`. Default is `"stepwiseInstructions"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionEnding (Optional[str]): A caption can ends with a colon, a newline or simply nothing.
-            If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
+                If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
 
         Example:
             ```xml
@@ -235,10 +235,10 @@ class _TagLib:
             caption (Optional[str]): The title or label for the hint paragraph. Default is `Hint`. Default is `"Hint"`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `hint`. Default is `"hint"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `bold`. Default is `"bold"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `bold`. Default is `"bold"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionColon (Optional[bool]): Indicates whether to append a colon after the caption.
-            By default, this is true for `bold` or `plain` captionStyle, and false otherwise.
+                By default, this is true for `bold` or `plain` captionStyle, and false otherwise.
 
         Example:
             ```xml
@@ -271,10 +271,10 @@ class _TagLib:
             caption (Optional[str]): The title or label for the introducer paragraph. Default is `Introducer`. Default is `"Introducer"`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `introducer`. Default is `"introducer"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `hidden`. Default is `"hidden"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `hidden`. Default is `"hidden"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionEnding (Optional[str]): A caption can ends with a colon, a newline or simply nothing.
-            If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
+                If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
 
         Example:
             ```xml
@@ -311,14 +311,14 @@ class _TagLib:
             caption (Optional[str]): The title or label for the example set paragraph. Default is `Examples`. Default is `"Examples"`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `examples`. Default is `"examples"`.
             chat (Optional[bool]): Indicates whether the examples should be rendered in chat format.
-            By default, it's `true` for "markup" syntaxes and `false` for "serializer" syntaxes.
+                By default, it's `true` for "markup" syntaxes and `false` for "serializer" syntaxes.
             introducer (Optional[str]): An optional introducer text to be displayed before the examples.
-            For example, `Here are some examples:`.
+                For example, `Here are some examples:`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionEnding (Optional[str]): A caption can ends with a colon, a newline or simply nothing.
-            If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
+                If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
 
         Example:
             ```xml
@@ -363,14 +363,14 @@ class _TagLib:
             caption (Optional[str]): The title or label for the example paragraph. Default is `Example`. Default is `"Example"`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `example`. Default is `"example"`.
             captionStyle (Optional[str]): Determines the style of the caption, applicable only for "markup" syntaxes. Default is `hidden`.
-            Options include `header`, `bold`, `plain`, or `hidden`. Default is `"hidden"`.
+                Options include `header`, `bold`, `plain`, or `hidden`. Default is `"hidden"`.
             chat (Optional[bool]): Indicates whether the example should be rendered in chat format.
-            When used in a example set (`<examples>`), this is inherited from the example set.
-            Otherwise, it defaults to `false` for "serializer" syntaxes and `true` for "markup" syntaxes.
+                When used in a example set (`<examples>`), this is inherited from the example set.
+                Otherwise, it defaults to `false` for "serializer" syntaxes and `true` for "markup" syntaxes.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes.
-            Options are `upper`, `lower`, `capitalize`, or `none`. Default is `none`. Default is `"none"`.
+                Options are `upper`, `lower`, `capitalize`, or `none`. Default is `none`. Default is `"none"`.
             captionColon (Optional[bool]): Indicates whether to append a colon after the caption.
-            By default, this is true for `bold` or `plain` captionStyle, and false otherwise.
+                By default, this is true for `bold` or `plain` captionStyle, and false otherwise.
 
         Example:
             ```xml
@@ -417,10 +417,10 @@ class _TagLib:
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `input`. Default is `"input"`.
             speaker (Optional[str]): The speaker for the example input. Default is `human` if chat context is enabled (see `<example>`). Default is `"human"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `hidden` if chat context is enabled. Otherwise, it's `bold`. Default is `"hidden"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `hidden` if chat context is enabled. Otherwise, it's `bold`. Default is `"hidden"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionColon (Optional[bool]): Indicates whether to append a colon after the caption.
-            By default, this is true for `bold` or `plain` captionStyle, and false otherwise.
+                By default, this is true for `bold` or `plain` captionStyle, and false otherwise.
 
         Example:
             ```xml
@@ -462,10 +462,10 @@ class _TagLib:
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `output`. Default is `"output"`.
             speaker (Optional[str]): The speaker for the example output. Default is `ai` if chat context is enabled (see `<example>`). Default is `"ai"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `hidden` if chat context is enabled. Otherwise, it's `bold`. Default is `"hidden"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `hidden` if chat context is enabled. Otherwise, it's `bold`. Default is `"hidden"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionColon (Optional[bool]): Indicates whether to append a colon after the caption.
-            By default, this is true for `bold` or `plain` captionStyle, and false otherwise.
+                By default, this is true for `bold` or `plain` captionStyle, and false otherwise.
 
         Example:
             ```xml
@@ -508,10 +508,10 @@ class _TagLib:
             answerCaption (Optional[str]): The title or label for the answer paragraph. Default is `Answer`. Default is `"Answer"`.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes. Default is `question`. Default is `"question"`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `bold`. Default is `"bold"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `bold`. Default is `"bold"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionEnding (Optional[str]): A caption can ends with a colon, a newline or simply nothing.
-            If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
+                If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
 
         Example:
             ```xml
@@ -612,8 +612,8 @@ class _TagLib:
         Args:
             messages (Optional[Any]): A list of message. Each message should have a `speaker` and a `content` field.
             selectedMessages (Optional[str]): The messages to be selected. If not provided, all messages will be selected.
-            You can use a string like `2` to specify a single message, or slice like `2:4` to specify a range of messages (2 inclusive, 4 exclusive).
-            Or use `-6:` to select the last 6 messages.
+                You can use a string like `2` to specify a single message, or slice like `2:4` to specify a range of messages (2 inclusive, 4 exclusive).
+                Or use `-6:` to select the last 6 messages.
 
         Example:
             ```xml
@@ -646,16 +646,16 @@ class _TagLib:
             syntax (Optional[str]): The output syntax of the content. Choices: `"markdown"`, `"html"`, `"json"`, `"text"`, `"csv"`, `"tsv"`, `"xml"`.
             records (Optional[Any]): A list, each element is an object / dictionary / list of elements. The keys are the fields and the values are the data in cells.
             columns (Optional[Any]): A list of column definitions. Each column definition is an object with keys "field", "header", and "description".
-            The field is the key in the record object, the header is displayed in the top row, and the description is meant to be an explanation.
-            Columns are optional. If not provided, the columns are inferred from the records.
+                The field is the key in the record object, the header is displayed in the top row, and the description is meant to be an explanation.
+                Columns are optional. If not provided, the columns are inferred from the records.
             src (Optional[str]): The source file to read the data from. This must be provided if records is not provided.
             parser (Optional[str]): The parser to use for reading the data. If not provided, it will be inferred from the file extension. Choices: `"auto"`, `"csv"`, `"tsv"`, `"excel"`, `"json"`, `"jsonl"`.
             selectedColumns (Optional[Any]): The selected columns to display. If not provided, all columns will be displayed.
-            It should be an array of column field names, e.g. `["name", "age"]`; or a string like `2:4` to select columns 2 (inclusive) to 4 (exclusive).
-            There is a special column name called `index` which is the enumeration of the records starting from 0.
-            You can also use a special value called `+index` to add the index column to the original table.
+                It should be an array of column field names, e.g. `["name", "age"]`; or a string like `2:4` to select columns 2 (inclusive) to 4 (exclusive).
+                There is a special column name called `index` which is the enumeration of the records starting from 0.
+                You can also use a special value called `+index` to add the index column to the original table.
             selectedRecords (Optional[Any]): The selected records to display. If not provided, all records will be displayed.
-            It should be an array of record indices, e.g. `[0, 1]`; or a string like `2:4` to select records 2 (inclusive) to 4 (exclusive).
+                It should be an array of record indices, e.g. `[0, 1]`; or a string like `2:4` to select records 2 (inclusive) to 4 (exclusive).
             maxRecords (Optional[int]): The maximum number of records to display. If not provided, all records will be displayed.
             maxColumns (Optional[int]): The maximum number of columns to display. If not provided, all columns will be displayed.
 
@@ -728,9 +728,9 @@ class _TagLib:
             src (Optional[str]): The source directory path to display.
             data (Optional[List[Any]]): Alternative to src, directly provide tree data structure.
             filter (Optional[str]): A regular expression to filter files.
-              The regex is applied to the folder names and file names (not the full path).
-              Directories are included by default unless all of their nested content is filtered out.
-              When filter is on, empty directories will not be shown.
+                  The regex is applied to the folder names and file names (not the full path).
+                  Directories are included by default unless all of their nested content is filtered out.
+                  When filter is on, empty directories will not be shown.
             maxDepth (Optional[int]): Maximum depth of directory traversal. Default is 3.
             showContent (Optional[bool]): Whether to show file contents. Default is false.
 
@@ -765,12 +765,12 @@ class _TagLib:
         Args:
             caption (Optional[str]): The title or label for the paragraph. Required.
             captionSerialized (Optional[str]): The serialized version of the caption when using "serializer" syntaxes.
-              By default, it's same as `caption`.
+                  By default, it's same as `caption`.
             captionStyle (Optional[str]): Determines the style of the caption,
-            applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
+                applicable only for "markup" syntaxes. Default is `header`. Default is `"header"`. Choices: `"header"`, `"bold"`, `"plain"`, `"hidden"`.
             captionTextTransform (Optional[str]): Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`. Default is `"none"`. Choices: `"upper"`, `"level"`, `"capitalize"`, `"none"`.
             captionEnding (Optional[str]): A caption can ends with a colon, a newline or simply nothing.
-            If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
+                If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise. Choices: `"colon"`, `"newline"`, `"colon-newline"`, `"none"`.
 
         Example:
             ```xml
@@ -847,6 +847,10 @@ class _TagLib:
         name: Optional[str] = None,
         type: Optional[str] = None,
         writerOptions: Optional[Any] = None,
+        whiteSpace: Optional[str] = None,
+        charLimit: Optional[float] = None,
+        tokenLimit: Optional[float] = None,
+        priority: Optional[float] = None,
         **kwargs: Any,
     ):
         """Text (`<text>`, `<poml>`) is a wrapper for any contents.
@@ -858,12 +862,19 @@ class _TagLib:
         2. If the first element is a POML component, `<poml syntax="markdown">` will be added.
 
         Args:
-            syntax (Optional[str]): The syntax of the content. Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"text"`.
+            syntax (Optional[str]): The syntax of the content. Note `xml` and `text` are experimental. Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"text"`.
             className (Optional[str]): A class name for quickly styling the current block with stylesheets.
             speaker (Optional[str]): The speaker of the content. By default, it's determined by the context and the content. Choices: `"human"`, `"ai"`, `"system"`.
             name (Optional[str]): The name of the content, used in serialization.
             type (Optional[str]): The type of the content, used in serialization.
-            writerOptions (Optional[Any]): An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+            writerOptions (Optional[Any]): **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+            whiteSpace (Optional[str]): **Experimental.** Controls how whitespace is handled in text content.
+                  `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+                  `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+                  `'trim'`: Trims whitespace from the beginning and end. Choices: `"pre"`, `"filter"`, `"trim"`.
+            charLimit (Optional[float]): **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+            tokenLimit (Optional[float]): **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+            priority (Optional[float]): **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
         Example:
             ```xml
@@ -883,6 +894,15 @@ class _TagLib:
               <p>What is the capital of France?</p>
             </poml>
             ```
+            
+            **Experimental usage with limits and priority:**
+            
+            ```xml
+            <poml syntax="markdown" tokenLimit="10">
+              <p priority="1">This has lower priority and may be truncated first.</p>
+              <p priority="3">This has higher priority and will be preserved longer.</p>
+            </poml>
+            ```
         """
         return self.tag(
             tag_name="Text",
@@ -892,6 +912,10 @@ class _TagLib:
             name=name,
             type=type,
             writerOptions=writerOptions,
+            whiteSpace=whiteSpace,
+            charLimit=charLimit,
+            tokenLimit=tokenLimit,
+            priority=priority,
             **kwargs,
         )
     
@@ -923,6 +947,10 @@ class _TagLib:
         className: Optional[str] = None,
         speaker: Optional[str] = None,
         writerOptions: Optional[Any] = None,
+        whiteSpace: Optional[str] = None,
+        charLimit: Optional[float] = None,
+        tokenLimit: Optional[float] = None,
+        priority: Optional[float] = None,
         **kwargs: Any,
     ):
         """Inline (`<span>`) is a container for inline content.
@@ -935,7 +963,14 @@ class _TagLib:
             syntax (Optional[str]): The syntax of the content. Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"text"`.
             className (Optional[str]): A class name for quickly styling the current block with stylesheets.
             speaker (Optional[str]): The speaker of the content. By default, it's determined by the context and the content. Choices: `"human"`, `"ai"`, `"system"`.
-            writerOptions (Optional[Any]): An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+            writerOptions (Optional[Any]): **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+            whiteSpace (Optional[str]): **Experimental.** Controls how whitespace is handled in text content.
+                  `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+                  `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+                  `'trim'`: Trims whitespace from the beginning and end. Choices: `"pre"`, `"filter"`, `"trim"`.
+            charLimit (Optional[float]): **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+            tokenLimit (Optional[float]): **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+            priority (Optional[float]): **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
         Example:
             ```xml
@@ -948,6 +983,10 @@ class _TagLib:
             className=className,
             speaker=speaker,
             writerOptions=writerOptions,
+            whiteSpace=whiteSpace,
+            charLimit=charLimit,
+            tokenLimit=tokenLimit,
+            priority=priority,
             **kwargs,
         )
     
@@ -1206,13 +1245,13 @@ class _TagLib:
             alt (Optional[str]): The alternative text to show when the image cannot be displayed.
             base64 (Optional[str]): The base64 encoded image data. It can not be specified together with `src`.
             type (Optional[str]): The MIME type of the image **to be shown**. If not specified, it will be inferred from the file extension.
-              If specified, the image will be converted to the specified type. Can be `image/jpeg`, `image/png`, etc., or without the `image/` prefix.
+                  If specified, the image will be converted to the specified type. Can be `image/jpeg`, `image/png`, etc., or without the `image/` prefix.
             position (Optional[str]): The position of the image. Default is `here`. Default is `"here"`. Choices: `"top"`, `"bottom"`, `"here"`.
             maxWidth (Optional[int]): The maximum width of the image to be shown.
             maxHeight (Optional[int]): The maximum height of the image to be shown.
             resize (Optional[float]): The ratio to resize the image to to be shown.
             syntax (Optional[str]): Only when specified as `multimedia`, the image will be shown.
-              Otherwise, the alt text will be shown. By default, it's `multimedia` when `alt` is not specified. Otherwise, it's undefined (inherit from parent). Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"multimedia"`.
+                  Otherwise, the alt text will be shown. By default, it's `multimedia` when `alt` is not specified. Otherwise, it's undefined (inherit from parent). Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"multimedia"`.
 
         Example:
             ```xml
@@ -1253,11 +1292,11 @@ class _TagLib:
             base64 (Optional[str]): Base64-encoded audio data. Cannot be used together with `src`.
             alt (Optional[str]): The alternative text to show when the image cannot be displayed.
             type (Optional[str]): The MIME type of the audio (e.g., audio/mpeg, audio/wav). If not specified, it will be inferred from the file extension.
-              The type must be consistent with the real type of the file. The consistency will NOT be checked or converted.
-              The type can be specified with or without the `audio/` prefix.
+                  The type must be consistent with the real type of the file. The consistency will NOT be checked or converted.
+                  The type can be specified with or without the `audio/` prefix.
             position (Optional[str]): The position of the image. Default is `here`. Default is `"here"`. Choices: `"top"`, `"bottom"`, `"here"`.
             syntax (Optional[str]): Only when specified as `multimedia`, the image will be shown.
-              Otherwise, the alt text will be shown. By default, it's `multimedia` when `alt` is not specified. Otherwise, it's undefined (inherit from parent). Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"multimedia"`.
+                  Otherwise, the alt text will be shown. By default, it's `multimedia` when `alt` is not specified. Otherwise, it's undefined (inherit from parent). Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"multimedia"`.
 
         Example:
             ```xml
@@ -1272,6 +1311,76 @@ class _TagLib:
             type=type,
             position=position,
             syntax=syntax,
+            **kwargs,
+        )
+    
+    def tool_request(
+        self,
+        id: Optional[str] = None,
+        name: Optional[str] = None,
+        parameters: Optional[Any] = None,
+        speaker: Optional[str] = None,
+        **kwargs: Any,
+    ):
+        """ToolRequest represents an AI-generated tool request with parameters.
+        Used to display tool calls made by AI models.
+
+        Args:
+            id (Optional[str]): Tool request ID
+            name (Optional[str]): Tool name
+            parameters (Optional[Any]): Tool input parameters
+            speaker (Optional[str]): The speaker of the content. Default is `ai`. Default is `"ai"`. Choices: `"human"`, `"ai"`, `"system"`.
+
+        Example:
+            ```xml
+            <ToolRequest id="123" name="search" parameters={{ query: "hello" }} />
+            ```
+        """
+        return self.tag(
+            tag_name="ToolRequest",
+            id=id,
+            name=name,
+            parameters=parameters,
+            speaker=speaker,
+            **kwargs,
+        )
+    
+    def tool_response(
+        self,
+        syntax: Optional[str] = None,
+        id: Optional[str] = None,
+        name: Optional[str] = None,
+        speaker: Optional[str] = None,
+        **kwargs: Any,
+    ):
+        """ToolResponse represents the result of a tool execution.
+        Used to display tool execution results with rich content.
+
+        Args:
+            syntax (Optional[str]): The syntax of ToolResponse is special.
+                  It is always `multimedia` for itself. The syntax is used to render the content inside.
+                  If not specified, it will inherit from the parent context. Choices: `"markdown"`, `"html"`, `"json"`, `"yaml"`, `"xml"`, `"text"`.
+            id (Optional[str]): Tool call ID to respond to
+            name (Optional[str]): Tool name
+            speaker (Optional[str]): The speaker of the content. Default is `tool`. Default is `"tool"`. Choices: `"human"`, `"ai"`, `"system"`, `"tool"`.
+
+        Example:
+            ```xml
+            <ToolResponse id="123" name="search">
+             <Paragraph>Search results for "hello":</Paragraph>
+             <List>
+              <ListItem>Result 1</ListItem>
+              <ListItem>Result 2</ListItem>
+             </List>
+            </ToolResponse>
+            ```
+        """
+        return self.tag(
+            tag_name="ToolResponse",
+            syntax=syntax,
+            id=id,
+            name=name,
+            speaker=speaker,
             **kwargs,
         )
     

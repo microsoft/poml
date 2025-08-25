@@ -135,12 +135,19 @@ export const AnyOrFree = component('AnyOrFree')((
  * 1. If the first element is pure text contents, `<poml syntax="text">` will be added.
  * 2. If the first element is a POML component, `<poml syntax="markdown">` will be added.
  *
- * @param {'markdown'|'html'|'json'|'yaml|'xml'|'text'} syntax - The syntax of the content.
+ * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'text'} syntax - The syntax of the content. Note `xml` and `text` are experimental.
  * @param className - A class name for quickly styling the current block with stylesheets.
  * @param {'human'|'ai'|'system'} speaker - The speaker of the content. By default, it's determined by the context and the content.
  * @param name - The name of the content, used in serialization.
  * @param type - The type of the content, used in serialization.
- * @param {object} writerOptions - An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {object} writerOptions - **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {'pre'|'filter'|'trim'} whiteSpace - **Experimental.** Controls how whitespace is handled in text content. 
+ *   `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+ *   `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+ *   `'trim'`: Trims whitespace from the beginning and end.
+ * @param {number} charLimit - **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} tokenLimit - **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} priority - **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
  *
  * @example
  * ```xml
@@ -158,6 +165,15 @@ export const AnyOrFree = component('AnyOrFree')((
  * <poml syntax="markdown" speaker="human">
  *   <p>You are a helpful assistant.</p>
  *   <p>What is the capital of France?</p>
+ * </poml>
+ * ```
+ * 
+ * **Experimental usage with limits and priority:**
+ * 
+ * ```xml
+ * <poml syntax="markdown" tokenLimit="10">
+ *   <p priority="1">This has lower priority and may be truncated first.</p>
+ *   <p priority="3">This has higher priority and will be preserved longer.</p>
  * </poml>
  * ```
  */
@@ -241,7 +257,14 @@ export const Paragraph = component('Paragraph', ['p'])((
  * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'text'} syntax - The syntax of the content.
  * @param className - A class name for quickly styling the current block with stylesheets.
  * @param {'human'|'ai'|'system'} speaker - The speaker of the content. By default, it's determined by the context and the content.
- * @param {object} writerOptions - An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {object} writerOptions - **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {'pre'|'filter'|'trim'} whiteSpace - **Experimental.** Controls how whitespace is handled in text content. 
+ *   `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+ *   `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+ *   `'trim'`: Trims whitespace from the beginning and end.
+ * @param {number} charLimit - **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} tokenLimit - **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} priority - **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
  *
  * @example
  * ```xml
@@ -772,10 +795,7 @@ export const Audio = component('Audio', { aliases: ['audio'], asynchorous: true 
     } else if (!base64) {
       throw ReadError.fromProps('Either `src` or `base64` must be specified.', others);
     }
-    const audio = useWithCatch(
-      preprocessAudio({ src, base64, type }),
-      others
-    );
+    const audio = useWithCatch(preprocessAudio({ src, base64, type }), others);
     if (!audio) {
       return null;
     }
@@ -790,4 +810,105 @@ export const Audio = component('Audio', { aliases: ['audio'], asynchorous: true 
   } else {
     return null;
   }
+});
+
+export interface ToolRequestProps extends PropsSyntaxBase, MultiMedia.ToolRequestProps {}
+
+export interface ToolResponseProps extends PropsSyntaxBase, MultiMedia.ToolResponseProps {}
+
+/**
+ * ToolRequest represents an AI-generated tool request with parameters.
+ * Used to display tool calls made by AI models.
+ *
+ * @param {string} id - Tool request ID
+ * @param {string} name - Tool name
+ * @param {any} parameters - Tool input parameters
+ * @param {'human'|'ai'|'system'} speaker - The speaker of the content. Default is `ai`.
+ *
+ * @example
+ * ```xml
+ * <ToolRequest id="123" name="search" parameters={{ query: "hello" }} />
+ * ```
+ */
+export const ToolRequest = component('ToolRequest', { aliases: ['toolRequest'] })((
+  props: ToolRequestProps
+) => {
+  let { syntax, id, name, parameters, speaker, ...others } = props;
+  syntax = syntax ?? 'multimedia';
+  const presentation = computeSyntaxContext({ ...props, syntax }, 'multimedia', []);
+
+  if (presentation === 'multimedia') {
+    return (
+      <MultiMedia.ToolRequest
+        presentation={presentation}
+        id={id}
+        name={name}
+        parameters={parameters}
+        speaker={speaker ?? 'ai'}
+        {...others}
+      />
+    );
+  } else {
+    return (
+      <Object
+        syntax={syntax}
+        speaker={speaker ?? 'ai'}
+        data={{ id, name, parameters }}
+        {...others}
+      />
+    );
+  }
+});
+
+/**
+ * ToolResponse represents the result of a tool execution.
+ * Used to display tool execution results with rich content.
+ *
+ * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'text'} syntax - The syntax of ToolResponse is special.
+ *   It is always `multimedia` for itself. The syntax is used to render the content inside.
+ *   If not specified, it will inherit from the parent context.
+ * @param {string} id - Tool call ID to respond to
+ * @param {string} name - Tool name
+ * @param {'human'|'ai'|'system'|'tool'} speaker - The speaker of the content. Default is `tool`.
+ *
+ * @example
+ * ```xml
+ * <ToolResponse id="123" name="search">
+ *  <Paragraph>Search results for "hello":</Paragraph>
+ *  <List>
+ *   <ListItem>Result 1</ListItem>
+ *   <ListItem>Result 2</ListItem>
+ *  </List>
+ * </ToolResponse>
+ * ```
+ */
+export const ToolResponse = component('ToolResponse', { aliases: ['toolResponse'] })((
+  props: React.PropsWithChildren<ToolResponseProps>
+) => {
+  const { syntax, id, name, children, speaker, ...others } = props;
+  const presentation = computeSyntaxContext(props);
+  let syntaxFromContext = syntax;
+  if (syntaxFromContext === undefined) {
+    if (presentation === 'markup') {
+      syntaxFromContext = 'markdown';
+    } else if (presentation === 'serialize') {
+      syntaxFromContext = 'json';
+    } else if (presentation === 'free') {
+      syntaxFromContext = 'text';
+    } else if (presentation === 'multimedia') {
+      syntaxFromContext = 'multimedia';
+    }
+  }
+
+  return (
+    <MultiMedia.ToolResponse
+      presentation={'multimedia'}
+      id={id}
+      name={name}
+      speaker={speaker ?? 'tool'}
+      {...others}
+    >
+      <Inline syntax={syntaxFromContext}>{children}</Inline>
+    </MultiMedia.ToolResponse>
+  );
 });

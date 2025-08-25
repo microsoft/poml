@@ -1,5 +1,5 @@
-import { component, ContentMultiMedia, RichContent } from 'poml/base';
-import { Text, Image } from 'poml/essentials';
+import { component, ContentMultiMedia, ContentMultiMediaBinary, ContentMultiMediaToolRequest, ContentMultiMediaToolResponse, RichContent } from 'poml/base';
+import { Text, Image, ToolRequest, ToolResponse } from 'poml/essentials';
 import * as React from 'react';
 import { Message } from 'poml/base';
 import { parsePythonStyleSlice } from './utils';
@@ -65,6 +65,7 @@ export const AiMessage = component('AiMessage', ['ai-msg'])((props: React.PropsW
   );
 });
 
+
 interface MessageContentProps {
   content: RichContent;
 }
@@ -92,8 +93,32 @@ export const MessageContent = component('MessageContent', ['msg-content'])((
         </Text>
       );
     } else if (media.type.startsWith('image/')) {
+      const image = media as ContentMultiMediaBinary;
       return (
-        <Image key={key} base64={media.base64} alt={media.alt} type={media.type} {...others} />
+        <Image key={key} base64={image.base64} alt={image.alt} type={image.type} {...others} />
+      );
+    } else if (media.type === 'application/vnd.poml.toolrequest') {
+      const toolRequest = media as ContentMultiMediaToolRequest;
+      return (
+        <ToolRequest 
+          key={key} 
+          id={toolRequest.id} 
+          name={toolRequest.name} 
+          parameters={toolRequest.content} 
+          {...others} 
+        />
+      );
+    } else if (media.type === 'application/vnd.poml.toolresponse') {
+      const toolResponse = media as ContentMultiMediaToolResponse;
+      return (
+        <ToolResponse 
+          key={key} 
+          id={toolResponse.id} 
+          name={toolResponse.name} 
+          {...others}
+        >
+          <MessageContent content={toolResponse.content} {...others} />
+        </ToolResponse>
       );
     } else {
       throw new Error(`Unsupported media type: ${media.type}`);
@@ -103,7 +128,7 @@ export const MessageContent = component('MessageContent', ['msg-content'])((
   if (typeof content === 'string') {
     return displayStringOrMultimedia(content);
   } else if (Array.isArray(content)) {
-    return <>{content.map((item, index) => displayStringOrMultimedia(item, `content-${index}`))}</>;
+    return <Text>{content.map((item, index) => displayStringOrMultimedia(item, `content-${index}`))}</Text>;
   }
 });
 
@@ -134,12 +159,12 @@ export const Conversation = component('Conversation', ['conversation'])((
     messages = messages.slice(start, end);
   }
   return (
-    <>
+    <Text>
       {messages.map((message, index) => (
         <Text key={`message-${index}`} speaker={message.speaker} {...others}>
           <MessageContent content={message.content} {...others} />
         </Text>
       ))}
-    </>
+    </Text>
   );
 });

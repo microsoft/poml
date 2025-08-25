@@ -39,7 +39,8 @@ import {
   ReadError,
   RichContent,
   SystemError,
-  WriteError
+  WriteError,
+  ContentMultiMediaBinary
 } from 'poml/base';
 import { PomlFile, PomlToken } from 'poml/file';
 import { encodingForModel, Tiktoken } from 'js-tiktoken';
@@ -54,6 +55,7 @@ import {
   TelemetryServer
 } from 'poml-vscode/util/telemetryServer';
 import { parseJsonWithBuffers } from 'poml/util/trace';
+import { EvaluationMessage, EvaluationNotification } from '../panel/types';
 import { getImageWidthHeight } from 'poml/util/image';
 import { estimateImageTokens } from 'poml/util/tokenCounterImage';
 
@@ -215,28 +217,39 @@ class PomlLspServer {
     }
     const text = document.getText();
     const pomlFile = new PomlFile(text);
-    const tokens = pomlFile.getExpressionTokens();
+    let tokens: PomlToken[];
+    try {
+      tokens = pomlFile.getExpressionTokens();
+    } catch (e) {
+      console.error(`Failed to parse document for code lenses: ${e}`);
+      return [];
+    }
     const lenses: CodeLens[] = [];
-    for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i];
-      if (token.expression === undefined) {
-        continue;
+    try {
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (token.expression === undefined) {
+          continue;
+        }
+        const expr = token.expression;
+        let titleExpr = expr;
+        if (titleExpr.length > 20) {
+          titleExpr = `${titleExpr.slice(0, 10)}...${titleExpr.slice(-10)}`;
+        }
+        const command: Command = {
+          title: `▶️ Evaluate ${titleExpr}`,
+          command: 'poml.evaluateExpression',
+          arguments: [params.textDocument.uri, text, token.range.start, token.range.end]
+        };
+        const vscodeRange: Range = {
+          start: document.positionAt(token.range.start),
+          end: document.positionAt(token.range.end + 1)
+        }
+        lenses.push({ range: vscodeRange, command });
       }
-      const expr = token.expression;
-      let titleExpr = expr;
-      if (titleExpr.length > 20) {
-        titleExpr = `${titleExpr.slice(0, 10)}...${titleExpr.slice(-10)}`;
-      }
-      const command: Command = {
-        title: `▶️ Evaluate ${titleExpr}`,
-        command: 'poml.evaluateExpression',
-        arguments: [params.textDocument.uri, text, token.range.start, token.range.end]
-      };
-      const vscodeRange: Range = {
-        start: document.positionAt(token.range.start),
-        end: document.positionAt(token.range.end + 1)
-      }
-      lenses.push({ range: vscodeRange, command });
+    } catch (e) {
+      console.error(`Failed to compute code lenses: ${e}`);
+      return lenses;
     }
     return lenses;
   }
@@ -250,7 +263,11 @@ class PomlLspServer {
     const rangeStart = params.arguments?.[2] as number | undefined;
     const rangeEnd = params.arguments?.[3] as number | undefined;
     if (!uri || !text || rangeStart === undefined || rangeEnd === undefined) {
-      this.connection.console.error(`${new Date().toLocaleString()} Invalid arguments for poml.evaluateExpression command`);
+      const message: EvaluationMessage = {
+        type: 'error',
+        message: `${new Date().toLocaleString()} Invalid arguments for poml.evaluateExpression command`
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
       return;
     }
     const expression = text.slice(rangeStart, rangeEnd + 1);
@@ -273,12 +290,20 @@ class PomlLspServer {
 
     if (!ErrorCollection.empty()) {
       const err = ErrorCollection.first()?.toString() ?? 'Unknown error';
-      this.connection.console.error(`${new Date().toLocaleString()} Error during evaluation: ${expression} => ${err}`);
+      const message: EvaluationMessage = {
+        type: 'error',
+        message: `${new Date().toLocaleString()} Error during evaluation: ${expression} => ${err}`
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
     }
 
     const evaluations = file.getExpressionEvaluations({ start: rangeStart, end: rangeEnd });
     if (evaluations.length === 0) {
-      this.connection.console.warn(`${new Date().toLocaleString()} No evaluations found for expression: ${expression} (${rangeStart}-${rangeEnd})`);
+      const message: EvaluationMessage = {
+        type: 'warning',
+        message: `${new Date().toLocaleString()} No evaluations found for expression: ${expression} (${rangeStart}-${rangeEnd})`
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
       return;
     }
     for (let i = 0; i < evaluations.length; i++) {
@@ -289,7 +314,11 @@ class PomlLspServer {
       if (result.length > 1024) {
         result = `${result.slice(0, 1024)} ...[truncated]`;
       }
-      this.connection.console.log(`${new Date().toLocaleString()} [Eval ${i + 1}] ${expression} => ${result}`);
+      const message: EvaluationMessage = {
+        type: 'info',
+        message: `${new Date().toLocaleString()} [Eval ${i + 1}] ${expression} => ${result}`
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
     }
   }
 
@@ -318,10 +347,15 @@ class PomlLspServer {
       for (const part of content) {
         if (typeof part === 'string') {
           total += enc.encode(part).length;
-        } else {
-          const { width, height } = await getImageWidthHeight(part.base64);
+        } else if ((part as any).base64) {
+          const binaryPart = part as ContentMultiMediaBinary;
+          const { width, height } = await getImageWidthHeight(binaryPart.base64);
           // For images, we can use a heuristic based on width and height
           total += estimateImageTokens(width, height, { model: model as any });
+        } else {
+          // estimate the token cost by json serializing the content
+          const jsonContent = JSON.stringify(part);
+          total += enc.encode(jsonContent).length;
         }
       }
       return total;
@@ -439,7 +473,7 @@ class PomlLspServer {
       tokens,
       sourceMap,
       responseSchema: pomlFile?.getResponseSchema()?.toOpenAPI(),
-      tools: pomlFile?.getToolsSchema()?.toOpenAI(),
+      tools: pomlFile?.getToolsSchema()?.toOpenAI(),  // FIXME: handle errors gracefully here
       runtime: pomlFile?.getRuntimeParameters(),
       error: params.returnAllErrors
         ? ErrorCollection.list()

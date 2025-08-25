@@ -149,8 +149,9 @@ function scanComponentDocs(folderPath: string) {
     const names = components.map(c => c.name!);
     allComments.push(...components);
     if (filePath.endsWith('essentials.tsx') || filePath.endsWith('utils.tsx')) {
-      basicComponents.push(...names.filter(name => name !== 'Image' && name !== 'Object'));
+      basicComponents.push(...names.filter(name => name !== 'Image' && name !== 'Object' && !name.startsWith('Tool')));
       dataDisplays.push(...names.filter(name => name === 'Image' || name === 'Object'));
+      utilities.push(...names.filter(name => name.startsWith('Tool')));
     } else if (filePath.endsWith('instructions.tsx')) {
       intentions.push(...names);
     } else if (filePath.endsWith('message.tsx')) {
@@ -237,7 +238,7 @@ function generatePythonMethod(tag: ComponentSpec): string {
     paramsSignatureList.push(`        ${paramName}: ${typeHint} = None`);
     callArgsList.push(`${paramName}=${paramName}`);
 
-    let paramDesc = param.description.replace(/\n/g, '\n            ');
+    let paramDesc = param.description.replace(/\n/g, '\n                ');
     if (param.defaultValue !== undefined) {
       const defValStr =
         typeof param.defaultValue === 'string' ? `"${param.defaultValue}"` : param.defaultValue;

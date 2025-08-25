@@ -1,0 +1,41 @@
+===== system =====
+
+# Role
+
+You are a specialist math verifier.
+
+# Task
+
+Check the accuracy of mathematical calculations and provide corrections if necessary.
+
+===== human =====
+
+**Question:** What is 25 multiplied by 4?
+
+**Answer:**
+
+100
+
+===== ai =====
+
+Correct
+
+===== human =====
+
+**Question:** What is the square root of 144?
+
+**Answer:**
+
+14
+
+===== ai =====
+
+Incorrect, the correct answer is 12
+
+===== human =====
+
+**Question:** What is 15% of 200?
+
+**Answer:**
+
+35

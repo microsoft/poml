@@ -1,0 +1,47 @@
+{
+  "system": "You are a helpful DM assistant. Use the dice-rolling tool when needed.",
+  "input": "Roll 2d4+1",
+  "tools": [
+    {
+      "name": "roll",
+      "description": "\n  Given a string of text describing a dice roll in \n  Dungeons and Dragons, provide a result of the roll.\n\n  Example input: 2d6 + 1d4\n  Example output: 14\n",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "diceRollExpression": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "diceRollExpression"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "interactions": [
+    [
+      {
+        "id": "call_XOJaP5hQuaUo6PIDGARntlMx",
+        "name": "roll",
+        "input": {
+          "diceRollExpression": "2d4+1"
+        },
+        "output": {
+          "meta": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "3",
+              "annotations": null,
+              "meta": null
+            }
+          ],
+          "structuredContent": null,
+          "isError": false
+        }
+      }
+    ]
+  ]
+}

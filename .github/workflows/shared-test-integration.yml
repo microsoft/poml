@@ -1,0 +1,143 @@
+name: Shared Integration Test Workflow
+
+on:
+  workflow_call:
+    inputs:
+      integration:
+        description: 'Integration type (agentops, mlflow, weave, mcp, openai)'
+        required: true
+        type: string
+      os:
+        description: 'Operating system to run on'
+        required: true
+        type: string
+    secrets:
+      AGENTOPS_API_KEY:
+        description: 'AgentOps API Key'
+        required: true
+      OPENAI_API_BASE:
+        description: 'OpenAI API Base URL'
+        required: true
+      OPENAI_API_KEY:
+        description: 'OpenAI API Key'
+        required: true
+      WANDB_API_KEY:
+        description: 'Weights & Biases API Key'
+        required: true
+
+jobs:
+  sub-test-integration:
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Node dependencies
+        run: npm ci
+        shell: bash
+
+      - name: Build CLI
+        run: npm run build-cli
+        shell: bash
+
+      - name: Install POML Python
+        run: python -m pip install -e .[agent]
+        shell: bash
+
+      - name: Setup MLflow tracking server
+        if: inputs.integration == 'mlflow'
+        run: |
+          mlflow server --host 127.0.0.1 --port 5000 &
+          sleep 10  # Wait for server to start
+        shell: bash
+
+      - name: Setup MCP server
+        if: inputs.integration == 'mcp'
+        run: |
+          cd python/tests/integration
+          python mcp_server.py &
+          sleep 10  # Wait for server to start
+        shell: bash
+
+      - name: Run ${{ inputs.integration }} baseline test
+        if: inputs.integration != 'openai'
+        env:
+          # Common environment variables
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # AgentOps specific
+          AGENTOPS_API_KEY: ${{ secrets.AGENTOPS_API_KEY }}
+          # MLflow specific
+          MLFLOW_TRACKING_URI: 'http://localhost:5000'
+          # Weave specific (uses WANDB)
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          cd python/tests/integration
+          python ${{ inputs.integration }}_baseline.py
+        shell: bash
+
+      - name: Run ${{ inputs.integration }} integration tests
+        if: inputs.integration != 'openai'
+        env:
+          # Common environment variables
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # AgentOps specific
+          AGENTOPS_API_KEY: ${{ secrets.AGENTOPS_API_KEY }}
+          # MLflow specific
+          MLFLOW_TRACKING_URI: 'http://localhost:5000'
+          # Weave specific (uses WANDB)
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+        run: |
+          cd python/tests/integration
+          python ${{ inputs.integration }}_poml.py
+        shell: bash
+
+      - name: Run OpenAI response format test
+        if: inputs.integration == 'openai'
+        env:
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd python/tests/integration
+          python openai_response_format.py
+        shell: bash
+
+      - name: Run OpenAI tool call test
+        if: inputs.integration == 'openai'
+        env:
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd python/tests/integration
+          python openai_tool_call.py
+        shell: bash
+
+      - name: Run OpenAI Pydantic test
+        if: inputs.integration == 'openai'
+        run: |
+          cd python/tests/integration
+          python openai_pydantic.py
+        shell: bash
+
+      - name: Run mlflow additional integration tests
+        if: inputs.integration == 'mlflow'
+        env:
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MLFLOW_TRACKING_URI: 'http://localhost:5000'
+        run: |
+          cd python/tests/integration
+          python mlflow_poml_langchain.py
+        shell: bash

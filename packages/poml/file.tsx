@@ -342,22 +342,20 @@ export class PomlFile {
     const regex = /{{\s*(.+?)\s*}}(?!})/gm;
 
     const visit = (element: XMLElement) => {
-      // Special handling for meta elements with lang="expr"
-      if (element.name?.toLowerCase() === 'meta') {
-        const langAttr = xmlAttribute(element, 'lang');
-        const typeAttr = xmlAttribute(element, 'type');
-        const isSchemaType = typeAttr?.value === 'responseSchema' || typeAttr?.value === 'tool';
+      // Special handling for schema and tool definition elements with parser="eval"
+      const elementName = element.name?.toLowerCase();
+      if (elementName === 'output-schema' || elementName === 'outputschema' || elementName === 'tool-definition' || elementName === 'tool-def' || elementName === 'tooldef' || elementName === 'tool') {
+        const parserAttr = xmlAttribute(element, 'parser');
         const text = xmlElementText(element).trim();
 
-        // Check if it's an expression (either explicit lang="expr" or auto-detected)
-        if (isSchemaType && (langAttr?.value === 'expr' || (!langAttr && !text.trim().startsWith('{')))) {
+        // Check if it's an expression (either explicit parser="eval" or auto-detected)
+        if (parserAttr?.value === 'eval' || (!parserAttr && !text.trim().startsWith('{'))) {
           const position = this.xmlElementRange(element.textContents[0]);
           tokens.push({
             type: 'expression',
             range: position,
             expression: text.trim(),
           });
-          return;
         }
       }
 
@@ -462,16 +460,16 @@ export class PomlFile {
   private handleForLoop(
     element: XMLElement,
     context: { [key: string]: any }
-  ): { [key: string]: any }[] {
+  ): { [key: string]: any }[] | undefined {
     const forLoop = element.attributes.find(attr => attr.key?.toLowerCase() === 'for');
     if (!forLoop) {
       // No for loop found.
-      return [];
+      return undefined;
     }
     const forLoopValue = forLoop.value;
     if (!forLoopValue) {
       this.reportError('for attribute value is expected.', this.xmlElementRange(element));
-      return [];
+      return undefined;
     }
     const [itemName, listName] = forLoopValue.match(/(.+)\s+in\s+(.+)/)?.slice(1) || [null, null];
     if (!itemName || !listName) {
@@ -479,13 +477,13 @@ export class PomlFile {
         'item in list syntax is expected in for attribute.',
         this.xmlAttributeValueRange(forLoop)
       );
-      return [];
+      return undefined;
     }
 
     const list = this.evaluateExpression(listName, context, this.xmlAttributeValueRange(forLoop));
     if (!Array.isArray(list)) {
       this.reportError('List is expected in for attribute.', this.xmlAttributeValueRange(forLoop));
-      return [];
+      return undefined;
     }
     return list.map((item: any, index: number) => {
       const loop = {
@@ -522,7 +520,7 @@ export class PomlFile {
     }
   };
 
-  private handleLet = (element: XMLElement, context: { [key: string]: any }): boolean => {
+  private handleLet = (element: XMLElement, contextIn: { [key: string]: any }, contextOut: { [key: string]: any }): boolean => {
     if (element.name?.toLowerCase() !== 'let') {
       return false;
     }
@@ -553,7 +551,7 @@ export class PomlFile {
       }
       if (!name) {
         if (content && typeof content === 'object') {
-          Object.assign(context, content);
+          Object.assign(contextOut, content);
         } else {
           this.reportError(
             'name attribute is expected when the source is not an object.',
@@ -561,7 +559,7 @@ export class PomlFile {
           );
         }
       } else {
-        context[name] = content;
+        contextOut[name] = content;
       }
       return true;
     }
@@ -577,11 +575,11 @@ export class PomlFile {
       }
       const evaluated = this.evaluateExpression(
         value,
-        context,
+        contextIn,
         this.xmlAttributeValueRange(xmlAttribute(element, 'value')!),
         true
       );
-      context[name] = evaluated;
+      contextOut[name] = evaluated;
       return true;
     }
 
@@ -604,7 +602,7 @@ export class PomlFile {
       }
       if (!name) {
         if (content && typeof content === 'object') {
-          Object.assign(context, content);
+          Object.assign(contextOut, content);
         } else {
           this.reportError(
             'name attribute is expected when the source is not an object.',
@@ -612,7 +610,7 @@ export class PomlFile {
           );
         }
       } else {
-        context[name] = content;
+        contextOut[name] = content;
       }
 
       return true;
@@ -720,7 +718,11 @@ export class PomlFile {
   };
 
   private handleSchema = (element: XMLElement, context?: { [key: string]: any }): Schema | undefined => {
-    let lang: 'json' | 'expr' | undefined = xmlAttribute(element, 'lang')?.value as any;
+    const parserAttr = xmlAttribute(element, 'parser');
+    let parser: 'json' | 'eval' | undefined = parserAttr?.value
+      ? this.handleTextAsString(parserAttr.value, context || {},
+                                this.xmlAttributeValueRange(parserAttr)) as 'json' | 'eval'
+      : undefined;
     const text = xmlElementText(element).trim();
     
     // Get the range for the text content (if available)
@@ -728,23 +730,23 @@ export class PomlFile {
       ? this.xmlElementRange(element.textContents[0])
       : this.xmlElementRange(element);
     
-    // Auto-detect language if not specified
-    if (!lang) {
+    // Auto-detect parser if not specified
+    if (!parser) {
       if (text.startsWith('{')) {
-        lang = 'json';
+        parser = 'json';
       } else {
-        lang = 'expr';
+        parser = 'eval';
       }
-    } else if (lang !== 'json' && lang !== 'expr') {
+    } else if (parser !== 'json' && parser !== 'eval') {
       this.reportError(
-        `Invalid lang attribute: ${lang}. Expected "json" or "expr"`,
-        this.xmlAttributeValueRange(xmlAttribute(element, 'lang')!)
+        `Invalid parser attribute: ${parser}. Expected "json" or "eval"`,
+        this.xmlAttributeValueRange(xmlAttribute(element, 'parser')!)
       );
       return undefined;
     }
     
     try {
-      if (lang === 'json') {
+      if (parser === 'json') {
         // Process template expressions in JSON text
         const processedText = this.handleText(text, context || {}, textRange);
         // handleText returns an array, join if all strings
@@ -753,10 +755,10 @@ export class PomlFile {
           : processedText.map(p => typeof p === 'string' ? p : JSON.stringify(p)).join('');
         const jsonSchema = JSON.parse(jsonText);
         return Schema.fromOpenAPI(jsonSchema);
-      } else if (lang === 'expr') {
+      } else if (parser === 'eval') {
         // Evaluate expression directly with z in context
         const contextWithZ = { z, ...context };
-        const result = this.evaluateExpression(text, contextWithZ, textRange);
+        const result = this.evaluateExpression(text, contextWithZ, textRange, true);
         
         // If evaluation failed, result will be empty string
         if (!result) {
@@ -782,66 +784,140 @@ export class PomlFile {
     return undefined;
   }
 
+  private handleOutputSchema = (element: XMLElement, context?: { [key: string]: any }): boolean => {
+    const elementName = element.name?.toLowerCase();
+    if (elementName !== 'output-schema' && elementName !== 'outputschema') {
+      return false;
+    }
+    
+    if (this.responseSchema) {
+      this.reportError(
+        'Multiple output-schema elements found. Only one is allowed.',
+        this.xmlElementRange(element)
+      );
+      return true;
+    }
+
+    const schema = this.handleSchema(element, context);
+    if (schema) {
+      this.responseSchema = schema;
+    }
+    return true;
+  };
+
+  private handleToolDefinition = (element: XMLElement, context?: { [key: string]: any }): boolean => {
+    const elementName = element.name?.toLowerCase();
+    if (elementName !== 'tool-definition' && elementName !== 'tool-def' && elementName !== 'tooldef' && elementName !== 'tool') {
+      return false;
+    }
+    
+    const nameAttr = xmlAttribute(element, 'name');
+    if (!nameAttr?.value) {
+      this.reportError(
+        'name attribute is required for tool definition',
+        this.xmlElementRange(element)
+      );
+      return true;
+    }
+    
+    // Process template expressions in name attribute
+    const name = this.handleTextAsString(nameAttr.value, context || {}, this.xmlAttributeValueRange(nameAttr));
+
+    const descriptionAttr = xmlAttribute(element, 'description');
+    // Process template expressions in description attribute if present
+    const description = descriptionAttr?.value 
+      ? this.handleTextAsString(descriptionAttr.value, context || {}, this.xmlAttributeValueRange(descriptionAttr))
+      : undefined;
+    const inputSchema = this.handleSchema(element, context);
+    if (inputSchema) {
+      if (!this.toolsSchema) {
+        this.toolsSchema = new ToolsSchema();
+      }
+      try {
+        this.toolsSchema.addTool(name, description || undefined, inputSchema);
+      } catch (e) {
+        this.reportError(
+          e instanceof Error ? e.message : 'Error adding tool to tools schema',
+          this.xmlElementRange(element),
+          e
+        );
+      }
+    }
+    return true;
+  };
+
+  private handleRuntime = (element: XMLElement, context?: { [key: string]: any }): boolean => {
+    const elementName = element.name?.toLowerCase();
+    if (elementName !== 'runtime') {
+      return false;
+    }
+
+    // Extract runtime parameters from all attributes
+    const runtimeParams: any = {};
+    for (const attribute of element.attributes) {
+      if (attribute.key && attribute.value) {
+        // Process template expressions and convert to string
+        const stringValue = this.handleTextAsString(attribute.value, context || {}, this.xmlAttributeValueRange(attribute));
+        
+        // Convert key to camelCase (kebab-case to camelCase)
+        const camelKey = hyphenToCamelCase(attribute.key);
+        // Convert value (auto-convert booleans, numbers, JSON)
+        const convertedValue = this.convertRuntimeValue(stringValue);
+        runtimeParams[camelKey] = convertedValue;
+      }
+    }
+    this.runtimeParameters = runtimeParams;
+    return true;
+  };
+
+  private convertRuntimeValue = (value: string): any => {
+    // Convert boolean-like values
+    if (value === 'true') {
+      return true;
+    }
+    if (value === 'false') {
+      return false;
+    }
+    
+    // Convert number-like values
+    if (/^-?\d*\.?\d+$/.test(value)) {
+      const num = parseFloat(value);
+      if (!isNaN(num)) {
+        return num;
+      }
+    }
+    
+    // Convert JSON-like values (arrays and objects)
+    if ((value.startsWith('[') && value.endsWith(']')) || 
+        (value.startsWith('{') && value.endsWith('}'))) {
+      try {
+        return JSON.parse(value);
+      } catch {
+        // If JSON parsing fails, return as string
+        return value;
+      }
+    }
+    
+    // Return as string for everything else
+    return value;
+  };
+
   private handleMeta = (element: XMLElement, context?: { [key: string]: any }): boolean => {
     if (element.name?.toLowerCase() !== 'meta') {
       return false;
     }
+
+    // Check if this is an old-style meta with type attribute
     const metaType = xmlAttribute(element, 'type')?.value;
-    if (metaType === 'responseSchema') {
-      if (this.responseSchema) {
-        this.reportError(
-          'Multiple responseSchema meta elements found. Only one is allowed.',
-          this.xmlElementRange(element)
-        );
-        return true;
-      }
-      const schema = this.handleSchema(element, context);
-      if (schema) {
-        this.responseSchema = schema;
-      }
+    if (metaType) {
+      this.reportError(
+        `Meta elements with type attribute have been removed. Use <${metaType === 'schema' ? 'output-schema' : metaType === 'tool' ? 'tool-definition' : metaType === 'runtime' ? 'runtime' : metaType}> instead of <meta type="${metaType}">`,
+        this.xmlElementRange(element)
+      );
       return true;
     }
 
-    if (metaType === 'tool') {
-      const name = xmlAttribute(element, 'name')?.value;
-      if (!name) {
-        this.reportError(
-          'name attribute is required for tool meta type',
-          this.xmlElementRange(element)
-        );
-        return true;
-      }
-      const description = xmlAttribute(element, 'description')?.value;
-      const inputSchema = this.handleSchema(element, context);
-      if (inputSchema) {
-        if (!this.toolsSchema) {
-          this.toolsSchema = new ToolsSchema();
-        }
-        try {
-          this.toolsSchema.addTool(name, description || undefined, inputSchema);
-        } catch (e) {
-          this.reportError(
-            e instanceof Error ? e.message : 'Error adding tool to tools schema',
-            this.xmlElementRange(element),
-            e
-          );
-        }
-      }
-      return true;
-    }
-
-    if (metaType === 'runtime') {
-      // Extra runtime parameters sending to LLM.
-      const runtimeParams: any = {};
-      for (const attribute of element.attributes) {
-        if (attribute.key && attribute.value && attribute.key?.toLowerCase() !== 'type') {
-          runtimeParams[attribute.key] = attribute.value;
-        }
-      }
-      this.runtimeParameters = runtimeParams;
-      return true;
-    }
-
+    // Handle version control
     const minVersion = xmlAttribute(element, 'minVersion')?.value;
     if (minVersion && compareVersions(POML_VERSION, minVersion) < 0) {
       this.reportError(
@@ -936,6 +1012,19 @@ export class PomlFile {
     return results;
   };
 
+  private handleTextAsString = (text: string, context: { [key: string]: any }, position?: Range): string => {
+    const results = this.handleText(text, context, position);
+    if (results.length === 1) {
+      if (typeof results[0] === 'string') {
+        return results[0];
+      } else {
+        return results[0].toString();
+      }
+    } else {
+      return JSON.stringify(results);
+    }
+  };
+
   private evaluateExpression(
     expression: string,
     context: { [key: string]: any },
@@ -979,7 +1068,7 @@ export class PomlFile {
     localContext: { [key: string]: any }
   ): React.ReactElement {
     // Let. Always set the global.
-    if (this.handleLet(element, globalContext)) {
+    if (this.handleLet(element, {...globalContext, ...localContext}, globalContext)) {
       return <></>;
     }
 
@@ -988,12 +1077,16 @@ export class PomlFile {
       // Probably already had an invalid syntax error.
       return <></>;
     }
-    const isMeta = tagName.toLowerCase() === 'meta';
-    const isInclude = tagName.toLowerCase() === 'include';
+    const tagNameLower = tagName.toLowerCase();
+    const isMeta = tagNameLower === 'meta';
+    const isInclude = tagNameLower === 'include';
+    const isOutputSchema = tagNameLower === 'output-schema' || tagNameLower === 'outputschema';
+    const isToolDefinition = tagNameLower === 'tool-definition' || tagNameLower === 'tool-def' || tagNameLower === 'tooldef' || tagNameLower === 'tool';
+    const isRuntime = tagNameLower === 'runtime';
 
     // Common logic for handling for-loops
-    const forLoops = this.handleForLoop(element, globalContext);
-    const forLoopedContext = forLoops.length > 0 ? forLoops : [{}];
+    const forLoops = this.handleForLoop(element, {...globalContext, ...localContext});
+    const forLoopedContext = forLoops === undefined ? [{}] : forLoops;
     const resultElements: React.ReactElement[] = [];
 
     for (let i = 0; i < forLoopedContext.length; i++) {
@@ -1004,9 +1097,21 @@ export class PomlFile {
       if (!this.handleIfCondition(element, context)) {
         continue;
       }
-      // Common logic for handling meta elements
+      // Common logic for handling meta elements and new schema/tool elements
       if (isMeta && this.handleMeta(element, context)) {
         // If it's a meta element, we don't render anything.
+        continue;
+      }
+      if (isOutputSchema && this.handleOutputSchema(element, context)) {
+        // If it's an output-schema element, we don't render anything.
+        continue;
+      }
+      if (isToolDefinition && this.handleToolDefinition(element, context)) {
+        // If it's a tool-definition element, we don't render anything.
+        continue;
+      }
+      if (isRuntime && this.handleRuntime(element, context)) {
+        // If it's a runtime element, we don't render anything.
         continue;
       }
 
@@ -1451,8 +1556,12 @@ const compareVersions = (a: string, b: string): number => {
   for (let i = 0; i < Math.max(versionA.parts.length, versionB.parts.length); i++) {
     const na = versionA.parts[i] || 0;
     const nb = versionB.parts[i] || 0;
-    if (na > nb) return 1;
-    if (na < nb) return -1;
+    if (na > nb) {
+      return 1;
+    }
+    if (na < nb) {
+      return -1;
+    }
   }
 
   // If base versions are equal, handle prerelease comparison
@@ -1464,8 +1573,12 @@ const compareVersions = (a: string, b: string): number => {
   }
   if (versionA.isPrerelease && versionB.isPrerelease) {
     // Both are prereleases, compare timestamps
-    if (versionA.timestamp > versionB.timestamp) return 1;
-    if (versionA.timestamp < versionB.timestamp) return -1;
+    if (versionA.timestamp > versionB.timestamp) {
+      return 1;
+    }
+    if (versionA.timestamp < versionB.timestamp) {
+      return -1;
+    }
   }
 
   return 0;
