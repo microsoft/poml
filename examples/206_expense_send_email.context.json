@@ -1,0 +1,384 @@
+{
+  "trip_context": {
+    "is_international": false,
+    "trip_length_days": 4
+  },
+  "extracted_documents": [
+    {
+      "source": "assets/203_flight_itinerary.pdf",
+      "doc_type": "flight_itinerary",
+      "merchant": "Sample Air",
+      "currency": "USD",
+      "lines": [
+        {
+          "date": "2025-10-01",
+          "description": "Flight XY123 Sample Air New York (JFK) to London (LHR)",
+          "category": "airfare",
+          "amount": 0
+        },
+        {
+          "date": "2025-10-10",
+          "description": "Flight XY124 Sample Air London (LHR) to New York (JFK)",
+          "category": "airfare",
+          "amount": 0
+        }
+      ],
+      "subtotals_by_category": [
+        {
+          "category": "airfare",
+          "amount": 0
+        }
+      ]
+    },
+    {
+      "source": "assets/203_hotel_invoice.pdf",
+      "doc_type": "hotel_invoice",
+      "merchant": "Hotel Paradise",
+      "currency": "USD",
+      "lines": [
+        {
+          "date": null,
+          "description": "Deluxe Room 4 nights @ $150",
+          "category": "lodging",
+          "amount": 600
+        },
+        {
+          "date": null,
+          "description": "Breakfast 4 @ $20",
+          "category": "meals",
+          "amount": 80
+        },
+        {
+          "date": null,
+          "description": "Airport Pickup",
+          "category": "ground_transportation",
+          "amount": 50
+        }
+      ],
+      "subtotals_by_category": [
+        {
+          "category": "lodging",
+          "amount": 600
+        },
+        {
+          "category": "meals",
+          "amount": 80
+        },
+        {
+          "category": "ground_transportation",
+          "amount": 50
+        }
+      ]
+    },
+    {
+      "source": "assets/203_meal_receipt.png",
+      "doc_type": "receipt",
+      "merchant": null,
+      "currency": "USD",
+      "lines": [
+        {
+          "date": "2024-04-16",
+          "description": "CHEESEBURGER",
+          "category": "meals",
+          "amount": 10.99
+        },
+        {
+          "date": "2024-04-16",
+          "description": "FRIED CHICKEN",
+          "category": "meals",
+          "amount": 13.5
+        },
+        {
+          "date": "2024-04-16",
+          "description": "FRENCH FRIES",
+          "category": "meals",
+          "amount": 4.5
+        },
+        {
+          "date": "2024-04-16",
+          "description": "ICE CREAM",
+          "category": "meals",
+          "amount": 2.5
+        }
+      ],
+      "subtotals_by_category": [
+        {
+          "category": "meals",
+          "amount": 31.49
+        }
+      ]
+    },
+    {
+      "source": "assets/203_taxi_receipt.png",
+      "doc_type": "receipt",
+      "merchant": "Taxi Receipt",
+      "currency": "USD",
+      "lines": [
+        {
+          "date": "2024-04-05",
+          "description": "Miles",
+          "category": "miles",
+          "amount": 8.4
+        },
+        {
+          "date": "2024-04-05",
+          "description": "Fare",
+          "category": "ground_transportation",
+          "amount": 23.5
+        },
+        {
+          "date": "2024-04-05",
+          "description": "Tax",
+          "category": "tax",
+          "amount": 1
+        },
+        {
+          "date": "2024-04-05",
+          "description": "Total",
+          "category": "total",
+          "amount": 24.5
+        }
+      ],
+      "subtotals_by_category": [
+        {
+          "category": "miles",
+          "amount": 8.4
+        },
+        {
+          "category": "ground_transportation",
+          "amount": 23.5
+        },
+        {
+          "category": "tax",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "relevant_rules": {
+    "trip_context": {
+      "is_international": false,
+      "trip_length_days": 4
+    },
+    "rules": [
+      {
+        "rule_id": 1,
+        "category": "lodging",
+        "type": "per_night_cap",
+        "scope": "domestic",
+        "reference": "Policy 4. Accommodation: Use standard mid-range; cap 200 USD/night",
+        "value": 200,
+        "unit": "USD/night",
+        "requires_preapproval": true,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 2,
+        "category": "meals",
+        "type": "per_day_cap",
+        "scope": "domestic",
+        "reference": "Budget Table Appendix: Meals per diem domestic 60 USD/day",
+        "value": 60,
+        "unit": "USD/day",
+        "requires_preapproval": false,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 3,
+        "category": "ground_transportation",
+        "type": "per_day_cap",
+        "scope": "domestic",
+        "reference": "Budget Table: Ground Transportation 40/day; 250/trip",
+        "value": 40,
+        "unit": "USD/day",
+        "requires_preapproval": false,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 4,
+        "category": "ground_transportation",
+        "type": "per_trip_cap",
+        "scope": "domestic",
+        "reference": "Budget Table: Ground Transportation 40/day; 250/trip",
+        "value": 250,
+        "unit": "USD/trip",
+        "requires_preapproval": false,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 5,
+        "category": "airfare",
+        "type": "booking_class_restriction",
+        "scope": "domestic",
+        "reference": "Travel Policy: Economy class mandatory unless long flight",
+        "value": "economy (premium economy allowed if flight >8 hours)",
+        "unit": "",
+        "requires_preapproval": true,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 6,
+        "category": "visa_and_documents",
+        "type": "per_trip_cap",
+        "scope": "international",
+        "reference": "Policy: Visa & Travel Documents reimbursable per-trip",
+        "value": 150,
+        "unit": "USD/trip",
+        "requires_preapproval": false,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 7,
+        "category": "client_entertainment",
+        "type": "per_trip_cap",
+        "scope": "domestic",
+        "reference": "Policy: Client entertainment requires pre-approval; cap 200/trip",
+        "value": 200,
+        "unit": "USD/trip",
+        "requires_preapproval": true,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 8,
+        "category": "mileage",
+        "type": "per_trip_cap",
+        "scope": "domestic",
+        "reference": "Policy: mileage reimbursement; must provide odometer record",
+        "value": null,
+        "unit": "USD/trip",
+        "requires_preapproval": false,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 9,
+        "category": "receipts",
+        "type": "receipt_threshold",
+        "scope": "domestic",
+        "reference": "Expense policy: attach itemized receipts for all expenses >$25",
+        "value": 25,
+        "unit": "USD",
+        "requires_preapproval": false,
+        "non_reimbursable": false
+      },
+      {
+        "rule_id": 10,
+        "category": "lodging",
+        "type": "class_restriction",
+        "scope": "domestic",
+        "reference": "Policy: luxury hotel not reimbursable",
+        "value": "no luxury hotels (mid-range preferred)",
+        "unit": "",
+        "requires_preapproval": false,
+        "non_reimbursable": false
+      }
+    ]
+  },
+  "compliance_result": {
+    "totals_by_category": [
+      {
+        "category": "lodging",
+        "amount": 600
+      },
+      {
+        "category": "meals",
+        "amount": 111.49
+      },
+      {
+        "category": "ground_transportation",
+        "amount": 50
+      },
+      {
+        "category": "miles",
+        "amount": 8.4
+      },
+      {
+        "category": "tax",
+        "amount": 1
+      }
+    ],
+    "overall_total_usd": 770.89,
+    "rule_checks": [
+      {
+        "rule_id": 1,
+        "satisfied": false,
+        "evidence": "Rule 1 (lodging): lodging total 600 across 4 nights; per-night cap 200 => allowed up to 800 for 4 nights. Pre-approval is required but not present in provided docs.",
+        "over_by": 0,
+        "severity": "high",
+        "suggested_fix": "Obtain pre-approval for lodging and/or reduce lodging spend to stay within per-night cap or adjust trip duration to fit approved lodging amount."
+      },
+      {
+        "rule_id": 2,
+        "satisfied": true,
+        "evidence": "Rule 2 (meals): meals total across trip 111.49 (80 in hotel invoice + 31.49 itemized meals receipt). Domestic per-day cap 60/day for 4 days would allow up to 240. Amount within cap.",
+        "over_by": null,
+        "severity": "low",
+        "suggested_fix": "No action needed."
+      },
+      {
+        "rule_id": 3,
+        "satisfied": false,
+        "evidence": "Rule 3 (ground_transportation per_day_cap): domestic cap 40/day for 4 days = 160. Recorded ground_transportation 50 (hotel pickup) as well as miles/tax/taxi total 24.5 in receipts? The explicit per-day subtotal shown is 50. Amount exceeds daily cap.",
+        "over_by": 90,
+        "severity": "medium",
+        "suggested_fix": "Consolidate or reduce daily ground transportation to ≤ $40/day or use a per-trip approach if permitted."
+      },
+      {
+        "rule_id": 4,
+        "satisfied": true,
+        "evidence": "Rule 4 (ground_transportation per_trip_cap): domestic cap 250/trip. Current ground_transportation charges (including the taxi portion) total 50 (plus related lines) which is ≤ 250.",
+        "over_by": null,
+        "severity": "low",
+        "suggested_fix": "No action needed."
+      },
+      {
+        "rule_id": 5,
+        "satisfied": true,
+        "evidence": "Rule 5 (airfare booking_class_restriction): No airfare line items present (0 amount). Economy class requirement not triggered.",
+        "over_by": null,
+        "severity": "low",
+        "suggested_fix": "No action needed."
+      },
+      {
+        "rule_id": 6,
+        "satisfied": true,
+        "evidence": "Rule 6 (visa_and_documents per_trip_cap international): Trip is domestic; rule scope international. Not applicable.",
+        "over_by": null,
+        "severity": "low",
+        "suggested_fix": "No action needed."
+      },
+      {
+        "rule_id": 7,
+        "satisfied": true,
+        "evidence": "Rule 7 (client_entertainment per_trip_cap): No client entertainment expenses recorded. Within cap and no preapproval needed.",
+        "over_by": null,
+        "severity": "low",
+        "suggested_fix": "No action needed."
+      },
+      {
+        "rule_id": 8,
+        "satisfied": true,
+        "evidence": "Rule 8 (mileage per_trip_cap): No mileage reimbursement rule triggered; no mileage amount provided.",
+        "over_by": null,
+        "severity": "low",
+        "suggested_fix": "No action needed."
+      },
+      {
+        "rule_id": 9,
+        "satisfied": true,
+        "evidence": "Rule 9 (receipts threshold): All >$25 expenses appear itemized or have itemized receipts (meals receipt shown with line items; lodging has line items; taxi subcategories exist; threshold 25).",
+        "over_by": null,
+        "severity": "low",
+        "suggested_fix": "No action needed."
+      },
+      {
+        "rule_id": 10,
+        "satisfied": true,
+        "evidence": "Rule 10 (lodging class restriction): Deluxe Room at Hotel Paradise; policy prohibits luxury hotels (mid-range preferred). Not clearly luxury; assume compliant but could be clarified.",
+        "over_by": null,
+        "severity": "low",
+        "suggested_fix": "If hotel is luxury, switch to mid-range option or obtain policy clarification."
+      }
+    ],
+    "decision": "needs_fixes"
+  }
+}

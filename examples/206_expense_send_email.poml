@@ -1,0 +1,33 @@
+<!-- Part of prompts for 404_travel_expense_agent.py -->
+<poml>
+  <task>
+    <p>Use the tool to notify the employee about the expense report decision. Under 200 words.</p>
+    <p>Summarize decision, list only the key violations with fixes, and include category totals and the overall total.</p>
+  </task>
+
+  <human-msg>
+    <cp caption="Travel Context">
+      <object data="{{ trip_context }}" syntax="xml" />
+    </cp>
+
+    <cp caption="Extracted Documents">
+      <object data="{{ extracted_documents }}" syntax="xml" />
+    </cp>
+
+    <cp caption="Policy Rules">
+      <object data="{{ relevant_rules }}" syntax="xml" />
+    </cp>
+
+    <cp caption="Compliance Check Result">
+      <object data="{{ compliance_result }}" syntax="xml" />
+    </cp>
+  </human-msg>
+
+  <tool name="send_email" description="Send an email with specified to, subject, body, and optional metadata." parser="eval">
+  z.object({
+    to: z.string(),
+    subject: z.string(),
+    body: z.string(),
+  })
+  </tool>
+</poml>

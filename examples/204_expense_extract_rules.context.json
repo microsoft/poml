@@ -1,0 +1,344 @@
+{
+  "email_text": "\n    Hi, I just got back from a business trip to New York. Attached are my expense reports.\n    Please let me know if you need any more information to process my reimbursement.\n    Thanks!\n    ",
+  "extracted_documents": [
+    {
+      "source": "assets/203_flight_itinerary.pdf",
+      "doc_type": "flight_itinerary",
+      "merchant": "Sample Air",
+      "currency": "USD",
+      "lines": [
+        {
+          "date": "2025-10-01",
+          "description": "Flight XY123 Sample Air New York (JFK) to London (LHR)",
+          "category": "airfare",
+          "amount": 0
+        },
+        {
+          "date": "2025-10-10",
+          "description": "Flight XY124 Sample Air London (LHR) to New York (JFK)",
+          "category": "airfare",
+          "amount": 0
+        }
+      ],
+      "subtotals_by_category": [
+        {
+          "category": "airfare",
+          "amount": 0
+        }
+      ]
+    },
+    {
+      "source": "assets/203_hotel_invoice.pdf",
+      "doc_type": "hotel_invoice",
+      "merchant": "Hotel Paradise",
+      "currency": "USD",
+      "lines": [
+        {
+          "date": null,
+          "description": "Deluxe Room 4 nights @ $150",
+          "category": "lodging",
+          "amount": 600
+        },
+        {
+          "date": null,
+          "description": "Breakfast 4 @ $20",
+          "category": "meals",
+          "amount": 80
+        },
+        {
+          "date": null,
+          "description": "Airport Pickup",
+          "category": "ground_transportation",
+          "amount": 50
+        }
+      ],
+      "subtotals_by_category": [
+        {
+          "category": "lodging",
+          "amount": 600
+        },
+        {
+          "category": "meals",
+          "amount": 80
+        },
+        {
+          "category": "ground_transportation",
+          "amount": 50
+        }
+      ]
+    },
+    {
+      "source": "assets/203_meal_receipt.png",
+      "doc_type": "receipt",
+      "merchant": null,
+      "currency": "USD",
+      "lines": [
+        {
+          "date": "2024-04-16",
+          "description": "CHEESEBURGER",
+          "category": "meals",
+          "amount": 10.99
+        },
+        {
+          "date": "2024-04-16",
+          "description": "FRIED CHICKEN",
+          "category": "meals",
+          "amount": 13.5
+        },
+        {
+          "date": "2024-04-16",
+          "description": "FRENCH FRIES",
+          "category": "meals",
+          "amount": 4.5
+        },
+        {
+          "date": "2024-04-16",
+          "description": "ICE CREAM",
+          "category": "meals",
+          "amount": 2.5
+        }
+      ],
+      "subtotals_by_category": [
+        {
+          "category": "meals",
+          "amount": 31.49
+        }
+      ]
+    },
+    {
+      "source": "assets/203_taxi_receipt.png",
+      "doc_type": "receipt",
+      "merchant": "Taxi Receipt",
+      "currency": "USD",
+      "lines": [
+        {
+          "date": "2024-04-05",
+          "description": "Miles",
+          "category": "miles",
+          "amount": 8.4
+        },
+        {
+          "date": "2024-04-05",
+          "description": "Fare",
+          "category": "ground_transportation",
+          "amount": 23.5
+        },
+        {
+          "date": "2024-04-05",
+          "description": "Tax",
+          "category": "tax",
+          "amount": 1
+        },
+        {
+          "date": "2024-04-05",
+          "description": "Total",
+          "category": "total",
+          "amount": 24.5
+        }
+      ],
+      "subtotals_by_category": [
+        {
+          "category": "miles",
+          "amount": 8.4
+        },
+        {
+          "category": "ground_transportation",
+          "amount": 23.5
+        },
+        {
+          "category": "tax",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "rules_output_schema": {
+    "$defs": {
+      "Rule": {
+        "properties": {
+          "rule_id": {
+            "description": "Unique identifier for the rule.",
+            "title": "Rule Id",
+            "type": "integer"
+          },
+          "category": {
+            "description": "Type of expense the rule applies to, such as lodging, meals, transportation, insurance, or booking.",
+            "title": "Category",
+            "type": "string"
+          },
+          "type": {
+            "description": "Defines the kind of restriction, such as daily cap, receipt threshold, or preapproval requirement.",
+            "title": "Type",
+            "type": "string"
+          },
+          "scope": {
+            "description": "Specifies whether the rule applies domestically, internationally, or to any trip.",
+            "title": "Scope",
+            "type": "string"
+          },
+          "reference": {
+            "description": "Reference to policy section or appendix.",
+            "title": "Reference",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Limit or requirement. Can be numeric, boolean, or text.",
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Measurement unit such as USD/day, hours, or enum value.",
+            "title": "Unit"
+          },
+          "requires_preapproval": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "True if the expense requires preapproval.",
+            "title": "Requires Preapproval"
+          },
+          "non_reimbursable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "True if the expense is not reimbursable.",
+            "title": "Non Reimbursable"
+          }
+        },
+        "required": [
+          "rule_id",
+          "category",
+          "type",
+          "scope",
+          "reference",
+          "value",
+          "unit",
+          "requires_preapproval",
+          "non_reimbursable"
+        ],
+        "title": "Rule",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TripContext": {
+        "properties": {
+          "is_international": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Indicates whether the trip is international.",
+            "title": "Is International"
+          },
+          "trip_length_days": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of days for the trip.",
+            "title": "Trip Length Days"
+          }
+        },
+        "required": [
+          "is_international",
+          "trip_length_days"
+        ],
+        "title": "TripContext",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    "properties": {
+      "trip_context": {
+        "description": "Context about the trip used for applying rules.",
+        "properties": {
+          "is_international": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Indicates whether the trip is international.",
+            "title": "Is International"
+          },
+          "trip_length_days": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of days for the trip.",
+            "title": "Trip Length Days"
+          }
+        },
+        "required": [
+          "is_international",
+          "trip_length_days"
+        ],
+        "title": "TripContext",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "rules": {
+        "description": "List of policy rules to apply.",
+        "items": {
+          "$ref": "#/$defs/Rule"
+        },
+        "title": "Rules",
+        "type": "array"
+      }
+    },
+    "required": [
+      "trip_context",
+      "rules"
+    ],
+    "title": "RelevantRules",
+    "type": "object",
+    "additionalProperties": false
+  }
+}

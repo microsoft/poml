@@ -165,7 +165,7 @@ def _read_latest_traced_file(file_suffix: str) -> Optional[str]:
 
 
 def trace_artifact(file_suffix: str, contents: str | bytes) -> Optional[Path]:
-    """Write an additional artifact file for the most recent ``poml`` call."""
+    """Write an additional artifact file for the most recent ``poml`` call. This API is experimental."""
     prefix = _latest_trace_prefix()
     if prefix is None:
         return None
