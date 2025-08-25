@@ -1922,6 +1922,11 @@
             <div class="md-content" data-md-component="content">
               <article class="md-content__inner md-typeset">
                 
+  <div id="version-warning" class="version-warning" style="display: none;">
+    ⚠️ You are viewing development documentation. For stable documentation, please visit 
+    <a href="https://microsoft.github.io/poml/stable/">https://microsoft.github.io/poml/stable/</a>
+  </div>
+  
                   
 
 
@@ -2237,18 +2242,18 @@
 <h2 id="running-the-complete-example">Running the Complete Example<a class="headerlink" href="#running-the-complete-example" title="Permanent link">&para;</a></h2>
 <p>To see the full system in action, the full prompt files are available at:</p>
 <ul>
-<li><a href="https://github.com/microsoft/poml/tree/fa4f4ef62e68cd34d7463e10800d19b094a41dc9/examples/203_expense_extract_document.poml">Document extraction</a></li>
-<li><a href="https://github.com/microsoft/poml/tree/fa4f4ef62e68cd34d7463e10800d19b094a41dc9/examples/204_expense_extract_rules.poml">Rule extraction</a></li>
-<li><a href="https://github.com/microsoft/poml/tree/fa4f4ef62e68cd34d7463e10800d19b094a41dc9/examples/205_expense_check_compliance.poml">Compliance checking</a></li>
-<li><a href="https://github.com/microsoft/poml/tree/fa4f4ef62e68cd34d7463e10800d19b094a41dc9/examples/206_expense_send_email.poml">Email generation</a></li>
+<li><a href="https://github.com/microsoft/poml/tree/d82dd50d965cc264493d9aa0b24decebcb1e6fff/examples/203_expense_extract_document.poml">Document extraction</a></li>
+<li><a href="https://github.com/microsoft/poml/tree/d82dd50d965cc264493d9aa0b24decebcb1e6fff/examples/204_expense_extract_rules.poml">Rule extraction</a></li>
+<li><a href="https://github.com/microsoft/poml/tree/d82dd50d965cc264493d9aa0b24decebcb1e6fff/examples/205_expense_check_compliance.poml">Compliance checking</a></li>
+<li><a href="https://github.com/microsoft/poml/tree/d82dd50d965cc264493d9aa0b24decebcb1e6fff/examples/206_expense_send_email.poml">Email generation</a></li>
 </ul>
-<p>The full Python implementation is available at <a href="https://github.com/microsoft/poml/tree/fa4f4ef62e68cd34d7463e10800d19b094a41dc9/examples/404_travel_expense_agent.py">travel expense agent</a>. You can run it by:</p>
+<p>The full Python implementation is available at <a href="https://github.com/microsoft/poml/tree/d82dd50d965cc264493d9aa0b24decebcb1e6fff/examples/404_travel_expense_agent.py">travel expense agent</a>. You can run it by:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>404_travel_expense_agent.py
 </code></pre></div>
 <p>This will process sample documents and walk through the complete workflow, showing you structured outputs at each step and the final email generation.</p>
 <h2 id="next-step">Next Step<a class="headerlink" href="#next-step" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Try the example file <a href="https://github.com/microsoft/poml/tree/fa4f4ef62e68cd34d7463e10800d19b094a41dc9/examples/404_travel_expense_agent.py">404_travel_expense_agent.py</a>.</li>
+<li>Try the example file <a href="https://github.com/microsoft/poml/tree/d82dd50d965cc264493d9aa0b24decebcb1e6fff/examples/404_travel_expense_agent.py">404_travel_expense_agent.py</a>.</li>
 <li>Explore different options with <code>syntax</code>.</li>
 <li>Go to <a href="../expense_part2/">part 2</a> to learn how to debug and optimize your prompts using the VS Code extension.</li>
 </ul>
@@ -2312,6 +2317,7 @@
 
 
                 
+
               </article>
             </div>
           
@@ -2350,6 +2356,7 @@
       <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "stable", "provider": "mike"}}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
         <script src="../../js/timeago.min.js"></script>
@@ -2359,5 +2366,19 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
       
     
+  <script>
+    // Show warning banner if not viewing stable documentation
+    document.addEventListener("DOMContentLoaded", function() {
+      const currentURL = window.location.href;
+      const warningDiv = document.getElementById("version-warning");
+      
+      // Check if we're on the stable docs or the redirect page
+      if (currentURL.includes('poml/latest/')) {
+        // Show warning for explicitly latest docs
+        warningDiv.style.display = "block";
+      }
+    });
+  </script>
+
   </body>
 </html>
