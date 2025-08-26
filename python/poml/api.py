@@ -174,7 +174,7 @@ def trace_artifact(file_suffix: str, contents: str | bytes, encoding: str | None
     suffix = file_suffix if file_suffix.startswith(".") else f".{file_suffix}"
     path = Path(str(prefix) + suffix)
     mode = "wb" if isinstance(contents, (bytes, bytearray)) else "w"
-    with open(path, mode, encoding=(encoding if mode == "w" else None)) as f:
+    with open(path, mode, encoding=(None if "b" in mode else encoding)) as f:
         f.write(contents)
     return path
 
