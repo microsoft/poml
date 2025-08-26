@@ -63,10 +63,12 @@ poml-cli = "poml.cli:entrypoint"
 line-length = 120
 target-version = ['py312']
 include = '\.pyi?$'
-excludes = '''
+extend-exclude = '''
 /(
   # Exclude auto-generated files and directories
   python/poml/_tags\.py
+  | assets
+  | _version\.py
 )
 '''
 
@@ -76,4 +78,6 @@ line_length = 120
 known_first_party = ["poml"]
 excludes = [
   "python/poml/_tags.py",
+  "assets",
+  "_version.py",
 ]

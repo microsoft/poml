@@ -18,8 +18,6 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/no-namespace': 'off',
-    'eqeqeq': 'off',
-    'prefer-const': 'off',
     // '@typescript-eslint/naming-convention': [
     //   'warn',
     //   {
@@ -28,6 +26,8 @@ module.exports = {
     //   },
     // ],
     // '@typescript-eslint/semi': 'warn',
+    // 'eqeqeq': 'off',
+    // 'prefer-const': 'off',
     // 'max-len': 'off',
     // 'quotes': 'off',
     // 'indent': 'off',
@@ -41,5 +41,5 @@ module.exports = {
     // 'max-len': ['warn', { code: 100 }],
     // 'indent': ['warn', 2],
   },
-  ignorePatterns: ['out', 'dist', '**/*.d.ts'],
+  ignorePatterns: ['out', 'dist', '**/*.d.ts', 'assets'],
 };
