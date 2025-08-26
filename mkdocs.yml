@@ -126,6 +126,8 @@ nav:
       - IR Specification: deep-dive/ir.md
       - Proposals:
           - Extended POML: deep-dive/proposals/poml_extended.md
+  - Miscellaneous:
+      - Contributing: contributing.md
 
 extra:
   version:
