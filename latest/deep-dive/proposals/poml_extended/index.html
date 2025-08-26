@@ -14,6 +14,8 @@
         <link rel="prev" href="../../ir/">
       
       
+        <link rel="next" href="../../../contributing/">
+      
       
       <link rel="icon" href="../../../media/logo-16-purple.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
@@ -1894,6 +1896,79 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Miscellaneous
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Miscellaneous
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -2168,7 +2243,7 @@
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>Here are some key points to consider:
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">-</span><span class="w"> </span>Data quality
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">-</span><span class="w"> </span>Statistical significance  
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">-</span><span class="w"> </span>Statistical significance
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span>Business impact
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;examples&gt;
@@ -2221,26 +2296,28 @@ File-level metadata can be included at any place of the file in a special <code>
 <li><strong>Algorithm</strong>:</li>
 <li>Load all valid POML component tag names (including aliases) from <code>componentDocs.json</code>. This set of tags will be used for detection.</li>
 <li>Initialize the root of the segment tree as a single, top-level <code>TEXT</code> segment spanning the entire file, unless the root segment is a single <code>&lt;poml&gt;...&lt;/poml&gt;</code> block spanning the whole file (in which case it will be treated as a <code>POML</code> segment).</li>
-<li>Use a stack-based algorithm to scan the text.<ul>
+<li>Use a stack-based algorithm to scan the text.</li>
 <li>When an opening tag (e.g., <code>&lt;task&gt;</code>) that matches a known POML component is found, push its name and start position onto the stack. This marks the beginning of a potential <code>POML</code> segment.</li>
 <li>When a closing tag (e.g., <code>&lt;/task&gt;</code>) is found that matches the tag at the top of the stack, pop the stack. This marks a complete <code>POML</code> segment. This new segment is added as a child to the current parent segment in the tree.</li>
 <li>The special <code>&lt;text&gt;</code> tag is handled recursively. If a <code>&lt;text&gt;</code> tag is found <em>inside</em> a <code>POML</code> segment, the scanner will treat its content as a nested <code>TEXT</code> segment. This <code>TEXT</code> segment can, in turn, contain more <code>POML</code> children.</li>
 <li>Any content not enclosed within identified <code>POML</code> tags remains part of its parent <code>TEXT</code> segment.</li>
-</ul>
+<li>
+<p><code>&lt;meta&gt;</code> tags are treated specially. They are identified and parsed into <code>META</code> segments at any level but are logically hoisted and processed first. They should not have children.</p>
 </li>
-<li><code>&lt;meta&gt;</code> tags are treated specially. They are identified and parsed into <code>META</code> segments at any level but are logically hoisted and processed first. They should not have children.</li>
-<li><strong>Output</strong>: A <code>Segment</code> tree. For backward compatibility, if the root segment is a single <code>&lt;poml&gt;...&lt;/poml&gt;</code> block spanning the whole file, the system can revert to the original, simpler parsing model.</li>
+<li>
+<p><strong>Output</strong>: A <code>Segment</code> tree. For backward compatibility, if the root segment is a single <code>&lt;poml&gt;...&lt;/poml&gt;</code> block spanning the whole file, the system can revert to the original, simpler parsing model.</p>
+</li>
 </ul>
 <p><strong><code>Segment</code> Interface</strong>: The <code>children</code> property is key to representing the nested structure of mixed-content files.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">Segment</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                      </span><span class="c1">// Unique ID for caching and React keys</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// Unique ID for caching and React keys</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;META&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;TEXT&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s1">&#39;POML&#39;</span><span class="p">;</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nx">start</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nx">end</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                 </span><span class="c1">// The raw string content of the segment</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">parent?</span><span class="o">:</span><span class="w"> </span><span class="kt">Segment</span><span class="p">;</span><span class="w">                 </span><span class="c1">// Reference to the parent segment</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nx">children</span><span class="o">:</span><span class="w"> </span><span class="kt">Segment</span><span class="p">[];</span><span class="w">             </span><span class="c1">// Nested segments (e.g., a POML block within text)</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nx">tagName?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                 </span><span class="c1">// For POML segments, the name of the root tag (e.g., &#39;task&#39;)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// The raw string content of the segment</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nx">parent?</span><span class="o">:</span><span class="w"> </span><span class="kt">Segment</span><span class="p">;</span><span class="w"> </span><span class="c1">// Reference to the parent segment</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nx">children</span><span class="o">:</span><span class="w"> </span><span class="kt">Segment</span><span class="p">[];</span><span class="w"> </span><span class="c1">// Nested segments (e.g., a POML block within text)</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nx">tagName?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// For POML segments, the name of the root tag (e.g., &#39;task&#39;)</span>
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="p">}</span>
 </code></pre></div>
 <h4 id="ii-metadata-processing">II. Metadata Processing<a class="headerlink" href="#ii-metadata-processing" title="Permanent link">&para;</a></h4>
@@ -2255,19 +2332,15 @@ File-level metadata can be included at any place of the file in a special <code>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nx">variables</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="nx">any</span><span class="w"> </span><span class="p">};</span><span class="w"> </span><span class="c1">// For {{ substitutions }} and &lt;let&gt; (Read/Write)</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nx">texts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="nx">React</span><span class="p">.</span><span class="nx">ReactElement</span><span class="w"> </span><span class="p">};</span><span class="w"> </span><span class="c1">// Maps TEXT_ID to content for &lt;text&gt; replacement (Read/Write)</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nx">stylesheet</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">[</span><span class="nx">key</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">};</span><span class="w"> </span><span class="c1">// Merged styles from all &lt;meta&gt; tags (Read-Only during render)</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nx">minimalPomlVersion?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// From &lt;meta&gt; (Read-Only)</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nx">sourcePath</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">                </span><span class="c1">// File path for resolving includes (Read-Only)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nx">minimalPomlVersion?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// From &lt;meta&gt; (Read-Only)</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nx">sourcePath</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w"> </span><span class="c1">// File path for resolving includes (Read-Only)</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
 </code></pre></div>
 <h4 id="iii-textpoml-dispatching-recursive-rendering">III. Text/POML Dispatching (Recursive Rendering)<a class="headerlink" href="#iii-textpoml-dispatching-recursive-rendering" title="Permanent link">&para;</a></h4>
 <p>Rendering starts at the root of the segment tree and proceeds recursively. A controller dispatches segments to the appropriate reader.</p>
 <ul>
-<li>
-<p><strong><code>PureTextReader</code></strong>: Handles <code>TEXT</code> segments.</p>
-</li>
-<li>
-<p>Currently we directly render the pure-text contents as a single React element. In future, we can:</p>
-<ul>
+<li><strong><code>PureTextReader</code></strong>: Handles <code>TEXT</code> segments.</li>
+<li>Currently we directly render the pure-text contents as a single React element. In future, we can:<ul>
 <li>Renders the text content, potentially using a Markdown processor.</li>
 <li>Performs variable substitutions (<code>{{...}}</code>) using the <code>variables</code> from <code>PomlContext</code>. The logic from <code>handleText</code> in the original <code>PomlFile</code> should be extracted into a shared utility for this.</li>
 </ul>
@@ -2278,9 +2351,7 @@ File-level metadata can be included at any place of the file in a special <code>
 <li>
 <p><strong><code>PomlReader</code></strong>: Handles <code>POML</code> segments.</p>
 </li>
-<li>
-<p><strong>Pre-processing</strong>: Before parsing, it replaces any direct child <code>&lt;text&gt;</code> regions with a self-closing placeholder tag containing a unique ID: <code>&lt;text ref="TEXT_ID_123" /&gt;</code>. The original content of the <code>&lt;text&gt;</code> segment is stored in <code>context.texts</code>. This ensures the XML parser inside <code>PomlFile</code> doesn't fail on non-XML content (like Markdown).</p>
-</li>
+<li><strong>Pre-processing</strong>: Before parsing, it replaces any direct child <code>&lt;text&gt;</code> regions with a self-closing placeholder tag containing a unique ID: <code>&lt;text ref="TEXT_ID_123" /&gt;</code>. The original content of the <code>&lt;text&gt;</code> segment is stored in <code>context.texts</code>. This ensures the XML parser inside <code>PomlFile</code> doesn't fail on non-XML content (like Markdown).</li>
 <li><strong>Delegation</strong>: Instantiates a modified <code>PomlFile</code> class with the processed segment content and the shared <code>PomlContext</code>.</li>
 <li>
 <p><strong>Rendering</strong>: Calls the <code>pomlFile.react(context)</code> method to render the segment.</p>
@@ -2327,12 +2398,10 @@ File-level metadata can be included at any place of the file in a special <code>
 <li>
 <p>The core <code>parseXmlElement</code> method needs a new branch to handle the <code>&lt;text ref="..." /&gt;</code> placeholder.</p>
 </li>
-<li>When it encounters this element:<ol>
+<li>When it encounters this element:</li>
 <li>It extracts the <code>ref</code> attribute (e.g., <code>"TEXT_ID_123"</code>).</li>
 <li>It looks up the corresponding raw text from <code>context.texts</code>.</li>
 <li>It fetches from the <code>context.texts</code> map and returns a React element containing the pure text content.</li>
-</ol>
-</li>
 </ol>
 
 
@@ -2356,7 +2425,7 @@ File-level metadata can be included at any place of the file in a special <code>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 22, 2025 06:55:24 UTC"><span class="timeago" datetime="2025-08-22T06:55:24+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 22, 2025 06:55:24 UTC">2025-08-22</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 26, 2025 02:23:25 UTC"><span class="timeago" datetime="2025-08-26T02:23:25+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 26, 2025 02:23:25 UTC">2025-08-26</span>
   </span>
 
     

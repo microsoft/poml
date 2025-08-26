@@ -1803,6 +1803,79 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Miscellaneous
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Miscellaneous
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -2010,6 +2083,7 @@
 <a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>    <span class="p">)</span>
 <a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    <span class="n">documents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
 </code></pre></div>
+<!-- prettier-ignore -->
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <code>to_strict_json_schema</code> function automatically converts your Pydantic models into JSON schemas that guide the LLM's output format. You can also use <code>Document.model_json_schema()</code> from <a href="https://docs.pydantic.dev/latest/concepts/json_schema/">Pydantic official</a> instead of <code>to_strict_json_schema()</code>, but it may produce a less strict schema that may result in 400 Bad Request errors from the LLM.</p>
@@ -2027,6 +2101,7 @@
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="nt">&lt;output-schema&gt;</span>{{<span class="w"> </span>document_output_schema<span class="w"> </span>}}<span class="nt">&lt;/output-schema&gt;</span>
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nt">&lt;/poml&gt;</span>
 </code></pre></div>
+<!-- prettier-ignore -->
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <code>&lt;task&gt;</code> and <code>&lt;hint&gt;</code> components are both "intention components" that help organize your prompts. They serve to denote special parts of instructions. When rendered, the only difference between them is their caption - <code>&lt;task&gt;</code> renders with "# Task" while <code>&lt;hint&gt;</code> renders with <code>**Hint:**</code>. Using these semantic components is not necessary when using POML, but they help you maintain clean, understandable, optimizable prompt structures rather than mixing all instructions together.</p>
@@ -2242,18 +2317,18 @@
 <h2 id="running-the-complete-example">Running the Complete Example<a class="headerlink" href="#running-the-complete-example" title="Permanent link">&para;</a></h2>
 <p>To see the full system in action, the full prompt files are available at:</p>
 <ul>
-<li><a href="https://github.com/microsoft/poml/tree/5acd01b6ba93a565fb69986653c615ec9288f55b/examples/203_expense_extract_document.poml">Document extraction</a></li>
-<li><a href="https://github.com/microsoft/poml/tree/5acd01b6ba93a565fb69986653c615ec9288f55b/examples/204_expense_extract_rules.poml">Rule extraction</a></li>
-<li><a href="https://github.com/microsoft/poml/tree/5acd01b6ba93a565fb69986653c615ec9288f55b/examples/205_expense_check_compliance.poml">Compliance checking</a></li>
-<li><a href="https://github.com/microsoft/poml/tree/5acd01b6ba93a565fb69986653c615ec9288f55b/examples/206_expense_send_email.poml">Email generation</a></li>
+<li><a href="https://github.com/microsoft/poml/tree/4d77018e5b469d32e60ec39f5f3299e08c43829f/examples/203_expense_extract_document.poml">Document extraction</a></li>
+<li><a href="https://github.com/microsoft/poml/tree/4d77018e5b469d32e60ec39f5f3299e08c43829f/examples/204_expense_extract_rules.poml">Rule extraction</a></li>
+<li><a href="https://github.com/microsoft/poml/tree/4d77018e5b469d32e60ec39f5f3299e08c43829f/examples/205_expense_check_compliance.poml">Compliance checking</a></li>
+<li><a href="https://github.com/microsoft/poml/tree/4d77018e5b469d32e60ec39f5f3299e08c43829f/examples/206_expense_send_email.poml">Email generation</a></li>
 </ul>
-<p>The full Python implementation is available at <a href="https://github.com/microsoft/poml/tree/5acd01b6ba93a565fb69986653c615ec9288f55b/examples/404_travel_expense_agent.py">travel expense agent</a>. You can run it by:</p>
+<p>The full Python implementation is available at <a href="https://github.com/microsoft/poml/tree/4d77018e5b469d32e60ec39f5f3299e08c43829f/examples/404_travel_expense_agent.py">travel expense agent</a>. You can run it by:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>404_travel_expense_agent.py
 </code></pre></div>
 <p>This will process sample documents and walk through the complete workflow, showing you structured outputs at each step and the final email generation.</p>
 <h2 id="next-step">Next Step<a class="headerlink" href="#next-step" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Try the example file <a href="https://github.com/microsoft/poml/tree/5acd01b6ba93a565fb69986653c615ec9288f55b/examples/404_travel_expense_agent.py">404_travel_expense_agent.py</a>.</li>
+<li>Try the example file <a href="https://github.com/microsoft/poml/tree/4d77018e5b469d32e60ec39f5f3299e08c43829f/examples/404_travel_expense_agent.py">404_travel_expense_agent.py</a>.</li>
 <li>Explore different options with <code>syntax</code>.</li>
 <li>Go to <a href="../expense_part2/">part 2</a> to learn how to debug and optimize your prompts using the VS Code extension.</li>
 </ul>
@@ -2279,7 +2354,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 25, 2025 04:01:09 UTC"><span class="timeago" datetime="2025-08-25T04:01:09+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 25, 2025 04:01:09 UTC">2025-08-25</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 26, 2025 02:23:25 UTC"><span class="timeago" datetime="2025-08-26T02:23:25+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 26, 2025 02:23:25 UTC">2025-08-26</span>
   </span>
 
     

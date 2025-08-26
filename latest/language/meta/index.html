@@ -2005,6 +2005,79 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Miscellaneous
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Miscellaneous
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -2357,9 +2430,11 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="nt">&lt;/poml&gt;</span>
 </code></pre></div>
 <h3 id="meta-element-usage">Meta Element Usage<a class="headerlink" href="#meta-element-usage" title="Permanent link">&para;</a></h3>
-<p>Meta elements are used for general document configuration:
-- Version control (<code>minVersion</code>, <code>maxVersion</code>)
-- Component management (<code>components</code>)</p>
+<p>Meta elements are used for general document configuration:</p>
+<ul>
+<li>Version control (<code>minVersion</code>, <code>maxVersion</code>)</li>
+<li>Component management (<code>components</code>)</li>
+</ul>
 <h2 id="version-control">Version Control<a class="headerlink" href="#version-control" title="Permanent link">&para;</a></h2>
 <p>Version requirements ensure compatibility between documents and the POML runtime. This prevents runtime errors when documents require specific POML features.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">&lt;meta</span><span class="w"> </span><span class="na">minVersion=</span><span class="s">&quot;0.5.0&quot;</span><span class="w"> </span><span class="na">maxVersion=</span><span class="s">&quot;2.0.0&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
@@ -2390,7 +2465,7 @@
 <h2 id="meta-like-components">Meta-like Components<a class="headerlink" href="#meta-like-components" title="Permanent link">&para;</a></h2>
 <p>The following sections describe components that behave like meta elements - they affect how the prompt is processed and executed but don't appear in the final prompt messages sent to the LLM.</p>
 <h3 id="stylesheet">Stylesheet<a class="headerlink" href="#stylesheet" title="Permanent link">&para;</a></h3>
-<p>POML allows you to define styles for your elements using the <code>&lt;stylesheet&gt;</code> tag.  This enables you to apply CSS-like styles (or, more generally, component attributes) to your markup.</p>
+<p>POML allows you to define styles for your elements using the <code>&lt;stylesheet&gt;</code> tag. This enables you to apply CSS-like styles (or, more generally, component attributes) to your markup.</p>
 <p>You can define styles within a <code>&lt;stylesheet&gt;</code> tag. The stylesheet must be a valid JSON object and must be placed directly under the root <code>&lt;poml&gt;</code> element.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">&lt;poml&gt;</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&lt;stylesheet&gt;</span>
@@ -2405,7 +2480,7 @@
 </code></pre></div>
 <p>In this example, all <code>&lt;p&gt;</code> elements will have their <code>syntax</code> attribute set to <code>"json"</code>. You can set any attribute of a component using the stylesheet.</p>
 <h4 id="classname-attribute">ClassName Attribute<a class="headerlink" href="#classname-attribute" title="Permanent link">&para;</a></h4>
-<p>Elements can be identified with a <code>className</code> attribute for styling.  The stylesheet can then target elements with specific class names using a CSS-like selector syntax (using a dot <code>.</code> before the class name).</p>
+<p>Elements can be identified with a <code>className</code> attribute for styling. The stylesheet can then target elements with specific class names using a CSS-like selector syntax (using a dot <code>.</code> before the class name).</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">&lt;poml&gt;</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">&lt;table</span><span class="w"> </span><span class="na">className=</span><span class="s">&quot;csv&quot;</span><span class="w"> </span><span class="na">records=</span><span class="s">&quot;[[1,2,3],[4,5,6]]&quot;</span><span class="nt">/&gt;</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">&lt;stylesheet&gt;</span>
@@ -2418,7 +2493,7 @@
 <a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="nt">&lt;/stylesheet&gt;</span>
 <a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="nt">&lt;/poml&gt;</span>
 </code></pre></div>
-<p>Here, the <code>&lt;table&gt;</code> element has the class name "csv".  The stylesheet targets elements with the class "csv" (using <code>.csv</code>) and sets their <code>syntax</code> to "csv" and <code>writerOptions</code> to a specific JSON string. Note the escaped backslashes (<code>\\</code>) in the <code>writerOptions</code> value, which are necessary because the stylesheet itself is a JSON string.  This example will render to:</p>
+<p>Here, the <code>&lt;table&gt;</code> element has the class name "csv". The stylesheet targets elements with the class "csv" (using <code>.csv</code>) and sets their <code>syntax</code> to "csv" and <code>writerOptions</code> to a specific JSON string. Note the escaped backslashes (<code>\\</code>) in the <code>writerOptions</code> value, which are necessary because the stylesheet itself is a JSON string. This example will render to:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>1;2;3
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>4;5;6
 </code></pre></div>
@@ -2447,9 +2522,11 @@
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span>})
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="nt">&lt;/output-schema&gt;</span>
 </code></pre></div>
-<p>When <code>parser</code> is omitted, POML auto-detects the format:
-- If the content starts with <code>{</code>, it's treated as JSON
-- Otherwise, it's treated as an expression</p>
+<p>When <code>parser</code> is omitted, POML auto-detects the format:</p>
+<ul>
+<li>If the content starts with <code>{</code>, it's treated as JSON</li>
+<li>Otherwise, it's treated as an expression</li>
+</ul>
 <h4 id="expression-evaluation-in-schemas">Expression Evaluation in Schemas<a class="headerlink" href="#expression-evaluation-in-schemas" title="Permanent link">&para;</a></h4>
 <h4 id="json-schema-with-template-expressions">JSON Schema with Template Expressions<a class="headerlink" href="#json-schema-with-template-expressions" title="Permanent link">&para;</a></h4>
 <p>JSON schemas support template expressions using <code>{{ }}</code> syntax:</p>
@@ -2459,7 +2536,7 @@
 <a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span>&quot;type&quot;:<span class="w"> </span>&quot;object&quot;,
 <a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span>&quot;properties&quot;:<span class="w"> </span>{
 <a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">      </span>&quot;name&quot;:<span class="w"> </span>{<span class="w"> </span>&quot;type&quot;:<span class="w"> </span>&quot;string&quot;<span class="w"> </span>},
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">      </span>&quot;age&quot;:<span class="w"> </span>{<span class="w"> </span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">      </span>&quot;age&quot;:<span class="w"> </span>{
 <a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">        </span>&quot;type&quot;:<span class="w"> </span>&quot;number&quot;,
 <a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">        </span>&quot;minimum&quot;:<span class="w"> </span>0,
 <a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">        </span>&quot;maximum&quot;:<span class="w"> </span>{{<span class="w"> </span>maxAge<span class="w"> </span>}}
@@ -2477,13 +2554,18 @@
 <a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span>)
 <a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="nt">&lt;/output-schema&gt;</span>
 </code></pre></div>
-<p>The expression can return either:
-- A Zod schema object (detected by the presence of <code>_def</code> property)
-- A plain JavaScript object treated as JSON Schema</p>
-<p><strong>Important limitations:</strong>
-- Only one <code>output-schema</code> element is allowed per document. Multiple response schemas will result in an error.</p>
+<p>The expression can return either:</p>
+<ul>
+<li>A Zod schema object (detected by the presence of <code>_def</code> property)</li>
+<li>A plain JavaScript object treated as JSON Schema</li>
+</ul>
+<p><strong>Important limitations:</strong></p>
+<ul>
+<li>Only one <code>output-schema</code> element is allowed per document. Multiple response schemas will result in an error.</li>
+</ul>
 <h3 id="tool-registration">Tool Registration<a class="headerlink" href="#tool-registration" title="Permanent link">&para;</a></h3>
 <p>Tool registration enables AI models to interact with external functions during conversation. Tools are function definitions that tell the AI model what functions are available, what parameters they expect, and what they do. Tool registration is done using the <code>&lt;tool-definition&gt;</code> or <code>&lt;tool&gt;</code> tag (both are equivalent).</p>
+<!-- prettier-ignore -->
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Using tools together with response schema is only supported for some models, e.g., those from OpenAI.</p>
@@ -2494,9 +2576,9 @@
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span>&quot;type&quot;:<span class="w"> </span>&quot;object&quot;,
 <a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span>&quot;properties&quot;:<span class="w"> </span>{
 <a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">      </span>&quot;location&quot;:<span class="w"> </span>{<span class="w"> </span>&quot;type&quot;:<span class="w"> </span>&quot;string&quot;<span class="w"> </span>},
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">      </span>&quot;unit&quot;:<span class="w"> </span>{<span class="w"> </span>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">        </span>&quot;type&quot;:<span class="w"> </span>&quot;string&quot;,<span class="w"> </span>
-<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">        </span>&quot;enum&quot;:<span class="w"> </span>[&quot;celsius&quot;,<span class="w"> </span>&quot;fahrenheit&quot;]<span class="w"> </span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">      </span>&quot;unit&quot;:<span class="w"> </span>{
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">        </span>&quot;type&quot;:<span class="w"> </span>&quot;string&quot;,
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">        </span>&quot;enum&quot;:<span class="w"> </span>[&quot;celsius&quot;,<span class="w"> </span>&quot;fahrenheit&quot;]
 <a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">      </span>}
 <a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span>},
 <a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">    </span>&quot;required&quot;:<span class="w"> </span>[&quot;location&quot;]
@@ -2520,7 +2602,7 @@
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span>{
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span>&quot;type&quot;:<span class="w"> </span>&quot;object&quot;,
 <a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span>&quot;properties&quot;:<span class="w"> </span>{
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">      </span>&quot;value&quot;:<span class="w"> </span>{<span class="w"> </span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">      </span>&quot;value&quot;:<span class="w"> </span>{
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">        </span>&quot;type&quot;:<span class="w"> </span>&quot;number&quot;,
 <a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">        </span>&quot;maximum&quot;:<span class="w"> </span>{{<span class="w"> </span>maxValue<span class="w"> </span>}}
 <a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">      </span>}
@@ -2539,10 +2621,12 @@
 <a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="nt">&lt;/tool-definition&gt;</span>
 </code></pre></div>
 <p>In expression mode, the <code>z</code> variable is automatically available for constructing Zod schemas, and you have direct access to all context variables.</p>
-<p><strong>Required attributes for tools:</strong>
-- <strong>name</strong>: Tool identifier (required)
-- <strong>description</strong>: Tool description (optional but recommended)
-- <strong>parser</strong>: Schema parser, either "json" or "eval" (optional, auto-detected based on content)</p>
+<p><strong>Required attributes for tools:</strong></p>
+<ul>
+<li><strong>name</strong>: Tool identifier (required)</li>
+<li><strong>description</strong>: Tool description (optional but recommended)</li>
+<li><strong>parser</strong>: Schema parser, either "json" or "eval" (optional, auto-detected based on content)</li>
+</ul>
 <h4 id="template-expressions-in-attributes">Template Expressions in Attributes<a class="headerlink" href="#template-expressions-in-attributes" title="Permanent link">&para;</a></h4>
 <p>Both schemas and tools support template expressions in their attributes:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;toolName&quot;</span><span class="nt">&gt;</span>calculate<span class="nt">&lt;/let&gt;</span>
@@ -2574,8 +2658,8 @@
 <p>You can define multiple tools in a single document.</p>
 <h3 id="runtime-parameters">Runtime Parameters<a class="headerlink" href="#runtime-parameters" title="Permanent link">&para;</a></h3>
 <p>Runtime parameters configure the language model's behavior during execution. These parameters are automatically used in <a href="../../vscode/features/">VSCode's test command</a> functionality, which is based on the <a href="https://ai-sdk.dev/">Vercel AI SDK</a>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">&lt;runtime</span><span class="w"> </span><span class="na">temperature=</span><span class="s">&quot;0.7&quot;</span><span class="w"> </span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">         </span><span class="na">max-output-tokens=</span><span class="s">&quot;1000&quot;</span><span class="w"> </span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">&lt;runtime</span><span class="w"> </span><span class="na">temperature=</span><span class="s">&quot;0.7&quot;</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">         </span><span class="na">max-output-tokens=</span><span class="s">&quot;1000&quot;</span>
 <a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">         </span><span class="na">model=</span><span class="s">&quot;gpt-5&quot;</span>
 <a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">         </span><span class="na">top-p=</span><span class="s">&quot;0.9&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
 </code></pre></div>
@@ -2631,7 +2715,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 22, 2025 09:01:19 UTC"><span class="timeago" datetime="2025-08-22T09:01:19+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 22, 2025 09:01:19 UTC">2025-08-22</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 26, 2025 02:23:25 UTC"><span class="timeago" datetime="2025-08-26T02:23:25+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 26, 2025 02:23:25 UTC">2025-08-26</span>
   </span>
 
     

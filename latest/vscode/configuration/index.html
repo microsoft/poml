@@ -1915,6 +1915,79 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Miscellaneous
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Miscellaneous
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -2176,7 +2249,7 @@
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="nt">&quot;poml.trace&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;off&quot;</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">}</span>
 </code></pre></div>
-<p>For multiple providers with different API keys, which is useful when overriding the default provider setting in POML files:
+<p>For multiple providers with different API keys, which is useful when overriding the default provider setting in POML files:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.provider&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.model&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">,</span>
@@ -2190,7 +2263,7 @@
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="nt">&quot;microsoft&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://your-resource.openai.azure.com/&quot;</span>
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="p">}</span>
-</code></pre></div></p>
+</code></pre></div>
 <h2 id="language-model-configuration">Language Model Configuration<a class="headerlink" href="#language-model-configuration" title="Permanent link">&para;</a></h2>
 <p>The following settings mainly control the language model used for POML testing feature within VSCode.</p>
 <h3 id="language-model-provider">Language Model Provider<a class="headerlink" href="#language-model-provider" title="Permanent link">&para;</a></h3>
@@ -2201,33 +2274,33 @@
 <p><strong>Options:</strong> <code>openai</code>, <code>microsoft</code>, <code>anthropic</code>, <code>google</code><br />
 <strong>Default:</strong> <code>openai</code></p>
 <h3 id="model-name">Model Name<a class="headerlink" href="#model-name" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.model&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gpt-4o&quot;</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="p">}</span>
 </code></pre></div>
-<strong>Default:</strong> <code>gpt-4o</code><br />
+<p><strong>Default:</strong> <code>gpt-4o</code><br />
 For Azure OpenAI, use the deployment name. For other providers, use the model code name.</p>
 <h3 id="temperature">Temperature<a class="headerlink" href="#temperature" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.temperature&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="p">}</span>
 </code></pre></div>
-<strong>Default:</strong> <code>0.5</code><br />
+<p><strong>Default:</strong> <code>0.5</code><br />
 <strong>Range:</strong> <code>0.0</code> to <code>2.0</code><br />
 Controls randomness in responses. Lower values are more deterministic.</p>
 <h3 id="max-tokens">Max Tokens<a class="headerlink" href="#max-tokens" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.maxTokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2000</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">}</span>
 </code></pre></div>
-<strong>Default:</strong> <code>0</code> (unlimited)<br />
+<p><strong>Default:</strong> <code>0</code> (unlimited)<br />
 Maximum number of completion tokens to generate.</p>
 <h3 id="api-key">API Key<a class="headerlink" href="#api-key" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.apiKey&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;your-api-key-here&quot;</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="p">}</span>
 </code></pre></div>
-<p>Or use provider-specific keys:
+<p>Or use provider-specific keys:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.apiKey&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">&quot;openai&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sk-your-openai-key&quot;</span><span class="p">,</span>
@@ -2236,17 +2309,19 @@ Maximum number of completion tokens to generate.</p>
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">    </span><span class="nt">&quot;microsoft&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;your-azure-key&quot;</span>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="p">}</span>
-</code></pre></div></p>
+</code></pre></div>
 <p><strong>Required</strong> for most providers. Keep this secure and never commit to version control.</p>
-<p>The API key can be:
-- A <strong>string</strong> for a single key used across all providers
-- An <strong>object</strong> with provider-specific keys, useful when switching between providers or when prompts override the provider at runtime</p>
+<p>The API key can be:</p>
+<ul>
+<li>A <strong>string</strong> for a single key used across all providers</li>
+<li>An <strong>object</strong> with provider-specific keys, useful when switching between providers or when prompts override the provider at runtime</li>
+</ul>
 <h3 id="api-url">API URL<a class="headerlink" href="#api-url" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.apiUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://api.openai.com/v1/&quot;</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="p">}</span>
 </code></pre></div>
-<p>Or use provider-specific URLs:
+<p>Or use provider-specific URLs:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.apiUrl&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">&quot;openai&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://api.openai.com/v1/&quot;</span><span class="p">,</span>
@@ -2254,24 +2329,29 @@ Maximum number of completion tokens to generate.</p>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="nt">&quot;anthropic&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://api.anthropic.com/&quot;</span>
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="p">}</span>
-</code></pre></div></p>
-<p><strong>Examples:</strong>
-- OpenAI: <code>https://api.openai.com/v1/</code>
-- Azure OpenAI: <code>https://westeurope.api.cognitive.microsoft.com/openai</code>
-- Custom OpenAI-compatible: <code>https://api.example.com/v2/</code></p>
-<p>The API URL can be:
-- A <strong>string</strong> for a single URL used across all providers
-- An <strong>object</strong> with provider-specific URLs, useful when different providers require different endpoints</p>
+</code></pre></div>
+<p><strong>Examples:</strong></p>
+<ul>
+<li>OpenAI: <code>https://api.openai.com/v1/</code></li>
+<li>Azure OpenAI: <code>https://westeurope.api.cognitive.microsoft.com/openai</code></li>
+<li>Custom OpenAI-compatible: <code>https://api.example.com/v2/</code></li>
+</ul>
+<p>The API URL can be:</p>
+<ul>
+<li>A <strong>string</strong> for a single URL used across all providers</li>
+<li>An <strong>object</strong> with provider-specific URLs, useful when different providers require different endpoints</li>
+</ul>
+<!-- prettier-ignore -->
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>If you are using Azure OpenAI and encounter a <code>Resource not found</code> error, you may want to change the configuration from <code>https://xxx.cognitiveservices.azure.com/</code> to <code>https://xxx.cognitiveservices.azure.com/openai</code> or vice versa. Refer to <a href="https://ai-sdk.dev/providers/ai-sdk-providers/azure">Vercel AI Azure Provider</a> for more details.</p>
 </div>
 <h3 id="api-version">API Version<a class="headerlink" href="#api-version" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">&quot;poml.languageModel.apiVersion&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-02-15-preview&quot;</span>
 <a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="p">}</span>
 </code></pre></div>
-<strong>Optional</strong> - Mainly used for OpenAI and Azure OpenAI services.</p>
+<p><strong>Optional</strong> - Mainly used for OpenAI and Azure OpenAI services.</p>
 <h3 id="provider-specific-examples">Provider-Specific Examples<a class="headerlink" href="#provider-specific-examples" title="Permanent link">&para;</a></h3>
 <h4 id="azure-openai">Azure OpenAI<a class="headerlink" href="#azure-openai" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span>
@@ -2301,36 +2381,36 @@ Maximum number of completion tokens to generate.</p>
 <p>These features need further testing. Please report bugs if you need this feature but it does not work as expected.</p>
 </blockquote>
 <h3 id="scroll-synchronization">Scroll Synchronization<a class="headerlink" href="#scroll-synchronization" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">&quot;poml.scrollPreviewWithEditor&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nt">&quot;poml.scrollEditorWithPreview&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">}</span>
 </code></pre></div>
-<strong>Default:</strong> <code>true</code><br />
+<p><strong>Default:</strong> <code>true</code><br />
 Synchronize scrolling between editor and preview panes.</p>
 <h3 id="editor-selection">Editor Selection<a class="headerlink" href="#editor-selection" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
 <a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="nt">&quot;poml.markEditorSelection&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
 <a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="nt">&quot;poml.doubleClickToSwitchToEditor&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
 <a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="p">}</span>
 </code></pre></div>
-<strong>Default:</strong> <code>true</code><br />
+<p><strong>Default:</strong> <code>true</code><br />
 Highlight current editor selection in preview and enable double-click navigation.</p>
 <h2 id="development-settings">Development Settings<a class="headerlink" href="#development-settings" title="Permanent link">&para;</a></h2>
 <h3 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span>
 <a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span><span class="nt">&quot;poml.trace&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;verbose&quot;</span>
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="p">}</span>
 </code></pre></div>
-<strong>Options:</strong> <code>off</code>, <code>verbose</code><br />
+<p><strong>Options:</strong> <code>off</code>, <code>verbose</code><br />
 <strong>Default:</strong> <code>off</code></p>
 <p>Enable detailed tracing for troubleshooting.</p>
 <h3 id="telemetry">Telemetry<a class="headerlink" href="#telemetry" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="p">{</span>
 <a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span><span class="nt">&quot;poml.telemetry.connection&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
 <a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="p">}</span>
 </code></pre></div>
-<strong>Default:</strong> <code>""</code> (empty)<br />
+<p><strong>Default:</strong> <code>""</code> (empty)<br />
 Development setting for telemetry connection string.</p>
 
 
@@ -2354,7 +2434,7 @@ Development setting for telemetry connection string.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 23, 2025 06:53:10 UTC"><span class="timeago" datetime="2025-08-23T06:53:10+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 23, 2025 06:53:10 UTC">2025-08-23</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 26, 2025 02:23:25 UTC"><span class="timeago" datetime="2025-08-26T02:23:25+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 26, 2025 02:23:25 UTC">2025-08-26</span>
   </span>
 
     

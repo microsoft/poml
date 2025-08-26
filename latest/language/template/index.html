@@ -1864,6 +1864,79 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Miscellaneous
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Miscellaneous
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -2082,7 +2155,7 @@
 <h3 id="expression-usages">Expression Usages<a class="headerlink" href="#expression-usages" title="Permanent link">&para;</a></h3>
 <p>POML supports various JavaScript expressions within the double curly brackets. This includes but is not limited to:</p>
 <ul>
-<li><strong>Variables:</strong>  <code>{{variableName}}</code></li>
+<li><strong>Variables:</strong> <code>{{variableName}}</code></li>
 <li><strong>Arithmetic:</strong> <code>{{a + b}}</code>, <code>{{x * y}}</code>, <code>{{count / total}}</code></li>
 <li><strong>String Concatenation:</strong> <code>{{firstName + " " + lastName}}</code></li>
 <li><strong>Array Access:</strong> <code>{{myArray[0]}}</code></li>
@@ -2113,14 +2186,14 @@
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&lt;p&gt;</span>First<span class="w"> </span>user:<span class="w"> </span>{{users[0].name}}<span class="nt">&lt;/p&gt;</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">&lt;/poml&gt;</span>
 </code></pre></div>
-<p>This imports the contents of <code>users.json</code> and assigns it to the <code>users</code> variable.  The <code>src</code> attribute specifies the path to the file (relative to the POML file). The optional <code>type</code> attribute can specify the file type (e.g., "json", "text", "csv"). If not provided, POML attempts to infer it from the file extension.</p>
+<p>This imports the contents of <code>users.json</code> and assigns it to the <code>users</code> variable. The <code>src</code> attribute specifies the path to the file (relative to the POML file). The optional <code>type</code> attribute can specify the file type (e.g., "json", "text", "csv"). If not provided, POML attempts to infer it from the file extension.</p>
 <h3 id="syntax-3-importing-data-from-a-file-without-a-name">Syntax 3: Importing data from a file without a name<a class="headerlink" href="#syntax-3-importing-data-from-a-file-without-a-name" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">&lt;poml&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">&lt;poml&gt;</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">&lt;let</span><span class="w"> </span><span class="na">src=</span><span class="s">&quot;config.json&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">&lt;p&gt;</span>API<span class="w"> </span>Key:<span class="w"> </span>{{apiKey}}<span class="nt">&lt;/p&gt;</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nt">&lt;/poml&gt;</span>
 </code></pre></div>
-If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, this will output "API Key: your_api_key". When you use <code>src</code> without <code>name</code>, and the file content is a JSON object, the properties of that object are directly added to the context.</p>
+<p>If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, this will output "API Key: your_api_key". When you use <code>src</code> without <code>name</code>, and the file content is a JSON object, the properties of that object are directly added to the context.</p>
 <h3 id="syntax-4-setting-a-variable-using-inline-json">Syntax 4: Setting a variable using inline JSON<a class="headerlink" href="#syntax-4-setting-a-variable-using-inline-json" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">&lt;poml&gt;</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">&lt;let</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;person&quot;</span><span class="nt">&gt;</span>
@@ -2151,8 +2224,12 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
 <ul>
 <li><strong>Boolean:</strong> If an attribute is defined as a boolean, values like <code>"true"</code>, <code>1</code>, <code>"1"</code>, or <code>{{true}}</code> will be cast to the boolean value <code>true</code>. Similarly, <code>"false"</code>, <code>0</code>, <code>"0"</code>, or <code>{{false}}</code> will be cast to <code>false</code>.</li>
 <li><strong>Number:</strong> If an attribute is defined as a number, values like <code>"123"</code>, <code>45.6</code>, <code>{{anyNumber}}</code> or <code>{{myNumber+1.3}}</code> will be cast to their corresponding numeric values.</li>
-<li><strong>Object:</strong> If an attribute is defined as an object, POML will attempt to parse the attribute value as a JSON string. For example, <code>data="{{{name: 'John', age: 30}}}"</code> or <code>data='{"name":"John","age":30}'</code> will be parsed into the corresponding JavaScript object.</li>
-<li><strong>String:</strong> If an attribute is a string, no casting is performed.</li>
+<li>
+<p><strong>Object:</strong> If an attribute is defined as an object, POML will attempt to parse the attribute value as a JSON string. For example, <code>data="{{{name: 'John', age: 30}}}"</code> or <code>data='{"name":"John","age":30}'</code> will be parsed into the corresponding JavaScript object.</p>
+</li>
+<li>
+<p><strong>String:</strong> If an attribute is a string, no casting is performed.</p>
+</li>
 </ul>
 <p>In the following example, the first auto-casting happened at let, where <code>true</code> is converted to boolean at <code>let</code> expression.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">&lt;poml&gt;</span>
@@ -2240,7 +2317,7 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 23, 2025 06:53:10 UTC"><span class="timeago" datetime="2025-08-23T06:53:10+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 23, 2025 06:53:10 UTC">2025-08-23</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-timeago" title="August 26, 2025 02:23:25 UTC"><span class="timeago" datetime="2025-08-26T02:23:25+00:00" locale="en"></span></span><span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-iso_date" title="August 26, 2025 02:23:25 UTC">2025-08-26</span>
   </span>
 
     
@@ -2266,8 +2343,8 @@ If <code>config.json</code> contains <code>{ "apiKey": "your_api_key" }</code>, 
     <nav>
       
         <a href="mailto:56454264+kartikey-garg@users.noreply.github.com">Kartikey Garg</a>, 
-        <a href="mailto:scottyugochang@gmail.com">Yuge Zhang</a>, 
-        <a href="mailto:yuge.zhang@microsoft.com">Yuge Zhang</a>
+        <a href="mailto:yuge.zhang@microsoft.com">Yuge Zhang</a>, 
+        <a href="mailto:scottyugochang@gmail.com">Yuge Zhang</a>
     </nav>
   </span>
 

@@ -1,4 +1,6 @@
-import os, re, subprocess
+import os
+import re
+import subprocess
 
 _SHA = None
 _REPO = "https://github.com/microsoft/poml".rstrip("/")
