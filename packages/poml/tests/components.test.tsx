@@ -466,7 +466,7 @@ Be **bold** in stating your key points. Put them in a list:
 Improve your image by including an image. `,
       expect.objectContaining({
         alt: 'A Great HTML Resource',
-        type: 'image/jpeg',
+        type: 'image/png',
         base64: expect.stringMatching(/^.{27}/)
       }),
       `Add a link to your favorite Web site.

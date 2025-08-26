@@ -57,7 +57,7 @@ describe('content', () => {
 
 describe('preprocessImage', () => {
   const sampleImagePath = __dirname + '/assets/tomCat.jpg';
-  const sampleImageURL = 'https://raw.githubusercontent.com/microsoft/poml/refs/heads/main/packages/poml/tests/assets/tomCat.jpg';
+  const sampleImageURL = 'https://raw.githubusercontent.com/ultmaster/poml-test-fixtures/e2bed155890e4cf853a515a990660328799ee5e3/image/gpt-5-random-image.png';
   const sampleImageBase64 = readFileSync(sampleImagePath).toString('base64');
 
   test('should process an image from a supported file path', async () => {
@@ -77,7 +77,7 @@ describe('preprocessImage', () => {
   test('should process an image from an URL', async () => {
     const result = await preprocessImage({ src: sampleImageURL });
     expect(result.base64).toBeTruthy();
-    expect(result.mimeType).toBe('image/jpeg');
+    expect(result.mimeType).toBe('image/png');
   });
 
   test('should resize the image with the resize parameter', async () => {
