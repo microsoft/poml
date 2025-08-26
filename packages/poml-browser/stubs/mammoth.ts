@@ -8,7 +8,7 @@ export interface ConversionResult {
 }
 
 export interface ConversionOptions {
-  buffer: ArrayBuffer | Buffer;
+  buffer: ArrayBuffer | Uint8Array;
 }
 
 export async function convertToHtml(_options: ConversionOptions): Promise<ConversionResult> {
