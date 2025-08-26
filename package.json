@@ -380,7 +380,7 @@
     "package:win": "vsce package --target win32-x64",
     "pretest": "npm run compile",
     "lint": "eslint packages",
-    "format": "prettier --write 'src/**/*.{ts,tsx,js,json,md,yml}'",
+    "format": "prettier --write '**/*.{ts,tsx,js,json,md,yml}'",
     "format:py": "black . && isort .",
     "test": "jest",
     "test-vscode": "vscode-test",

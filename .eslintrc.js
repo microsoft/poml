@@ -41,5 +41,5 @@ module.exports = {
     // 'max-len': ['warn', { code: 100 }],
     // 'indent': ['warn', 2],
   },
-  ignorePatterns: ['out', 'dist', '**/*.d.ts', 'assets'],
+  ignorePatterns: ['out', 'dist', 'node_modules', '**/*.d.ts', 'assets'],
 };
