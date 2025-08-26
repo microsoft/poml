@@ -53,11 +53,11 @@ export default [
     output: {
       dir: 'dist/ui',
       format: 'iife',
-      sourcemap: true
+      sourcemap: true,
     },
     watch: {
       include: ['ui/**', 'functions/**', 'poml/**'],
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
     },
     onwarn(warning, warn) {
       // https://github.com/TanStack/query/issues/5175
@@ -84,27 +84,27 @@ export default [
     plugins: [
       // trace('trace'),
       alias({
-        entries: [...aliasEntries, ...pomlAliasEntries]
+        entries: [...aliasEntries, ...pomlAliasEntries],
       }),
       typescript({
         tsconfig: './tsconfig.json',
-        include: [
-          'poml-browser/ui/**/*',
-          'poml-browser/functions/**/*',
-          'poml-browser/stubs/**/*',
-          'poml/**/*'
+        include: ['poml-browser/ui/**/*', 'poml-browser/functions/**/*', 'poml-browser/stubs/**/*', 'poml/**/*'],
+        exclude: [
+          'poml/node_modules/**/*',
+          'poml/tests/**/*',
+          'poml-browser/ui/custom.js',
+          'poml-browser/ui/theme/style.css',
         ],
-        exclude: ['poml/node_modules/**/*', 'poml/tests/**/*', 'poml-browser/ui/custom.js', 'poml-browser/ui/theme/style.css']
       }),
       json(),
       replace({
         // https://stackoverflow.com/questions/70368760/react-uncaught-referenceerror-process-is-not-defined
         'process.env.NODE_ENV': JSON.stringify('development'),
-        preventAssignment: true
+        'preventAssignment': true,
       }),
       postcss({
         extract: true,
-        minimize: true
+        minimize: true,
       }),
       nodePolyfills({
         include: ['stubs/**/*', '../poml/**/*'],
@@ -119,67 +119,72 @@ export default [
         // dedupe: ['entities']
       }),
       commonjs({
-        transformMixedEsModules: true
+        transformMixedEsModules: true,
       }),
       copy({
         targets: [
           {
             src: ['ui/*.html', 'ui/custom.css', 'ui/custom.js'],
-            dest: 'dist/ui'
-          }
-        ]
-      })
-    ]
+            dest: 'dist/ui',
+          },
+        ],
+      }),
+    ],
   },
   {
     input: 'background/index.ts',
     output: {
       file: 'dist/background.js',
       format: 'es',
-      sourcemap: true
+      sourcemap: true,
     },
     watch: {
       include: 'background/**',
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
     },
     plugins: [
       alias({
-        entries: [...aliasEntries]
+        entries: [...aliasEntries],
       }),
       typescript({
         tsconfig: './tsconfig.json',
-        include: ['poml-browser/background/**/*', 'poml-browser/functions/**/*', 'poml-browser/stubs/**/*', 'poml/**/*']
+        include: [
+          'poml-browser/background/**/*',
+          'poml-browser/functions/**/*',
+          'poml-browser/stubs/**/*',
+          'poml/**/*',
+        ],
       }),
       nodeResolve({
         jsnext: true,
         main: true,
-        browser: true
+        browser: true,
       }),
       commonjs(),
       copy({
         targets: [
           {
             src: ['manifest.json', 'images'],
-            dest: 'dist'
-          }
-        ]
-      })
-    ]
+            dest: 'dist',
+          },
+        ],
+      }),
+    ],
   },
   {
     input: 'contentScript/index.ts',
     output: {
       file: 'dist/contentScript.js',
       format: 'iife',
-      sourcemap: true
+      sourcemap: true,
     },
     watch: {
       include: ['contentScript/**', 'functions/**'],
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
     },
     plugins: [
       alias({
-        entries: [...aliasEntries]
+        entries: [...aliasEntries],
       }),
       typescript({
         tsconfig: './tsconfig.json',
@@ -188,17 +193,17 @@ export default [
       nodeResolve({
         jsnext: true,
         main: true,
-        browser: true
+        browser: true,
       }),
       commonjs(),
       copy({
         targets: [
           {
             src: 'node_modules/pdfjs-dist/build/pdf.worker.min.mjs',
-            dest: 'dist/external'
-          }
-        ]
-      })
-    ]
-  }
+            dest: 'dist/external',
+          },
+        ],
+      }),
+    ],
+  },
 ];

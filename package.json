@@ -381,8 +381,8 @@
     "package:win": "vsce package --target win32-x64",
     "pretest": "npm run compile",
     "lint": "eslint packages",
-    "format": "prettier --write '**/*.{ts,tsx,js,json,md,yml}'",
-    "format:check": "prettier --check '**/*.{ts,tsx,js,json,md,yml}'",
+    "format": "prettier --write '**/*.{ts,tsx,js,mjs,json,md,yml}'",
+    "format:check": "prettier --check '**/*.{ts,tsx,js,mjs,json,md,yml}'",
     "test": "jest",
     "test-vscode": "vscode-test",
     "typedoc": "typedoc",
@@ -390,10 +390,10 @@
     "docs:build": "npm run generate-component-spec && npm run typedoc && mkdocs build"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,json,md,yml}": [
+    "*.{ts,tsx,js,mjs,json,md,yml}": [
       "prettier --write"
     ],
-    "*.{ts,tsx,js}": [
+    "*.{ts,tsx,js,mjs}": [
       "eslint --fix"
     ],
     "*.py": [
