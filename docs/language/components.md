@@ -1127,7 +1127,14 @@ Convert HTML to structured POML components:
 - **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
 - **className**: A class name for quickly styling the current block with stylesheets.
 - **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
+    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+    `'trim'`: Trims whitespace from the beginning and end.
+- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
 
 ## Utilities
 
@@ -1283,60 +1290,3 @@ Used to display tool execution results with rich content.
 - **id**: Tool call ID to respond to
 - **name**: Tool name
 - **speaker**: Can be one of: human, ai, system, tool. The speaker of the content. Default is `tool`.
-
-### Tree
-
-Renders a tree structure in various formats.
-
-#### Usages
-
-```xml
-<Tree items={treeData} syntax="markdown" showContent={true} />
-```
-
-#### Parameters
-
-- **syntax**: Can be one of: markdown, html, json, yaml, text, xml. The output syntax to use for rendering the tree
-- **items**: TreeItemData[]. Array of tree items to render
-- **showContent**: Boolean. Whether to show content values of tree items
-
-### Webpage
-
-Displays content from a webpage.
-
-#### Usages
-
-Display content from a URL:
-```xml
-<webpage url="https://example.com" />
-```
-
-Extract only specific content using a selector:
-```xml
-<webpage url="https://example.com" selector="main article" />
-```
-
-Convert HTML to structured POML components:
-```xml
-<webpage url="https://example.com" extractText="false" />
-```
-
-#### Parameters
-
-- **url**: The URL of the webpage to fetch and display.
-- **src**: Local file path to an HTML file to display.
-- **buffer**: Buffer. HTML content as string or buffer.
-- **base64**: Base64 encoded HTML content.
-- **extractText**: Boolean. Whether to extract plain text content (true) or convert HTML to structured POML (false). Default is false.
-- **selector**: CSS selector to extract specific content from the page (e.g., "article", ".content", "#main"). Default is "body".
-- **syntax**: Can be one of: markdown, html, json, yaml, xml, text. The syntax of the content.
-- **className**: A class name for quickly styling the current block with stylesheets.
-- **speaker**: Can be one of: human, ai, system. The speaker of the content. By default, it's determined by the context and the content.
-- **writerOptions**: Object. **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
-- **whiteSpace**: Can be one of: pre, filter, trim. **Experimental.** Controls how whitespace is handled in text content.
-    `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
-    `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
-    `'trim'`: Trims whitespace from the beginning and end.
-- **charLimit**: Number. **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
-- **tokenLimit**: Number. **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
-- **priority**: Number. **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
