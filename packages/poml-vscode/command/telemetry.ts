@@ -8,9 +8,7 @@ export class TelemetryCompletionAcceptanceCommand implements Command {
   private acceptCount: number = 0;
   private reporter: DelayedTelemetryReporter | undefined;
 
-  public constructor(
-    private readonly previewManager: POMLWebviewPanelManager
-  ) {
+  public constructor(private readonly previewManager: POMLWebviewPanelManager) {
     const reporter = getTelemetryReporter();
     this.reporter = reporter ? new DelayedTelemetryReporter(reporter) : undefined;
   }
@@ -18,16 +16,15 @@ export class TelemetryCompletionAcceptanceCommand implements Command {
   public execute() {
     if (this.reporter) {
       this.acceptCount++;
-      this.reporter.reportTelemetry(
-        TelemetryEvent.CompletionAcceptanceStatistics,
-        {
-          acceptCount: this.acceptCount
-        }
-      ).then((reported) => {
-        if (reported) {
-          this.acceptCount = 0;
-        }
-      });
+      this.reporter
+        .reportTelemetry(TelemetryEvent.CompletionAcceptanceStatistics, {
+          acceptCount: this.acceptCount,
+        })
+        .then((reported) => {
+          if (reported) {
+            this.acceptCount = 0;
+          }
+        });
     }
   }
 }

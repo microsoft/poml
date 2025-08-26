@@ -1,0 +1,13 @@
+<poml>
+  <role>You are a highly skilled math calculator.</role>
+  <task>Perform the following calculations accurately and efficiently.</task>
+  <example>
+    <input>What is 25 multiplied by 4?</input>
+    <output>100</output>
+  </example>
+  <example>
+    <input>What is the square root of 144?</input>
+    <output>12</output>
+  </example>
+  <input>{{ question }}</input>
+</poml>

@@ -24,12 +24,19 @@ import {
   CodeLensParams,
   Command,
   ExecuteCommandParams,
-  Range
+  Range,
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as crypto from 'crypto';
-import { Message, _readWithFile, writeWithSourceMap, SourceMapMessage, SourceMapRichContent, richContentFromSourceMap } from 'poml';
+import {
+  Message,
+  _readWithFile,
+  writeWithSourceMap,
+  SourceMapMessage,
+  SourceMapRichContent,
+  richContentFromSourceMap,
+} from 'poml';
 import {
   ErrorCollection,
   BufferCollection,
@@ -39,7 +46,8 @@ import {
   ReadError,
   RichContent,
   SystemError,
-  WriteError
+  WriteError,
+  ContentMultiMediaBinary,
 } from 'poml/base';
 import { PomlFile, PomlToken } from 'poml/file';
 import { encodingForModel, Tiktoken } from 'js-tiktoken';
@@ -48,12 +56,9 @@ import * as fs from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { PreviewParams, PreviewMethodName, PreviewResponse, WebviewUserOptions } from '../panel/types';
 import { formatComponentDocumentation, formatParameterDocumentation } from './documentFormatter';
-import {
-  DelayedTelemetryReporter,
-  TelemetryEvent,
-  TelemetryServer
-} from 'poml-vscode/util/telemetryServer';
+import { DelayedTelemetryReporter, TelemetryEvent, TelemetryServer } from 'poml-vscode/util/telemetryServer';
 import { parseJsonWithBuffers } from 'poml/util/trace';
+import { EvaluationMessage, EvaluationNotification } from '../panel/types';
 import { getImageWidthHeight } from 'poml/util/image';
 import { estimateImageTokens } from 'poml/util/tokenCounterImage';
 
@@ -152,16 +157,16 @@ class PomlLspServer {
         capabilities: {
           textDocumentSync: TextDocumentSyncKind.Incremental,
           completionProvider: {
-            resolveProvider: true
+            resolveProvider: true,
           },
           diagnosticProvider: {
             interFileDependencies: false,
-            workspaceDiagnostics: false
+            workspaceDiagnostics: false,
           },
           hoverProvider: true,
           codeLensProvider: { resolveProvider: false },
-          executeCommandProvider: { commands: ['poml.evaluateExpression'] }
-        }
+          executeCommandProvider: { commands: ['poml.evaluateExpression'] },
+        },
       };
     });
 
@@ -175,7 +180,7 @@ class PomlLspServer {
     this.connection.onExecuteCommand(this.onExecuteCommand.bind(this));
 
     // Provide a way to force the diagnostics to be reset.
-    this.documents.onDidSave(change => {
+    this.documents.onDidSave((change) => {
       // Invalidate the diagnostic cache
       const uri = change.document.uri.toString();
       this.diagnosticCache.delete(uri);
@@ -201,7 +206,7 @@ class PomlLspServer {
     this.statistics[key] = (this.statistics[key] ?? 0) + (n ?? 1);
     const reported = await this.statisticsReporter.reportTelemetry(
       TelemetryEvent.LanguageServerStatistics,
-      this.statistics
+      this.statistics,
     );
     if (reported) {
       this.statistics = {};
@@ -215,28 +220,39 @@ class PomlLspServer {
     }
     const text = document.getText();
     const pomlFile = new PomlFile(text);
-    const tokens = pomlFile.getExpressionTokens();
+    let tokens: PomlToken[];
+    try {
+      tokens = pomlFile.getExpressionTokens();
+    } catch (e) {
+      console.error(`Failed to parse document for code lenses: ${e}`);
+      return [];
+    }
     const lenses: CodeLens[] = [];
-    for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i];
-      if (token.expression === undefined) {
-        continue;
+    try {
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        if (token.expression === undefined) {
+          continue;
+        }
+        const expr = token.expression;
+        let titleExpr = expr;
+        if (titleExpr.length > 20) {
+          titleExpr = `${titleExpr.slice(0, 10)}...${titleExpr.slice(-10)}`;
+        }
+        const command: Command = {
+          title: `▶️ Evaluate ${titleExpr}`,
+          command: 'poml.evaluateExpression',
+          arguments: [params.textDocument.uri, text, token.range.start, token.range.end],
+        };
+        const vscodeRange: Range = {
+          start: document.positionAt(token.range.start),
+          end: document.positionAt(token.range.end + 1),
+        };
+        lenses.push({ range: vscodeRange, command });
       }
-      const expr = token.expression;
-      let titleExpr = expr;
-      if (titleExpr.length > 20) {
-        titleExpr = `${titleExpr.slice(0, 10)}...${titleExpr.slice(-10)}`;
-      }
-      const command: Command = {
-        title: `▶️ Evaluate ${titleExpr}`,
-        command: 'poml.evaluateExpression',
-        arguments: [params.textDocument.uri, text, token.range.start, token.range.end]
-      };
-      const vscodeRange: Range = {
-        start: document.positionAt(token.range.start),
-        end: document.positionAt(token.range.end + 1)
-      }
-      lenses.push({ range: vscodeRange, command });
+    } catch (e) {
+      console.error(`Failed to compute code lenses: ${e}`);
+      return lenses;
     }
     return lenses;
   }
@@ -250,7 +266,11 @@ class PomlLspServer {
     const rangeStart = params.arguments?.[2] as number | undefined;
     const rangeEnd = params.arguments?.[3] as number | undefined;
     if (!uri || !text || rangeStart === undefined || rangeEnd === undefined) {
-      this.connection.console.error(`${new Date().toLocaleString()} Invalid arguments for poml.evaluateExpression command`);
+      const message: EvaluationMessage = {
+        type: 'error',
+        message: `${new Date().toLocaleString()} Invalid arguments for poml.evaluateExpression command`,
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
       return;
     }
     const expression = text.slice(rangeStart, rangeEnd + 1);
@@ -273,12 +293,20 @@ class PomlLspServer {
 
     if (!ErrorCollection.empty()) {
       const err = ErrorCollection.first()?.toString() ?? 'Unknown error';
-      this.connection.console.error(`${new Date().toLocaleString()} Error during evaluation: ${expression} => ${err}`);
+      const message: EvaluationMessage = {
+        type: 'error',
+        message: `${new Date().toLocaleString()} Error during evaluation: ${expression} => ${err}`,
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
     }
 
     const evaluations = file.getExpressionEvaluations({ start: rangeStart, end: rangeEnd });
     if (evaluations.length === 0) {
-      this.connection.console.warn(`${new Date().toLocaleString()} No evaluations found for expression: ${expression} (${rangeStart}-${rangeEnd})`);
+      const message: EvaluationMessage = {
+        type: 'warning',
+        message: `${new Date().toLocaleString()} No evaluations found for expression: ${expression} (${rangeStart}-${rangeEnd})`,
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
       return;
     }
     for (let i = 0; i < evaluations.length; i++) {
@@ -289,7 +317,11 @@ class PomlLspServer {
       if (result.length > 1024) {
         result = `${result.slice(0, 1024)} ...[truncated]`;
       }
-      this.connection.console.log(`${new Date().toLocaleString()} [Eval ${i + 1}] ${expression} => ${result}`);
+      const message: EvaluationMessage = {
+        type: 'info',
+        message: `${new Date().toLocaleString()} [Eval ${i + 1}] ${expression} => ${result}`,
+      };
+      this.connection.sendNotification(EvaluationNotification, message);
     }
   }
 
@@ -318,10 +350,15 @@ class PomlLspServer {
       for (const part of content) {
         if (typeof part === 'string') {
           total += enc.encode(part).length;
-        } else {
-          const { width, height } = await getImageWidthHeight(part.base64);
+        } else if ((part as any).base64) {
+          const binaryPart = part as ContentMultiMediaBinary;
+          const { width, height } = await getImageWidthHeight(binaryPart.base64);
           // For images, we can use a heuristic based on width and height
           total += estimateImageTokens(width, height, { model: model as any });
+        } else {
+          // estimate the token cost by json serializing the content
+          const jsonContent = JSON.stringify(part);
+          total += enc.encode(jsonContent).length;
         }
       }
       return total;
@@ -351,7 +388,7 @@ class PomlLspServer {
             rawText: '',
             ir: '',
             content: [],
-            error: `Unable to read file: ${e}`
+            error: `Unable to read file: ${e}`,
           };
         }
       }
@@ -386,7 +423,7 @@ class PomlLspServer {
         rawText: documentContent,
         ir: '',
         content: [],
-        error: `Unable to perform "read" step when rendering file: ${e}`
+        error: `Unable to perform "read" step when rendering file: ${e}`,
       };
     }
     let result: Message[] | RichContent;
@@ -396,18 +433,18 @@ class PomlLspServer {
       if (speakerMode) {
         const map = writeWithSourceMap(ir, { speaker: true }) as SourceMapMessage[];
         sourceMap = map;
-        result = map.map(m => ({
+        result = map.map((m) => ({
           speaker: m.speaker,
-          content: richContentFromSourceMap(m.content)
+          content: richContentFromSourceMap(m.content),
         }));
         if (params.returnTokenCounts) {
           const model = params.returnTokenCounts.model;
           const perMessageTokens = await Promise.all(
-            result.map(async m => await this.computeTokens(m.content, model))
+            result.map(async (m) => await this.computeTokens(m.content, model)),
           );
           tokens = {
             perMessage: perMessageTokens,
-            total: perMessageTokens.reduce((a, b) => a + b, 0)
+            total: perMessageTokens.reduce((a, b) => a + b, 0),
           };
         }
       } else {
@@ -417,7 +454,7 @@ class PomlLspServer {
         if (params.returnTokenCounts) {
           const model = params.returnTokenCounts.model;
           tokens = {
-            total: await this.computeTokens(result, model)
+            total: await this.computeTokens(result, model),
           };
         }
       }
@@ -428,7 +465,7 @@ class PomlLspServer {
         rawText: documentContent,
         ir,
         content: [],
-        error: `Unable to perform "write" step when rendering file: ${e}`
+        error: `Unable to perform "write" step when rendering file: ${e}`,
       };
     }
 
@@ -439,20 +476,20 @@ class PomlLspServer {
       tokens,
       sourceMap,
       responseSchema: pomlFile?.getResponseSchema()?.toOpenAPI(),
-      tools: pomlFile?.getToolsSchema()?.toOpenAI(),
+      tools: pomlFile?.getToolsSchema()?.toOpenAI(), // FIXME: handle errors gracefully here
       runtime: pomlFile?.getRuntimeParameters(),
       error: params.returnAllErrors
         ? ErrorCollection.list()
         : ErrorCollection.empty()
           ? undefined
-          : ErrorCollection.first().toString()
+          : ErrorCollection.first().toString(),
     };
   }
 
   private async onPreview(params: PreviewParams): Promise<PreviewResponse> {
     const key = JSON.stringify(params);
     const requestedTime = Date.now();
-    await new Promise(resolve => setTimeout(resolve, this.throttleTime));
+    await new Promise((resolve) => setTimeout(resolve, this.throttleTime));
 
     // After waiting for, e.g., 10ms, there is a result computed later than the request time.
     if (requestedTime < (this.cache.get(key)?.latestComputedTime ?? 0)) {
@@ -473,7 +510,7 @@ class PomlLspServer {
       speakerMode: params.speakerMode,
       displayFormat: params.displayFormat,
       contexts: [...params.contexts],
-      stylesheets: [...params.stylesheets]
+      stylesheets: [...params.stylesheets],
     });
 
     // Send telemetry
@@ -483,7 +520,7 @@ class PomlLspServer {
       uri: params.uri,
       request: JSON.stringify(params),
       compileTime: elapsed,
-      throttleTime: this.throttleTime
+      throttleTime: this.throttleTime,
     });
 
     // Dynamically adjust the throttle time
@@ -493,24 +530,27 @@ class PomlLspServer {
     this.cache.set(key, {
       key,
       latestComputedTime: computedTime, // Use the computed time as the time when source is retrieved
-      latestResult: response
+      latestResult: response,
     });
 
     return response;
   }
 
   private async onDiagnostic(
-    params: DocumentDiagnosticParams
+    params: DocumentDiagnosticParams,
   ): Promise<UnchangedDocumentDiagnosticReport | FullDocumentDiagnosticReport> {
     const key = params.textDocument.uri.toString();
     const document = this.documents.get(params.textDocument.uri);
     const cache = this.diagnosticCache.get(key) ?? { key, fileContent: undefined, diagnostics: [] };
     if (cache.fileContent === document?.getText()) {
       // Compute hash of the file content
-      const hash = crypto.createHash('sha256').update(cache.fileContent ?? '').digest('hex');
+      const hash = crypto
+        .createHash('sha256')
+        .update(cache.fileContent ?? '')
+        .digest('hex');
       return {
         kind: DocumentDiagnosticReportKind.Unchanged,
-        resultId: hash
+        resultId: hash,
       };
     } else {
       const result = document !== undefined ? await this.validateTextDocument(document) : [];
@@ -519,7 +559,7 @@ class PomlLspServer {
         this.diagnosticsReporter.reportTelemetry(TelemetryEvent.Diagnostics, {
           rawText: document?.getText(),
           uri: params.textDocument.uri.toString(),
-          diagnostics: JSON.stringify(result)
+          diagnostics: JSON.stringify(result),
         });
       }
       this.diagnosticCache.set(key, { key, fileContent: document!.getText(), diagnostics: result });
@@ -527,7 +567,7 @@ class PomlLspServer {
       return {
         kind: DocumentDiagnosticReportKind.Full,
         items: result,
-        resultId: hash
+        resultId: hash,
       };
     }
   }
@@ -547,14 +587,14 @@ class PomlLspServer {
       returnAllErrors: true,
       contexts: options.contexts,
       stylesheets: options.stylesheets,
-      returnTokenCounts: undefined
+      returnTokenCounts: undefined,
     });
     const errors = Array.isArray(response.error) ? response.error : response.error ? [response.error] : [];
 
     const normalizeStartEnd = (
       start: number | undefined,
       end: number | undefined,
-      length: number
+      length: number,
     ): [number, number] => {
       start = start ?? 0;
       if (isNaN(start)) {
@@ -568,9 +608,7 @@ class PomlLspServer {
     };
 
     for (const e of errors) {
-      const src = (e as any).sourcePath
-        ? pathToFileURL((e as any).sourcePath).toString()
-        : textDocument.uri.toString();
+      const src = (e as any).sourcePath ? pathToFileURL((e as any).sourcePath).toString() : textDocument.uri.toString();
       let targetText = text;
       let doc = textDocument;
       if (src !== textDocument.uri.toString()) {
@@ -594,10 +632,10 @@ class PomlLspServer {
           severity: DiagnosticSeverity.Error,
           range: {
             start: doc.positionAt(0),
-            end: doc.positionAt(targetText.length)
+            end: doc.positionAt(targetText.length),
           },
           message: e,
-          source: 'POML Unknown Error (please report)'
+          source: 'POML Unknown Error (please report)',
         } as Diagnostic;
         if (src === textDocument.uri.toString()) {
           diagnostics.push(diag);
@@ -610,10 +648,10 @@ class PomlLspServer {
           severity: DiagnosticSeverity.Warning,
           range: {
             start: doc.positionAt(start),
-            end: doc.positionAt(end)
+            end: doc.positionAt(end),
           },
           message: e.message,
-          source: 'POML Reader'
+          source: 'POML Reader',
         };
         if (src === textDocument.uri.toString()) {
           diagnostics.push(diag);
@@ -626,24 +664,21 @@ class PomlLspServer {
           severity: DiagnosticSeverity.Warning,
           range: {
             start: doc.positionAt(start),
-            end: doc.positionAt(end)
+            end: doc.positionAt(end),
           },
           message: e.message,
-          source: 'POML Writer'
+          source: 'POML Writer',
         };
         if (this.hasDiagnosticRelatedInformationCapability) {
           diagnostic.relatedInformation = [
             {
               location: {
                 uri: textDocument.uri,
-                range: diagnostic.range
+                range: diagnostic.range,
               },
               message:
-                e.relatedIr?.slice(
-                  e.startIndex ?? 0,
-                  e.endIndex !== undefined ? e.endIndex + 1 : text.length
-                ) ?? ''
-            }
+                e.relatedIr?.slice(e.startIndex ?? 0, e.endIndex !== undefined ? e.endIndex + 1 : text.length) ?? '',
+            },
           ];
         }
         if (src === textDocument.uri.toString()) {
@@ -656,10 +691,10 @@ class PomlLspServer {
           severity: DiagnosticSeverity.Error,
           range: {
             start: doc.positionAt(0),
-            end: doc.positionAt(targetText.length)
+            end: doc.positionAt(targetText.length),
           },
           message: e.message,
-          source: 'POML System (please report)'
+          source: 'POML System (please report)',
         } as Diagnostic;
         if (src === textDocument.uri.toString()) {
           diagnostics.push(diag);
@@ -671,10 +706,10 @@ class PomlLspServer {
           severity: DiagnosticSeverity.Error,
           range: {
             start: doc.positionAt(0),
-            end: doc.positionAt(targetText.length)
+            end: doc.positionAt(targetText.length),
           },
           message: e.message,
-          source: 'POML Unknown Error (please report)'
+          source: 'POML Unknown Error (please report)',
         } as Diagnostic;
         if (src === textDocument.uri.toString()) {
           diagnostics.push(diag);
@@ -705,7 +740,7 @@ class PomlLspServer {
       this.telemetryReporter.reportTelemetry(TelemetryEvent.Hover, {
         rawText: textDocument.getText(),
         uri: textDocument.uri.toString(),
-        token: JSON.stringify(token)
+        token: JSON.stringify(token),
       });
       this.incrementStatistics('hover');
       const markdown = {
@@ -713,14 +748,14 @@ class PomlLspServer {
         value:
           token.type !== 'element' && token.attribute
             ? this.queryDocumentationForParameter(token.element!, token.attribute)
-            : this.queryDocumentationForComponent(token.element!)
+            : this.queryDocumentationForComponent(token.element!),
       };
       return {
         contents: markdown,
         range: {
           start: textDocument.positionAt(token.range.start),
-          end: textDocument.positionAt(token.range.end + 1)
-        }
+          end: textDocument.positionAt(token.range.end + 1),
+        },
       };
     }
   }
@@ -747,7 +782,7 @@ class PomlLspServer {
     if (doc === undefined) {
       return `Documentation unavailable for ${component.name}.`;
     } else {
-      const param = doc.params.find(param => param.name === parameter);
+      const param = doc.params.find((param) => param.name === parameter);
       if (param === undefined) {
         return `Documentation unavailable for ${parameter} in component ${component.name}.`;
       } else {
@@ -769,9 +804,9 @@ class PomlLspServer {
       return {
         range: {
           start: textDocument.positionAt(suggestion.range.start),
-          end: textDocument.positionAt(suggestion.range.end + 1)
+          end: textDocument.positionAt(suggestion.range.end + 1),
         },
-        newText: content
+        newText: content,
       };
     };
 
@@ -784,7 +819,7 @@ class PomlLspServer {
           kind: CompletionItemKind.Class,
           textEdit: toTextEdit(suggestion, suggestion.element!),
           data: suggestion,
-          command
+          command,
         };
       } else if (suggestion.type === 'attribute' && suggestion.attribute !== undefined) {
         return {
@@ -792,7 +827,7 @@ class PomlLspServer {
           kind: CompletionItemKind.Property,
           textEdit: toTextEdit(suggestion, suggestion.attribute),
           data: suggestion,
-          command
+          command,
         };
       } else if (suggestion.type === 'attributeValue' && suggestion.value !== undefined) {
         return {
@@ -800,13 +835,13 @@ class PomlLspServer {
           kind: CompletionItemKind.Value,
           textEdit: toTextEdit(suggestion, suggestion.value),
           data: suggestion,
-          command
+          command,
         };
       } else {
         return undefined;
       }
     });
-    const result = vscodeSuggestions.filter(suggestion => suggestion !== undefined);
+    const result = vscodeSuggestions.filter((suggestion) => suggestion !== undefined);
     this.incrementStatistics('completion');
     this.incrementStatistics('completionItems', result.length);
     return result;
@@ -821,7 +856,7 @@ class PomlLspServer {
       item.detail = suggestion.element! + ' (Component)';
       item.documentation = {
         kind: MarkupKind.Markdown,
-        value: this.queryDocumentationForComponent(suggestion.element!)
+        value: this.queryDocumentationForComponent(suggestion.element!),
       };
     } else if (
       (suggestion.type === 'attribute' || suggestion.type === 'attributeValue') &&
@@ -830,7 +865,7 @@ class PomlLspServer {
       item.detail = suggestion.attribute + ' (Parameter of ' + suggestion.element! + ')';
       item.documentation = {
         kind: MarkupKind.Markdown,
-        value: this.queryDocumentationForParameter(suggestion.element!, suggestion.attribute)
+        value: this.queryDocumentationForParameter(suggestion.element!, suggestion.attribute),
       };
     }
     this.incrementStatistics('completionResolve');

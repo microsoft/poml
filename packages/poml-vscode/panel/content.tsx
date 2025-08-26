@@ -2,6 +2,12 @@ import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { PreviewResponse, WebviewState, WebviewUserOptions } from './types';
 import { Message, RichContent, SourceMapMessage, SourceMapRichContent } from 'poml';
+import {
+  ContentMultiMediaToolRequest,
+  ContentMultiMediaToolResponse,
+  ContentMultiMediaJson,
+  ContentMultiMediaBinary,
+} from 'poml/base';
 import { Converter as MarkdownConverter } from 'showdown';
 
 type HeadlessPomlVscodePanelContentProps = WebviewUserOptions & PreviewResponse;
@@ -19,10 +25,10 @@ function ButtonContent(props: { icon: string; content: string }) {
   const { icon, content } = props;
   return (
     <>
-      <div className="avatar">
+      <div className='avatar'>
         <i className={`codicon codicon-${icon}`}></i>
       </div>
-      <div className="content">{content}</div>
+      <div className='content'>{content}</div>
     </>
   );
 }
@@ -33,81 +39,91 @@ function ToolBar(props: WebviewUserOptions) {
   const applicableDisplayFormats = [
     { value: 'rendered', content: 'Rendered' },
     { value: 'plain', content: 'Plain Text' },
-    { value: 'ir', content: 'IR (debug mode)' }
+    { value: 'ir', content: 'IR (debug mode)' },
   ];
 
   return (
-    <div className="toolbar">
-      <div className="toolbar-buttons">
-        <div className="button oneclick" id="copy" role="button" tabIndex={0} aria-label="Copy content">
-          <ButtonContent icon="copy" content="Copy" />
+    <div className='toolbar'>
+      <div className='toolbar-buttons'>
+        <div className='button oneclick' id='copy' role='button' tabIndex={0} aria-label='Copy content'>
+          <ButtonContent icon='copy' content='Copy' />
         </div>
 
         <div
           className={`button onoff ${props.contexts.length + props.stylesheets.length ? 'active' : ''}`}
-          id="context-stylesheet"
-          role="button"
+          id='context-stylesheet'
+          role='button'
           tabIndex={0}
-          aria-label="Toggle context and stylesheet view"
-        >
-          <ButtonContent icon="references" content="Context & Stylesheet" />
+          aria-label='Toggle context and stylesheet view'>
+          <ButtonContent icon='references' content='Context & Stylesheet' />
           {props.contexts.length + props.stylesheets.length > 0 && (
-            <div className="badge">
-              {props.contexts.length + props.stylesheets.length}
-            </div>
+            <div className='badge'>{props.contexts.length + props.stylesheets.length}</div>
           )}
         </div>
 
         <div
           className={`button onoff ${speakerMode ? 'active' : ''}`}
-          id="speaker-mode"
+          id='speaker-mode'
           data-value={speakerMode}
-          role="button"
+          role='button'
           tabIndex={0}
-          aria-label="Toggle speaker mode"
-        >
-          <ButtonContent icon="comment-discussion" content="Speaker Mode" />
+          aria-label='Toggle speaker mode'>
+          <ButtonContent icon='comment-discussion' content='Speaker Mode' />
         </div>
-        <div className="button menu-selection" id="display-format" data-value={displayFormat} role="button" tabIndex={0} aria-label="Select display format">
+        <div
+          className='button menu-selection'
+          id='display-format'
+          data-value={displayFormat}
+          role='button'
+          tabIndex={0}
+          aria-label='Select display format'>
           <ButtonContent
-            icon="code-oss"
-            content={`Display: ${applicableDisplayFormats.find(val => val.value === displayFormat)?.content}`}
+            icon='code-oss'
+            content={`Display: ${applicableDisplayFormats.find((val) => val.value === displayFormat)?.content}`}
           />
-          <div className="expand">
-            <i className="codicon codicon-triangle-down"></i>
+          <div className='expand'>
+            <i className='codicon codicon-triangle-down'></i>
           </div>
-          <div className="menu">
-            {applicableDisplayFormats.map(item => (
+          <div className='menu'>
+            {applicableDisplayFormats.map((item) => (
               <div
                 className={`item ${displayFormat === item.value ? 'selected' : ''}`}
                 data-value={item.value}
                 key={item.value}
-                role="menuitem"
+                role='menuitem'
                 tabIndex={0}
-                aria-label={`Display format: ${item.content}`}
-              >
-                <ButtonContent icon="check" content={item.content} />
+                aria-label={`Display format: ${item.content}`}>
+                <ButtonContent icon='check' content={item.content} />
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className={`toolbar-files chips ${props.contexts.length + props.stylesheets.length ? '' : 'hidden'}`} id="context-stylesheet-files">
+      <div
+        className={`toolbar-files chips ${props.contexts.length + props.stylesheets.length ? '' : 'hidden'}`}
+        id='context-stylesheet-files'>
         {/* This is set on the client side. */}
       </div>
     </div>
   );
 }
 
-function CodeBlock(props: { className?: string; content: RichContent; mappings?: SourceMapRichContent[]; rawText?: string }) {
+function CodeBlock(props: {
+  className?: string;
+  content: RichContent;
+  mappings?: SourceMapRichContent[];
+  rawText?: string;
+}) {
   const { content, className, mappings, rawText } = props;
   if (mappings && rawText) {
     const spans = mappings.map((m, i) => {
       const text = typeof m.content === 'string' ? m.content : JSON.stringify(m.content, null, 2);
       const line = lineFromIndex(rawText, m.startIndex);
       return (
-        <span key={i} data-line={line} className="code-span">{text}</span>
+        <span key={i} data-line={line} className='code-span'>
+          {text}
+        </span>
       );
     });
     return (
@@ -136,22 +152,35 @@ function Markdown(props: { content: RichContent }) {
     headerLevelStart: 2,
     strikethrough: true,
     tables: true,
-    underline: true
+    underline: true,
   });
 
-  const concatenatedMarkdown =
-    typeof props.content === 'string'
-      ? props.content
-      : props.content
-        .map(part => {
-          if (typeof part === 'string') {
-            return part;
-          } else {
-            const { type, base64, alt } = part;
-            return `![${alt ?? ''}](data:${type};base64,${base64})`;
-          }
-        })
-        .join('\n\n');
+  const richContentToMarkdown = (content: RichContent): string => {
+    return typeof content === 'string'
+      ? content
+      : content
+          .map((part) => {
+            if (typeof part === 'string') {
+              return part;
+            } else if (part.type === 'application/json') {
+              return '```json\n' + JSON.stringify((part as ContentMultiMediaJson).content, null, 2) + '\n```';
+            } else if (part.type === 'application/vnd.poml.toolrequest') {
+              const requestPart = part as ContentMultiMediaToolRequest;
+              return `**Tool Request:** ${requestPart.name} (${requestPart.id})\n\nParameters:\n\`\`\`json\n${JSON.stringify(requestPart.content, null, 2)}\n\`\`\``;
+            } else if (part.type === 'application/vnd.poml.toolresponse') {
+              const responsePart = part as ContentMultiMediaToolResponse;
+              return `**Tool Response:** ${responsePart.name} (${responsePart.id})\n\n${richContentToMarkdown(responsePart.content)}`;
+            } else if (part.type.startsWith('image/')) {
+              const { type, base64, alt } = part as ContentMultiMediaBinary;
+              return `![${alt ?? ''}](data:${type};base64,${base64})`;
+            } else {
+              return `[Unsupported content type: ${part.type}]`;
+            }
+          })
+          .join('\n\n');
+  };
+
+  const concatenatedMarkdown = richContentToMarkdown(props.content);
 
   return <div dangerouslySetInnerHTML={{ __html: converter.makeHtml(concatenatedMarkdown) }} />;
 }
@@ -181,47 +210,40 @@ function ChatMessages(props: {
     } else if (role === 'ai') {
       role = 'AI';
       icon = 'robot';
+    } else if (role === 'tool') {
+      role = 'Tool';
+      icon = 'tools';
     }
     return (
       <div className={`chat-message chat-message-${message.speaker}`} key={`message-${idx}`} data-line={line}>
-        <div className="chat-message-header">
-          <div className="content">
-            <div className="avatar">
+        <div className='chat-message-header'>
+          <div className='content'>
+            <div className='avatar'>
               <div className={`codicon codicon-${icon}`}></div>
             </div>
-            <h3 className="name">
+            <h3 className='name'>
               {role}
-              {tokens && tokens[idx] !== undefined && (
-                <span className="token-count">{tokens[idx]} tokens</span>
-              )}
+              {tokens && tokens[idx] !== undefined && <span className='token-count'>{tokens[idx]} tokens</span>}
             </h3>
           </div>
-          <div className="chat-message-toolbar">
-            <div className="toolbar-item tooltip-anchor">
-              <a
-                className="codicon codicon-code"
-                role="button"
-                aria-label="Jump to Source Code"
-                data-line={line}
-              ></a>
-              <span className="tooltip">Source Code</span>
+          <div className='chat-message-toolbar'>
+            <div className='toolbar-item tooltip-anchor'>
+              <a className='codicon codicon-code' role='button' aria-label='Jump to Source Code' data-line={line}></a>
+              <span className='tooltip'>Source Code</span>
             </div>
-            <div className="toolbar-item tooltip-anchor">
+            <div className='toolbar-item tooltip-anchor'>
               <a
-                className="codicon codicon-copy"
-                role="button"
-                aria-label="Copy"
+                className='codicon codicon-copy'
+                role='button'
+                aria-label='Copy'
                 data-value={
-                  typeof message.content === 'string'
-                    ? message.content
-                    : JSON.stringify(message.content, null, 2)
-                }
-              ></a>
-              <span className="tooltip">Copy</span>
+                  typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)
+                }></a>
+              <span className='tooltip'>Copy</span>
             </div>
           </div>
         </div>
-        <div className="chat-message-content">
+        <div className='chat-message-content'>
           {toRender ? (
             <Markdown content={message.content} />
           ) : (
@@ -231,52 +253,51 @@ function ChatMessages(props: {
       </div>
     );
   });
-  return <div className="chat-messages">
-    {chatMessages}
-    {(responseSchema || tools || runtime) && (
-      <div className="chat-message">
-        <div className="chat-message-header">
-          <div className="content">
-            <div className="avatar">
-              <div className="codicon codicon-symbol-keyword"></div>
+  return (
+    <div className='chat-messages'>
+      {chatMessages}
+      {(responseSchema || tools || runtime) && (
+        <div className='chat-message'>
+          <div className='chat-message-header'>
+            <div className='content'>
+              <div className='avatar'>
+                <div className='codicon codicon-symbol-keyword'></div>
+              </div>
+              <h3 className='name'>Prompt Configuration</h3>
             </div>
-            <h3 className="name">
-              Meta information
-            </h3>
+          </div>
+          <div className='chat-message-content'>
+            {responseSchema && (
+              <>
+                <h4>Output Schema</h4>
+                <CodeBlock content={JSON.stringify(responseSchema, null, 2)} />
+              </>
+            )}
+            {tools && (
+              <>
+                <h4>Tool Definitions</h4>
+                <CodeBlock content={JSON.stringify(tools, null, 2)} />
+              </>
+            )}
+            {runtime && (
+              <>
+                <h4>Runtime Parameters</h4>
+                <CodeBlock content={JSON.stringify(runtime, null, 2)} />
+              </>
+            )}
           </div>
         </div>
-        <div className="chat-message-content">
-          {responseSchema && (
-            <>
-              <h4>Response Schema</h4>
-              <CodeBlock content={JSON.stringify(responseSchema, null, 2)} />
-            </>
-          )}
-          {tools && (
-            <>
-              <h4>Tool Definitions</h4>
-              <CodeBlock content={JSON.stringify(tools, null, 2)} />
-            </>
-          )}
-          {runtime && (
-            <>
-              <h4>Runtime Parameters</h4>
-              <CodeBlock content={JSON.stringify(runtime, null, 2)} />
-            </>
-          )}
-        </div>
-      </div>)}
-  </div>;
+      )}
+    </div>
+  );
 }
 
 function Content(props: WebviewUserOptions & PreviewResponse) {
   let { displayFormat, ir, content, sourceMap, rawText, tokens, responseSchema, tools, runtime } = props;
 
-  let toCopy: string =
-    typeof content === 'string'
-      ? content
-      : JSON.stringify(content, null, 2);
+  let toCopy: string = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
   let result: React.ReactElement;
+  // eslint-disable-next-line no-prototype-builtins
   if (content.length > 0 && content[0].hasOwnProperty('speaker')) {
     content = content as Message[];
     if (displayFormat === 'ir') {
@@ -295,30 +316,49 @@ function Content(props: WebviewUserOptions & PreviewResponse) {
         />
       );
     } else if (displayFormat === 'rendered') {
-      result = <ChatMessages messages={content} toRender={true} tokens={tokens?.perMessage} responseSchema={responseSchema} tools={tools} runtime={runtime} />;
+      result = (
+        <ChatMessages
+          messages={content}
+          toRender={true}
+          tokens={tokens?.perMessage}
+          responseSchema={responseSchema}
+          tools={tools}
+          runtime={runtime}
+        />
+      );
     } else {
       result = <div>Invalid display format</div>;
     }
   } else {
     content = content as RichContent;
     if (displayFormat === 'ir') {
-      result = <div className="main-container"><CodeBlock content={ir} /></div>;
+      result = (
+        <div className='main-container'>
+          <CodeBlock content={ir} />
+        </div>
+      );
     } else if (displayFormat === 'plain') {
-      result = <div className="main-container"><CodeBlock content={content} mappings={sourceMap as SourceMapRichContent[]} rawText={rawText} /></div>;
+      result = (
+        <div className='main-container'>
+          <CodeBlock content={content} mappings={sourceMap as SourceMapRichContent[]} rawText={rawText} />
+        </div>
+      );
     } else if (displayFormat === 'rendered') {
-      result = <div className="main-container"><Markdown content={content} /></div>;
+      result = (
+        <div className='main-container'>
+          <Markdown content={content} />
+        </div>
+      );
     } else {
       result = <div>Invalid display format</div>;
     }
   }
 
   return (
-    <div className="main" id="content">
-      <div className="hidden" id="copy-content" data-value={toCopy} />
+    <div className='main' id='content'>
+      <div className='hidden' id='copy-content' data-value={toCopy} />
       {result}
-      {tokens && (
-        <div className="token-total">Total tokens: {tokens.total}</div>
-      )}
+      {tokens && <div className='token-total'>Total tokens: {tokens.total}</div>}
     </div>
   );
 }
@@ -328,16 +368,16 @@ function Root(props: PomlVscodePanelContentProps) {
   const nonce = new Date().getTime() + '' + new Date().getMilliseconds();
 
   return (
-    <html lang="en">
+    <html lang='en'>
       <head>
-        <meta httpEquiv="Content-type" content="text/html;charset=UTF-8" />
-        <meta id="webview-state" data-state={JSON.stringify(props)} />
+        <meta httpEquiv='Content-type' content='text/html;charset=UTF-8' />
+        <meta id='webview-state' data-state={JSON.stringify(props)} />
         <script src={extensionResourcePath('index.js')} nonce={nonce}></script>
-        <link href={extensionResourcePath('style.css')} rel="stylesheet" nonce={nonce} />
-        <link href={extensionResourcePath('codicons/codicon.css')} rel="stylesheet" nonce={nonce} />
+        <link href={extensionResourcePath('style.css')} rel='stylesheet' nonce={nonce} />
+        <link href={extensionResourcePath('codicons/codicon.css')} rel='stylesheet' nonce={nonce} />
         <base href={localResourcePath(state.source)} />
       </head>
-      <body className="vscode-body">
+      <body className='vscode-body'>
         <ToolBar {...state} />
         <Content {...state} />
       </body>

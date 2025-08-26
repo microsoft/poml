@@ -1,0 +1,305 @@
+===== system =====
+
+# Task
+
+From the email from employee, policy PDF and the budget CSV, select ONLY rules that apply to the extracted documents. Prefer numeric caps and binary requirements. Represent each as a compact rule object. Infer trip_context (is_international, trip_length_days) from dates/locations if available; if not infer conservative defaults.
+
+When considering rules, take into account: 
+
+- receipt threshold (> a specific number)
+- lodging $/night caps
+- meals per diem (domestic vs international)
+- ground transportation per-day and per-trip caps
+- rental car class restriction
+- communications cap/day and per-trip
+- visa/travel docs reimbursable per-trip cap
+- exceptions need CFO approval
+- ...
+
+**Hint:** Keep scope domestic/international as needed. Use USD per the budget table.
+
+# Travel Budget Table
+
+Category,Budget per Day,Budget per Trip,Notes
+Airfare,N/A,"$600 domestic / $1,200 international",Economy only
+Accommodation,$200/night,"$1,000 (5 nights)",Mid-range hotels
+Meals & Per Diem,$60/day (domestic) / $75/day (intl.),$420 (7-day trip domestic) / $525 (intl.),"Covers breakfast, lunch, dinner"
+Ground Transportation,$40/day,$250/trip,"Taxi, rideshare, public transport"
+Rental Car & Fuel,$50/day,$300/trip,Compact/mid-size only
+Mileage (personal car),IRS/local rate,As applicable,Must provide odometer record
+"Communications (Wi-Fi, roaming)",$15/day,$100/trip,Business use only
+Travel Insurance,N/A,$50/trip,Company-preferred provider
+Visa & Travel Documents,N/A,$150/trip,Includes required vaccinations
+Client Entertainment,N/A,$200/trip,Pre-approval required
+Supplies/Materials,$20/day,$100/trip,Office or meeting essentials
+Incidentals,$30/day,$150/trip,"Parking, tips, misc."
+Estimated Totals,—,"$3,500 – $4,000/trip",Varies by location & duration
+
+# Travel Policy Document
+
+## Travel & Expense Policy Document
+
+## 1. Introduction
+
+This Travel & Expense (T&E) Policy sets the framework for employees traveling on company business. It ensures fair, consistent, and responsible use of company resources, while enabling employees to conduct business effectively. This document applies to all full-time, part-time, and contract employees authorized to travel on behalf of the company.
+
+## 2. Objectives
+
+- Establish transparent rules for travel booking and expense reimbursement.
+- Provide clarity on allowable vs. non-allowable expenses.
+- Protect employees through safety, health, and insurance measures.
+- Support financial control and reporting requirements.
+- Encourage cost efficiency and sustainability in travel choices.
+
+## 3. Roles & Responsibilities
+
+- Employees: Plan cost-effective travel, obtain prior approval, and submit timely expense reports.
+- Managers: Approve travel in advance, verify business justification, review submitted claims.
+- Finance Department: Audit compliance, process reimbursements, update policy as needed.
+- HR / Admin: Ensure awareness of policies, provide support for travel arrangements.
+
+## 4. Travel Booking Guidelines
+
+- Approval Requirement: All travel must be pre-approved via the designated workflow tool.
+
+- Airfare:
+
+  - Economy class is mandatory unless >8-hour flights, where premium economy may be approved.
+  - Employees should book tickets at least 14 days in advance where possible.
+
+- Accommodation:
+
+  - Standard is mid-range hotels. The company does not cover luxury hotels or suites unless approved.
+  - Use corporate-negotiated rates where available.
+
+- Ground Transportation:
+
+  - Use ride-hailing apps, public transport, or economy rental cars.
+  - Car rentals should include insurance; luxury or specialty vehicles are not reimbursable.
+
+- Rail / Ferry Travel: Use standard or economy fares unless business necessity requires higher class.
+- Visa & Travel Documents: Company will reimburse required visas, entry permits, and vaccinations for business travel.
+
+## 5. Expense Eligibility
+
+Covered Expenses include but are not limited to:
+
+- Transportation (airfare, rail, rental cars, taxis, mileage reimbursement for personal vehicles).
+- Lodging (within approved nightly rates).
+- Meals and per diems.
+- Business-related communications (Wi-Fi, international roaming if pre-approved).
+- Travel insurance.
+- Client entertainment (requires pre-approval and itemized receipt).
+
+Non-Reimbursable Expenses include:
+
+- Alcohol (unless pre-approved for business entertainment).
+- Personal travel extensions.
+- Room service and minibar.
+- Spa, gym, or recreational activities.
+- Luxury upgrades (airline class, suites, concierge services).
+- Fines, penalties, or traffic violations.
+
+## 6. Per Diem & Allowances
+
+- Daily limits for meals and incidentals are set in the Travel Budget Table (Appendix A).
+- Per diem rates differ by domestic vs. international destinations.
+- Unused per diem amounts cannot be claimed as cash reimbursement.
+
+## 7. Advances & Company Cards
+
+- Travel Advances: Available for extended or international trips; must be reconciled within 30 days of return.
+- Company Cards: Issued to frequent travelers; must not be used for personal purchases.
+
+## 8. Expense Reporting Process
+
+1. Submit reports within 10 business days of travel completion.
+2. Attach itemized receipts for all expenses >$25.
+3. Include trip details, business purpose, and approver sign-off.
+4. Finance audits submissions and reimburses approved claims within 15 business days.
+
+## 9. Safety & Duty of Care
+
+- Employees must register all international travel with HR/Admin.
+- Emergency contact details must be provided before departure.
+- The company provides travel insurance covering medical emergencies, lost baggage, and accidents.
+- Employees are expected to comply with local laws and safety advisories.
+
+## 10. Sustainability Commitment
+
+- Preference for trains or buses for short-distance travel (<4 hours).
+- Encourage use of hotels with sustainability certifications.
+- Minimize printed documents; use digital resources.
+
+## 11. Compliance & Audit
+
+- Random audits will be conducted by Finance.
+- Fraudulent claims may result in disciplinary action up to termination.
+- Exceptions must be approved in writing by the CFO.
+
+===== human =====
+
+# Email from Employee
+
+```
+
+    Hi, I just got back from a business trip to New York. Attached are my expense reports.
+    Please let me know if you need any more information to process my reimbursement.
+    Thanks!
+    
+```
+
+# Extracted Documents
+
+```xml
+<item>
+  <source>assets/203_flight_itinerary.pdf</source>
+  <doc_type>flight_itinerary</doc_type>
+  <merchant>Sample Air</merchant>
+  <currency>USD</currency>
+  <lines>
+    <item>
+      <date>2025-10-01</date>
+      <description>Flight XY123 Sample Air New York (JFK) to London (LHR)</description>
+      <category>airfare</category>
+      <amount>0</amount>
+    </item>
+    <item>
+      <date>2025-10-10</date>
+      <description>Flight XY124 Sample Air London (LHR) to New York (JFK)</description>
+      <category>airfare</category>
+      <amount>0</amount>
+    </item>
+  </lines>
+  <subtotals_by_category>
+    <item>
+      <category>airfare</category>
+      <amount>0</amount>
+    </item>
+  </subtotals_by_category>
+</item>
+<item>
+  <source>assets/203_hotel_invoice.pdf</source>
+  <doc_type>hotel_invoice</doc_type>
+  <merchant>Hotel Paradise</merchant>
+  <currency>USD</currency>
+  <lines>
+    <item>
+      <date/>
+      <description>Deluxe Room 4 nights @ $150</description>
+      <category>lodging</category>
+      <amount>600</amount>
+    </item>
+    <item>
+      <date/>
+      <description>Breakfast 4 @ $20</description>
+      <category>meals</category>
+      <amount>80</amount>
+    </item>
+    <item>
+      <date/>
+      <description>Airport Pickup</description>
+      <category>ground_transportation</category>
+      <amount>50</amount>
+    </item>
+  </lines>
+  <subtotals_by_category>
+    <item>
+      <category>lodging</category>
+      <amount>600</amount>
+    </item>
+    <item>
+      <category>meals</category>
+      <amount>80</amount>
+    </item>
+    <item>
+      <category>ground_transportation</category>
+      <amount>50</amount>
+    </item>
+  </subtotals_by_category>
+</item>
+<item>
+  <source>assets/203_meal_receipt.png</source>
+  <doc_type>receipt</doc_type>
+  <merchant/>
+  <currency>USD</currency>
+  <lines>
+    <item>
+      <date>2024-04-16</date>
+      <description>CHEESEBURGER</description>
+      <category>meals</category>
+      <amount>10.99</amount>
+    </item>
+    <item>
+      <date>2024-04-16</date>
+      <description>FRIED CHICKEN</description>
+      <category>meals</category>
+      <amount>13.5</amount>
+    </item>
+    <item>
+      <date>2024-04-16</date>
+      <description>FRENCH FRIES</description>
+      <category>meals</category>
+      <amount>4.5</amount>
+    </item>
+    <item>
+      <date>2024-04-16</date>
+      <description>ICE CREAM</description>
+      <category>meals</category>
+      <amount>2.5</amount>
+    </item>
+  </lines>
+  <subtotals_by_category>
+    <item>
+      <category>meals</category>
+      <amount>31.49</amount>
+    </item>
+  </subtotals_by_category>
+</item>
+<item>
+  <source>assets/203_taxi_receipt.png</source>
+  <doc_type>receipt</doc_type>
+  <merchant>Taxi Receipt</merchant>
+  <currency>USD</currency>
+  <lines>
+    <item>
+      <date>2024-04-05</date>
+      <description>Miles</description>
+      <category>miles</category>
+      <amount>8.4</amount>
+    </item>
+    <item>
+      <date>2024-04-05</date>
+      <description>Fare</description>
+      <category>ground_transportation</category>
+      <amount>23.5</amount>
+    </item>
+    <item>
+      <date>2024-04-05</date>
+      <description>Tax</description>
+      <category>tax</category>
+      <amount>1</amount>
+    </item>
+    <item>
+      <date>2024-04-05</date>
+      <description>Total</description>
+      <category>total</category>
+      <amount>24.5</amount>
+    </item>
+  </lines>
+  <subtotals_by_category>
+    <item>
+      <category>miles</category>
+      <amount>8.4</amount>
+    </item>
+    <item>
+      <category>ground_transportation</category>
+      <amount>23.5</amount>
+    </item>
+    <item>
+      <category>tax</category>
+      <amount>1</amount>
+    </item>
+  </subtotals_by_category>
+</item>
+```

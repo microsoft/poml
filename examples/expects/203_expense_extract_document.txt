@@ -1,0 +1,16 @@
+===== human =====
+
+# Task
+
+Classify travel docs and extract with high recall. Return numbers as numbers. Compute ONLY per-document subtotals_by_category (no combined totals).
+
+# File: assets/203_flight_itinerary.pdf
+
+Flight Itinerary
+Passenger Name John Doe
+Booking Reference ABC123
+Flight Airline From To Date Departure Arrival
+XY123 Sample Air New York (JFK) London (LHR) 01-Oct-2025 18:30 06:45
+XY124 Sample Air London (LHR) New York (JFK) 10-Oct-2025 10:00 13:00
+
+**Hint:** For each file, return JSON per schema. If unknown, omit. Avoid hallucinating.

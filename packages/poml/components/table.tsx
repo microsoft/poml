@@ -4,7 +4,7 @@ import { PropsSyntaxBase, computeSyntaxContext } from 'poml/essentials';
 import { component, expandRelative } from 'poml/base';
 import { parseText, guessStringType, AnyValue } from 'poml/util';
 import { csvParse, tsvParse, DSVRowArray } from 'd3-dsv';
-import { readFileSync } from '../util/fs';
+import { readFileSync } from 'fs';
 import * as XLSX from 'xlsx';
 import { parsePythonStyleSlice } from './utils';
 
@@ -75,22 +75,20 @@ function postProcessD3Records(records: DSVRowArray<string>): RecordColumns {
     (prev, column) => {
       prev[column] = 'string';
       if (records.length > 0) {
-        const types = records.map(record => guessStringType(record[column])[1]);
-        if (types.every(type => type === 'boolean')) {
+        const types = records.map((record) => guessStringType(record[column])[1]);
+        if (types.every((type) => type === 'boolean')) {
           prev[column] = 'boolean';
-        } else if (types.every(type => type === 'integer' || type === 'boolean')) {
+        } else if (types.every((type) => type === 'integer' || type === 'boolean')) {
           prev[column] = 'integer';
-        } else if (
-          types.every(type => type === 'float' || type === 'integer' || type === 'boolean')
-        ) {
+        } else if (types.every((type) => type === 'float' || type === 'integer' || type === 'boolean')) {
           prev[column] = 'float';
-        } else if (types.every(type => type === 'array' || type === 'object')) {
+        } else if (types.every((type) => type === 'array' || type === 'object')) {
           prev[column] = 'object';
         }
       }
       return prev;
     },
-    {} as Record<string, AnyValue>
+    {} as Record<string, AnyValue>,
   );
 
   return {
@@ -104,9 +102,9 @@ function postProcessD3Records(records: DSVRowArray<string>): RecordColumns {
           }
           return prev;
         }, {} as any);
-      })
+      }),
     ],
-    columns: columns
+    columns: columns,
   };
 }
 
@@ -132,7 +130,7 @@ function parseExcel(data: Buffer): RecordColumns {
     return { records: [] };
   }
   const headers = rawData[0] as string[];
-  const columns = headers.map(header => ({ field: header, header }));
+  const columns = headers.map((header) => ({ field: header, header }));
   const records = rawData.slice(1).map((row: any) => {
     const record: Record<string, any> = {};
     headers.forEach((header, index) => {
@@ -153,14 +151,14 @@ function parseJsonl(data: Buffer): RecordColumns {
       .toString('utf-8')
       .trim()
       .split('\n')
-      .map(line => JSON.parse(line))
+      .map((line) => JSON.parse(line)),
   };
 }
 
 function columnRecordsSelector(
   records: any[],
   columns: ColumnDefinition[] | undefined,
-  props: TableProps
+  props: TableProps,
 ): RecordColumns {
   const { selectedColumns, selectedRecords, maxRecords, maxColumns } = props;
   if (!selectedColumns && !selectedRecords && !maxRecords && !maxColumns) {
@@ -169,8 +167,8 @@ function columnRecordsSelector(
   if (selectedColumns && columns) {
     let newColumns: ColumnDefinition[];
     if (Array.isArray(selectedColumns)) {
-      newColumns = selectedColumns.map(columnName => {
-        const found = columns!.find(column => column.field === columnName);
+      newColumns = selectedColumns.map((columnName) => {
+        const found = columns!.find((column) => column.field === columnName);
         if (found) {
           return found;
         }
@@ -203,7 +201,7 @@ function columnRecordsSelector(
   }
   if (selectedRecords) {
     if (Array.isArray(selectedRecords)) {
-      records = selectedRecords.map(index => records[index]);
+      records = selectedRecords.map((index) => records[index]);
     } else if (typeof selectedRecords === 'string') {
       const [start, end] = parsePythonStyleSlice(selectedRecords, records.length);
       records = records.slice(start, end);
@@ -214,17 +212,14 @@ function columnRecordsSelector(
   if (maxRecords && records.length > maxRecords) {
     const topRows = Math.ceil(maxRecords / 2);
     const bottomRows = Math.floor(maxRecords / 2);
-    const ellipseRecord = (
-      columns ? columns.map(column => column.field) : Object.keys(records[0])
-    ).reduce((prev, column) => {
-      prev[column] = '...';
-      return prev;
-    }, {} as any);
-    records = [
-      ...records.slice(0, topRows),
-      ellipseRecord,
-      ...records.slice(-bottomRows)
-    ];
+    const ellipseRecord = (columns ? columns.map((column) => column.field) : Object.keys(records[0])).reduce(
+      (prev, column) => {
+        prev[column] = '...';
+        return prev;
+      },
+      {} as any,
+    );
+    records = [...records.slice(0, topRows), ellipseRecord, ...records.slice(-bottomRows)];
   }
   if (maxColumns && columns && columns.length > maxColumns) {
     const leftColumns = Math.ceil(maxColumns / 2);
@@ -232,9 +227,9 @@ function columnRecordsSelector(
     const newColumns = [
       ...columns.slice(0, leftColumns),
       { field: '...', header: '...' },
-      ...columns.slice(-rightColumns)
+      ...columns.slice(-rightColumns),
     ];
-    records = records.map(record => {
+    records = records.map((record) => {
       return newColumns.reduce((prev, column) => {
         prev[column.field] = column.field === '...' ? '...' : record[column.field];
         return prev;
@@ -253,10 +248,10 @@ export function toRecordColumns(props: TableProps): RecordColumns {
     }
     if (records.length > 0 && Array.isArray(records[0])) {
       // Converting to object records
-      const maxColumns = Math.max(...records.map(record => record.length));
+      const maxColumns = Math.max(...records.map((record) => record.length));
       const columns = Array.from({ length: maxColumns }, (_, i) => ({
         field: i.toString(),
-        header: 'Column ' + i.toString()
+        header: 'Column ' + i.toString(),
       }));
       records = records.map((record: any) => {
         return columns.reduce((prev, column, index) => {
@@ -299,14 +294,14 @@ const TableMarkup = component('TableMarkup')(({
 }: RecordColumns & PropsSyntaxBase) => {
   if (columns === undefined) {
     const keys = Object.keys(records[0]);
-    records.forEach(record => {
+    records.forEach((record) => {
       Object.keys(record).forEach((key: any) => {
         if (!keys.includes(key)) {
           keys.push(key);
         }
       });
     });
-    columns = keys.map(key => ({ field: key, header: key }));
+    columns = keys.map((key) => ({ field: key, header: key }));
   }
   return (
     <Markup.TableContainer markupLang={syntax} {...others}>
@@ -343,7 +338,7 @@ const TableSerialize = component('TableSerialize')(({
       <Serialize.Object
         data={{
           columns: columns,
-          records: records
+          records: records,
         }}
         serializer={syntax}
         {...others}
@@ -377,9 +372,9 @@ const TableSerialize = component('TableSerialize')(({
  * ```xml
  * <table records="{{[{ name: 'Alice', age: 20 }, { name: 'Bob', age: 30 }]}}" />
  * ```
- * 
+ *
  * To import an excel file, and display the first 10 records in csv syntax:
- * 
+ *
  * ```xml
  * <table src="data.xlsx" parser="excel" maxRecords="10" syntax="csv" />
  * ```

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+out/
+assets/
+**/*.d.ts
+mlartifacts/
+mlruns/
+mlrun/
+pomlrun/
+test-results/
+test-artifacts/
+
+# Generated files
+docs/language/components.md
+*.context.json
+*.result.json
+python/poml/js/cli.js

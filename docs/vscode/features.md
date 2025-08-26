@@ -54,8 +54,8 @@ Autocompletion assists you by suggesting component tags, attribute names, and po
 While editing a `.poml` file in VSCode:
 
 - **Tag Completion:** Start typing a tag name (e.g., `<p`). VSCode with the POML extension will offer completions, such as `<p>`, `<paragraph>`, or other available components. It also suggests closing tags.
-- **Attribute Completion:** Inside an opening tag, type a space or start typing an attribute name (e.g., `class`).  You'll see suggestions for valid attributes for that component (e.g., `className`).
-- **Attribute Value Completion:**  For some attributes, POML can suggest possible values. For example, if you type `<question speaker="`, you might see suggestions like `"human"` or `"ai"`.
+- **Attribute Completion:** Inside an opening tag, type a space or start typing an attribute name (e.g., `class`). You'll see suggestions for valid attributes for that component (e.g., `className`).
+- **Attribute Value Completion:** For some attributes, POML can suggest possible values. For example, if you type `<question speaker="`, you might see suggestions like `"human"` or `"ai"`.
 
 This feature significantly improves the efficiency and accuracy of writing POML code.
 
@@ -69,7 +69,7 @@ The POML extension provides CodeLens buttons that allow you to evaluate template
 
 1. **CodeLens Buttons**: When you open a `.poml` file, you'll see "▶️ Evaluate" buttons appearing above expressions and variables.
 2. **Click to Evaluate**: Click any "▶️ Evaluate" button to execute the expression and see its result.
-3. **View Output**: Go to View → Output in VS Code. Results are displayed in the **POML Language Server** output channel.
+3. **View Output**: Go to View → Output in VS Code. Results are displayed in the **POML Debug** output channel.
 
 #### What Gets Evaluated
 
@@ -78,7 +78,7 @@ The CodeLens evaluation feature works with:
 - **Template Expressions**: Any `{{ expression }}` in your POML content
 - **Variable Definitions**: `<let>` element value attributes
 - **Control Flow**: Expressions in `for` and `if` attributes
-- **Schema Expressions**: Expressions in meta elements with `lang="expr"`
+- **Schema Expressions**: Expressions in meta elements with `parser="eval"`
 
 #### Example
 
@@ -86,19 +86,20 @@ The CodeLens evaluation feature works with:
 <poml>
   <let name="items" value='["apple", "banana", "cherry"]' />
   <let name="count" value="items.length" />
-  
+
   <p>We have {{ count }} items: {{ items.join(', ') }}</p>
-  
-  <meta type="responseSchema" lang="expr">
+
+  <output-schema parser="eval">
     z.object({
       total: z.number().max(count),
       items: z.array(z.enum(items))
     })
-  </meta>
+  </output-schema>
 </poml>
 ```
 
 In this example, you can evaluate:
+
 - The `items` array definition to see `["apple", "banana", "cherry"]`
 - The `count` calculation to see `3`
 - The template expressions to see `"3"` and `"apple, banana, cherry"`
@@ -114,7 +115,7 @@ POML provides integrated testing capabilities that allow you to test your prompt
 
 Use the **Test current prompt on Chat Models** command to test your `.poml` file with chat-based language models. This sends your prompt to the configured language model and displays the response in VS Code's output panel.
 
-### Testing with Text Completion Models  
+### Testing with Text Completion Models
 
 For non-chat models, use the **Test current prompt on Text Completion Models** command. This is useful for testing prompts designed for text completion rather than conversational AI models.
 
@@ -127,17 +128,24 @@ The **Clear output and rerun last test** command allows you to quickly clear the
 If a test is taking too long or you need to stop it, use the **Abort current prompt test** command to cancel the ongoing request.
 
 Before testing prompts, make sure you have configured your [language model settings](./configuration.md):
+
 - Set your model provider (OpenAI, Azure OpenAI, Anthropic, or Google GenAI)
 - Configure your API key and endpoint URL
 - Choose your preferred model name
 
 ## Prompt Gallery
 
+<!-- prettier-ignore -->
+!!! warning
+
+    The Prompt Gallery is an experimental feature. It is likely to be removed after we find a replacement to use models from GitHub Copilot. Related discussions: [#102](https://github.com/microsoft/poml/pull/102).
+
 The Prompt Gallery provides access to pre-built prompt templates and allows you to manage your own custom prompts. Access it from the POML activity bar in VS Code.
 
 ### Built-in Templates
 
 The gallery includes several built-in prompt templates covering common use cases:
+
 - **Ask**: General question-answering prompts
 - **Chat**: Conversational prompts
 - **Edit**: Text editing and revision prompts
@@ -156,21 +164,21 @@ The usage of custom prompts are the same as built-in prompts. You can use them i
 
 ## List of Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `poml.test` | Test current prompt on Chat Models |
-| `poml.testNonChat` | Test current prompt on Text Completion Models |
-| `poml.testRerun` | Clear output and rerun last test |
-| `poml.testAbort` | Abort current prompt test |
-| `poml.showPreview` | Open POML Preview |
-| `poml.showPreviewToSide` | Open POML Preview to the Side |
-| `poml.showLockedPreviewToSide` | Open Locked POML Preview |
-| `poml.showSource` | Show Source File |
-| `poml.addContextFile` | Add Context File |
-| `poml.addStylesheetFile` | Add Stylesheet File |
-| `poml.removeContextFile` | Remove Context File |
-| `poml.removeStylesheetFile` | Remove Stylesheet File |
-| `poml.gallery.addPrompt` | Add Prompt to Gallery |
-| `poml.gallery.deletePrompt` | Delete Prompt from Gallery |
-| `poml.gallery.editPrompt` | Edit Prompt in Gallery |
-| `poml.telemetry.completion` | Telemetry: Completion |
+| Command                        | Description                                   |
+| ------------------------------ | --------------------------------------------- |
+| `poml.test`                    | Test current prompt on Chat Models            |
+| `poml.testNonChat`             | Test current prompt on Text Completion Models |
+| `poml.testRerun`               | Clear output and rerun last test              |
+| `poml.testAbort`               | Abort current prompt test                     |
+| `poml.showPreview`             | Open POML Preview                             |
+| `poml.showPreviewToSide`       | Open POML Preview to the Side                 |
+| `poml.showLockedPreviewToSide` | Open Locked POML Preview                      |
+| `poml.showSource`              | Show Source File                              |
+| `poml.addContextFile`          | Add Context File                              |
+| `poml.addStylesheetFile`       | Add Stylesheet File                           |
+| `poml.removeContextFile`       | Remove Context File                           |
+| `poml.removeStylesheetFile`    | Remove Stylesheet File                        |
+| `poml.gallery.addPrompt`       | Add Prompt to Gallery                         |
+| `poml.gallery.deletePrompt`    | Delete Prompt from Gallery                    |
+| `poml.gallery.editPrompt`      | Edit Prompt in Gallery                        |
+| `poml.telemetry.completion`    | Telemetry: Completion                         |

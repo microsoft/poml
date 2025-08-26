@@ -1,6 +1,0 @@
-<poml>
-  <task>You are a senior Python developer. Please explain the code.</task>
-  <code inline="false">
-  <document src="{{ code_path }}" parser="txt" />
-  </code>
-</poml>

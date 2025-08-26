@@ -3,16 +3,16 @@ name: PyPI Release
 on:
   push:
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0, v1.2.3, etc.
+      - 'v*' # Trigger on version tags like v1.0.0, v1.2.3, etc.
   schedule:
     # Run daily at 10:00 PM UTC for nightly builds
     - cron: '0 22 * * *'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   check-version:
     if: startsWith(github.ref, 'refs/tags/')
-    uses: ./.github/workflows/check-version.yml
+    uses: ./.github/workflows/shared-check-version.yml
 
   generate-timestamp:
     runs-on: ubuntu-latest
@@ -31,7 +31,7 @@ jobs:
             echo "type=production" >> $GITHUB_OUTPUT
             echo "Build type: production"
           fi
-      
+
       - name: Generate timestamp
         id: timestamp
         shell: bash
@@ -60,12 +60,12 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
       contents: read
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
@@ -74,7 +74,7 @@ jobs:
       - name: Use Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - run: npm ci
       - run: npm run build-webview
       - run: npm run build-cli
@@ -119,13 +119,13 @@ jobs:
             exit 1
           fi
           echo "Original wheel: $WHEEL_FILE"
-          
+
           # Parse the original wheel filename to extract components
           WHEEL_NAME=$(basename "$WHEEL_FILE" .whl)
-          
+
           # Split wheel name into components: name-version-python_tag-abi_tag-platform_tag
           IFS='-' read -ra PARTS <<< "$WHEEL_NAME"
-          
+
           if [ ${#PARTS[@]} -ge 5 ]; then
             DIST_NAME="${PARTS[0]}"
             VERSION="${PARTS[1]}"
@@ -137,11 +137,11 @@ jobs:
             echo "Warning: Unexpected wheel filename format: $WHEEL_NAME"
             exit 1
           fi
-          
+
           # Create platform-specific wheel name
           PLATFORM_WHEEL="${DIST_NAME}-${VERSION}-${PYTHON_TAG}-${ABI_TAG}-${{ matrix.wheel_platform }}.whl"
           echo "Platform-specific wheel: $PLATFORM_WHEEL"
-          
+
           # Rename the wheel file
           mv "$WHEEL_FILE" "dist/$PLATFORM_WHEEL"
           echo "wheel-file=dist/$PLATFORM_WHEEL" >> $GITHUB_OUTPUT

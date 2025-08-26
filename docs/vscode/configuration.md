@@ -18,6 +18,24 @@ Configure POML in VS Code settings (`Ctrl+,` or `Cmd+,`).
 }
 ```
 
+For multiple providers with different API keys, which is useful when overriding the default provider setting in POML files:
+
+```json
+{
+  "poml.languageModel.provider": "openai",
+  "poml.languageModel.model": "gpt-4o",
+  "poml.languageModel.apiKey": {
+    "openai": "sk-your-openai-key",
+    "anthropic": "sk-ant-your-anthropic-key",
+    "google": "your-google-key"
+  },
+  "poml.languageModel.apiUrl": {
+    "openai": "https://api.openai.com/v1/",
+    "microsoft": "https://your-resource.openai.azure.com/"
+  }
+}
+```
+
 ## Language Model Configuration
 
 The following settings mainly control the language model used for POML testing feature within VSCode.
@@ -30,7 +48,7 @@ The following settings mainly control the language model used for POML testing f
 }
 ```
 
-**Options:** `openai`, `microsoft`, `anthropic`, `google`  
+**Options:** `openai`, `openaiResponse`, `microsoft`, `anthropic`, `google`
 **Default:** `openai`
 
 ### Model Name
@@ -40,6 +58,7 @@ The following settings mainly control the language model used for POML testing f
   "poml.languageModel.model": "gpt-4o"
 }
 ```
+
 **Default:** `gpt-4o`  
 For Azure OpenAI, use the deployment name. For other providers, use the model code name.
 
@@ -50,6 +69,7 @@ For Azure OpenAI, use the deployment name. For other providers, use the model co
   "poml.languageModel.temperature": 0.5
 }
 ```
+
 **Default:** `0.5`  
 **Range:** `0.0` to `2.0`  
 Controls randomness in responses. Lower values are more deterministic.
@@ -61,6 +81,7 @@ Controls randomness in responses. Lower values are more deterministic.
   "poml.languageModel.maxTokens": 2000
 }
 ```
+
 **Default:** `0` (unlimited)  
 Maximum number of completion tokens to generate.
 
@@ -71,7 +92,26 @@ Maximum number of completion tokens to generate.
   "poml.languageModel.apiKey": "your-api-key-here"
 }
 ```
+
+Or use provider-specific keys:
+
+```json
+{
+  "poml.languageModel.apiKey": {
+    "openai": "sk-your-openai-key",
+    "anthropic": "sk-ant-your-anthropic-key",
+    "google": "your-google-key",
+    "microsoft": "your-azure-key"
+  }
+}
+```
+
 **Required** for most providers. Keep this secure and never commit to version control.
+
+The API key can be:
+
+- A **string** for a single key used across all providers
+- An **object** with provider-specific keys, useful when switching between providers or when prompts override the provider at runtime
 
 ### API URL
 
@@ -80,10 +120,34 @@ Maximum number of completion tokens to generate.
   "poml.languageModel.apiUrl": "https://api.openai.com/v1/"
 }
 ```
+
+Or use provider-specific URLs:
+
+```json
+{
+  "poml.languageModel.apiUrl": {
+    "openai": "https://api.openai.com/v1/",
+    "microsoft": "https://westeurope.api.cognitive.microsoft.com/",
+    "anthropic": "https://api.anthropic.com/"
+  }
+}
+```
+
 **Examples:**
+
 - OpenAI: `https://api.openai.com/v1/`
-- Azure OpenAI: `https://westeurope.api.cognitive.microsoft.com/`
+- Azure OpenAI: `https://westeurope.api.cognitive.microsoft.com/openai`
 - Custom OpenAI-compatible: `https://api.example.com/v2/`
+
+The API URL can be:
+
+- A **string** for a single URL used across all providers
+- An **object** with provider-specific URLs, useful when different providers require different endpoints
+
+<!-- prettier-ignore -->
+!!! warning
+
+    If you are using Azure OpenAI and encounter a `Resource not found` error, you may want to change the configuration from `https://xxx.cognitiveservices.azure.com/` to `https://xxx.cognitiveservices.azure.com/openai` or vice versa. Refer to [Vercel AI Azure Provider](https://ai-sdk.dev/providers/ai-sdk-providers/azure) for more details.
 
 ### API Version
 
@@ -92,11 +156,13 @@ Maximum number of completion tokens to generate.
   "poml.languageModel.apiVersion": "2024-02-15-preview"
 }
 ```
+
 **Optional** - Mainly used for OpenAI and Azure OpenAI services.
 
 ### Provider-Specific Examples
 
 #### Azure OpenAI
+
 ```json
 {
   "poml.languageModel.provider": "microsoft",
@@ -108,6 +174,7 @@ Maximum number of completion tokens to generate.
 ```
 
 #### Anthropic Claude
+
 ```json
 {
   "poml.languageModel.provider": "anthropic",
@@ -117,6 +184,7 @@ Maximum number of completion tokens to generate.
 ```
 
 #### Google Gemini
+
 ```json
 {
   "poml.languageModel.provider": "google",
@@ -137,6 +205,7 @@ Maximum number of completion tokens to generate.
   "poml.scrollEditorWithPreview": true
 }
 ```
+
 **Default:** `true`  
 Synchronize scrolling between editor and preview panes.
 
@@ -148,17 +217,20 @@ Synchronize scrolling between editor and preview panes.
   "poml.doubleClickToSwitchToEditor": true
 }
 ```
+
 **Default:** `true`  
 Highlight current editor selection in preview and enable double-click navigation.
 
 ## Development Settings
 
 ### Debugging
+
 ```json
 {
   "poml.trace": "verbose"
 }
 ```
+
 **Options:** `off`, `verbose`  
 **Default:** `off`
 
@@ -171,5 +243,6 @@ Enable detailed tracing for troubleshooting.
   "poml.telemetry.connection": ""
 }
 ```
+
 **Default:** `""` (empty)  
 Development setting for telemetry connection string.

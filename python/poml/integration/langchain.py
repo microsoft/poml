@@ -1,15 +1,17 @@
 from pathlib import Path
-from typing import Union, Any
-from typing_extensions import override
-from poml.api import poml
-from langchain_core.prompts import PromptTemplate
+from typing import Any, Union
+
 from langchain_core.messages import messages_from_dict
 from langchain_core.prompt_values import ChatPromptValue, StringPromptValue
+from langchain_core.prompts import PromptTemplate
+from typing_extensions import override
+
+from poml.api import poml
 
 
 def poml_formatter(markup: Union[str, Path], speaker_mode: bool, context: dict | None = None):
-    messages = poml(markup, chat=speaker_mode, context=context, format="langchain")
-    return messages_from_dict(messages)
+    response = poml(markup, chat=speaker_mode, context=context, format="langchain")
+    return messages_from_dict(response["messages"])
 
 
 class LangchainPomlTemplate(PromptTemplate):

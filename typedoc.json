@@ -1,7 +1,7 @@
 {
   "entryPoints": [
     "packages/poml/index.ts",
-    "packages/poml/base.tsx", 
+    "packages/poml/base.tsx",
     "packages/poml/cli.ts",
     "packages/poml/essentials.tsx",
     "packages/poml/file.tsx",
@@ -22,7 +22,7 @@
   "name": "POML TypeScript API",
   "hideBreadcrumbs": true,
   "hidePageTitle": true,
-  "cleanOutputDir": false,
+  "cleanOutputDir": true,
   "outputFileStrategy": "modules",
   "mergeReadme": false,
   "indexFormat": "table",

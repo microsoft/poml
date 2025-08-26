@@ -1,0 +1,100 @@
+name: Test on Nightly Packages
+
+on:
+  schedule:
+    - cron: '0 23 * * *' # After package publish
+  workflow_dispatch:
+
+jobs:
+  node-package-test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+          - os: macos-latest
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Create clean test environment
+        run: |
+          mkdir -p ${{ runner.temp }}/poml_test
+          cp -r examples ${{ runner.temp }}/poml_test/
+        shell: bash
+      - name: Install POML nightly
+        run: |
+          cd ${{ runner.temp }}/poml_test
+          npm init -y
+          npm install pomljs@nightly
+        shell: bash
+      - name: Copy and test API example
+        run: |
+          cp examples/401_js_hello_world.mjs ${{ runner.temp }}/poml_test/
+          cd ${{ runner.temp }}/poml_test
+          node 401_js_hello_world.mjs
+        shell: bash
+      - name: Test all .poml examples
+        run: |
+          cd ${{ runner.temp }}/poml_test
+          set -ex
+          for poml_file in examples/*.poml; do
+            echo "Testing $poml_file"
+            # Check if context file exists
+            if [ -f "${poml_file%.poml}.context.json" ]; then
+              npx poml -f "$poml_file" --context-file "${poml_file%.poml}.context.json"
+            else
+              npx poml -f "$poml_file"
+            fi
+          done
+        shell: bash
+
+  python-package-test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+          - os: macos-latest
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Create clean test environment
+        run: |
+          mkdir -p ${{ runner.temp }}/poml_test
+          cp -r examples ${{ runner.temp }}/poml_test/
+        shell: bash
+      - run: |
+          pip install --upgrade --pre --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ poml
+        shell: bash
+      - name: Copy and test API example
+        run: |
+          cp examples/402_py_hello_world.py ${{ runner.temp }}/poml_test/
+          cd ${{ runner.temp }}/poml_test
+          python 402_py_hello_world.py
+        shell: bash
+      - name: Test all .poml examples
+        run: |
+          cd ${{ runner.temp }}/poml_test
+          set -ex
+          for poml_file in examples/*.poml; do
+            echo "Testing $poml_file"
+            # Check if context file exists
+            if [ -f "${poml_file%.poml}.context.json" ]; then
+              poml-cli -f "$poml_file" --context-file "${poml_file%.poml}.context.json"
+            else
+              poml-cli -f "$poml_file"
+            fi
+          done
+        shell: bash

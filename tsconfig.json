@@ -9,7 +9,7 @@
     "rootDir": "packages",
     "jsx": "react",
     "allowJs": true,
-    "strict": true, /* enable all strict type-checking options */
+    "strict": true /* enable all strict type-checking options */,
     "isolatedModules": true,
     /* Additional Checks */
     // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
@@ -21,11 +21,10 @@
       "poml-vscode": ["packages/poml-vscode"],
       "poml-vscode/*": ["packages/poml-vscode/*"]
     },
-    "plugins": [
-      { "transform": "typescript-transform-paths" }
-    ],
+    "plugins": [{ "transform": "typescript-transform-paths" }],
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": ["packages/**/*"]
+  "include": ["packages/**/*"],
+  "exclude": ["packages/poml-browser/**/*"]
 }

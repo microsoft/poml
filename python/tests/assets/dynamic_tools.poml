@@ -1,0 +1,21 @@
+<poml>
+  <system-msg>{{ system }}</system-msg>
+  <human-msg>{{ input }}</human-msg>
+
+  <!-- The for loop in external div will be merged into tool-definition in future. -->
+  <div for="tool in tools">
+    <tool-definition name="{{ tool.name }}" description="{{ tool.description }}">
+      {{ tool.schema }}
+    </tool-definition>
+  </div>
+
+  <div for="i in interactions">
+    <tool-request for="res in i" id="{{ res.id }}" name="{{ res.name }}" parameters="{{ res.input }}" />
+    <tool-response for="res in i" id="{{ res.id }}" name="{{ res.name }}">
+      <object data="{{ res.output }}"/>
+    </tool-response>
+  </div>
+
+  <runtime model="gpt-4.1-nano"/>
+
+</poml>

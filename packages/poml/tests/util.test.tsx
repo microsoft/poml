@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { describe, expect, test } from '@jest/globals';
-import { readFileSync } from '../util/fs';
+import { readFileSync } from 'fs';
 import { component } from 'poml/base';
 import { Writable } from 'stream';
 import { parseText, readSource } from 'poml/util';
@@ -47,7 +47,7 @@ describe('content', () => {
       last_name: 'Penddreth',
       email: 'jpenddreth0@census.gov',
       gender: 'Female',
-      ip_address: '26.58.193.2'
+      ip_address: '26.58.193.2',
     });
 
     const image = readSource('assets/tomCat.jpg', __dirname, 'buffer');
@@ -93,20 +93,23 @@ describe('preprocessImage', () => {
 
 describe('sse', () => {
   test('should render a component with a promise', async () => {
-    const dummyPromise = () => new Promise<string>(resolve => setTimeout(() => resolve('done'), 500));
+    const dummyPromise = () => new Promise<string>((resolve) => setTimeout(() => resolve('done'), 500));
     const CustomComponent = component('custom')((props: any) => {
       const msg = React.use<string>(dummyPromise());
       return <div>{msg}</div>;
     });
     const result = await reactRender(
-      <React.Suspense fallback="loading">
+      <React.Suspense fallback='loading'>
         <CustomComponent />
-      </React.Suspense>);
+      </React.Suspense>,
+    );
     expect(result).toContain('done');
     const resultShell = await reactRender(
-      <React.Suspense fallback="loading">
+      <React.Suspense fallback='loading'>
         <CustomComponent />
-      </React.Suspense>, true);
+      </React.Suspense>,
+      true,
+    );
     expect(resultShell).toMatch(/loading|done/);
   });
 });

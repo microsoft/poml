@@ -1155,7 +1155,7 @@
           "xml",
           "text"
         ],
-        "description": "The syntax of the content.",
+        "description": "The syntax of the content. Note `xml` and `text` are experimental.",
         "required": false
       },
       {
@@ -1194,11 +1194,43 @@
         "name": "writerOptions",
         "type": "object",
         "choices": [],
-        "description": "An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.",
+        "description": "**Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.",
+        "required": false
+      },
+      {
+        "name": "whiteSpace",
+        "type": "string",
+        "choices": [
+          "pre",
+          "filter",
+          "trim"
+        ],
+        "description": "**Experimental.** Controls how whitespace is handled in text content.\n  `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;\n  `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;\n  `'trim'`: Trims whitespace from the beginning and end.",
+        "required": false
+      },
+      {
+        "name": "charLimit",
+        "type": "number",
+        "choices": [],
+        "description": "**Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.",
+        "required": false
+      },
+      {
+        "name": "tokenLimit",
+        "type": "number",
+        "choices": [],
+        "description": "**Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.",
+        "required": false
+      },
+      {
+        "name": "priority",
+        "type": "number",
+        "choices": [],
+        "description": "**Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.",
         "required": false
       }
     ],
-    "example": "```xml\n<poml syntax=\"text\">\nContents of the whole prompt.\n\n1. Your customized list.\n2. You don't need to know anything about POML.\n</poml>\n```\n\nTo render the whole prompt in markdown syntax with a \"human\" speaker:\n\n```xml\n<poml syntax=\"markdown\" speaker=\"human\">\n  <p>You are a helpful assistant.</p>\n  <p>What is the capital of France?</p>\n</poml>\n```",
+    "example": "```xml\n<poml syntax=\"text\">\nContents of the whole prompt.\n\n1. Your customized list.\n2. You don't need to know anything about POML.\n</poml>\n```\n\nTo render the whole prompt in markdown syntax with a \"human\" speaker:\n\n```xml\n<poml syntax=\"markdown\" speaker=\"human\">\n  <p>You are a helpful assistant.</p>\n  <p>What is the capital of France?</p>\n</poml>\n```\n\n**Experimental usage with limits and priority:**\n\n```xml\n<poml syntax=\"markdown\" tokenLimit=\"10\">\n  <p priority=\"1\">This has lower priority and may be truncated first.</p>\n  <p priority=\"3\">This has higher priority and will be preserved longer.</p>\n</poml>\n```",
     "baseComponents": []
   },
   {
@@ -1258,7 +1290,39 @@
         "name": "writerOptions",
         "type": "object",
         "choices": [],
-        "description": "An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.",
+        "description": "**Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.",
+        "required": false
+      },
+      {
+        "name": "whiteSpace",
+        "type": "string",
+        "choices": [
+          "pre",
+          "filter",
+          "trim"
+        ],
+        "description": "**Experimental.** Controls how whitespace is handled in text content.\n  `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;\n  `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;\n  `'trim'`: Trims whitespace from the beginning and end.",
+        "required": false
+      },
+      {
+        "name": "charLimit",
+        "type": "number",
+        "choices": [],
+        "description": "**Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.",
+        "required": false
+      },
+      {
+        "name": "tokenLimit",
+        "type": "number",
+        "choices": [],
+        "description": "**Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.",
+        "required": false
+      },
+      {
+        "name": "priority",
+        "type": "number",
+        "choices": [],
+        "description": "**Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.",
         "required": false
       }
     ],
@@ -1570,6 +1634,96 @@
       }
     ],
     "example": "```xml\n<Audio src=\"path/to/audio.mp3\" />\n```",
+    "baseComponents": []
+  },
+  {
+    "name": "ToolRequest",
+    "description": "ToolRequest represents an AI-generated tool request with parameters.\nUsed to display tool calls made by AI models.",
+    "params": [
+      {
+        "name": "id",
+        "type": "string",
+        "choices": [],
+        "description": "Tool request ID",
+        "required": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "choices": [],
+        "description": "Tool name",
+        "required": false
+      },
+      {
+        "name": "parameters",
+        "type": "any",
+        "choices": [],
+        "description": "Tool input parameters",
+        "required": false
+      },
+      {
+        "name": "speaker",
+        "type": "string",
+        "choices": [
+          "human",
+          "ai",
+          "system"
+        ],
+        "description": "The speaker of the content. Default is `ai`.",
+        "defaultValue": "ai",
+        "required": false
+      }
+    ],
+    "example": "```xml\n<ToolRequest id=\"123\" name=\"search\" parameters={{ query: \"hello\" }} />\n```",
+    "baseComponents": []
+  },
+  {
+    "name": "ToolResponse",
+    "description": "ToolResponse represents the result of a tool execution.\nUsed to display tool execution results with rich content.",
+    "params": [
+      {
+        "name": "syntax",
+        "type": "string",
+        "choices": [
+          "markdown",
+          "html",
+          "json",
+          "yaml",
+          "xml",
+          "text"
+        ],
+        "description": "The syntax of ToolResponse is special.\n  It is always `multimedia` for itself. The syntax is used to render the content inside.\n  If not specified, it will inherit from the parent context.",
+        "required": false
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "choices": [],
+        "description": "Tool call ID to respond to",
+        "required": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "choices": [],
+        "description": "Tool name",
+        "required": false
+      },
+      {
+        "name": "speaker",
+        "type": "string",
+        "choices": [
+          "human",
+          "ai",
+          "system",
+          "tool"
+        ],
+        "description": "The speaker of the content. Default is `tool`.",
+        "defaultValue": "tool",
+        "required": false
+      }
+    ],
+    "example": "```xml\n<ToolResponse id=\"123\" name=\"search\">\n <Paragraph>Search results for \"hello\":</Paragraph>\n <List>\n  <ListItem>Result 1</ListItem>\n  <ListItem>Result 2</ListItem>\n </List>\n</ToolResponse>\n```",
     "baseComponents": []
   }
 ]

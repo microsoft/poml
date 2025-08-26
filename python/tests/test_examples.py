@@ -1,10 +1,12 @@
-import re
-import poml
 import json
-import pytest
+import re
 import sys
 from pathlib import Path
 from typing import Any, TypedDict
+
+import pytest
+
+import poml
 
 example_directory = Path(__file__).parent.parent.parent / "examples"
 
@@ -114,7 +116,12 @@ def test_example_file(example_file):
     if sys.platform.startswith("win") and example_file.name == "301_generate_poml.poml":
         pytest.skip("Skip 301_generate_poml on Windows due to CRLF handling issue in txt files")
 
-    result = poml.poml(example_file)
+    if example_file.with_suffix(".context.json").exists():
+        context = json.loads(example_file.with_suffix(".context.json").read_text())
+    else:
+        context = None
+
+    result = poml.poml(example_file, context=context)
     expect_file = example_directory / "expects" / (example_file.stem + ".txt")
     if not expect_file.exists():
         raise FileNotFoundError(f"Expected output file not found: {expect_file}")

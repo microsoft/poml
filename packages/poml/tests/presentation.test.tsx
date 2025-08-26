@@ -13,27 +13,21 @@ describe('markup presentation', () => {
 
   test('paragraph', async () => {
     const paragraph = <Markup.Paragraph>hahaha</Markup.Paragraph>;
-    expect(await read(paragraph)).toBe(
-      '<env presentation="markup" markup-lang="markdown"><p>hahaha</p></env>'
-    );
+    expect(await read(paragraph)).toBe('<env presentation="markup" markup-lang="markdown"><p>hahaha</p></env>');
   });
 
   test('markupLang', async () => {
-    const paragraph = <Markup.Paragraph markupLang="html">hahaha</Markup.Paragraph>;
-    expect(await read(paragraph)).toBe(
-      '<env presentation="markup" markup-lang="html"><p>hahaha</p></env>'
-    );
+    const paragraph = <Markup.Paragraph markupLang='html'>hahaha</Markup.Paragraph>;
+    expect(await read(paragraph)).toBe('<env presentation="markup" markup-lang="html"><p>hahaha</p></env>');
     const nested = (
-      <Markup.Paragraph markupLang="html">
-        hahaha<Markup.Paragraph markupLang="html">dadada</Markup.Paragraph>
+      <Markup.Paragraph markupLang='html'>
+        hahaha<Markup.Paragraph markupLang='html'>dadada</Markup.Paragraph>
       </Markup.Paragraph>
     );
-    expect(await read(nested)).toBe(
-      '<env presentation="markup" markup-lang="html"><p>hahaha<p>dadada</p></p></env>'
-    );
+    expect(await read(nested)).toBe('<env presentation="markup" markup-lang="html"><p>hahaha<p>dadada</p></p></env>');
     const nestedEnv = <Markup.Environment>{nested}</Markup.Environment>;
     expect(await read(nestedEnv)).toBe(
-      '<env presentation="markup" markup-lang="markdown"><env presentation="markup" markup-lang="html"><p>hahaha<p>dadada</p></p></env></env>'
+      '<env presentation="markup" markup-lang="markdown"><env presentation="markup" markup-lang="html"><p>hahaha<p>dadada</p></p></env></env>',
     );
   });
 });
@@ -43,25 +37,25 @@ describe('markdown json hybrid', () => {
     const env = (
       <Markup.Environment>
         <Serialize.Environment>
-          <Serialize.Any name="hello">world</Serialize.Any>
+          <Serialize.Any name='hello'>world</Serialize.Any>
         </Serialize.Environment>
       </Markup.Environment>
     );
     expect(await read(env)).toBe(
-      '<env presentation="markup" markup-lang="markdown"><code inline="false" lang="json"><env presentation="serialize" serializer="json"><any name="hello">world</any></env></code></env>'
+      '<env presentation="markup" markup-lang="markdown"><code inline="false" lang="json"><env presentation="serialize" serializer="json"><any name="hello">world</any></env></code></env>',
     );
   });
 
   test('jsonMarkdown', async () => {
     const env = (
       <Serialize.Environment>
-        <Serialize.Any name="hello">
+        <Serialize.Any name='hello'>
           <Markup.Paragraph>world</Markup.Paragraph>
         </Serialize.Any>
       </Serialize.Environment>
     );
     expect(await read(env)).toBe(
-      '<env presentation="serialize" serializer="json"><any name="hello"><env presentation="markup" markup-lang="markdown"><p>world</p></env></any></env>'
+      '<env presentation="serialize" serializer="json"><any name="hello"><env presentation="markup" markup-lang="markdown"><p>world</p></env></any></env>',
     );
   });
 });
@@ -74,6 +68,8 @@ describe('free', () => {
 
   test('freeText', async () => {
     const text = <Free.Text>{'hello\nworld'}</Free.Text>;
-    expect(await read(text)).toBe('<env presentation="free" white-space="pre"><text white-space="pre">hello\nworld</text></env>');
+    expect(await read(text)).toBe(
+      '<env presentation="free" white-space="pre"><text white-space="pre">hello\nworld</text></env>',
+    );
   });
 });

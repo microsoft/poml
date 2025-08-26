@@ -11,9 +11,9 @@ import {
   computePresentationOrUndefined,
   PropsFreeBase,
   Free,
-  MultiMedia
+  MultiMedia,
 } from './presentation';
-import fs from './util/fs';
+import * as fs from 'fs';
 import { preprocessImage } from './util/image';
 import { preprocessAudio } from './util/audio';
 
@@ -34,18 +34,14 @@ const MULTIMEDIA_SYNTAXES = ['multimedia'];
 export const computeSyntaxContext = (
   props: PropsSyntaxBase,
   defaultSyntax?: string,
-  invalidPresentations?: string[]
+  invalidPresentations?: string[],
 ): Presentation => {
   const { syntax, ...others } = props;
   invalidPresentations = invalidPresentations ?? ['multimedia'];
 
   // 1. Create the full presentation style based on the syntax shortcut.
   // This is the case when syntax is explicity specified.
-  let presentationStyle:
-    | PropsMarkupBase
-    | PropsSerializeBase
-    | PropsFreeBase
-    | PropsPresentationBase;
+  let presentationStyle: PropsMarkupBase | PropsSerializeBase | PropsFreeBase | PropsPresentationBase;
   if (!syntax) {
     presentationStyle = {};
   } else if (MARKUP_SYNTAXES.includes(syntax)) {
@@ -83,7 +79,7 @@ export const computeSyntaxContext = (
       // This should not happen. Must be a bug.
       throw ReadError.fromProps(
         `Syntax is specified (${syntax}) but presentation method is not found. Something is wrong.`,
-        others
+        others,
       );
     }
 
@@ -91,7 +87,7 @@ export const computeSyntaxContext = (
     return computeSyntaxContext(
       { ...others, syntax: defaultSyntax || 'markdown' },
       defaultSyntax,
-      invalidPresentations
+      invalidPresentations,
     );
   }
   return presentation;
@@ -99,7 +95,7 @@ export const computeSyntaxContext = (
 
 // Helper component for contents that are designed for markup, but also work in other syntaxes.
 export const AnyOrFree = component('AnyOrFree')((
-  props: React.PropsWithChildren<PropsSyntaxAny & { presentation: Presentation; asAny: boolean }>
+  props: React.PropsWithChildren<PropsSyntaxAny & { presentation: Presentation; asAny: boolean }>,
 ) => {
   const { syntax, children, presentation, name, type, asAny, ...others } = props;
   if (presentation === 'serialize') {
@@ -119,10 +115,7 @@ export const AnyOrFree = component('AnyOrFree')((
   } else if (presentation === 'free') {
     return <Free.Text {...others}>{children}</Free.Text>;
   } else {
-    throw ReadError.fromProps(
-      `This component is not designed for ${presentation} syntaxes.`,
-      others
-    );
+    throw ReadError.fromProps(`This component is not designed for ${presentation} syntaxes.`, others);
   }
 });
 
@@ -135,12 +128,19 @@ export const AnyOrFree = component('AnyOrFree')((
  * 1. If the first element is pure text contents, `<poml syntax="text">` will be added.
  * 2. If the first element is a POML component, `<poml syntax="markdown">` will be added.
  *
- * @param {'markdown'|'html'|'json'|'yaml|'xml'|'text'} syntax - The syntax of the content.
+ * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'text'} syntax - The syntax of the content. Note `xml` and `text` are experimental.
  * @param className - A class name for quickly styling the current block with stylesheets.
  * @param {'human'|'ai'|'system'} speaker - The speaker of the content. By default, it's determined by the context and the content.
  * @param name - The name of the content, used in serialization.
  * @param type - The type of the content, used in serialization.
- * @param {object} writerOptions - An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {object} writerOptions - **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {'pre'|'filter'|'trim'} whiteSpace - **Experimental.** Controls how whitespace is handled in text content.
+ *   `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+ *   `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+ *   `'trim'`: Trims whitespace from the beginning and end.
+ * @param {number} charLimit - **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} tokenLimit - **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} priority - **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
  *
  * @example
  * ```xml
@@ -160,10 +160,17 @@ export const AnyOrFree = component('AnyOrFree')((
  *   <p>What is the capital of France?</p>
  * </poml>
  * ```
+ *
+ * **Experimental usage with limits and priority:**
+ *
+ * ```xml
+ * <poml syntax="markdown" tokenLimit="10">
+ *   <p priority="1">This has lower priority and may be truncated first.</p>
+ *   <p priority="3">This has higher priority and will be preserved longer.</p>
+ * </poml>
+ * ```
  */
-export const Text = component('Text', ['div', 'poml'])((
-  props: React.PropsWithChildren<PropsSyntaxAny>
-) => {
+export const Text = component('Text', ['div', 'poml'])((props: React.PropsWithChildren<PropsSyntaxAny>) => {
   const { syntax, children, name, type, ...others } = props;
   const presentation = computeSyntaxContext(props, 'markdown');
 
@@ -175,14 +182,7 @@ export const Text = component('Text', ['div', 'poml'])((
     );
   } else {
     return (
-      <AnyOrFree
-        syntax={syntax}
-        presentation={presentation}
-        asAny={true}
-        name={name}
-        type={type}
-        {...others}
-      >
+      <AnyOrFree syntax={syntax} presentation={presentation} asAny={true} name={name} type={type} {...others}>
         {children}
       </AnyOrFree>
     );
@@ -205,7 +205,7 @@ export const Poml = Text;
  * ```
  */
 export const Paragraph = component('Paragraph', ['p'])((
-  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ParagraphProps>
+  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ParagraphProps>,
 ) => {
   const { syntax, children, name, type, ...others } = props;
   const presentation = computeSyntaxContext(props);
@@ -217,14 +217,7 @@ export const Paragraph = component('Paragraph', ['p'])((
     );
   } else {
     return (
-      <AnyOrFree
-        syntax={syntax}
-        presentation={presentation}
-        asAny={true}
-        name={name}
-        type={type}
-        {...others}
-      >
+      <AnyOrFree syntax={syntax} presentation={presentation} asAny={true} name={name} type={type} {...others}>
         {children}
       </AnyOrFree>
     );
@@ -241,16 +234,21 @@ export const Paragraph = component('Paragraph', ['p'])((
  * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'text'} syntax - The syntax of the content.
  * @param className - A class name for quickly styling the current block with stylesheets.
  * @param {'human'|'ai'|'system'} speaker - The speaker of the content. By default, it's determined by the context and the content.
- * @param {object} writerOptions - An experimental optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {object} writerOptions - **Experimental.**. Optional JSON string to customize the format of markdown headers, JSON indents, etc.
+ * @param {'pre'|'filter'|'trim'} whiteSpace - **Experimental.** Controls how whitespace is handled in text content.
+ *   `'pre'` (default when `syntax` is `text`): Preserves all whitespace as-is;
+ *   `'filter'` (default when `syntax` is not `text`): Removes leading/trailing whitespace and normalizes internal whitespace in the gaps;
+ *   `'trim'`: Trims whitespace from the beginning and end.
+ * @param {number} charLimit - **Experimental.** Soft character limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} tokenLimit - **Experimental.** Soft token limit before truncation is applied. Content exceeding this limit will be truncated with a marker.
+ * @param {number} priority - **Experimental.** Priority used when truncating globally. Lower numbers are dropped first when content needs to be reduced to fit limits.
  *
  * @example
  * ```xml
  * <p>I'm listening to <span>music</span> right now.</p>
  * ```
  */
-export const Inline = component('Inline', ['span'])((
-  props: React.PropsWithChildren<PropsSyntaxBase>
-) => {
+export const Inline = component('Inline', ['span'])((props: React.PropsWithChildren<PropsSyntaxBase>) => {
   const { syntax, children, ...others } = props;
   const presentation = computeSyntaxContext(props);
   if (presentation === 'markup') {
@@ -281,9 +279,7 @@ export const Inline = component('Inline', ['span'])((
  * <br />
  * ```
  */
-export const Newline = component('Newline', ['br'])((
-  props: PropsSyntaxBase & Markup.NewlineProps
-) => {
+export const Newline = component('Newline', ['br'])((props: PropsSyntaxBase & Markup.NewlineProps) => {
   const { syntax, ...others } = props;
   const presentation = computeSyntaxContext(props);
   if (presentation === 'markup') {
@@ -307,7 +303,7 @@ export const Newline = component('Newline', ['br'])((
  * ```
  */
 export const Header = component('Header', ['h'])((
-  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ParagraphProps>
+  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ParagraphProps>,
 ) => {
   const { syntax, children, name, type, ...others } = props;
   const presentation = computeSyntaxContext(props);
@@ -319,14 +315,7 @@ export const Header = component('Header', ['h'])((
     );
   } else {
     return (
-      <AnyOrFree
-        syntax={syntax}
-        presentation={presentation}
-        asAny={true}
-        name={name}
-        type={type}
-        {...others}
-      >
+      <AnyOrFree syntax={syntax} presentation={presentation} asAny={true} name={name} type={type} {...others}>
         {children}
       </AnyOrFree>
     );
@@ -349,7 +338,7 @@ export const Header = component('Header', ['h'])((
  * ```
  */
 export const SubContent = component('SubContent', ['section'])((
-  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ParagraphProps>
+  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ParagraphProps>,
 ) => {
   const { syntax, children, name, type, ...others } = props;
   const presentation = computeSyntaxContext(props);
@@ -361,14 +350,7 @@ export const SubContent = component('SubContent', ['section'])((
     );
   } else {
     return (
-      <AnyOrFree
-        syntax={syntax}
-        presentation={presentation}
-        asAny={true}
-        name={name}
-        type={type}
-        {...others}
-      >
+      <AnyOrFree syntax={syntax} presentation={presentation} asAny={true} name={name} type={type} {...others}>
         {children}
       </AnyOrFree>
     );
@@ -413,9 +395,7 @@ export const Bold = component('Bold', ['b'])((props: React.PropsWithChildren<Pro
  * Your <i>italicized</i> text.
  * ```
  */
-export const Italic = component('Italic', ['i'])((
-  props: React.PropsWithChildren<PropsSyntaxBase>
-) => {
+export const Italic = component('Italic', ['i'])((props: React.PropsWithChildren<PropsSyntaxBase>) => {
   const { syntax, children, ...others } = props;
   const presentation = computeSyntaxContext(props);
   if (presentation === 'markup') {
@@ -444,7 +424,7 @@ export const Italic = component('Italic', ['i'])((
  * ```
  */
 export const Strikethrough = component('Strikethrough', ['s', 'strike'])((
-  props: React.PropsWithChildren<PropsSyntaxBase>
+  props: React.PropsWithChildren<PropsSyntaxBase>,
 ) => {
   const { syntax, children, ...others } = props;
   const presentation = computeSyntaxContext(props);
@@ -473,9 +453,7 @@ export const Strikethrough = component('Strikethrough', ['s', 'strike'])((
  * This text is <u>underlined</u>.
  * ```
  */
-export const Underline = component('Underline', ['u'])((
-  props: React.PropsWithChildren<PropsSyntaxBase>
-) => {
+export const Underline = component('Underline', ['u'])((props: React.PropsWithChildren<PropsSyntaxBase>) => {
   const { syntax, children, ...others } = props;
   const presentation = computeSyntaxContext(props);
   if (presentation === 'markup') {
@@ -513,7 +491,7 @@ export const Underline = component('Underline', ['u'])((
  * ```
  */
 export const Code = component('Code')((
-  props: React.PropsWithChildren<PropsSyntaxAny & InlineProps & Markup.CodeProps>
+  props: React.PropsWithChildren<PropsSyntaxAny & InlineProps & Markup.CodeProps>,
 ) => {
   const { syntax, children, name, type, ...others } = props;
   const presentation = computeSyntaxContext(props);
@@ -525,14 +503,7 @@ export const Code = component('Code')((
     );
   } else {
     return (
-      <AnyOrFree
-        syntax={syntax}
-        presentation={presentation}
-        asAny={true}
-        name={name}
-        type={type}
-        {...others}
-      >
+      <AnyOrFree syntax={syntax} presentation={presentation} asAny={true} name={name} type={type} {...others}>
         {children}
       </AnyOrFree>
     );
@@ -556,7 +527,7 @@ export const Code = component('Code')((
  * ```
  */
 export const List = component('List')((
-  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ListProps & Markup.ParagraphProps>
+  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ListProps & Markup.ParagraphProps>,
 ) => {
   const { syntax, children, listStyle, name, type, ...others } = props;
   const presentation = computeSyntaxContext(props);
@@ -574,8 +545,7 @@ export const List = component('List')((
         asAny={true}
         name={name}
         type={type ?? 'array'}
-        {...others}
-      >
+        {...others}>
         {children}
       </AnyOrFree>
     );
@@ -597,7 +567,7 @@ export const List = component('List')((
  * ```
  */
 export const ListItem = component('ListItem', ['item'])((
-  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ParagraphProps>
+  props: React.PropsWithChildren<PropsSyntaxAny & Markup.ParagraphProps>,
 ) => {
   const { syntax, children, name, type, ...others } = props;
   const presentation = computeSyntaxContext(props);
@@ -609,14 +579,7 @@ export const ListItem = component('ListItem', ['item'])((
     );
   } else {
     return (
-      <AnyOrFree
-        syntax={syntax}
-        presentation={presentation}
-        asAny={true}
-        name={name}
-        type={type}
-        {...others}
-      >
+      <AnyOrFree syntax={syntax} presentation={presentation} asAny={true} name={name} type={type} {...others}>
         {children}
       </AnyOrFree>
     );
@@ -638,7 +601,7 @@ export const ListItem = component('ListItem', ['item'])((
  * ```
  */
 export const Object = component('Object', ['obj', 'dataObj'])((
-  props: React.PropsWithChildren<PropsSyntaxBase & Serialize.ObjectProps>
+  props: React.PropsWithChildren<PropsSyntaxBase & Serialize.ObjectProps>,
 ) => {
   const { syntax, children, ...others } = props;
   const presentation = computeSyntaxContext(props, 'json');
@@ -684,9 +647,7 @@ interface ImageProps extends PropsSyntaxBase, MultiMedia.ImageProps {
  * <Image src="path/to/image.jpg" alt="Image description" position="bottom" />
  * ```
  */
-export const Image = component('Image', { aliases: ['img'], asynchorous: true })((
-  props: ImageProps
-) => {
+export const Image = component('Image', { aliases: ['img'], asynchorous: true })((props: ImageProps) => {
   let { syntax, src, base64, alt, type, position, maxWidth, maxHeight, resize, ...others } = props;
   if (!alt) {
     syntax = syntax ?? 'multimedia';
@@ -707,10 +668,7 @@ export const Image = component('Image', { aliases: ['img'], asynchorous: true })
     } else if (!base64) {
       throw ReadError.fromProps('Either `src` or `base64` must be specified.', others);
     }
-    const image = useWithCatch(
-      preprocessImage({ src, base64, type, maxWidth, maxHeight, resize }),
-      others
-    );
+    const image = useWithCatch(preprocessImage({ src, base64, type, maxWidth, maxHeight, resize }), others);
     if (!image) {
       return null;
     }
@@ -758,9 +716,7 @@ interface AudioProps extends PropsSyntaxBase, MultiMedia.AudioProps {
  * <Audio base64="..." type="audio/wav" />
  * ```
  */
-export const Audio = component('Audio', { aliases: ['audio'], asynchorous: true })((
-  props: AudioProps
-) => {
+export const Audio = component('Audio', { aliases: ['audio'], asynchorous: true })((props: AudioProps) => {
   let { syntax, src, base64, type, ...others } = props;
   const presentation = computeSyntaxContext(props, 'multimedia', []);
   if (presentation === 'multimedia') {
@@ -775,22 +731,98 @@ export const Audio = component('Audio', { aliases: ['audio'], asynchorous: true 
     } else if (!base64) {
       throw ReadError.fromProps('Either `src` or `base64` must be specified.', others);
     }
-    const audio = useWithCatch(
-      preprocessAudio({ src, base64, type }),
-      others
-    );
+    const audio = useWithCatch(preprocessAudio({ src, base64, type }), others);
     if (!audio) {
       return null;
     }
+    return <MultiMedia.Audio presentation={presentation} base64={audio.base64} type={audio.mimeType} {...others} />;
+  } else {
+    return null;
+  }
+});
+
+export interface ToolRequestProps extends PropsSyntaxBase, MultiMedia.ToolRequestProps {}
+
+export interface ToolResponseProps extends PropsSyntaxBase, MultiMedia.ToolResponseProps {}
+
+/**
+ * ToolRequest represents an AI-generated tool request with parameters.
+ * Used to display tool calls made by AI models.
+ *
+ * @param {string} id - Tool request ID
+ * @param {string} name - Tool name
+ * @param {any} parameters - Tool input parameters
+ * @param {'human'|'ai'|'system'} speaker - The speaker of the content. Default is `ai`.
+ *
+ * @example
+ * ```xml
+ * <ToolRequest id="123" name="search" parameters={{ query: "hello" }} />
+ * ```
+ */
+export const ToolRequest = component('ToolRequest', { aliases: ['toolRequest'] })((props: ToolRequestProps) => {
+  let { syntax, id, name, parameters, speaker, ...others } = props;
+  syntax = syntax ?? 'multimedia';
+  const presentation = computeSyntaxContext({ ...props, syntax }, 'multimedia', []);
+
+  if (presentation === 'multimedia') {
     return (
-      <MultiMedia.Audio
+      <MultiMedia.ToolRequest
         presentation={presentation}
-        base64={audio.base64}
-        type={audio.mimeType}
+        id={id}
+        name={name}
+        parameters={parameters}
+        speaker={speaker ?? 'ai'}
         {...others}
       />
     );
   } else {
-    return null;
+    return <Object syntax={syntax} speaker={speaker ?? 'ai'} data={{ id, name, parameters }} {...others} />;
   }
+});
+
+/**
+ * ToolResponse represents the result of a tool execution.
+ * Used to display tool execution results with rich content.
+ *
+ * @param {'markdown'|'html'|'json'|'yaml'|'xml'|'text'} syntax - The syntax of ToolResponse is special.
+ *   It is always `multimedia` for itself. The syntax is used to render the content inside.
+ *   If not specified, it will inherit from the parent context.
+ * @param {string} id - Tool call ID to respond to
+ * @param {string} name - Tool name
+ * @param {'human'|'ai'|'system'|'tool'} speaker - The speaker of the content. Default is `tool`.
+ *
+ * @example
+ * ```xml
+ * <ToolResponse id="123" name="search">
+ *  <Paragraph>Search results for "hello":</Paragraph>
+ *  <List>
+ *   <ListItem>Result 1</ListItem>
+ *   <ListItem>Result 2</ListItem>
+ *  </List>
+ * </ToolResponse>
+ * ```
+ */
+export const ToolResponse = component('ToolResponse', { aliases: ['toolResponse'] })((
+  props: React.PropsWithChildren<ToolResponseProps>,
+) => {
+  const { syntax, id, name, children, speaker, ...others } = props;
+  const presentation = computeSyntaxContext(props);
+  let syntaxFromContext = syntax;
+  if (syntaxFromContext === undefined) {
+    if (presentation === 'markup') {
+      syntaxFromContext = 'markdown';
+    } else if (presentation === 'serialize') {
+      syntaxFromContext = 'json';
+    } else if (presentation === 'free') {
+      syntaxFromContext = 'text';
+    } else if (presentation === 'multimedia') {
+      syntaxFromContext = 'multimedia';
+    }
+  }
+
+  return (
+    <MultiMedia.ToolResponse presentation={'multimedia'} id={id} name={name} speaker={speaker ?? 'tool'} {...others}>
+      <Inline syntax={syntaxFromContext}>{children}</Inline>
+    </MultiMedia.ToolResponse>
+  );
 });
