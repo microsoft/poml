@@ -12,6 +12,32 @@ on:
   workflow_dispatch:
 
 jobs:
+  browser-build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Install dependencies
+        run: |
+          cd packages/poml-browser
+          npm ci
+      - name: Build poml-browser (warnings as errors)
+        run: |
+          cd packages/poml-browser
+          npm run build
+        env:
+          WARNINGS_AS_ERRORS: 'true'
+
   build:
     strategy:
       matrix:

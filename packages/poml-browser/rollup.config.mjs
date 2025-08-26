@@ -82,6 +82,12 @@ export default [
       // if (warning.code === 'EVAL') {
       //   return;
       // }
+
+      // In CI environment, treat warnings as errors
+      if (process.env.CI || process.env.WARNINGS_AS_ERRORS) {
+        throw new Error(`Build warning treated as error: ${warning.message}`);
+      }
+
       warn(warning);
     },
     plugins: [
