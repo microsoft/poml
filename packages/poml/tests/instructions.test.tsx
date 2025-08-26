@@ -12,7 +12,7 @@ import {
   Example,
   ExampleSet,
   ExampleInput,
-  ExampleOutput
+  ExampleOutput,
 } from 'poml/components/instructions';
 import { CaptionedParagraph } from 'poml/components';
 
@@ -21,43 +21,43 @@ describe('instructions', () => {
     const role = <Role>You are a data scientist.</Role>;
     expect(await poml(role)).toBe('# Role\n\nYou are a data scientist.');
 
-    const roleInJson = <Role syntax="json">You are a data scientist.</Role>;
+    const roleInJson = <Role syntax='json'>You are a data scientist.</Role>;
     expect(await poml(roleInJson)).toBe('{\n  "role": "You are a data scientist."\n}');
   });
 
   test('roleTaskFormat', async () => {
     const roleTaskFormat = (
-      <Text syntax="json">
+      <Text syntax='json'>
         <Role>You are a data scientist.</Role>
         <Task>Analyze the data.</Task>
         <OutputFormat>JSON</OutputFormat>
       </Text>
     );
     expect(await poml(roleTaskFormat)).toBe(
-      '{\n  "role": "You are a data scientist.",\n  "task": "Analyze the data.",\n  "outputFormat": "JSON"\n}'
+      '{\n  "role": "You are a data scientist.",\n  "task": "Analyze the data.",\n  "outputFormat": "JSON"\n}',
     );
     const roleTaskFormatMarkdown = (
-      <Text syntax="markdown">
-        <Role captionStyle="bold">You are a data scientist.</Role>
-        <Task captionStyle="plain" captionTextTransform="upper">
+      <Text syntax='markdown'>
+        <Role captionStyle='bold'>You are a data scientist.</Role>
+        <Task captionStyle='plain' captionTextTransform='upper'>
           Analyze the data.
         </Task>
-        <OutputFormat captionStyle="header" captionEnding="colon">
+        <OutputFormat captionStyle='header' captionEnding='colon'>
           JSON
         </OutputFormat>
       </Text>
     );
     expect(await poml(roleTaskFormatMarkdown)).toBe(
-      '**Role:** You are a data scientist.\n\nTASK: Analyze the data.\n\n# Output Format:\n\nJSON'
+      '**Role:** You are a data scientist.\n\nTASK: Analyze the data.\n\n# Output Format:\n\nJSON',
     );
   });
 
   test('captionColon', async () => {
-    const role = <Role captionEnding="colon">You are a data scientist.</Role>;
+    const role = <Role captionEnding='colon'>You are a data scientist.</Role>;
     expect(await poml(role)).toBe('# Role:\n\nYou are a data scientist.');
 
     const roleWithNewline = (
-      <Role captionEnding="colon-newline" captionStyle="bold">
+      <Role captionEnding='colon-newline' captionStyle='bold'>
         You are a data scientist.
       </Role>
     );
@@ -76,21 +76,23 @@ describe('instructions', () => {
       </Task>
     );
     expect(await poml(task)).toBe(
-      '# Task\n\nPlanning a schedule for a travel.\n\n- Decide on the destination and plan the duration.\n- Find useful information about the destination.\n- Write down the schedule for each day.'
+      '# Task\n\nPlanning a schedule for a travel.\n\n- Decide on the destination and plan the duration.\n- Find useful information about the destination.\n- Write down the schedule for each day.',
     );
   });
 
   test('captioned paragraph', async () => {
     const task = (
-      <CaptionedParagraph caption="Task" syntax="yaml">
+      <CaptionedParagraph caption='Task' syntax='yaml'>
         <List>
           <ListItem>Decide on the destination and plan the duration.</ListItem>
           <ListItem>Find useful information about the destination.</ListItem>
         </List>
       </CaptionedParagraph>
     );
-    expect(await poml(task)).toBe('Task:\n  - Decide on the destination and plan the duration.\n  - Find useful information about the destination.')
-  })
+    expect(await poml(task)).toBe(
+      'Task:\n  - Decide on the destination and plan the duration.\n  - Find useful information about the destination.',
+    );
+  });
 
   test('hint', async () => {
     const hint = <Hint>Use the following code to analyze the data.</Hint>;
@@ -99,52 +101,50 @@ describe('instructions', () => {
 
   test('examples', async () => {
     const examples = (
-      <ExampleSet introducer="Here are some examples.">
+      <ExampleSet introducer='Here are some examples.'>
         <Example>
-          <ExampleInput captionStyle="bold">What's the capital of France?</ExampleInput>
-          <ExampleOutput captionStyle="bold">Paris</ExampleOutput>
+          <ExampleInput captionStyle='bold'>What's the capital of France?</ExampleInput>
+          <ExampleOutput captionStyle='bold'>Paris</ExampleOutput>
         </Example>
         <Example>
-          <ExampleInput captionStyle="bold">What's the capital of Germany?</ExampleInput>
-          <ExampleOutput captionStyle="bold">Berlin</ExampleOutput>
+          <ExampleInput captionStyle='bold'>What's the capital of Germany?</ExampleInput>
+          <ExampleOutput captionStyle='bold'>Berlin</ExampleOutput>
         </Example>
       </ExampleSet>
     );
     expect(await poml(examples)).toBe(
-      "# Examples\n\nHere are some examples.\n\n**Input:** What's the capital of France?\n\n**Output:** Paris\n\n**Input:** What's the capital of Germany?\n\n**Output:** Berlin"
+      "# Examples\n\nHere are some examples.\n\n**Input:** What's the capital of France?\n\n**Output:** Paris\n\n**Input:** What's the capital of Germany?\n\n**Output:** Berlin",
     );
-    expect(JSON.parse((await poml(<Text syntax="json">{examples}</Text>)) as string)).toStrictEqual(
-      {
-        examples: [
-          {
-            input: "What's the capital of France?",
-            output: 'Paris'
-          },
-          {
-            input: "What's the capital of Germany?",
-            output: 'Berlin'
-          }
-        ]
-      }
-    );
+    expect(JSON.parse((await poml(<Text syntax='json'>{examples}</Text>)) as string)).toStrictEqual({
+      examples: [
+        {
+          input: "What's the capital of France?",
+          output: 'Paris',
+        },
+        {
+          input: "What's the capital of Germany?",
+          output: 'Berlin',
+        },
+      ],
+    });
 
     const ir = await read(examples);
     const out = write(ir, { speaker: true });
     expect(out).toStrictEqual([
       {
         speaker: 'system',
-        content: '# Examples\n\nHere are some examples.'
+        content: '# Examples\n\nHere are some examples.',
       },
       {
         speaker: 'human',
-        content: "**Input:** What's the capital of France?"
+        content: "**Input:** What's the capital of France?",
       },
       { speaker: 'ai', content: '**Output:** Paris' },
       {
         speaker: 'human',
-        content: "**Input:** What's the capital of Germany?"
+        content: "**Input:** What's the capital of Germany?",
       },
-      { speaker: 'ai', content: '**Output:** Berlin' }
+      { speaker: 'ai', content: '**Output:** Berlin' },
     ]);
   });
 
@@ -181,7 +181,7 @@ Berlin`);
     expect(result).toStrictEqual([
       { speaker: 'system', content: 'Example:' },
       { speaker: 'human', content: 'abc' },
-      { speaker: 'ai', content: 'def' }
+      { speaker: 'ai', content: 'def' },
     ]);
-  })
+  });
 });

@@ -16,7 +16,7 @@ export class AddPromptCommand implements Command {
   public async execute() {
     const uri = await vscode.window.showOpenDialog({
       openLabel: 'Select POML',
-      filters: { POML: ['poml'], 'All Files': ['*'] }
+      filters: { 'POML': ['poml'], 'All Files': ['*'] },
     });
     if (!uri || !uri[0]) {
       return;
@@ -24,22 +24,22 @@ export class AddPromptCommand implements Command {
     while (true) {
       const name = await vscode.window.showInputBox({
         prompt: 'Name for the prompt (use /<name> in chat panel)',
-        value: path.basename(uri[0].fsPath, '.poml')
+        value: path.basename(uri[0].fsPath, '.poml'),
       });
       if (!name) {
         break;
       }
       if (!isValidPromptName(name)) {
-        vscode.window.showErrorMessage('Invalid prompt name. Only alphanumeric characters, underscores, and hyphens are allowed.');
-        continue;
-      }
-      if (this.provider.hasPrompt(name)) {
         vscode.window.showErrorMessage(
-          `A prompt with the name "${name}" already exists.`
+          'Invalid prompt name. Only alphanumeric characters, underscores, and hyphens are allowed.',
         );
         continue;
       }
-      this.provider.addPrompt({ name, file: uri[0].fsPath });
+      if (this.provider.hasPrompt(name)) {
+        vscode.window.showErrorMessage(`A prompt with the name "${name}" already exists.`);
+        continue;
+      }
+      this.provider.addPrompt({ name, file: uri[0].fsPath, category: 'user' });
       break;
     }
   }
@@ -68,19 +68,19 @@ export class EditPromptCommand implements Command {
     while (true) {
       name = await vscode.window.showInputBox({
         prompt: 'Name for the prompt (use /<name> in chat panel)',
-        value: item.name
+        value: item.name,
       });
       if (!name) {
         return;
       }
       if (!isValidPromptName(name)) {
-        vscode.window.showErrorMessage('Invalid prompt name. Only alphanumeric characters, underscores, and hyphens are allowed.');
+        vscode.window.showErrorMessage(
+          'Invalid prompt name. Only alphanumeric characters, underscores, and hyphens are allowed.',
+        );
         continue;
       }
       if (name !== item.name && this.provider.hasPrompt(name)) {
-        vscode.window.showErrorMessage(
-          `A prompt with the name "${name}" already exists.`
-        );
+        vscode.window.showErrorMessage(`A prompt with the name "${name}" already exists.`);
         continue;
       }
       break;
@@ -88,11 +88,11 @@ export class EditPromptCommand implements Command {
     const uri = await vscode.window.showOpenDialog({
       openLabel: 'Select POML',
       defaultUri: vscode.Uri.file(item.file),
-      filters: { POML: ['poml'], 'All Files': ['*'] }
+      filters: { 'POML': ['poml'], 'All Files': ['*'] },
     });
     if (!uri || !uri[0]) {
       return;
     }
-    this.provider.updatePrompt(item, { name, file: uri[0].fsPath });
+    this.provider.updatePrompt(item, { name, file: uri[0].fsPath, category: 'user' });
   }
 }

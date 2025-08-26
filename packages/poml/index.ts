@@ -1,13 +1,22 @@
 import * as React from 'react';
 import { readFileSync, writeFileSync } from 'fs';
-import { renderToString } from "react-dom/server";
+import { renderToString } from 'react-dom/server';
 import path from 'path';
-import { EnvironmentDispatcher } from "./writer";
-import { ErrorCollection, Message, RichContent, StyleSheetProvider, SystemError, SourceMapRichContent, SourceMapMessage, richContentFromSourceMap } from './base';
+import { EnvironmentDispatcher } from './writer';
+import {
+  ErrorCollection,
+  Message,
+  RichContent,
+  StyleSheetProvider,
+  SystemError,
+  SourceMapRichContent,
+  SourceMapMessage,
+  richContentFromSourceMap,
+} from './base';
 import { PomlFile, PomlReaderOptions } from './file';
 import './presentation';
 import './essentials';
-import "./components";
+import './components';
 import { reactRender } from './util/reactRender';
 import { dumpTrace, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
 
@@ -36,6 +45,33 @@ export const read = async (
   return await reactRender(readElement);
 };
 
+// Read and also returning the POML file
+// A hacky way to get the POML file from the React element
+// Do not use it in production code
+export const _readWithFile = async (
+  element: React.ReactElement | string,
+  options?: PomlReaderOptions,
+  context?: { [key: string]: any },
+  stylesheet?: { [key: string]: any },
+  sourcePath?: string,
+): Promise<[string, PomlFile | undefined]> => {
+  let readElement: React.ReactElement;
+  let pomlFile: PomlFile | undefined;
+  if (typeof element === 'string') {
+    pomlFile = new PomlFile(element, options, sourcePath);
+    readElement = pomlFile.react(context);
+  } else {
+    if (options || context) {
+      console.warn('Options and context are ignored when element is React.ReactElement');
+    }
+    readElement = element;
+  }
+  if (stylesheet) {
+    readElement = React.createElement(StyleSheetProvider, { stylesheet }, readElement);
+  }
+  return [await reactRender(readElement), pomlFile];
+};
+
 interface WriteOptions {
   speaker?: boolean;
 }
@@ -47,7 +83,6 @@ interface WriteOptionsNoSpeakerMode extends WriteOptions {
 interface WriteOptionsSpeakerMode extends WriteOptions {
   speaker: true;
 }
-
 
 export function write(ir: string, options?: WriteOptionsNoSpeakerMode): RichContent;
 export function write(ir: string, options: WriteOptionsSpeakerMode): Message[];
@@ -63,7 +98,7 @@ export function write(ir: string, options?: WriteOptions): RichContent | Message
   } else {
     return writer.write(ir);
   }
-};
+}
 
 export function writeWithSourceMap(ir: string, options?: WriteOptionsNoSpeakerMode): SourceMapRichContent[];
 export function writeWithSourceMap(ir: string, options: WriteOptionsSpeakerMode): SourceMapMessage[];
@@ -79,7 +114,7 @@ export function writeWithSourceMap(ir: string, options?: WriteOptions): SourceMa
   } else {
     return writer.writeWithSourceMap(ir);
   }
-};
+}
 
 export const poml = async (element: React.ReactElement | string): Promise<RichContent> => {
   ErrorCollection.clear();
@@ -89,7 +124,7 @@ export const poml = async (element: React.ReactElement | string): Promise<RichCo
     throw ErrorCollection.first();
   }
   return result;
-}
+};
 
 interface CliArgs {
   input?: string;
@@ -105,6 +140,13 @@ interface CliArgs {
   strict?: boolean;
   cwd?: string;
   traceDir?: string;
+}
+
+interface CliResult {
+  messages: Message[] | RichContent;
+  schema?: { [key: string]: any };
+  tools?: { [key: string]: any }[];
+  runtime?: { [key: string]: any };
 }
 
 export async function commandLine(args: CliArgs) {
@@ -163,31 +205,32 @@ export async function commandLine(args: CliArgs) {
   }
 
   ErrorCollection.clear();
+
+  const pomlFile = new PomlFile(input, readOptions, sourcePath);
+  let reactElement = pomlFile.react(context);
+  reactElement = React.createElement(StyleSheetProvider, { stylesheet }, reactElement);
+
   const ir = await read(input, readOptions, context, stylesheet, sourcePath);
 
   const speakerMode = args.speakerMode === true || args.speakerMode === undefined;
   const prettyPrint = args.prettyPrint === true;
-  let output: string = '';
-  let result: any;
-  if (prettyPrint) {
-    if (speakerMode) {
-      result = write(ir, { speaker: true });
-      const outputs = (result as Message[]).map((message) => {
-        return `===== ${message.speaker} =====\n\n${renderContent(message.content)}`;
-      });
-      output = outputs.join('\n\n');
-    } else {
-      result = write(ir);
-      output = renderContent(result);
-    }
-  } else {
-    result = write(ir, { speaker: speakerMode });
-    output = JSON.stringify(result);
-  }
+  let resultMessages = write(ir, { speaker: speakerMode });
+  const prettyOutput = speakerMode
+    ? (resultMessages as Message[])
+        .map((message) => `===== ${message.speaker} =====\n\n${renderContent(message.content)}`)
+        .join('\n\n')
+    : renderContent(resultMessages as RichContent);
+  const result: CliResult = {
+    messages: resultMessages,
+    schema: pomlFile.getResponseSchema()?.toOpenAPI(),
+    tools: pomlFile.getToolsSchema()?.toOpenAI(),
+    runtime: pomlFile.getRuntimeParameters(),
+  };
+  const output = prettyPrint ? prettyOutput : JSON.stringify(result);
 
   if (isTracing()) {
     try {
-      dumpTrace(input, context, stylesheet, result);
+      dumpTrace(input, context, stylesheet, result, sourcePath, prettyOutput);
     } catch (err: any) {
       ErrorCollection.add(new SystemError('Failed to dump trace', { cause: err }));
     }
@@ -224,6 +267,6 @@ const renderContent = (content: RichContent) => {
     }
   });
   return outputs.join('\n\n');
-}
+};
 
 export { setTrace, clearTrace, parseJsonWithBuffers, dumpTrace };

@@ -17,7 +17,6 @@ async function showPreview(
   uri: vscode.Uri | undefined,
   previewSettings: ShowPreviewSettings,
 ): Promise<any> {
-
   let resource = uri;
   if (!(resource instanceof vscode.Uri)) {
     if (vscode.window.activeTextEditor) {
@@ -35,27 +34,25 @@ async function showPreview(
     return;
   }
 
-  const resourceColumn = (vscode.window.activeTextEditor && vscode.window.activeTextEditor.viewColumn) || vscode.ViewColumn.One;
+  const resourceColumn =
+    (vscode.window.activeTextEditor && vscode.window.activeTextEditor.viewColumn) || vscode.ViewColumn.One;
   webviewManager.preview(resource, {
     resourceColumn: resourceColumn,
     previewColumn: previewSettings.sideBySide ? resourceColumn + 1 : resourceColumn,
-    locked: !!previewSettings.locked
+    locked: !!previewSettings.locked,
   });
-
 }
 
 export class ShowPreviewCommand implements Command {
   public readonly id = 'poml.showPreview';
 
-  public constructor(
-    private readonly webviewManager: POMLWebviewPanelManager,
-  ) { }
+  public constructor(private readonly webviewManager: POMLWebviewPanelManager) {}
 
   public execute(mainUri?: vscode.Uri, allUris?: vscode.Uri[], panelSettings?: PanelSettings) {
     for (const uri of Array.isArray(allUris) ? allUris : [mainUri]) {
       showPreview(this.webviewManager, uri, {
         sideBySide: false,
-        locked: panelSettings && panelSettings.locked
+        locked: panelSettings && panelSettings.locked,
       });
     }
   }
@@ -64,36 +61,31 @@ export class ShowPreviewCommand implements Command {
 export class ShowPreviewToSideCommand implements Command {
   public readonly id = 'poml.showPreviewToSide';
 
-  public constructor(
-    private readonly webviewManager: POMLWebviewPanelManager,
-  ) { }
+  public constructor(private readonly webviewManager: POMLWebviewPanelManager) {}
 
   public execute(uri?: vscode.Uri, panelSettings?: PanelSettings) {
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.CommandInvoked, {
-      command: this.id
+      command: this.id,
     });
     showPreview(this.webviewManager, uri, {
       sideBySide: true,
-      locked: panelSettings && panelSettings.locked
+      locked: panelSettings && panelSettings.locked,
     });
   }
 }
 
-
 export class ShowLockedPreviewToSideCommand implements Command {
   public readonly id = 'poml.showLockedPreviewToSide';
 
-  public constructor(
-    private readonly webviewManager: POMLWebviewPanelManager
-  ) { }
+  public constructor(private readonly webviewManager: POMLWebviewPanelManager) {}
 
   public execute(uri?: vscode.Uri) {
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.CommandInvoked, {
-      command: this.id
+      command: this.id,
     });
     showPreview(this.webviewManager, uri, {
       sideBySide: true,
-      locked: true
+      locked: true,
     });
   }
 }

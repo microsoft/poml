@@ -1,0 +1,31 @@
+name: Integration Tests
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run once daily at midnight UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  test-linux:
+    strategy:
+      matrix:
+        integration: [agentops, mlflow, weave, mcp, openai]
+      fail-fast: false
+    uses: ./.github/workflows/shared-test-integration.yml
+    with:
+      integration: ${{ matrix.integration }}
+      os: ubuntu-latest
+    secrets: inherit
+
+  test-cross-platform:
+    needs: test-linux
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+        integration: [agentops, mlflow, weave, mcp, openai]
+      fail-fast: false
+    uses: ./.github/workflows/shared-test-integration.yml
+    with:
+      integration: ${{ matrix.integration }}
+      os: ${{ matrix.os }}
+    secrets: inherit

@@ -6,7 +6,8 @@ import {
   unregisterComponent,
   listComponents,
   findComponentByAlias,
-  findComponentByAliasOrUndefined
+  findComponentByAliasOrUndefined,
+  BufferCollection,
 } from 'poml/base';
 import { read } from 'poml';
 import { describe, expect, test } from '@jest/globals';
@@ -23,13 +24,13 @@ test('parameters', () => {
   expect(
     findComponentByAliasOrUndefined('question')!
       .mro()
-      .map(c => c.name)
+      .map((c) => c.name),
   ).toEqual(['Paragraph', 'Text']);
 
   expect(
     findComponentByAliasOrUndefined('table')!
       .parameters()
-      .map(p => p.name)
+      .map((p) => p.name),
   ).toEqual([
     'syntax',
     'records',
@@ -42,7 +43,11 @@ test('parameters', () => {
     'maxColumns',
     'className',
     'speaker',
-    'writerOptions'
+    'writerOptions',
+    'whiteSpace',
+    'charLimit',
+    'tokenLimit',
+    'priority',
   ]);
 });
 
@@ -54,7 +59,7 @@ test('computeStylesLegacy', () => {
       unwantedProps: [],
       requiredProps: [],
       applyStyleSheet: true,
-      asynchorous: false
+      asynchorous: false,
     });
     const style = fakeComponent.style(customStyle);
     expect(style).toEqual(expectStyle);
@@ -67,14 +72,14 @@ test('computeStylesLegacy', () => {
   const App = ({ component, customStyle, expectStyle, children }: any) => {
     const stylesheet = {
       '*': {
-        color: 'red'
+        color: 'red',
       },
-      table: {
+      'table': {
         color: 'blue',
         header: {
-          color: 'green'
-        }
-      }
+          color: 'green',
+        },
+      },
     };
     if (children) {
       return (
@@ -95,45 +100,28 @@ test('computeStylesLegacy', () => {
 
   read(
     <App
-      component="table"
+      component='table'
       customStyle={{ padding: 10 }}
       expectStyle={{ color: 'blue', padding: 10, header: { color: 'green' } }}
-    />
+    />,
   );
+  read(<App component='header' customStyle={{ padding: 10 }} expectStyle={{ color: 'red', padding: 10 }} />);
   read(
     <App
-      component="header"
-      customStyle={{ padding: 10 }}
-      expectStyle={{ color: 'red', padding: 10 }}
-    />
-  );
-  read(
-    <App
-      component="table"
+      component='table'
       customStyle={{ color: 'white' }}
       expectStyle={{ color: 'white', header: { color: 'green' } }}
-    />
+    />,
   );
-  read(
-    <App
-      component="base"
-      customStyle={{ padding: 10 }}
-      expectStyle={{ color: 'red', padding: 10 }}
-    />
-  );
+  read(<App component='base' customStyle={{ padding: 10 }} expectStyle={{ color: 'red', padding: 10 }} />);
 
   read(
     <App
-      component="table"
+      component='table'
       customStyle={{ padding: 10 }}
-      expectStyle={{ color: 'blue', padding: 10, header: { color: 'green' } }}
-    >
-      <App
-        component="header"
-        customStyle={{ padding: 20 }}
-        expectStyle={{ color: 'red', padding: 20 }}
-      />
-    </App>
+      expectStyle={{ color: 'blue', padding: 10, header: { color: 'green' } }}>
+      <App component='header' customStyle={{ padding: 20 }} expectStyle={{ color: 'red', padding: 20 }} />
+    </App>,
   );
 });
 
@@ -143,50 +131,59 @@ test('computeStylesNew', () => {
     unwantedProps: [],
     requiredProps: [],
     applyStyleSheet: true,
-    asynchorous: false
+    asynchorous: false,
   });
   const stylesheet = {
     '*': {
-      padding: 20
+      padding: 20,
     },
     '.layout': {
       padding: 30,
-      margin: 5
+      margin: 5,
     },
     '.layout2': {
-      padding: 40
+      padding: 40,
     },
     '.layout .layout2': {
       margin: 10,
-      color: 'blue'
+      color: 'blue',
     },
-    table: {
+    'table': {
       color: 'red',
-      margin: 20
+      margin: 20,
     },
     'table .layout': {
-      color: 'green'
-    }
+      color: 'green',
+    },
   };
   expect(component.style({ className: 'layout', padding: 10 }, stylesheet)).toEqual({
     padding: 10,
     margin: 5,
-    color: 'green'
+    color: 'green',
   });
   expect(component.style({ className: 'layout layout2', padding: 10 }, stylesheet)).toEqual({
     padding: 10,
     margin: 10,
-    color: 'blue'
+    color: 'blue',
   });
   expect(component.style({ padding: 10 }, stylesheet)).toEqual({
     padding: 10,
     margin: 20,
-    color: 'red'
+    color: 'red',
   });
   expect(component.style({ children: component }, stylesheet)).toEqual({
     children: component,
     padding: 20,
     margin: 20,
-    color: 'red'
+    color: 'red',
   });
+});
+
+test('calculateSize recursive', () => {
+  BufferCollection.clear();
+  const obj = { data: { arr: [1, 2, 'abc'] }, extra: Buffer.alloc(4) };
+  BufferCollection.set('obj', obj);
+  const inst = (BufferCollection as any).instance as any;
+  const size = inst.buffers.get('obj').size;
+  expect(size).toBe(23);
 });

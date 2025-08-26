@@ -1,11 +1,11 @@
+import multiprocessing
 import os
+import re
 import subprocess
 import sys
-import re
 from pathlib import Path
-import multiprocessing
 
-from poml import poml, Prompt, set_trace, clear_trace, get_trace
+from poml import Prompt, clear_trace, get_trace, poml, set_trace, trace_artifact
 
 
 def test_basic():
@@ -94,18 +94,41 @@ def test_trace():
 
 def test_trace_directory(tmp_path: Path):
     clear_trace()
-    run_dir = set_trace(True, tmp_path)
+    run_dir = set_trace(True, trace_dir=tmp_path)
     assert run_dir is not None
     result = poml("<p>Dir</p>")
     set_trace(False)
     assert result == [{"speaker": "human", "content": "Dir"}]
-    files = list(run_dir.glob("*_markup.poml"))
-    assert len(files) == 1
+    files = list(run_dir.glob("*.poml"))
+    assert len(files) == 2
+
+
+def test_trace_artifact(tmp_path: Path):
+    clear_trace()
+    run_dir = set_trace(trace_dir=tmp_path)
+    poml("<p>A</p>")
+    trace_artifact("reply.txt", "hello")
+    set_trace(False)
+    artifacts = list(run_dir.glob("*.reply.txt"))
+    assert len(artifacts) == 1
+    assert artifacts[0].read_text().strip() == "hello"
+
+
+def test_trace_prefix_regex(tmp_path: Path):
+    clear_trace()
+    run_dir = set_trace(True, trace_dir=tmp_path)
+    src = tmp_path / "my.file.poml"
+    src.write_text("<p>B</p>")
+    poml(src)
+    trace_artifact("custom.txt", "bye")
+    set_trace(False)
+    artifact = run_dir / "0001.my.file.custom.txt"
+    assert artifact.exists()
 
 
 def test_trace_directory_name_format(tmp_path: Path):
     clear_trace()
-    run_dir = set_trace(True, tmp_path)
+    run_dir = set_trace(trace_dir=tmp_path)
     assert run_dir is not None
     assert re.fullmatch(r"\d{20}", run_dir.name)
     set_trace(False)
@@ -117,7 +140,7 @@ def _mp_worker():
 
 def test_multiprocessing_trace(tmp_path: Path):
     clear_trace()
-    run_dir = set_trace(True, tmp_path)
+    run_dir = set_trace(True, trace_dir=tmp_path)
     os.environ["POML_TRACE"] = str(run_dir)
     procs = [multiprocessing.Process(target=_mp_worker) for _ in range(3)]
     for p in procs:
@@ -126,7 +149,7 @@ def test_multiprocessing_trace(tmp_path: Path):
         p.join()
     set_trace(False)
     os.environ.pop("POML_TRACE", None)
-    assert len(list(run_dir.glob("*_markup.poml"))) == 3
+    assert len(list(run_dir.glob("*.poml"))) == 6
 
 
 def test_envvar_autotrace(tmp_path: Path):
@@ -135,4 +158,4 @@ def test_envvar_autotrace(tmp_path: Path):
     env["POML_TRACE"] = str(trace_dir)
     script = "from poml import poml; poml('<p>E</p>')"
     subprocess.check_call([sys.executable, "-c", script], env=env)
-    assert any(f.name.endswith("_markup.poml") for f in trace_dir.iterdir())
+    assert any(f.name.endswith(".poml") for f in trace_dir.iterdir())

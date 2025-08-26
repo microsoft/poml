@@ -1,4 +1,3 @@
 import { Reader } from './base';
 
-class MetaReader extends Reader {
-}
+class MetaReader extends Reader {}

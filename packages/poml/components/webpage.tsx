@@ -77,7 +77,7 @@ async function processWebpage(props: WebpageProps): Promise<React.ReactElement> 
 
   if (extractText) {
     const text = await extractTextFromHtml(html, selector);
-    return <Text whiteSpace="pre">{text}</Text>;
+    return <Text whiteSpace='pre'>{text}</Text>;
   } else {
     // Use the htmlToPoml function to convert HTML to POML components
     const $ = cheerio.load(html);
@@ -125,9 +125,7 @@ async function processWebpage(props: WebpageProps): Promise<React.ReactElement> 
  * <webpage url="https://example.com" extractText="false" />
  * ```
  */
-export const Webpage = component('Webpage', { asynchorous: true })((
-  props: WebpageProps
-) => {
+export const Webpage = component('Webpage', { asynchorous: true })((props: WebpageProps) => {
   let { src, url, buffer, base64, extractText, selector, ...others } = props;
   if (base64) {
     if (buffer !== undefined) {

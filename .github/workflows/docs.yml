@@ -1,0 +1,77 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for versioning
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build cli
+        run: npm run build-cli
+
+      - name: Install Python dependencies
+        run: |
+          pip install -e ".[dev]"  # Install poml with dev dependencies
+
+      - name: Generate TypeScript API documentation
+        run: npm run typedoc
+
+      - name: Configure Git for Mike
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Documentation version: $VERSION"
+
+      - name: Deploy documentation with Mike
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tagged release - deploy as versioned docs
+            VERSION="${{ steps.version.outputs.VERSION }}"
+            mike deploy --push --update-aliases $VERSION stable
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # Main branch - deploy as latest docs
+            mike deploy --push latest
+          fi
+          # Workaround before next release
+          # Always set stable to default
+          mike set-default --push stable

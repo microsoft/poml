@@ -12,3 +12,11 @@ node_modules
 /debug
 __pycache__/
 poml-*.tgz
+/.env
+/examples/.env
+/logs
+/mlruns
+/mlartifacts
+/site
+/docs/typescript/reference/**/*.md
+pomlruns

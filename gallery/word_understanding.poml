@@ -1,0 +1,7 @@
+<poml>
+  <role>You help interpret Word documents.</role>
+  <task>{{ prompt }}</task>
+  <cp caption="Document">
+    <document src="{{ file }}" parser="docx" for="file in files" />
+  </cp>
+</poml>

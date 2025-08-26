@@ -10,27 +10,28 @@ export class HTMLFileTopmostLineMonitor {
   private readonly throttle = 50;
 
   constructor() {
-    vscode.window.onDidChangeTextEditorVisibleRanges(event => {
-      if (isPomlFile(event.textEditor.document)) {
-        const line = getVisibleLine(event.textEditor);
-        if (typeof line === 'number') {
-          this.updateLine(event.textEditor.document.uri, line);
+    vscode.window.onDidChangeTextEditorVisibleRanges(
+      (event) => {
+        if (isPomlFile(event.textEditor.document)) {
+          const line = getVisibleLine(event.textEditor);
+          if (typeof line === 'number') {
+            this.updateLine(event.textEditor.document.uri, line);
+          }
         }
-      }
-    }, null, this.disposables);
+      },
+      null,
+      this.disposables,
+    );
   }
 
   dispose() {
     disposeAll(this.disposables);
   }
 
-  private readonly _onDidChangeTopmostLineEmitter = new vscode.EventEmitter<{ resource: vscode.Uri, line: number }>();
+  private readonly _onDidChangeTopmostLineEmitter = new vscode.EventEmitter<{ resource: vscode.Uri; line: number }>();
   public readonly onDidChangeTopmostLine = this._onDidChangeTopmostLineEmitter.event;
 
-  private updateLine(
-    resource: vscode.Uri,
-    line: number
-  ) {
+  private updateLine(resource: vscode.Uri, line: number) {
     const key = resource.toString();
     if (!this.pendingUpdates.has(key)) {
       // schedule update
@@ -38,7 +39,7 @@ export class HTMLFileTopmostLineMonitor {
         if (this.pendingUpdates.has(key)) {
           this._onDidChangeTopmostLineEmitter.fire({
             resource,
-            line: this.pendingUpdates.get(key) as number
+            line: this.pendingUpdates.get(key) as number,
           });
           this.pendingUpdates.delete(key);
         }
@@ -55,9 +56,7 @@ export class HTMLFileTopmostLineMonitor {
  * Returns a fractional line number based the visible character within the line.
  * Floor to get real line number
  */
-export function getVisibleLine(
-  editor: vscode.TextEditor
-): number | undefined {
+export function getVisibleLine(editor: vscode.TextEditor): number | undefined {
   if (!editor.visibleRanges.length) {
     return undefined;
   }

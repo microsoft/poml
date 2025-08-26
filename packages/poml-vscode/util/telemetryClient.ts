@@ -14,14 +14,14 @@ export class TelemetryClient extends TelemetryBase {
 
   public reportTelemetry(event: string, properties: { [key: string]: any }): Promise<void> {
     this.reporter.sendDangerousTelemetryEvent(event, {
-      ...this.formatProperties(properties)
+      ...this.formatProperties(properties),
     });
     return Promise.resolve();
   }
 
   public reportTelemetryError(event: string, error: any): Promise<void> {
     this.reporter.sendDangerousTelemetryErrorEvent(event, {
-      ...this.formatError(error)
+      ...this.formatError(error),
     });
     return Promise.resolve();
   }

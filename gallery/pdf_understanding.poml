@@ -1,0 +1,7 @@
+<poml>
+  <role>You help summarize and analyze PDF documents.</role>
+  <task>{{ prompt }}</task>
+  <cp caption="PDF">
+    <document src="{{ file }}" parser="pdf" for="file in files" />
+  </cp>
+</poml>

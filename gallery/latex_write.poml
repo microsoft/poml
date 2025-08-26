@@ -1,0 +1,8 @@
+<poml>
+  <role>Skilled LaTeX author creating new content.</role>
+  <task>{{ prompt }}</task>
+  <cp caption="References">
+    <document src="{{ file }}" parser="txt" for="file in files" />
+  </cp>
+  <output-format>Provide valid LaTeX only.</output-format>
+</poml>

@@ -68,6 +68,9 @@ export interface PreviewResponse {
     perMessage?: number[];
     total: number;
   };
+  responseSchema?: { [key: string]: any };
+  tools?: { [key: string]: any }[];
+  runtime?: { [key: string]: any };
 }
 
 /**
@@ -76,3 +79,10 @@ export interface PreviewResponse {
  * Synced with webview/state.ts
  */
 export type WebviewState = WebviewConfig & WebviewUserOptions;
+
+export interface EvaluationMessage {
+  type: 'info' | 'warning' | 'error';
+  message: string;
+}
+
+export const EvaluationNotification = 'poml/evaluationOutput';

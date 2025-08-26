@@ -1,7 +1,9 @@
-import { mkdirSync, writeFileSync, openSync, closeSync, writeSync, readFileSync } from 'fs';
+import { mkdirSync, writeFileSync, openSync, closeSync, writeSync, symlinkSync, readdirSync } from 'fs';
 import path from 'path';
 
-interface Base64Wrapper { __base64__: string }
+interface Base64Wrapper {
+  __base64__: string;
+}
 
 function replaceBuffers(value: any): any {
   if (Buffer.isBuffer(value)) {
@@ -60,19 +62,34 @@ export function isTracing(): boolean {
   return traceEnabled && !!traceDir;
 }
 
-function nextIndex(): [number, string, number] {
+function nextIndex(sourcePath?: string): [number, string, number] {
   if (!traceDir) {
     return [0, '', -1];
   }
+  const fileName = sourcePath ? path.basename(sourcePath, '.poml') : '';
+
   for (let i = 1; ; i++) {
     const idxStr = i.toString().padStart(4, '0');
-    const prefix = path.join(traceDir, idxStr);
-    const filePath = `${prefix}_markup.poml`;
+
+    // 1) If ANY file in traceDir starts with this index, skip it.
+    //    This makes the sequence independent of fileName.
+    const entries = readdirSync(traceDir);
+    const indexTaken = entries.some((entry) => entry.startsWith(idxStr));
+    if (indexTaken) {
+      continue;
+    }
+
+    // 2) Build our own target using the (possibly present) fileName.
+    const prefix = path.join(traceDir, idxStr) + (fileName ? `.${fileName}` : '');
+    const filePath = `${prefix}.poml`;
+
     try {
+      // 3) Atomically create our file. If it races and now exists, loop again.
       const fd = openSync(filePath, 'wx');
       return [i, prefix, fd];
     } catch (err: any) {
       if (err.code === 'EEXIST') {
+        // Someone created a file with this index between steps (1) and (3); try next i.
         continue;
       }
       throw err;
@@ -80,24 +97,44 @@ function nextIndex(): [number, string, number] {
   }
 }
 
-export function dumpTrace(markup: string, context?: any, stylesheet?: any, result?: any) {
+export function dumpTrace(
+  markup: string,
+  context?: any,
+  stylesheet?: any,
+  result?: any,
+  sourcePath?: string,
+  prettyResult?: string,
+) {
   if (!isTracing()) {
     return;
   }
-  const [_idx, prefix, fd] = nextIndex();
+  const [_idx, prefix, fd] = nextIndex(sourcePath);
   try {
     writeSync(fd, markup);
   } finally {
     closeSync(fd);
   }
+  if (sourcePath) {
+    const envFile = `${prefix}.env`;
+    writeFileSync(envFile, `SOURCE_PATH=${sourcePath}\n`);
+    const linkPath = `${prefix}.source.poml`;
+    try {
+      symlinkSync(sourcePath, linkPath);
+    } catch {
+      console.warn(`Failed to create symlink for source path: ${sourcePath}`);
+    }
+  }
   if (context && Object.keys(context).length > 0) {
-    writeFileSync(`${prefix}_context.json`, JSON.stringify(replaceBuffers(context), null, 2));
+    writeFileSync(`${prefix}.context.json`, JSON.stringify(replaceBuffers(context), null, 2));
   }
   if (stylesheet && Object.keys(stylesheet).length > 0) {
-    writeFileSync(`${prefix}_stylesheet.json`, JSON.stringify(replaceBuffers(stylesheet), null, 2));
+    writeFileSync(`${prefix}.stylesheet.json`, JSON.stringify(replaceBuffers(stylesheet), null, 2));
   }
   if (result !== undefined) {
-    writeFileSync(`${prefix}_result.json`, JSON.stringify(replaceBuffers(result), null, 2));
+    writeFileSync(`${prefix}.result.json`, JSON.stringify(replaceBuffers(result), null, 2));
+    if (prettyResult !== undefined) {
+      writeFileSync(`${prefix}.result.txt`, prettyResult);
+    }
   }
 }
 

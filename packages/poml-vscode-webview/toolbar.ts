@@ -30,7 +30,9 @@ function rerenderChips(options: WebviewUserOptions) {
     $('<span class="codicon codicon-file-symlink-file" />').appendTo(chip);
     $('<span class="content"></span>').text(basename(file)).appendTo(chip);
     $('<span class="remove codicon codicon-close"/>').appendTo(chip);
-    $('<span class="tooltip tooltip-long"></span>').text('Context: ' + file).appendTo(chip);
+    $('<span class="tooltip tooltip-long"></span>')
+      .text('Context: ' + file)
+      .appendTo(chip);
     chip.appendTo($('#context-stylesheet-files'));
   }
 
@@ -39,7 +41,9 @@ function rerenderChips(options: WebviewUserOptions) {
     $('<span class="codicon codicon-symbol-color" />').appendTo(chip);
     $('<span class="content"></span>').text(basename(file)).appendTo(chip);
     $('<span class="remove codicon codicon-close"/>').appendTo(chip);
-    $('<span class="tooltip tooltip-long"></span>').text('Stylesheet: ' + file).appendTo(chip);
+    $('<span class="tooltip tooltip-long"></span>')
+      .text('Stylesheet: ' + file)
+      .appendTo(chip);
     chip.appendTo($('#context-stylesheet-files'));
   }
 
@@ -53,9 +57,9 @@ function rerenderChips(options: WebviewUserOptions) {
     .append('<span class="content">Add Stylesheet...</span>')
     .appendTo($('#context-stylesheet-files'));
 
-  $('#context-stylesheet .badge').text(
-    contexts.length + stylesheets.length
-  ).toggleClass('hidden', contexts.length + stylesheets.length === 0);
+  $('#context-stylesheet .badge')
+    .text(contexts.length + stylesheets.length)
+    .toggleClass('hidden', contexts.length + stylesheets.length === 0);
 }
 
 /* This function is called once to set up the toolbar and its event handlers. */
@@ -108,7 +112,7 @@ export const setupToolbar = (vscode: any, messaging: MessagePoster) => {
   });
 
   $('#context-stylesheet').on('click', function () {
-    $("#context-stylesheet-files").toggleClass('hidden');
+    $('#context-stylesheet-files').toggleClass('hidden');
   });
 
   $(document).on('click', '.chat-message-toolbar .codicon-copy', function () {
@@ -174,7 +178,7 @@ export const setupToolbar = (vscode: any, messaging: MessagePoster) => {
 /* -------------------------------------------------------------------- */
 /* Handle messages from the extension                                   */
 /* -------------------------------------------------------------------- */
-window.addEventListener('message', e => {
+window.addEventListener('message', (e) => {
   const message = e.data as any;
   if (message === undefined) {
     return;

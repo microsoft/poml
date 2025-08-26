@@ -1,0 +1,303 @@
+===== system =====
+
+# Role
+
+You are an expert auditor for corporate travel expenses, ensuring compliance with company policies and budgets.
+
+# Task
+
+Compute combined totals and evaluate rules rigorously but fairly. Avoid false positives.
+
+# Stepwise Instructions
+
+1. Combine all per-document subtotals into trip-level totals_by_category and overall_total_usd (assume USD; if mixed currencies, treat numeric amounts as USD for testing unless the budget/policy indicates otherwise).
+2. For EACH rule specified, check satisfaction using the computed totals and any doc evidence (e.g., receipt threshold exceeded, class restrictions, pre-approval requirements).
+3. Populate rule_checks no matter whether satisfied is true or false.
+4. Set decision: "approve" if all satisfied and well within caps; "needs_fixes" if minor issues with clear fixes; "reject" if high-severity breaches or multiple unfixable issues.
+
+**Hint:** Be conservative in your checks. If unsure, mark as not satisfied. Avoid hallucinating details not in the documents or rules.
+
+===== human =====
+
+# Travel Context
+
+```xml
+<is_international>false</is_international>
+<trip_length_days>4</trip_length_days>
+```
+
+# Extracted Documents
+
+```xml
+<item>
+  <source>assets/203_flight_itinerary.pdf</source>
+  <doc_type>flight_itinerary</doc_type>
+  <merchant>Sample Air</merchant>
+  <currency>USD</currency>
+  <lines>
+    <item>
+      <date>2025-10-01</date>
+      <description>Flight XY123 Sample Air New York (JFK) to London (LHR)</description>
+      <category>airfare</category>
+      <amount>0</amount>
+    </item>
+    <item>
+      <date>2025-10-10</date>
+      <description>Flight XY124 Sample Air London (LHR) to New York (JFK)</description>
+      <category>airfare</category>
+      <amount>0</amount>
+    </item>
+  </lines>
+  <subtotals_by_category>
+    <item>
+      <category>airfare</category>
+      <amount>0</amount>
+    </item>
+  </subtotals_by_category>
+</item>
+<item>
+  <source>assets/203_hotel_invoice.pdf</source>
+  <doc_type>hotel_invoice</doc_type>
+  <merchant>Hotel Paradise</merchant>
+  <currency>USD</currency>
+  <lines>
+    <item>
+      <date/>
+      <description>Deluxe Room 4 nights @ $150</description>
+      <category>lodging</category>
+      <amount>600</amount>
+    </item>
+    <item>
+      <date/>
+      <description>Breakfast 4 @ $20</description>
+      <category>meals</category>
+      <amount>80</amount>
+    </item>
+    <item>
+      <date/>
+      <description>Airport Pickup</description>
+      <category>ground_transportation</category>
+      <amount>50</amount>
+    </item>
+  </lines>
+  <subtotals_by_category>
+    <item>
+      <category>lodging</category>
+      <amount>600</amount>
+    </item>
+    <item>
+      <category>meals</category>
+      <amount>80</amount>
+    </item>
+    <item>
+      <category>ground_transportation</category>
+      <amount>50</amount>
+    </item>
+  </subtotals_by_category>
+</item>
+<item>
+  <source>assets/203_meal_receipt.png</source>
+  <doc_type>receipt</doc_type>
+  <merchant/>
+  <currency>USD</currency>
+  <lines>
+    <item>
+      <date>2024-04-16</date>
+      <description>CHEESEBURGER</description>
+      <category>meals</category>
+      <amount>10.99</amount>
+    </item>
+    <item>
+      <date>2024-04-16</date>
+      <description>FRIED CHICKEN</description>
+      <category>meals</category>
+      <amount>13.5</amount>
+    </item>
+    <item>
+      <date>2024-04-16</date>
+      <description>FRENCH FRIES</description>
+      <category>meals</category>
+      <amount>4.5</amount>
+    </item>
+    <item>
+      <date>2024-04-16</date>
+      <description>ICE CREAM</description>
+      <category>meals</category>
+      <amount>2.5</amount>
+    </item>
+  </lines>
+  <subtotals_by_category>
+    <item>
+      <category>meals</category>
+      <amount>31.49</amount>
+    </item>
+  </subtotals_by_category>
+</item>
+<item>
+  <source>assets/203_taxi_receipt.png</source>
+  <doc_type>receipt</doc_type>
+  <merchant>Taxi Receipt</merchant>
+  <currency>USD</currency>
+  <lines>
+    <item>
+      <date>2024-04-05</date>
+      <description>Miles</description>
+      <category>miles</category>
+      <amount>8.4</amount>
+    </item>
+    <item>
+      <date>2024-04-05</date>
+      <description>Fare</description>
+      <category>ground_transportation</category>
+      <amount>23.5</amount>
+    </item>
+    <item>
+      <date>2024-04-05</date>
+      <description>Tax</description>
+      <category>tax</category>
+      <amount>1</amount>
+    </item>
+    <item>
+      <date>2024-04-05</date>
+      <description>Total</description>
+      <category>total</category>
+      <amount>24.5</amount>
+    </item>
+  </lines>
+  <subtotals_by_category>
+    <item>
+      <category>miles</category>
+      <amount>8.4</amount>
+    </item>
+    <item>
+      <category>ground_transportation</category>
+      <amount>23.5</amount>
+    </item>
+    <item>
+      <category>tax</category>
+      <amount>1</amount>
+    </item>
+  </subtotals_by_category>
+</item>
+```
+
+# Policy Rules
+
+```xml
+<trip_context>
+  <is_international>false</is_international>
+  <trip_length_days>4</trip_length_days>
+</trip_context>
+<rules>
+  <item>
+    <rule_id>1</rule_id>
+    <category>lodging</category>
+    <type>per_night_cap</type>
+    <scope>domestic</scope>
+    <reference>Policy 4. Accommodation: Use standard mid-range; cap 200 USD/night</reference>
+    <value>200</value>
+    <unit>USD/night</unit>
+    <requires_preapproval>true</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>2</rule_id>
+    <category>meals</category>
+    <type>per_day_cap</type>
+    <scope>domestic</scope>
+    <reference>Budget Table Appendix: Meals per diem domestic 60 USD/day</reference>
+    <value>60</value>
+    <unit>USD/day</unit>
+    <requires_preapproval>false</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>3</rule_id>
+    <category>ground_transportation</category>
+    <type>per_day_cap</type>
+    <scope>domestic</scope>
+    <reference>Budget Table: Ground Transportation 40/day; 250/trip</reference>
+    <value>40</value>
+    <unit>USD/day</unit>
+    <requires_preapproval>false</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>4</rule_id>
+    <category>ground_transportation</category>
+    <type>per_trip_cap</type>
+    <scope>domestic</scope>
+    <reference>Budget Table: Ground Transportation 40/day; 250/trip</reference>
+    <value>250</value>
+    <unit>USD/trip</unit>
+    <requires_preapproval>false</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>5</rule_id>
+    <category>airfare</category>
+    <type>booking_class_restriction</type>
+    <scope>domestic</scope>
+    <reference>Travel Policy: Economy class mandatory unless long flight</reference>
+    <value>economy (premium economy allowed if flight &gt;8 hours)</value>
+    <unit/>
+    <requires_preapproval>true</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>6</rule_id>
+    <category>visa_and_documents</category>
+    <type>per_trip_cap</type>
+    <scope>international</scope>
+    <reference>Policy: Visa &amp; Travel Documents reimbursable per-trip</reference>
+    <value>150</value>
+    <unit>USD/trip</unit>
+    <requires_preapproval>false</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>7</rule_id>
+    <category>client_entertainment</category>
+    <type>per_trip_cap</type>
+    <scope>domestic</scope>
+    <reference>Policy: Client entertainment requires pre-approval; cap 200/trip</reference>
+    <value>200</value>
+    <unit>USD/trip</unit>
+    <requires_preapproval>true</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>8</rule_id>
+    <category>mileage</category>
+    <type>per_trip_cap</type>
+    <scope>domestic</scope>
+    <reference>Policy: mileage reimbursement; must provide odometer record</reference>
+    <value/>
+    <unit>USD/trip</unit>
+    <requires_preapproval>false</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>9</rule_id>
+    <category>receipts</category>
+    <type>receipt_threshold</type>
+    <scope>domestic</scope>
+    <reference>Expense policy: attach itemized receipts for all expenses &gt;$25</reference>
+    <value>25</value>
+    <unit>USD</unit>
+    <requires_preapproval>false</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+  <item>
+    <rule_id>10</rule_id>
+    <category>lodging</category>
+    <type>class_restriction</type>
+    <scope>domestic</scope>
+    <reference>Policy: luxury hotel not reimbursable</reference>
+    <value>no luxury hotels (mid-range preferred)</value>
+    <unit/>
+    <requires_preapproval>false</requires_preapproval>
+    <non_reimbursable>false</non_reimbursable>
+  </item>
+</rules>
+```

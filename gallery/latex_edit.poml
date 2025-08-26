@@ -1,0 +1,8 @@
+<poml>
+  <role>You are a LaTeX expert revising documents.</role>
+  <task>{{ prompt }}</task>
+  <cp caption="LaTeX Source">
+    <document src="{{ file }}" parser="txt" for="file in files" />
+  </cp>
+  <output-format>Return only the updated LaTeX code.</output-format>
+</poml>

@@ -6,18 +6,14 @@ import { CommandManager } from './util/commandManager';
 import * as command from './command';
 import { Logger } from './util/logger';
 import { POMLWebviewPanelManager } from './panel/manager';
-import {
-  LanguageClient,
-  LanguageClientOptions,
-  ServerOptions,
-  TransportKind
-} from 'vscode-languageclient/node';
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 import { initializeReporter, getTelemetryReporter, TelemetryClient } from './util/telemetryClient';
 import { TelemetryEvent } from './util/telemetryServer';
 import { registerPomlChatParticipant } from './chat/participant';
 import { registerPromptGallery, PromptGalleryProvider } from './chat/gallery';
+import { EvaluationMessage, EvaluationNotification } from './panel/types';
 
-let extensionPath = "";
+let extensionPath = '';
 
 export function getExtensionPath(): string {
   return extensionPath;
@@ -63,6 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
   commandManager.register(new command.TelemetryCompletionAcceptanceCommand(webviewManager));
 
   activateClient(context, getTelemetryReporter());
+  return { getClient };
 }
 
 // This method is called when your extension is deactivated
@@ -71,12 +68,11 @@ export function deactivate() {
 }
 
 let client: LanguageClient;
+let evaluationOutputChannel: vscode.OutputChannel | undefined;
 
 export function activateClient(context: vscode.ExtensionContext, reporter?: TelemetryClient) {
   // The server is implemented in node
-  const serverModule = context.asAbsolutePath(
-    path.join('dist', 'server.js')
-  );
+  const serverModule = context.asAbsolutePath(path.join('dist', 'server.js'));
 
   // If the extension is launched in debug mode then the debug server options are used
   // Otherwise the run options are used
@@ -85,26 +81,34 @@ export function activateClient(context: vscode.ExtensionContext, reporter?: Tele
     debug: {
       module: serverModule,
       transport: TransportKind.ipc,
-    }
+    },
   };
 
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
     // Register the server for plain text documents
-    documentSelector: [{ scheme: 'file', language: 'poml' }]
+    documentSelector: [{ scheme: 'file', language: 'poml' }],
   };
 
   // Create the language client and start the client.
-  client = new LanguageClient(
-    'poml-vscode',
-    'POML Language Server',
-    serverOptions,
-    clientOptions
-  );
+  client = new LanguageClient('poml-vscode', 'POML Language Server', serverOptions, clientOptions);
 
   if (reporter) {
     client.onTelemetry(reporter.handleDataFromServer, reporter);
   }
+
+  // Create output channel for evaluation results
+  if (!evaluationOutputChannel) {
+    evaluationOutputChannel = vscode.window.createOutputChannel('POML Debug', 'log');
+  }
+
+  // Register handler for evaluation notifications
+  client.onNotification(EvaluationNotification, (message: EvaluationMessage) => {
+    if (evaluationOutputChannel) {
+      evaluationOutputChannel.appendLine(message.message);
+      evaluationOutputChannel.show(true);
+    }
+  });
 
   // Start the client. This will also launch the server
   client.start();
@@ -118,6 +122,10 @@ export function deactivateClient(): Thenable<void> | undefined {
   if (!client) {
     return undefined;
   }
+  if (evaluationOutputChannel) {
+    evaluationOutputChannel.dispose();
+    evaluationOutputChannel = undefined;
+  }
   return client.stop();
 }
 
@@ -127,12 +135,10 @@ function environmentData(): { [key: string]: string | undefined } {
     os: os.platform(),
     osRelease: os.release(),
     architecture: os.arch(),
-    vscodeVersion: vscode.version
+    vscodeVersion: vscode.version,
   };
 }
 
 function getConnectionString(): string | undefined {
-  return vscode.workspace
-    .getConfiguration('poml')
-    .get<string>('telemetry.connection');
+  return vscode.workspace.getConfiguration('poml').get<string>('telemetry.connection');
 }

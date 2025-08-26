@@ -12,36 +12,154 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  browser-build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
 
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 22.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
-    - name: Use Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-    - run: npm ci
-    - run: npm run build-webview
-    - run: npm run build-cli
-    - run: npm run lint
-    - run: npm run package
-    - run: python -m pip install -e .[dev]
-    - run: xvfb-run -a npm test
-      if: runner.os == 'Linux'
-    - run: npm test
-      if: runner.os != 'Linux'
-    - run: python -m pytest python/tests
-    - run: xvfb-run -a npm run compile && xvfb-run -a npm run test-vscode
-      if: runner.os == 'Linux'
-    - run: npm run compile && npm run test-vscode
-      if: runner.os != 'Linux'
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      # This step should not be necessary, but without it,
+      # currently ../poml won't be able to locate dependencies
+      - name: Install base dependencies
+        run: |
+          npm ci
+      - name: Install dependencies
+        run: |
+          cd packages/poml-browser
+          npm ci
+      - name: Build poml-browser (warnings as errors)
+        run: |
+          cd packages/poml-browser
+          npm run build
+        env:
+          WARNINGS_AS_ERRORS: 'true'
+
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+          - os: windows-latest
+            platform: win32-x64
+          - os: macos-13
+            platform: darwin-x64
+          - os: macos-latest
+            platform: darwin-arm64
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Use Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: npm ci
+      - run: npm run build-webview
+      - run: npm run build-cli
+      - run: npm run validate-component-spec
+        if: matrix.os == 'ubuntu-latest'
+      - run: npm run package:win
+        if: matrix.platform == 'win32-x64'
+      - run: npm run package -- --target ${{ matrix.platform }}
+        if: matrix.platform != 'win32-x64'
+      - run: python -m pip install -e .[dev]
+      - run: xvfb-run -a npm test
+        if: runner.os == 'Linux'
+      - run: npm test
+        if: runner.os != 'Linux'
+      - run: python -m pytest -v python/tests
+      - run: xvfb-run -a npm run compile && xvfb-run -a npm run test-vscode
+        if: runner.os == 'Linux'
+      - uses: nick-invision/retry@v3
+        if: matrix.os == 'macos-13'
+        with:
+          max_attempts: 3
+          timeout_minutes: 10
+          command: npm run compile && npm run test-vscode
+      - run: npm run compile && npm run test-vscode
+        if: runner.os != 'Linux' && matrix.os != 'macos-13'
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run build-cli
+      - run: npm run format:check
+      - run: npm run lint
+      - run: python -m pip install -e .[dev]
+      - run: isort --check-only .
+      - run: black --check .
+
+  docs:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for versioning
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build cli
+        run: npm run build-cli
+
+      - name: Install Python dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Generate component documentation
+        run: npm run validate-component-spec
+
+      - name: Generate TypeScript API documentation
+        run: npm run typedoc
+
+      - name: Build documentation
+        run: mkdocs build
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-site
+          path: site/

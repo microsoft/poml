@@ -39,10 +39,7 @@ export class POMLWebviewPanelManager implements vscode.WebviewPanelSerializer {
     }
   }
 
-  public preview(
-    resource: vscode.Uri,
-    previewSettings: PanelSettings
-  ): void {
+  public preview(resource: vscode.Uri, previewSettings: PanelSettings): void {
     let preview = this.getExistingPreview(resource, previewSettings);
     if (preview) {
       preview.reveal(previewSettings.previewColumn);
@@ -79,34 +76,26 @@ export class POMLWebviewPanelManager implements vscode.WebviewPanelSerializer {
     }
   }
 
-  public async deserializeWebviewPanel(
-    webview: vscode.WebviewPanel,
-    state: any
-  ): Promise<void> {
+  public async deserializeWebviewPanel(webview: vscode.WebviewPanel, state: any): Promise<void> {
     const preview = await POMLWebviewPanel.revive(
       webview,
       state,
       this._extensionContext,
       this._previewConfigurations,
       this._logger,
-      this._topmostLineMonitor
+      this._topmostLineMonitor,
     );
 
     this.registerPreview(preview);
   }
 
-  private getExistingPreview(
-    resource: vscode.Uri,
-    previewSettings: PanelSettings
-  ): POMLWebviewPanel | undefined {
-    return this._previews.find(preview =>
-      preview.matchesResource(resource, previewSettings.previewColumn, previewSettings.locked));
+  private getExistingPreview(resource: vscode.Uri, previewSettings: PanelSettings): POMLWebviewPanel | undefined {
+    return this._previews.find((preview) =>
+      preview.matchesResource(resource, previewSettings.previewColumn, previewSettings.locked),
+    );
   }
 
-  private createNewPreview(
-    resource: vscode.Uri,
-    previewSettings: PanelSettings
-  ): POMLWebviewPanel {
+  private createNewPreview(resource: vscode.Uri, previewSettings: PanelSettings): POMLWebviewPanel {
     const preview = POMLWebviewPanel.create(
       resource,
       previewSettings.previewColumn,
@@ -114,16 +103,15 @@ export class POMLWebviewPanelManager implements vscode.WebviewPanelSerializer {
       this._extensionContext,
       this._previewConfigurations,
       this._logger,
-      this._topmostLineMonitor);
+      this._topmostLineMonitor,
+    );
 
     this.setPreviewActiveContext(true);
     this._activePreview = preview;
     return this.registerPreview(preview);
   }
 
-  private registerPreview(
-    preview: POMLWebviewPanel
-  ): POMLWebviewPanel {
+  private registerPreview(preview: POMLWebviewPanel): POMLWebviewPanel {
     this._previews.push(preview);
 
     preview.onDispose(() => {
@@ -140,7 +128,7 @@ export class POMLWebviewPanelManager implements vscode.WebviewPanelSerializer {
     });
 
     preview.onDidChangeViewState(({ webviewPanel }) => {
-      disposeAll(this._previews.filter(otherPreview => preview !== otherPreview && preview!.matches(otherPreview)));
+      disposeAll(this._previews.filter((otherPreview) => preview !== otherPreview && preview!.matches(otherPreview)));
       this.setPreviewActiveContext(webviewPanel.active);
       this._activePreview = webviewPanel.active ? preview : undefined;
     });
@@ -152,4 +140,3 @@ export class POMLWebviewPanelManager implements vscode.WebviewPanelSerializer {
     vscode.commands.executeCommand('setContext', POMLWebviewPanelManager.pomlPreviewActiveContextKey, value);
   }
 }
-

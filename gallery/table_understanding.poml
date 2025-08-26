@@ -1,0 +1,7 @@
+<poml>
+  <role>You are a data analyst interpreting tables.</role>
+  <task>{{ prompt }}</task>
+  <cp caption="Table">
+    <table src="{{ file }}" parser="auto" for="file in files" />
+  </cp>
+</poml>

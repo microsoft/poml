@@ -1,0 +1,206 @@
+name: PyPI Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags like v1.0.0, v1.2.3, etc.
+  schedule:
+    # Run daily at 10:00 PM UTC for nightly builds
+    - cron: '0 22 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  check-version:
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/shared-check-version.yml
+
+  generate-timestamp:
+    runs-on: ubuntu-latest
+    outputs:
+      timestamp: ${{ steps.timestamp.outputs.value }}
+      build_type: ${{ steps.build_type.outputs.type }}
+    steps:
+      - name: Determine build type
+        id: build_type
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]] || ([[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ ! "${{ github.ref }}" =~ ^refs/tags/ ]]); then
+            echo "type=nightly" >> $GITHUB_OUTPUT
+            echo "Build type: nightly"
+          else
+            echo "type=production" >> $GITHUB_OUTPUT
+            echo "Build type: production"
+          fi
+
+      - name: Generate timestamp
+        id: timestamp
+        shell: bash
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M)
+          echo "value=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "Generated timestamp: $TIMESTAMP"
+
+  publish-to-pypi:
+    needs: [check-version, generate-timestamp]
+    if: always() && (needs.check-version.result == 'success' || needs.check-version.result == 'skipped')
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            wheel_platform: manylinux_2_17_x86_64
+          - os: ubuntu-24.04-arm
+            wheel_platform: manylinux_2_17_aarch64
+          - os: windows-latest
+            wheel_platform: win_amd64
+          - os: macos-13
+            wheel_platform: macosx_10_9_x86_64
+          - os: macos-latest
+            wheel_platform: macosx_11_0_arm64
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Use Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run build-webview
+      - run: npm run build-cli
+      - run: python -m pip install -e .[dev]
+
+      - name: Get current version
+        id: get_version
+        shell: bash
+        run: |
+          VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Create development version
+        if: needs.generate-timestamp.outputs.build_type == 'nightly'
+        id: create_nightly
+        shell: bash
+        run: |
+          # Create a dev version with shared timestamp
+          TIMESTAMP=${{ needs.generate-timestamp.outputs.timestamp }}
+          echo "Using shared timestamp: $TIMESTAMP"
+          node bump-version.js ${{ steps.get_version.outputs.version }} "$TIMESTAMP"
+          NIGHTLY_VERSION=$(python -c "import poml; print(poml.__version__)")
+          echo "Nightly version: $NIGHTLY_VERSION"
+          echo "nightly_version=$NIGHTLY_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build package
+        run: hatch build -t wheel
+
+      - name: Verify package contents
+        shell: bash
+        run: |
+          python -m zipfile -l dist/*.whl
+
+      - name: Rename wheel for platform
+        id: rename-wheel
+        shell: bash
+        run: |
+          WHEEL_FILE=$(find dist -name "*.whl" -type f | head -1)
+          if [ -z "$WHEEL_FILE" ]; then
+            echo "No wheel file found!"
+            exit 1
+          fi
+          echo "Original wheel: $WHEEL_FILE"
+
+          # Parse the original wheel filename to extract components
+          WHEEL_NAME=$(basename "$WHEEL_FILE" .whl)
+
+          # Split wheel name into components: name-version-python_tag-abi_tag-platform_tag
+          IFS='-' read -ra PARTS <<< "$WHEEL_NAME"
+
+          if [ ${#PARTS[@]} -ge 5 ]; then
+            DIST_NAME="${PARTS[0]}"
+            VERSION="${PARTS[1]}"
+            PYTHON_TAG="${PARTS[2]}"
+            ABI_TAG="${PARTS[3]}"
+            # Join remaining parts as platform tag
+            PLATFORM_TAG=$(IFS='-'; echo "${PARTS[*]:4}")
+          else
+            echo "Warning: Unexpected wheel filename format: $WHEEL_NAME"
+            exit 1
+          fi
+
+          # Create platform-specific wheel name
+          PLATFORM_WHEEL="${DIST_NAME}-${VERSION}-${PYTHON_TAG}-${ABI_TAG}-${{ matrix.wheel_platform }}.whl"
+          echo "Platform-specific wheel: $PLATFORM_WHEEL"
+
+          # Rename the wheel file
+          mv "$WHEEL_FILE" "dist/$PLATFORM_WHEEL"
+          echo "wheel-file=dist/$PLATFORM_WHEEL" >> $GITHUB_OUTPUT
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.wheel_platform }}-${{ github.event_name }}
+          path: ${{ steps.rename-wheel.outputs.wheel-file }}
+          compression-level: 0
+
+      - name: Publish to Test PyPI (nightly)
+        if: needs.generate-timestamp.outputs.build_type == 'nightly'
+        run: |
+          twine upload --non-interactive --repository testpypi dist/*.whl
+
+      - name: Publish to PyPI (production)
+        if: needs.generate-timestamp.outputs.build_type == 'production'
+        run: |
+          twine upload --non-interactive dist/*.whl
+
+      - name: Test installation from Test PyPI (nightly)
+        if: needs.generate-timestamp.outputs.build_type == 'nightly'
+        shell: bash
+        run: |
+          pip uninstall -y poml
+          # Retry installation up to 5 times with 60-second delays
+          for i in {1..5}; do
+            echo "Attempt $i/5: Waiting 60 seconds for package to be available..."
+            sleep 60
+            if pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ poml==${{ steps.create_nightly.outputs.nightly_version }}; then
+              python -c "import poml; print('Nightly package installed successfully from Test PyPI')"
+              exit 0
+            else
+              echo "Installation attempt $i failed"
+              if [ $i -eq 5 ]; then
+                echo "All 5 installation attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Test installation from PyPI (production)
+        if: needs.generate-timestamp.outputs.build_type == 'production'
+        shell: bash
+        run: |
+          pip uninstall -y poml
+          # Retry installation up to 5 times with 60-second delays
+          for i in {1..5}; do
+            echo "Attempt $i/5: Waiting 60 seconds for package to be available..."
+            sleep 60
+            if pip install poml==${{ needs.check-version.outputs.pypi_version }}; then
+              python -c "import poml; print('Package installed successfully from PyPI')"
+              exit 0
+            else
+              echo "Installation attempt $i failed"
+              if [ $i -eq 5 ]; then
+                echo "All 5 installation attempts failed"
+                exit 1
+              fi
+            fi
+          done

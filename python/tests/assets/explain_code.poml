@@ -1,0 +1,7 @@
+<poml>
+  <task>You are a senior Python developer. Please explain the code.</task>
+  <code inline="false">
+    <document src="{{ code_path }}" parser="txt" />
+  </code>
+  <runtime temperature="0.7" max-tokens="256"/>
+</poml>

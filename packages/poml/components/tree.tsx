@@ -10,7 +10,7 @@ import {
   Header,
   Code,
   SubContent,
-  Object
+  Object,
 } from 'poml/essentials';
 import { component, expandRelative } from 'poml/base';
 
@@ -46,7 +46,7 @@ export interface TreeProps extends PropsSyntaxBase {
 function treeToHeaderContentTree(
   items: TreeItemData[],
   parentPath = '',
-  showContent: boolean = false
+  showContent: boolean = false,
 ): React.ReactNode[] {
   return items.map((item, index) => {
     const currentPath = parentPath ? `${parentPath}/${item.name}` : item.name;
@@ -58,16 +58,14 @@ function treeToHeaderContentTree(
       const pathExtension = path.extname(item.name).toLowerCase();
       const lang = pathExtension.length > 0 ? pathExtension.slice(1) : undefined;
       elements.push(
-        <Code key={`content-${index}`} lang={lang} inline={false} whiteSpace="pre">
+        <Code key={`content-${index}`} lang={lang} inline={false} whiteSpace='pre'>
           {item.value}
-        </Code>
+        </Code>,
       );
     }
 
     if (item.children && item.children.length > 0) {
-      elements.push(
-        <SubContent>{treeToHeaderContentTree(item.children, currentPath, showContent)}</SubContent>
-      );
+      elements.push(<SubContent>{treeToHeaderContentTree(item.children, currentPath, showContent)}</SubContent>);
     }
 
     return elements;
@@ -111,7 +109,7 @@ function treeToNestedList(items: TreeItemData[], depth = 0): React.ReactNode {
  */
 function treeToPureTextContents(items: TreeItemData[], parentPath = ''): string {
   return items
-    .map(item => {
+    .map((item) => {
       const currentPath = parentPath ? `${parentPath}/${item.name}` : item.name;
       const result: string[] = [];
 
@@ -212,14 +210,14 @@ export const Tree = component('Tree')((props: TreeProps) => {
     if (showContent) {
       const pureText = treeToPureTextContents(items);
       return (
-        <Text whiteSpace="pre" {...others}>
+        <Text whiteSpace='pre' {...others}>
           {pureText}
         </Text>
       );
     } else {
       const boxDrawings = treeToBoxDrawings(items);
       return (
-        <Text whiteSpace="pre" {...others}>
+        <Text whiteSpace='pre' {...others}>
           {boxDrawings}
         </Text>
       );
@@ -238,7 +236,7 @@ function readDirectoryToTreeItems(
   maxDepth: number,
   currentDepth: number,
   showContent: boolean,
-  filter?: RegExp
+  filter?: RegExp,
 ): TreeItemData | null {
   const name = path.basename(dirPath);
 
@@ -272,7 +270,7 @@ function readDirectoryToTreeItems(
 
     for (const entry of entries) {
       const entryPath = path.join(dirPath, entry.name);
-      
+
       if (entry.isDirectory()) {
         // For directories, recursively process and check if it has any matching children
         const directoryItem = readDirectoryToTreeItems(entryPath, maxDepth, currentDepth + 1, showContent, filter);
@@ -284,7 +282,7 @@ function readDirectoryToTreeItems(
         if (filter && !filter.test(entry.name)) {
           continue;
         }
-        
+
         if (showContent) {
           // TODO: support other file types.
           const content = fs.readFileSync(entryPath, 'utf-8');
@@ -302,7 +300,7 @@ function readDirectoryToTreeItems(
 
     return {
       name,
-      children: children.length > 0 ? children : undefined
+      children: children.length > 0 ? children : undefined,
     };
   } catch (error) {
     throw new Error(`Error reading directory ${dirPath}: ${error}`);
@@ -345,21 +343,11 @@ export const Folder = component('Folder')((props: FolderProps) => {
     treeData = data;
   } else if (src) {
     const resolvedPath = expandRelative(src);
-    const filterRegex = filter
-      ? typeof filter === 'string'
-        ? new RegExp(filter)
-        : filter
-      : undefined;
+    const filterRegex = filter ? (typeof filter === 'string' ? new RegExp(filter) : filter) : undefined;
 
     try {
-      const folderData = readDirectoryToTreeItems(
-        resolvedPath,
-        maxDepth ?? 3,
-        0,
-        showContent ?? false,
-        filterRegex
-      );
-      
+      const folderData = readDirectoryToTreeItems(resolvedPath, maxDepth ?? 3, 0, showContent ?? false, filterRegex);
+
       if (folderData) {
         // If we got results, add them to the tree
         treeData = folderData.children || [];

@@ -1,0 +1,6 @@
+.env
+logs
+agentops.log
+mlruns
+pomlruns
+mlartifacts

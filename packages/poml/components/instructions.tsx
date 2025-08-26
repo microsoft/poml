@@ -20,7 +20,7 @@ interface CustomizableCaptionParagraphProps extends BaseCaptionedParagraphProps 
  * Specifies text transformation for the caption, applicable only for "markup" syntaxes. Default is `none`.
  * @param {'colon'|'newline'|'colon-newline'|'none'} captionEnding - A caption can ends with a colon, a newline or simply nothing.
  * If not specified, it defaults to `colon` for `bold` or `plain` captionStyle, and `none` otherwise.
- * 
+ *
  * @see {@link Paragraph} for other props available.
  *
  * @example
@@ -28,9 +28,7 @@ interface CustomizableCaptionParagraphProps extends BaseCaptionedParagraphProps 
  * <role>You are a data scientist.</role>
  * ```
  */
-export const Role = component('Role')((
-  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>
-) => {
+export const Role = component('Role')((props: React.PropsWithChildren<CustomizableCaptionParagraphProps>) => {
   const { children, caption = 'Role', captionSerialized = 'role', ...others } = props;
   return (
     <CaptionedParagraph caption={caption} captionSerialized={captionSerialized} {...others}>
@@ -60,7 +58,7 @@ export const Role = component('Role')((
  * ```xml
  * <task>Cook a recipe on how to prepare a beef dish.</task>
  * ```
- * 
+ *
  * When including a list of steps:
  * ```xml
  * <task>
@@ -73,9 +71,7 @@ export const Role = component('Role')((
  * </task>
  * ```
  */
-export const Task = component('Task')((
-  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>
-) => {
+export const Task = component('Task')((props: React.PropsWithChildren<CustomizableCaptionParagraphProps>) => {
   const { children, caption = 'Task', captionSerialized = 'task', ...others } = props;
   return (
     <CaptionedParagraph caption={caption} captionSerialized={captionSerialized} {...others}>
@@ -108,14 +104,9 @@ export const Task = component('Task')((
  * ```
  */
 export const OutputFormat = component('OutputFormat')((
-  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>
+  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>,
 ) => {
-  const {
-    children,
-    caption = 'Output Format',
-    captionSerialized = 'outputFormat',
-    ...others
-  } = props;
+  const { children, caption = 'Output Format', captionSerialized = 'outputFormat', ...others } = props;
   return (
     <CaptionedParagraph caption={caption} captionSerialized={captionSerialized} {...others}>
       {children}
@@ -150,14 +141,9 @@ export const OutputFormat = component('OutputFormat')((
  * ```
  */
 export const StepwiseInstructions = component('StepwiseInstructions')((
-  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>
+  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>,
 ) => {
-  const {
-    children,
-    caption = 'Stepwise Instructions',
-    captionSerialized = 'stepwiseInstructions',
-    ...others
-  } = props;
+  const { children, caption = 'Stepwise Instructions', captionSerialized = 'stepwiseInstructions', ...others } = props;
   return (
     <CaptionedParagraph caption={caption} captionSerialized={captionSerialized} {...others}>
       {children}
@@ -185,16 +171,8 @@ export const StepwiseInstructions = component('StepwiseInstructions')((
  * <hint>Alice first purchased 4 apples and then 3 more, so she has 7 apples in total.</hint>
  * ```
  */
-export const Hint = component('Hint')((
-  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>
-) => {
-  const {
-    children,
-    caption = 'Hint',
-    captionStyle = 'bold',
-    captionSerialized = 'hint',
-    ...others
-  } = props;
+export const Hint = component('Hint')((props: React.PropsWithChildren<CustomizableCaptionParagraphProps>) => {
+  const { children, caption = 'Hint', captionStyle = 'bold', captionSerialized = 'hint', ...others } = props;
   return (
     <CaptionedParagraph caption={caption} captionStyle={captionStyle} {...others}>
       {children}
@@ -223,7 +201,7 @@ export const Hint = component('Hint')((
  * ```
  */
 export const Introducer = component('Introducer')((
-  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>
+  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>,
 ) => {
   const {
     children,
@@ -281,19 +259,10 @@ const ChatRenderedExampleContext = React.createContext(true);
  * </examples>
  * ```
  */
-export const ExampleSet = component('ExampleSet', ['examples'])((
-  props: React.PropsWithChildren<ExampleSetProps>
-) => {
-  const {
-    children,
-    caption = 'Examples',
-    captionSerialized = 'examples',
-    chat,
-    introducer,
-    ...others
-  } = props;
+export const ExampleSet = component('ExampleSet', ['examples'])((props: React.PropsWithChildren<ExampleSetProps>) => {
+  const { children, caption = 'Examples', captionSerialized = 'examples', chat, introducer, ...others } = props;
   const presentation = computeSyntaxContext(props);
-  const chatComputed = chat ?? (presentation === 'markup');
+  const chatComputed = chat ?? presentation === 'markup';
   const examples = (
     <ChatRenderedExampleContext.Provider value={chatComputed}>
       {trimChildrenWhiteSpace(children, props)}
@@ -336,7 +305,7 @@ interface ExampleProps extends CustomizableCaptionParagraphProps {
  *   <output>Paris</output>
  * </example>
  * ```
- * 
+ *
  * ```xml
  * <task>Summarize the following passage in a single sentence.</task>
  * <example>
@@ -361,8 +330,7 @@ export const Example = component('Example')((props: React.PropsWithChildren<Exam
         caption={caption}
         captionSerialized={captionSerialized}
         captionStyle={captionStyle}
-        {...others}
-      >
+        {...others}>
         {chat !== undefined ? (
           <ChatRenderedExampleContext.Provider value={chat}>
             {trimChildrenWhiteSpace(children, props)}
@@ -397,36 +365,26 @@ export const Example = component('Example')((props: React.PropsWithChildren<Exam
  * ```xml
  * <input>What is the capital of France?</input>
  * ```
- * 
+ *
  * When used with a template:
- * 
+ *
  * ```xml
  * <input>What is the capital of {{country}}?</input>
  * ```
  */
 export const ExampleInput = component('ExampleInput', ['input'])((
-  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>
+  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>,
 ) => {
-  const {
-    children,
-    caption = 'Input',
-    captionSerialized = 'input',
-    captionStyle,
-    speaker,
-    ...others
-  } = props;
-  const speakerFromContext =
-    speaker || (React.useContext(ChatRenderedExampleContext) ? 'human' : undefined);
-  const captionStyleForContext =
-    captionStyle || (React.useContext(ChatRenderedExampleContext) ? 'hidden' : 'bold');
+  const { children, caption = 'Input', captionSerialized = 'input', captionStyle, speaker, ...others } = props;
+  const speakerFromContext = speaker || (React.useContext(ChatRenderedExampleContext) ? 'human' : undefined);
+  const captionStyleForContext = captionStyle || (React.useContext(ChatRenderedExampleContext) ? 'hidden' : 'bold');
   return (
     <CaptionedParagraph
       caption={caption}
       captionSerialized={captionSerialized}
       captionStyle={captionStyleForContext}
       speaker={speakerFromContext}
-      {...others}
-    >
+      {...others}>
       {children}
     </CaptionedParagraph>
   );
@@ -452,36 +410,26 @@ export const ExampleInput = component('ExampleInput', ['input'])((
  * ```xml
  * <output>The capital of France is Paris.</output>
  * ```
- * 
+ *
  * When used with a template:
- * 
+ *
  * ```xml
  * <output>The capital of {{country}} is {{capital}}.</output>
  * ```
  */
 export const ExampleOutput = component('ExampleOutput', ['output'])((
-  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>
+  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>,
 ) => {
-  const {
-    children,
-    caption = 'Output',
-    captionSerialized = 'output',
-    captionStyle,
-    speaker,
-    ...others
-  } = props;
-  const speakerFromContext =
-    speaker || (React.useContext(ChatRenderedExampleContext) ? 'ai' : undefined);
-  const captionStyleForContext =
-    captionStyle || (React.useContext(ChatRenderedExampleContext) ? 'hidden' : 'bold');
+  const { children, caption = 'Output', captionSerialized = 'output', captionStyle, speaker, ...others } = props;
+  const speakerFromContext = speaker || (React.useContext(ChatRenderedExampleContext) ? 'ai' : undefined);
+  const captionStyleForContext = captionStyle || (React.useContext(ChatRenderedExampleContext) ? 'hidden' : 'bold');
   return (
     <CaptionedParagraph
       caption={caption}
       captionSerialized={captionSerialized}
       captionStyle={captionStyleForContext}
       speaker={speakerFromContext}
-      {...others}
-    >
+      {...others}>
       {children}
     </CaptionedParagraph>
   );
@@ -514,9 +462,7 @@ interface QuestionProps extends BaseCaptionedParagraphProps {
  * <qa>What is the capital of France?</qa>
  * ```
  */
-export const Question = component('Question', ['qa'])((
-  props: React.PropsWithChildren<QuestionProps>
-) => {
+export const Question = component('Question', ['qa'])((props: React.PropsWithChildren<QuestionProps>) => {
   const presentation = computeSyntaxContext(props);
   const {
     children,
@@ -532,17 +478,11 @@ export const Question = component('Question', ['qa'])((
         caption={questionCaption}
         captionSerialized={captionSerialized}
         captionStyle={captionStyle}
-        {...others}
-      >
+        {...others}>
         {children}
       </CaptionedParagraph>
       {answerCaption && presentation === 'markup' ? (
-        <Caption
-          caption={answerCaption}
-          captionStyle={captionStyle}
-          captionTailingSpace={false}
-          {...others}
-        />
+        <Caption caption={answerCaption} captionStyle={captionStyle} captionTailingSpace={false} {...others} />
       ) : null}
     </Paragraph>
   );

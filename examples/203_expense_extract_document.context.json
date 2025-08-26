@@ -1,0 +1,131 @@
+{
+  "file": "assets/203_flight_itinerary.pdf",
+  "document_output_schema": {
+    "$defs": {
+      "LineItem": {
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "YYYY-MM-DD",
+            "title": "Date"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "category": {
+            "description": "e.g., lodging, meals, ground_transportation, rental_car, communications, visa, entertainment, supplies, incidentals",
+            "title": "Category",
+            "type": "string"
+          },
+          "amount": {
+            "title": "Amount",
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "description",
+          "category",
+          "amount"
+        ],
+        "title": "LineItem",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TotalByCategory": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "amount": {
+            "title": "Amount",
+            "type": "number"
+          }
+        },
+        "required": [
+          "category",
+          "amount"
+        ],
+        "title": "TotalByCategory",
+        "type": "object",
+        "additionalProperties": false
+      }
+    },
+    "properties": {
+      "source": {
+        "description": "Filename or doc label",
+        "title": "Source",
+        "type": "string"
+      },
+      "doc_type": {
+        "enum": [
+          "hotel_invoice",
+          "flight_itinerary",
+          "receipt",
+          "other"
+        ],
+        "title": "Doc Type",
+        "type": "string"
+      },
+      "merchant": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Merchant or provider name",
+        "title": "Merchant"
+      },
+      "currency": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "ISO currency code, e.g., USD, EUR",
+        "title": "Currency"
+      },
+      "lines": {
+        "items": {
+          "$ref": "#/$defs/LineItem"
+        },
+        "title": "Lines",
+        "type": "array"
+      },
+      "subtotals_by_category": {
+        "description": "=Sum per category within this single document. DO NOT include overall/combined totals here.",
+        "items": {
+          "$ref": "#/$defs/TotalByCategory"
+        },
+        "title": "Subtotals By Category",
+        "type": "array"
+      }
+    },
+    "required": [
+      "source",
+      "doc_type",
+      "merchant",
+      "currency",
+      "lines",
+      "subtotals_by_category"
+    ],
+    "title": "Document",
+    "type": "object",
+    "additionalProperties": false
+  }
+}

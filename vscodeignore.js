@@ -1,5 +1,5 @@
 // This script generates a .vscodeignore file based on the package-lock.json.
-
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const path = require('path');
 
@@ -24,7 +24,9 @@ try {
 
   // Ensure we are working with a v2/v3 lockfile which has the 'packages' map
   if (!lockfile.packages) {
-    throw new Error('This script requires a lockfile version 2 or 3 (npm v7+). Please update npm or adjust the script.');
+    throw new Error(
+      'This script requires a lockfile version 2 or 3 (npm v7+). Please update npm or adjust the script.',
+    );
   }
 
   const allDependencies = new Set(['@img']);
@@ -32,12 +34,12 @@ try {
   const queue = [...rootPackages]; // Start with our root packages
 
   // Add root packages to the set initially
-  rootPackages.forEach(pkg => allDependencies.add(pkg));
+  rootPackages.forEach((pkg) => allDependencies.add(pkg));
 
   while (queue.length > 0) {
     const currentPackage = queue.shift();
     const packageKey = `node_modules/${currentPackage}`;
-    
+
     const packageInfo = lockfile.packages[packageKey];
 
     if (packageInfo) {
@@ -67,6 +69,7 @@ out/**
 packages/**
 python/**
 examples/**
+test-fixtures/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -92,8 +95,8 @@ dist/**/node_modules/**
 
   const ignoreRules = Array.from(allDependencies)
     .sort()
-    .filter(depName => ignoredDependencies.every(ignored => !depName.startsWith(ignored)))
-    .map(depName => `!node_modules/${depName}/**`);
+    .filter((depName) => ignoredDependencies.every((ignored) => !depName.startsWith(ignored)))
+    .map((depName) => `!node_modules/${depName}/**`);
 
   const ignoreContent = ignoreHeader + ignoreRules.join('\n');
 
@@ -101,7 +104,6 @@ dist/**/node_modules/**
   fs.writeFileSync(outputPath, ignoreContent);
 
   console.log(`.vscodeignore has been successfully generated at: ${outputPath}`);
-
 } catch (error) {
   console.error('Failed to generate .vscodeignore file.');
   console.error('Original error:', error);

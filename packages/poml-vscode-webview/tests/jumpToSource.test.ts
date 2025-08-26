@@ -5,7 +5,7 @@ import { describe, test, expect, jest } from '@jest/globals';
 import { setupToolbar } from '../toolbar';
 
 jest.mock('../state', () => ({
-  getState: () => ({ doubleClickToSwitchToEditor: true })
+  getState: () => ({ doubleClickToSwitchToEditor: true }),
 }));
 
 describe('jump to source', () => {

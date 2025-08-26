@@ -3,12 +3,36 @@ import * as fs from 'fs';
 import * as mammoth from 'mammoth';
 import * as cheerio from 'cheerio';
 
-import { Header, Newline, Text, Image, Paragraph, PropsSyntaxBase, List, ListItem, Bold, Italic } from 'poml/essentials';
+import {
+  Header,
+  Newline,
+  Text,
+  Image,
+  Paragraph,
+  PropsSyntaxBase,
+  List,
+  ListItem,
+  Bold,
+  Italic,
+} from 'poml/essentials';
 // import pdf from 'pdf-parse';
 import { pdfParse, getNumPages } from 'poml/util/pdf';
-import { component, expandRelative, useWithCatch } from 'poml/base';
+import { component, expandRelative, useWithCatch, BufferCollection } from 'poml/base';
 import { Table } from './table';
 import { parsePythonStyleSlice } from './utils';
+
+function readBufferCached(filePath: string): Buffer {
+  const abs = expandRelative(filePath);
+  const key = `content://${abs}`;
+  const stat = fs.statSync(abs);
+  const cached = BufferCollection.get<{ value: Buffer; mtime: number }>(key);
+  if (cached && cached.mtime === stat.mtimeMs) {
+    return cached.value;
+  }
+  const buf = fs.readFileSync(abs);
+  BufferCollection.set(key, { value: buf, mtime: stat.mtimeMs });
+  return buf;
+}
 
 async function parsePdfWithPageLimit(dataBuffer: Buffer, startPage: number, endPage: number) {
   // This is a workaround for pdf-parse not supporting a range.
@@ -20,10 +44,7 @@ async function parsePdfWithPageLimit(dataBuffer: Buffer, startPage: number, endP
   return data.slice(minusData.length);
 }
 
-export async function readPdf(
-  dataBuffer: Buffer,
-  options?: DocumentProps
-): Promise<React.ReactElement> {
+export async function readPdf(dataBuffer: Buffer, options?: DocumentProps): Promise<React.ReactElement> {
   const { selectedPages } = options || {};
   const numPages = await getNumPages(dataBuffer);
   if (selectedPages) {
@@ -35,18 +56,15 @@ export async function readPdf(
   }
 }
 
-export async function readPdfFromPath(
-  filePath: string,
-  options?: DocumentProps
-): Promise<React.ReactElement> {
-  const dataBuffer = fs.readFileSync(filePath);
+export async function readPdfFromPath(filePath: string, options?: DocumentProps): Promise<React.ReactElement> {
+  const dataBuffer = readBufferCached(filePath);
   return readPdf(dataBuffer, options);
 }
 
 function htmlContentsToPoml(
   element: cheerio.Cheerio<any>,
   $: cheerio.CheerioAPI,
-  options?: DocumentProps
+  options?: DocumentProps,
 ): React.ReactNode[] {
   const children = element
     .contents()
@@ -64,44 +82,40 @@ function htmlContentsToPoml(
 function convertTableFromHtml(
   element: cheerio.Cheerio<any>,
   $: cheerio.CheerioAPI,
-  options?: DocumentProps
+  options?: DocumentProps,
 ): React.ReactElement {
   const body = element
     .find('tr')
     .toArray()
-    .map(tr =>
+    .map((tr) =>
       $(tr)
         .find('td, th')
         .toArray()
-        .map(td => $(td).text())
+        .map((td) => $(td).text()),
     );
   const header = body.shift() || [];
 
   if (header.length === 0) {
     return <></>;
   }
-  const maxColumns = Math.max(...body.map(row => row.length), header.length);
+  const maxColumns = Math.max(...body.map((row) => row.length), header.length);
   if (header.length < maxColumns) {
-    header.push(
-      ...Array(maxColumns - header.length).map(i => `Unnamed Column ${i + header.length}`)
-    );
+    header.push(...Array(maxColumns - header.length).map((i) => `Unnamed Column ${i + header.length}`));
   }
-  const rows = body.map(row => {
+  const rows = body.map((row) => {
     return Object.fromEntries(
       header.map((column, index) => {
         return [column, index < row.length ? row[index] : ''];
-      })
+      }),
     );
   });
-  return (
-    <Table records={rows} columns={header.map(column => ({ field: column, header: column }))} />
-  );
+  return <Table records={rows} columns={header.map((column) => ({ field: column, header: column }))} />;
 }
 
 export function htmlToPoml(
   element: cheerio.Cheerio<any>,
   $: cheerio.CheerioAPI,
-  options?: DocumentProps
+  options?: DocumentProps,
 ): React.ReactElement {
   if (element.is('style') || element.is('script')) {
     return <></>;
@@ -135,7 +149,7 @@ export function htmlToPoml(
     if (src.startsWith('data:') && src.includes(';base64')) {
       const base64 = src.split(',')[1];
       if (options?.multimedia || options?.multimedia === undefined) {
-        return <Image syntax="multimedia" base64={base64} alt={element.attr('alt')} />;
+        return <Image syntax='multimedia' base64={base64} alt={element.attr('alt')} />;
       } else {
         return <Image base64={base64} alt={element.attr('alt')} />;
       }
@@ -150,36 +164,24 @@ export function htmlToPoml(
   }
 }
 
-export async function readDocx(
-  dataBuffer: Buffer,
-  options?: DocumentProps
-): Promise<React.ReactElement> {
+export async function readDocx(dataBuffer: Buffer, options?: DocumentProps): Promise<React.ReactElement> {
   const result = await mammoth.convertToHtml({ buffer: dataBuffer });
   const $ = cheerio.load(result.value);
-  return <Text syntax="markdown">{htmlContentsToPoml($('body'), $, options)}</Text>;
+  return <Text syntax='markdown'>{htmlContentsToPoml($('body'), $, options)}</Text>;
 }
 
-export async function readDocxFromPath(
-  filePath: string,
-  options?: DocumentProps
-): Promise<React.ReactElement> {
-  const dataBuffer = fs.readFileSync(filePath);
+export async function readDocxFromPath(filePath: string, options?: DocumentProps): Promise<React.ReactElement> {
+  const dataBuffer = readBufferCached(filePath);
   return readDocx(dataBuffer, options);
 }
 
-export async function readTxt(
-  dataBuffer: Buffer,
-  options?: DocumentProps
-): Promise<React.ReactElement> {
+export async function readTxt(dataBuffer: Buffer, options?: DocumentProps): Promise<React.ReactElement> {
   const text = dataBuffer.toString();
   return <Text whiteSpace='pre'>{text}</Text>;
 }
 
-export async function readTxtFromPath(
-  filePath: string,
-  options?: DocumentProps
-): Promise<React.ReactElement> {
-  const dataBuffer = fs.readFileSync(filePath);
+export async function readTxtFromPath(filePath: string, options?: DocumentProps): Promise<React.ReactElement> {
+  const dataBuffer = readBufferCached(filePath);
   return readTxt(dataBuffer, options);
 }
 
@@ -207,9 +209,7 @@ function determineParser(src: string): DocumentParser {
   }
 }
 
-async function autoParseDocument(
-  props: DocumentProps & { buffer?: Buffer }
-): Promise<React.ReactElement> {
+async function autoParseDocument(props: DocumentProps & { buffer?: Buffer }): Promise<React.ReactElement> {
   let { parser, src, buffer } = props;
   if (parser === 'auto' || parser === undefined) {
     if (!src) {
@@ -218,7 +218,7 @@ async function autoParseDocument(
     parser = determineParser(src);
   }
   if (src) {
-    buffer = fs.readFileSync(expandRelative(src));
+    buffer = readBufferCached(src);
   } else if (!buffer) {
     throw new Error('Either buffer or src must be provided');
   }
@@ -255,9 +255,7 @@ async function autoParseDocument(
  * <Document src="sample.docx" multimedia="false"/>
  * ```
  */
-export const Document = component('Document', { aliases: ['doc'], asynchorous: true })((
-  props: DocumentProps
-) => {
+export const Document = component('Document', { aliases: ['doc'], asynchorous: true })((props: DocumentProps) => {
   let { buffer, parser, base64, ...others } = props;
   let parsedBuffer: Buffer | undefined;
   if (base64) {
@@ -275,9 +273,6 @@ export const Document = component('Document', { aliases: ['doc'], asynchorous: t
       parsedBuffer = buffer;
     }
   }
-  const document = useWithCatch(
-    autoParseDocument({ buffer: parsedBuffer, parser, ...others }),
-    others
-  );
+  const document = useWithCatch(autoParseDocument({ buffer: parsedBuffer, parser, ...others }), others);
   return <>{document ?? null}</>;
 });

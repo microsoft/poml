@@ -1,9 +1,31 @@
 import 'poml';
 import { ComponentSpec, Parameter } from 'poml/base';
 
-import { readFileSync, readdirSync, writeFile, writeFileSync } from 'fs';
+import { readFileSync, readdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { formatComponentDocumentation } from './documentFormatter';
+
+const checkMode = process.argv.includes('--check');
+let hasChanges = false;
+
+function writeOrCheck(filePath: string, content: string) {
+  let existing: string | undefined;
+  try {
+    existing = readFileSync(filePath, 'utf8');
+  } catch {
+    existing = undefined;
+  }
+
+  if (existing !== content) {
+    if (checkMode) {
+      console.error(`${filePath} is out of date.`);
+      hasChanges = true;
+    } else {
+      writeFileSync(filePath, content);
+      console.log(`Updated ${filePath}`);
+    }
+  }
+}
 
 const basicComponents: string[] = [];
 const intentions: string[] = [];
@@ -18,14 +40,14 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
     .replace(/^\/\*\*?/, '')
     .replace(/\*\/$/, '')
     .split('\n')
-    .map(line => line.replace(/^\s*\*( )?/, ''))
-    .map(line => line.replace(/\s+$/, ''))
+    .map((line) => line.replace(/^\s*\*( )?/, ''))
+    .map((line) => line.replace(/\s+$/, ''))
     .join('\n');
 
   // Recognize description, @param and @example in the comment.
   const descriptionRegex = /([\s\S]*?)(?=@param|@example|@see|$)/;
-  const paramRegex =
-    /@param\s+(\{([\S'"\|]+?)\}\s+)?(\w+)\s+-\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
+  // eslint-disable-next-line no-useless-escape
+  const paramRegex = /@param\s+(\{([\S'"\|]+?)\}\s+)?(\w+)\s+-\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
   const exampleRegex = /@example\s+([\s\S]*?)(?=@param|@example|@see|$)/;
   const seeRegex = /@see\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
 
@@ -51,7 +73,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
       fallbackType = 'string';
     } else if (paramMatch[2] && paramMatch[2].includes('|')) {
       type = 'string';
-      choices = paramMatch[2].split('|').map(choice => choice.replace(/['"\s]/g, '').trim());
+      choices = paramMatch[2].split('|').map((choice) => choice.replace(/['"\s]/g, '').trim());
     } else if (paramMatch[2]) {
       type = paramMatch[2];
     }
@@ -63,7 +85,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
       choices,
       description: paramMatch[4].trim(),
       defaultValue: defaultMatch ? defaultMatch[1] : undefined,
-      required: false
+      required: false,
     });
   }
   const exampleMatch = strippedComment.match(exampleRegex);
@@ -80,7 +102,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
     description,
     params,
     example,
-    baseComponents
+    baseComponents,
   };
 }
 
@@ -96,8 +118,7 @@ function extractTsComments(text: string) {
 
 function extractComponentComments(text: string) {
   const comments: ComponentSpec[] = [];
-  const commentRegex =
-    /(\/\*\*([\s\S]*?)\*\/)\nexport const [\w]+ = component\(['"](\w+)['"](,[\S\s]*?)?\)/g;
+  const commentRegex = /(\/\*\*([\s\S]*?)\*\/)\nexport const [\w]+ = component\(['"](\w+)['"](,[\S\s]*?)?\)/g;
   let match;
   while ((match = commentRegex.exec(text)) !== null) {
     const doc = { name: match[3], ...tsCommentToMarkdown(match[2]) };
@@ -124,17 +145,20 @@ function scanComponentDocs(folderPath: string) {
   for (const filePath of walk(folderPath)) {
     const tsCode = readFileSync(filePath, { encoding: 'utf-8' });
     const components = extractComponentComments(tsCode);
-    const names = components.map(c => c.name!);
+    const names = components.map((c) => c.name!);
     allComments.push(...components);
     if (filePath.endsWith('essentials.tsx') || filePath.endsWith('utils.tsx')) {
-      basicComponents.push(...names.filter(name => name !== 'Image' && name !== 'Object'));
-      dataDisplays.push(...names.filter(name => name === 'Image' || name === 'Object'));
+      basicComponents.push(
+        ...names.filter((name) => name !== 'Image' && name !== 'Object' && !name.startsWith('Tool')),
+      );
+      dataDisplays.push(...names.filter((name) => name === 'Image' || name === 'Object'));
+      utilities.push(...names.filter((name) => name.startsWith('Tool')));
     } else if (filePath.endsWith('instructions.tsx')) {
       intentions.push(...names);
-    } else if (filePath.endsWith('document.tsx') || filePath.endsWith('table.tsx')) {
-      dataDisplays.push(...names);
-    } else {
+    } else if (filePath.endsWith('message.tsx')) {
       utilities.push(...names);
+    } else {
+      dataDisplays.push(...names);
     }
   }
   return allComments;
@@ -147,12 +171,12 @@ function docsToMarkdown(docs: ComponentSpec[]) {
     { title: 'Basic Components', names: basicComponents },
     { title: 'Intentions', names: intentions },
     { title: 'Data Displays', names: dataDisplays },
-    { title: 'Utilities', names: utilities }
+    { title: 'Utilities', names: utilities },
   ];
   for (const { title, names } of categories) {
     parts.push(`## ${title}`);
     for (const name of names.sort()) {
-      const doc = docs.find(d => d.name === name)!;
+      const doc = docs.find((d) => d.name === name)!;
       parts.push(`### ${name}`);
       parts.push(formatComponentDocumentation(doc, 4));
     }
@@ -207,7 +231,7 @@ function generatePythonMethod(tag: ComponentSpec): string {
   let argsDocstring = '';
   const callArgsList: string[] = [`tag_name="${tag.name}"`];
 
-  tag.params.forEach(param => {
+  tag.params.forEach((param) => {
     const paramName = param.name; // Use original JSON name for Python parameter
     const pythonType = getPythonType(param.type, paramName);
     const typeHint = `Optional[${pythonType}]`;
@@ -215,14 +239,13 @@ function generatePythonMethod(tag: ComponentSpec): string {
     paramsSignatureList.push(`        ${paramName}: ${typeHint} = None`);
     callArgsList.push(`${paramName}=${paramName}`);
 
-    let paramDesc = param.description.replace(/\n/g, '\n            ');
+    let paramDesc = param.description.replace(/\n/g, '\n                ');
     if (param.defaultValue !== undefined) {
-      const defValStr =
-        typeof param.defaultValue === 'string' ? `"${param.defaultValue}"` : param.defaultValue;
+      const defValStr = typeof param.defaultValue === 'string' ? `"${param.defaultValue}"` : param.defaultValue;
       paramDesc += ` Default is \`${defValStr}\`.`;
     }
     if (param.choices && param.choices.length > 0) {
-      paramDesc += ` Choices: ${param.choices.map(c => `\`${JSON.stringify(c)}\``).join(', ')}.`;
+      paramDesc += ` Choices: ${param.choices.map((c) => `\`${JSON.stringify(c)}\``).join(', ')}.`;
     }
     argsDocstring += `            ${paramName} (${typeHint}): ${paramDesc}\n`;
   });
@@ -274,7 +297,7 @@ class _TagLib:
         raise NotImplementedError("This method should be implemented by subclasses.")
 `;
 
-  jsonData.forEach(tag => {
+  jsonData.forEach((tag) => {
     if (!tag.name) {
       console.warn('Skipping tag with no name:', tag);
       return;
@@ -287,7 +310,17 @@ class _TagLib:
 
 const allDocs = scanComponentDocs('packages/poml');
 const pythonCode = generatePythonFile(allDocs);
-writeFileSync('packages/poml/assets/componentDocs.json', JSON.stringify(allDocs, null, 2));
-writeFileSync('docs/components.md', docsToMarkdown(allDocs));
-writeFileSync('python/poml/_tags.py', pythonCode);
-console.log('Component documentation generated successfully!');
+writeOrCheck('packages/poml/assets/componentDocs.json', JSON.stringify(allDocs, null, 2));
+writeOrCheck('docs/language/components.md', docsToMarkdown(allDocs));
+writeOrCheck('python/poml/_tags.py', pythonCode);
+
+if (checkMode) {
+  if (hasChanges) {
+    console.error('Component documentation is out of date. Run `npm run generate-component-spec` to update.');
+    process.exit(1);
+  } else {
+    console.log('Component documentation is up to date.');
+  }
+} else {
+  console.log('Component documentation generated successfully!');
+}

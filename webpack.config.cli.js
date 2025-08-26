@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const path = require('path');
 const fs = require('fs');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -14,9 +15,9 @@ try {
   const lines = vscodeignoreContent.split('\n');
 
   copyPatterns = lines
-    .map(line => line.trim())
-    .filter(line => line.startsWith('!node_modules/'))
-    .map(line => {
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('!node_modules/'))
+    .map((line) => {
       // 1. Get the path relative to node_modules
       // e.g., '!node_modules/sharp/package.json' becomes 'sharp/package.json'
       let subPath = line.substring('!node_modules/'.length);
@@ -39,15 +40,16 @@ try {
         context: sourceNodeModulesPath,
         noErrorOnMissing: true,
         // Add this to preserve the directory structure for individual files
-        ...(subPath.includes('/') && !subPath.endsWith('/**') ? {
-          // For individual files, we need to preserve the full path structure
-          to: path.join(outputNodeModulesPath, path.dirname(subPath))
-        } : {})
+        ...(subPath.includes('/') && !subPath.endsWith('/**')
+          ? {
+              // For individual files, we need to preserve the full path structure
+              to: path.join(outputNodeModulesPath, path.dirname(subPath)),
+            }
+          : {}),
       };
     });
 
   console.log(`[Webpack] Found ${copyPatterns.length} patterns to copy from .vscodeignore.`);
-
 } catch (error) {
   console.error('[Webpack] Could not read or parse .vscodeignore file. No dependencies will be copied.', error);
 }
@@ -55,16 +57,16 @@ try {
 module.exports = {
   mode: 'development',
   entry: {
-    cli: './packages/poml/cli.ts'
+    cli: './packages/poml/cli.ts',
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+    ],
   },
   plugins: [
     new CopyPlugin({
@@ -75,7 +77,7 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
       poml: path.resolve(__dirname, 'packages/poml'),
-    }
+    },
   },
   externals: {
     'sharp': 'commonjs sharp',
@@ -87,6 +89,6 @@ module.exports = {
   target: 'node',
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, 'python', 'poml', 'js')
-  }
+    path: path.resolve(__dirname, 'python', 'poml', 'js'),
+  },
 };

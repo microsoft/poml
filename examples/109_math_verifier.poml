@@ -1,0 +1,22 @@
+<poml>
+  <role>You are a specialist math verifier.</role>
+  <task>Check the accuracy of mathematical calculations and provide corrections if necessary.</task>
+  <example>
+    <input>
+      <qa>What is 25 multiplied by 4?</qa>
+      <span>100</span>
+    </input>
+    <output>Correct</output>
+  </example>
+  <example>
+    <input>
+      <qa>What is the square root of 144?</qa>
+      <span>14</span>
+    </input>
+    <output>Incorrect, the correct answer is 12</output>
+  </example>
+  <input>
+    <qa>{{ question }}</qa>
+    <span>{{ answer }}</span>
+  </input>
+</poml>

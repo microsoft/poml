@@ -1,11 +1,11 @@
-import xml.etree.ElementTree as ET
 import base64
 import json
 import tempfile
 import warnings
+import xml.etree.ElementTree as ET
 
-from .api import poml
 from ._tags import _TagLib
+from .api import poml
 
 
 def _write_file_for_poml(content: str):
@@ -211,7 +211,7 @@ class Prompt(_TagLib):
         return _ImplicitDualTagHandler(self, tag_name, attrs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Example usage of the Prompt class
     with Prompt() as p:
         with p.paragraph():
