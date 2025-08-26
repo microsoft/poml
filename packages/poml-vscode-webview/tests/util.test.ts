@@ -2,7 +2,7 @@ import { describe, test, expect, jest } from '@jest/globals';
 import { createPosterForVsCode } from '../util';
 
 jest.mock('../state', () => ({
-  getState: () => ({ source: 'test-source' })
+  getState: () => ({ source: 'test-source' }),
 }));
 
 describe('createPosterForVsCode', () => {
@@ -13,7 +13,7 @@ describe('createPosterForVsCode', () => {
     expect(vscode.postMessage).toHaveBeenCalledWith({
       type: 'type',
       source: 'test-source',
-      body: { foo: 'bar' }
+      body: { foo: 'bar' },
     });
   });
 
@@ -24,7 +24,7 @@ describe('createPosterForVsCode', () => {
     expect(vscode.postMessage).toHaveBeenCalledWith({
       type: 'command',
       source: 'test-source',
-      body: { command: 'cmd', args: [1, 2] }
+      body: { command: 'cmd', args: [1, 2] },
     });
   });
 });

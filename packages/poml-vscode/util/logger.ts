@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 enum Trace {
   Off,
-  Verbose
+  Verbose,
 }
 
 namespace Trace {
@@ -29,9 +29,7 @@ class LazyValue<T> implements Lazy<T> {
   private _hasValue: boolean = false;
   private _value?: T;
 
-  constructor(
-    private readonly _getValue: () => T
-  ) { }
+  constructor(private readonly _getValue: () => T) {}
 
   get value(): T {
     if (!this._hasValue) {
@@ -69,7 +67,7 @@ export class Logger {
 
   public log(message: string, data?: any): void {
     if (this.trace === Trace.Verbose) {
-      this.appendLine(`[Log - ${(new Date().toLocaleTimeString())}] ${message}`);
+      this.appendLine(`[Log - ${new Date().toLocaleTimeString()}] ${message}`);
       if (data) {
         this.appendLine(Logger.data2String(data));
       }

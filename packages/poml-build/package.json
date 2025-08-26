@@ -1,6 +1,6 @@
 {
   "name": "pomljs",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Prompt Orchestration Markup Language",
   "type": "module",
   "main": "./dist/index.cjs",

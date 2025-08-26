@@ -36,7 +36,16 @@ export const deepMerge = (target: any, source: any): any => {
   return target;
 };
 
-export type AnyValue = 'string' | 'integer' | 'float' | 'boolean' | 'array' | 'object' | 'buffer' | 'null' | 'undefined';
+export type AnyValue =
+  | 'string'
+  | 'integer'
+  | 'float'
+  | 'boolean'
+  | 'array'
+  | 'object'
+  | 'buffer'
+  | 'null'
+  | 'undefined';
 
 export const readSource = (source: string, directory?: string | undefined, type?: AnyValue): any => {
   // Read file content and convert to type.
@@ -49,7 +58,7 @@ export const readSource = (source: string, directory?: string | undefined, type?
     const text: string = readFileSync(source, 'utf8');
     return parseText(text, type);
   }
-}
+};
 
 export const parseText = (object: string | Buffer, type?: AnyValue): any => {
   if (typeof object === 'string') {
@@ -89,7 +98,7 @@ export const parseText = (object: string | Buffer, type?: AnyValue): any => {
   } else {
     throw new Error('Invalid object type (expect buffer or string): ' + typeof object);
   }
-}
+};
 
 export const guessStringType = (value: string): [any, AnyValue] => {
   if (value.toLowerCase() === 'null' || value === '') {
@@ -103,12 +112,16 @@ export const guessStringType = (value: string): [any, AnyValue] => {
   } else if (!isNaN(Number(value))) {
     // https://stackoverflow.com/questions/16775547/javascript-guess-data-type-from-string
     if (parseFloat(value) === parseInt(value)) {
-      return [parseInt(value), "integer"];
+      return [parseInt(value), 'integer'];
     } else {
-      return [parseFloat(value), "float"];
+      return [parseFloat(value), 'float'];
     }
-  } else if (/^\d*(\.|,)\d*$/.test(value) || /^(\d{0,3}(,)?)+\.\d*$/.test(value) || /^(\d{0,3}(\.)?)+,\d*$/.test(value)) {
-    return [Number(value), "float"];
+  } else if (
+    /^\d*(\.|,)\d*$/.test(value) ||
+    /^(\d{0,3}(,)?)+\.\d*$/.test(value) ||
+    /^(\d{0,3}(\.)?)+,\d*$/.test(value)
+  ) {
+    return [Number(value), 'float'];
   } else {
     try {
       const parsed = JSON.parse(value);
@@ -121,5 +134,4 @@ export const guessStringType = (value: string): [any, AnyValue] => {
       return [value, 'string'];
     }
   }
-}
-
+};

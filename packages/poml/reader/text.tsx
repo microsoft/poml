@@ -1,4 +1,3 @@
 import { Reader } from './base';
 
-export class PureTextReader extends Reader {
-}
+export class PureTextReader extends Reader {}

@@ -18,16 +18,16 @@ export interface MessagePoster {
  * @returns The message poster class.
  */
 export const createPosterForVsCode = (vscode: any) => {
-  return new class implements MessagePoster {
+  return new (class implements MessagePoster {
     postMessage(type: string, body: object): void {
       vscode.postMessage({
         type,
         source: getState().source,
-        body
+        body,
       });
     }
     postCommand(command: string, args: any[]) {
       this.postMessage('command', { command, args });
     }
-  };
+  })();
 };

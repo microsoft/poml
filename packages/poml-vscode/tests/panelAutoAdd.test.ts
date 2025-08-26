@@ -44,7 +44,7 @@ function createPanel(uri: vscode.Uri, context: vscode.ExtensionContext): POMLWeb
     context,
     new SettingsManager(),
     new Logger(),
-    new DummyTopmostLineMonitor() as any
+    new DummyTopmostLineMonitor() as any,
   );
   (panel as any).doUpdate = async () => {};
   (panel as any).onDidUserOptionsChange = async () => {};
@@ -62,7 +62,11 @@ suite('autoAddAssociatedFiles', () => {
     fs.writeFileSync(stylePath, '{}');
 
     const ext = vscode.extensions.getExtension('poml-team.poml')!;
-    const context = { extensionUri: ext.extensionUri, extensionPath: ext.extensionPath, subscriptions: [] } as unknown as vscode.ExtensionContext;
+    const context = {
+      extensionUri: ext.extensionUri,
+      extensionPath: ext.extensionPath,
+      subscriptions: [],
+    } as unknown as vscode.ExtensionContext;
 
     const panel = createPanel(vscode.Uri.file(pomlPath), context);
     panel.update(vscode.Uri.file(pomlPath));
@@ -86,7 +90,11 @@ suite('autoAddAssociatedFiles', () => {
     fs.writeFileSync(customCtx, '{}');
 
     const ext = vscode.extensions.getExtension('poml-team.poml')!;
-    const context = { extensionUri: ext.extensionUri, extensionPath: ext.extensionPath, subscriptions: [] } as unknown as vscode.ExtensionContext;
+    const context = {
+      extensionUri: ext.extensionUri,
+      extensionPath: ext.extensionPath,
+      subscriptions: [],
+    } as unknown as vscode.ExtensionContext;
 
     const panel = createPanel(vscode.Uri.file(pomlPath), context);
     panel.update(vscode.Uri.file(pomlPath));
@@ -103,4 +111,3 @@ suite('autoAddAssociatedFiles', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
-

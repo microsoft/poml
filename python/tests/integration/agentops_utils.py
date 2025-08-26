@@ -3,10 +3,11 @@ References:
 https://docs.agentops.ai/v2/usage/public-api#get-trace-metrics
 """
 
-import requests
 import time
+
+import requests
+from common_utils import Colors, print_section, print_separator
 from opentelemetry.trace.span import format_trace_id
-from common_utils import print_section, print_separator, Colors
 
 
 def get_bearer_token(api_key):

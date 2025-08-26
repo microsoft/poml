@@ -1,4 +1,3 @@
 import { Reader } from './base';
 
-class DispatchReader extends Reader {
-}
+class DispatchReader extends Reader {}

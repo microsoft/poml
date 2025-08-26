@@ -1,9 +1,6 @@
 import { ComponentSpec, Parameter, PomlComponent } from 'poml/base';
 
-export function formatComponentDocumentation(
-  componentSpec: ComponentSpec,
-  baseLevel?: number
-): string {
+export function formatComponentDocumentation(componentSpec: ComponentSpec, baseLevel?: number): string {
   baseLevel = baseLevel || 2;
   const docParts: string[] = [];
   docParts.push(componentSpec.description);
@@ -16,10 +13,10 @@ export function formatComponentDocumentation(
     docParts.push(
       '#'.repeat(baseLevel) + ' Parameters',
       params
-        .map(param => {
+        .map((param) => {
           return '- ' + formatParameterDocumentation(param);
         })
-        .join('\n')
+        .join('\n'),
     );
   }
   return docParts.join('\n\n');

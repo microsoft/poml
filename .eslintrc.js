@@ -5,23 +5,39 @@ module.exports = {
     ecmaVersion: 6,
     sourceType: 'module',
   },
-  plugins: [
-    '@typescript-eslint',
-  ],
+  plugins: ['@typescript-eslint'],
   extends: [
-    'prettier',
+    'eslint:recommended', // Use recommended rules from eslint
     'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended',
   ],
+  env: {
+    browser: true,
+    node: true,
+  },
   rules: {
-    '@typescript-eslint/naming-convention': [
-      'warn',
-      {
-        selector: 'import',
-        format: ['camelCase', 'PascalCase'],
-      },
-    ],
-    'curly': 'warn',
+    // Disabled rules as requested
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
+    '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-namespace': 'off',
+    'prefer-const': 'off',
+    'no-constant-condition': 'off',
+    // '@typescript-eslint/naming-convention': [
+    //   'warn',
+    //   {
+    //     selector: 'import',
+    //     format: ['camelCase', 'PascalCase'],
+    //   },
+    // ],
     // '@typescript-eslint/semi': 'warn',
+    // 'eqeqeq': 'off',
+
+    // 'max-len': 'off',
+    // 'quotes': 'off',
+    // 'indent': 'off',
+    // 'semi': 'off',
+    // 'curly': 'warn',
     // 'eqeqeq': 'warn',
     // 'no-throw-literal': 'warn',
     // 'semi': ['warn', 'always'],
@@ -29,18 +45,18 @@ module.exports = {
     // 'quotes': ['warn', 'single'],
     // 'max-len': ['warn', { code: 100 }],
     // 'indent': ['warn', 2],
-    // Disabled rules as requested
-    '@typescript-eslint/no-explicit-any': 'off',
-    'max-len': 'off',
-    'quotes': 'off',
-    'indent': 'off',
-    '@typescript-eslint/no-unused-vars': 'off',
-    '@typescript-eslint/semi': 'off',
-    'semi': 'off',
-    'eqeqeq': 'off',
-    'prefer-const': 'off',
-    '@typescript-eslint/no-var-requires': 'off',
-    '@typescript-eslint/no-namespace': 'off',
   },
-  ignorePatterns: ['out', 'dist', '**/*.d.ts'],
+  ignorePatterns: [
+    // Generated files
+    'out',
+    'dist',
+    'node_modules',
+    '**/*.d.ts',
+    'assets',
+    'mlartifacts',
+    'mlrun',
+    'pomlrun',
+    '*.context.json',
+    'python/poml/js/cli.js',
+  ],
 };

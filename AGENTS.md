@@ -4,6 +4,7 @@ This repository contains a TypeScript/JavaScript project together with a lite Py
 These instructions are for agents like Codex to contribute changes.
 
 ## Repository Structure
+
 - **packages/poml** – Core TypeScript package of POML parsing and rendering.
 - **packages/poml-vscode** – VS Code Extension package of POML.
 - **packages/poml-vscode-webview** – The VS Code Webview frontend JS/TS code.
@@ -12,6 +13,7 @@ These instructions are for agents like Codex to contribute changes.
 - **docs/** – Project documentation.
 
 ## Environment Setup
+
 - **Node.js**: version 22.x (20.x should also work)
 - **Python**: version 3.11 (3.10 or 3.12 should also work)
 
@@ -23,6 +25,7 @@ python -m pip install -e .[dev]
 ```
 
 ## Testing Instructions
+
 After your changes you must verify that everything still builds and tests pass.
 Execute the following commands from the repository root:
 
@@ -47,4 +50,5 @@ npm run generate-component-spec
 ```
 
 ## PR Instructions
+
 Use clear titles and summaries. Include relevant references to documentation when modifying or adding features.

@@ -15,7 +15,7 @@ export class AddContextFileCommand implements Command {
       canSelectMany: true,
       openLabel: 'Add Context',
       title: 'Select Context JSON Files to Associate with POML',
-      filters: { 'JSON Files': ['json'], 'All Files': ['*'] }
+      filters: { 'JSON Files': ['json'], 'All Files': ['*'] },
     });
     if (!uris) {
       return;
@@ -39,7 +39,7 @@ export class AddStylesheetFileCommand implements Command {
       canSelectMany: true,
       openLabel: 'Add Stylesheet',
       title: 'Select Stylesheet JSON Files to Associate with POML',
-      filters: { 'JSON Files': ['json'], 'All Files': ['*'] }
+      filters: { 'JSON Files': ['json'], 'All Files': ['*'] },
     });
     if (!uris) {
       return;

@@ -53,8 +53,8 @@ mlflow.openai.autolog()
 # Use POML as usual
 client = OpenAI()
 messages = poml.poml(
-    "explain_code.poml", 
-    context={"code_path": "sample.py"}, 
+    "explain_code.poml",
+    context={"code_path": "sample.py"},
     format="openai_chat"
 )
 
@@ -90,7 +90,7 @@ POML prompts are automatically registered in MLflow's prompt registry with:
 
 ### Example Trace Data
 
-```json
+````json
 {
   "inputs": {
     "prompt": "<poml> <task>You are a senior Python developer. Please explain the code.</task> <code inline=\"false\"> <document src=\"{{ code_path }}\" parser=\"txt\" /> </code> <runtime temperature=\"0.7\" max-tokens=\"256\"/> </poml>",
@@ -108,7 +108,7 @@ POML prompts are automatically registered in MLflow's prompt registry with:
     ]
   }
 }
-```
+````
 
 ## See Also
 

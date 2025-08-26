@@ -1,6 +1,6 @@
 [project]
 name = "poml"
-version = "0.0.8"
+version = "0.0.9"
 description = "Prompt Orchestration Markup Language"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -13,6 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "black",
+  "isort",
   "flake8",
   "pytest",
   "hatch",
@@ -21,6 +22,7 @@ dev = [
   "mkdocs-material",
   "mkdocs-git-revision-date-localized-plugin",
   "mkdocs-git-authors-plugin",
+  "mkdocs-timetoread-plugin",
   "mkdocstrings[python]",
   "mike",
 ]
@@ -57,3 +59,26 @@ include = [
 
 [project.scripts]
 poml-cli = "poml.cli:entrypoint"
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # Exclude auto-generated files and directories
+  python/poml/_tags\.py
+  | assets
+  | _version\.py
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_first_party = ["poml"]
+extend_skip_glob = [
+  "python/poml/_tags.py",
+  "assets/*",
+  "_version.py",
+]

@@ -2,9 +2,7 @@ import { renderToPipeableStream } from 'react-dom/server';
 
 import { Writable } from 'stream';
 
-const pipeableStreamToString = async (
-  stream: (destination: NodeJS.WritableStream) => NodeJS.WritableStream
-) => {
+const pipeableStreamToString = async (stream: (destination: NodeJS.WritableStream) => NodeJS.WritableStream) => {
   return new Promise<string>((resolve, reject) => {
     const chunks: Buffer[] = [];
     const writable = new Writable({
@@ -19,7 +17,7 @@ const pipeableStreamToString = async (
       destroy(err, callback) {
         reject(err);
         callback(err);
-      }
+      },
     });
     stream(writable);
   });
@@ -37,14 +35,14 @@ export const reactRender = (element: React.ReactElement, shellOnly?: boolean) =>
         console.error(errorInfo);
         reject(error);
       },
-      onShellError: error => {
+      onShellError: (error) => {
         reject(error);
       },
       onShellReady: () => {
         if (shellOnly) {
           resolve(pipeableStreamToString(pipe));
         }
-      }
+      },
     });
   });
   return promise;

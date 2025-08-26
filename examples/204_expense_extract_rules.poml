@@ -1,0 +1,42 @@
+<!-- Part of prompts for 404_travel_expense_agent.py -->
+<poml>
+  <task>From the email from employee, policy PDF and the budget CSV, select ONLY rules that apply to the extracted documents. Prefer numeric caps and binary requirements. Represent each as a compact rule object. Infer trip_context (is_international, trip_length_days) from dates/locations if available; if not infer conservative defaults.</task>
+
+  <p>When considering rules, take into account:
+    <list>
+      <item>receipt threshold (#gt; a specific number)</item>
+      <item>lodging $/night caps</item>
+      <item>meals per diem (domestic vs international)</item>
+      <item>ground transportation per-day and per-trip caps</item>
+      <item>rental car class restriction</item>
+      <item>communications cap/day and per-trip</item>
+      <item>visa/travel docs reimbursable per-trip cap</item>
+      <item>exceptions need CFO approval</item>
+      <item>...</item>
+    </list>
+  </p>
+
+  <hint>
+    Keep scope domestic/international as needed. Use USD per the budget table.
+  </hint>
+
+  <cp caption="Travel Budget Table">
+  <table src="assets/204_travel_budget_table.xlsx" syntax="csv" />
+  </cp>
+
+  <cp caption="Travel Policy Document">
+    <document src="assets/204_travel_expense_policy.docx" />
+  </cp>
+
+  <human-msg>
+    <cp caption="Email from Employee">
+      <text syntax="text">{{ email_text }}</text>
+    </cp>
+
+    <cp caption="Extracted Documents">
+      <object data="{{ extracted_documents }}" syntax="xml" />
+    </cp>
+  </human-msg>
+
+  <output-schema>{{ rules_output_schema }}</output-schema>
+</poml>

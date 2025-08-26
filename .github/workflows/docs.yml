@@ -47,9 +47,6 @@ jobs:
         run: |
           pip install -e ".[dev]"  # Install poml with dev dependencies
 
-      - name: Generate component documentation
-        run: npm run generate-component-spec
-
       - name: Generate TypeScript API documentation
         run: npm run typedoc
 
@@ -74,5 +71,7 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             # Main branch - deploy as latest docs
             mike deploy --push latest
-            mike set-default --push latest
           fi
+          # Workaround before next release
+          # Always set stable to default
+          mike set-default --push stable

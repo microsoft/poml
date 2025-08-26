@@ -4,16 +4,16 @@ on:
   workflow_call:
     outputs:
       version:
-        description: "The version from the project files"
+        description: 'The version from the project files'
         value: ${{ jobs.check-version.outputs.version }}
       tag_version:
-        description: "The version from the git tag"
+        description: 'The version from the git tag'
         value: ${{ jobs.check-version.outputs.tag_version }}
       npm_version:
-        description: "The version from package.json"
+        description: 'The version from package.json'
         value: ${{ jobs.check-version.outputs.npm_version }}
       pypi_version:
-        description: "The version from pyproject.toml"
+        description: 'The version from pyproject.toml'
         value: ${{ jobs.check-version.outputs.pypi_version }}
 
 jobs:
@@ -69,16 +69,16 @@ jobs:
         run: |
           NPM_VERSION=${{ steps.get_npm_version.outputs.npm_version }}
           PYPI_VERSION=${{ steps.get_pypi_version.outputs.pypi_version }}
-          
+
           echo "Comparing versions:"
           echo "  NPM (package.json): $NPM_VERSION"
           echo "  PyPI (pyproject.toml): $PYPI_VERSION"
-          
+
           if [ "$NPM_VERSION" != "$PYPI_VERSION" ]; then
             echo "Error: Version mismatch between package.json ($NPM_VERSION) and pyproject.toml ($PYPI_VERSION)"
             exit 1
           fi
-          
+
           echo "✅ All project versions are synchronized"
 
       - name: Verify version matches tag

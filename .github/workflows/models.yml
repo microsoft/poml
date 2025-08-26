@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  models: read  # allow calling the Models inference API
+  models: read # allow calling the Models inference API
 
 jobs:
   call-llm:

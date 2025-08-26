@@ -4,11 +4,13 @@ import json
 import os
 import re
 import tempfile
+import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Union
+
 from pydantic import BaseModel
-import warnings
+
 from .cli import run
 
 __all__ = [
@@ -165,7 +167,7 @@ def _read_latest_traced_file(file_suffix: str) -> Optional[str]:
 
 
 def trace_artifact(file_suffix: str, contents: str | bytes) -> Optional[Path]:
-    """Write an additional artifact file for the most recent ``poml`` call."""
+    """Write an additional artifact file for the most recent ``poml`` call. This API is experimental."""
     prefix = _latest_trace_prefix()
     if prefix is None:
         return None
@@ -413,8 +415,8 @@ def _poml_response_to_langchain(messages: List[PomlMessage]) -> List[Dict[str, A
 def _camel_case_to_snake_case(name: str) -> str:
     """Convert CamelCase to snake_case."""
     # Insert one underscore before each uppercase letter, then convert to lowercase
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
 def poml(
@@ -461,14 +463,14 @@ def poml(
         - dict when format="dict", "openai_chat", or "langchain"
         - PomlFrame when format="pydantic"
 
-        For format="message_dict": Returns just the messages array for backward 
+        For format="message_dict": Returns just the messages array for backward
         compatibility. Example: `[{"speaker": "human", "content": "Hello"}]`
 
         For format="dict": Returns complete structure with all metadata.
         Example: `{"messages": [...], "schema": {...}, "tools": [...], "runtime": {...}}`
 
-        For format="openai_chat": Returns OpenAI Chat Completion format with tool/schema 
-        support. Includes "messages" in OpenAI format, "tools" if present, "response_format" 
+        For format="openai_chat": Returns OpenAI Chat Completion format with tool/schema
+        support. Includes "messages" in OpenAI format, "tools" if present, "response_format"
         for JSON schema if present, and runtime parameters converted to `snake_case`.
 
         For format="langchain": Returns LangChain format preserving all metadata with
@@ -605,7 +607,7 @@ def poml(
                 return_result = trace_result = result
             else:
                 parsed_result = trace_result = json.loads(result)
-                
+
                 # Handle the new CLI result format with messages, schema, tools, runtime
                 if isinstance(parsed_result, dict) and "messages" in parsed_result:
                     cli_result = parsed_result
@@ -633,8 +635,8 @@ def poml(
                     poml_frame = PomlFrame(
                         messages=pydantic_messages,
                         output_schema=cli_result.get("schema"),
-                        tools=cli_result.get("tools"), 
-                        runtime=cli_result.get("runtime")
+                        tools=cli_result.get("tools"),
+                        runtime=cli_result.get("runtime"),
                     )
 
                     if format == "pydantic":
@@ -643,17 +645,20 @@ def poml(
                         # Return OpenAI-compatible format
                         openai_messages = _poml_response_to_openai_chat(pydantic_messages)
                         openai_result: dict = {"messages": openai_messages}
-                        
+
                         # Add tools if present
                         if poml_frame.tools:
-                            openai_result["tools"] = [{
-                                "type": "function",
-                                "function": {
-                                    "name": tool.get("name", ""),
-                                    "description": tool.get("description", ""),
-                                    "parameters": tool.get("parameters", {})
-                                }  # FIXME: hot-fix for the wrong format at node side
-                            } for tool in poml_frame.tools]
+                            openai_result["tools"] = [
+                                {
+                                    "type": "function",
+                                    "function": {
+                                        "name": tool.get("name", ""),
+                                        "description": tool.get("description", ""),
+                                        "parameters": tool.get("parameters", {}),
+                                    },  # FIXME: hot-fix for the wrong format at node side
+                                }
+                                for tool in poml_frame.tools
+                            ]
                         if poml_frame.output_schema:
                             openai_result["response_format"] = {
                                 "type": "json_schema",
@@ -661,13 +666,12 @@ def poml(
                                     "name": "schema",  # TODO: support schema name
                                     "schema": poml_frame.output_schema,
                                     "strict": True,  # Ensure strict validation
-                                }
+                                },
                             }
                         if poml_frame.runtime:
-                            openai_result.update({
-                                _camel_case_to_snake_case(k): v
-                                for k, v in poml_frame.runtime.items()
-                            })
+                            openai_result.update(
+                                {_camel_case_to_snake_case(k): v for k, v in poml_frame.runtime.items()}
+                            )
 
                         return_result = openai_result
                     elif format == "langchain":

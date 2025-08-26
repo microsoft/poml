@@ -1,10 +1,12 @@
-import re
-import poml
 import json
-import pytest
+import re
 import sys
 from pathlib import Path
 from typing import Any, TypedDict
+
+import pytest
+
+import poml
 
 example_directory = Path(__file__).parent.parent.parent / "examples"
 

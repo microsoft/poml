@@ -5,10 +5,10 @@ from __future__ import annotations
 __all__ = ["to_strict_json_schema"]
 
 import inspect
-from typing import Any, TypeVar, Literal, Union
-from typing_extensions import TypeGuard, override
+from typing import Any, Literal, TypeVar, Union
 
 import pydantic
+from typing_extensions import TypeGuard, override
 
 PYDANTIC_V2 = pydantic.VERSION.startswith("2.")
 
@@ -32,16 +32,16 @@ def to_strict_json_schema(model: type[pydantic.BaseModel] | pydantic.TypeAdapter
     Raises:
         TypeError: If the model is not a BaseModel type and Pydantic v2 is not available,
                   or if a non-BaseModel type is used with Pydantic v1
-                  
+
     Example:
         ```python
         from pydantic import BaseModel, Field
         from poml.integration.pydantic import to_strict_json_schema
-        
+
         class Query(BaseModel):
             name: str = Field(description="Query name")
             limit: int = Field(description="Result limit", default=10)
-            
+
         schema = to_strict_json_schema(Query)
         # Returns a strict JSON schema with additionalProperties: false
         ```

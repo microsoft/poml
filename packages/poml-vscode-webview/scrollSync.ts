@@ -2,7 +2,6 @@
 
 import { getState } from './state';
 
-
 function clamp(min: number, max: number, value: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -10,7 +9,6 @@ function clamp(min: number, max: number, value: number) {
 function clampLine(line: number) {
   return clamp(0, getState().lineCount - 1, line);
 }
-
 
 export interface CodeLineElement {
   element: HTMLElement;
@@ -21,9 +19,8 @@ const getCodeLineElements = (() => {
   let elements: CodeLineElement[];
   return () => {
     if (!elements) {
-      elements = Array.prototype.map.call(
-        document.getElementsByClassName('code-line'),
-        (element: any) => {
+      elements = Array.prototype.map
+        .call(document.getElementsByClassName('code-line'), (element: any) => {
           const line = +element.getAttribute('data-line');
           return { element, line };
         })
@@ -39,15 +36,14 @@ const getCodeLineElements = (() => {
  * If an exact match, returns a single element. If the line is between elements,
  * returns the element prior to and the element after the given line.
  */
-export function getElementsForSourceLine(targetLine: number): { previous: CodeLineElement; next?: CodeLineElement; } {
+export function getElementsForSourceLine(targetLine: number): { previous: CodeLineElement; next?: CodeLineElement } {
   const lineNumber = Math.floor(targetLine);
   const lines = getCodeLineElements();
   let previous = lines[0] || null;
   for (const entry of lines) {
     if (entry.line === lineNumber) {
       return { previous: entry, next: undefined };
-    }
-    else if (entry.line > lineNumber) {
+    } else if (entry.line > lineNumber) {
       return { previous, next: entry };
     }
     previous = entry;
@@ -58,7 +54,7 @@ export function getElementsForSourceLine(targetLine: number): { previous: CodeLi
 /**
  * Find the html elements that are at a specific pixel offset on the page.
  */
-export function getLineElementsAtPageOffset(offset: number): { previous: CodeLineElement; next?: CodeLineElement; } {
+export function getLineElementsAtPageOffset(offset: number): { previous: CodeLineElement; next?: CodeLineElement } {
   const lines = getCodeLineElements();
   const position = offset - window.scrollY;
   let lo = -1;
@@ -68,8 +64,7 @@ export function getLineElementsAtPageOffset(offset: number): { previous: CodeLin
     const bounds = lines[mid].element.getBoundingClientRect();
     if (bounds.top + bounds.height >= position) {
       hi = mid;
-    }
-    else {
+    } else {
       lo = mid;
     }
   }
@@ -96,8 +91,7 @@ export function scrollToRevealSourceLine(line: number) {
       const betweenProgress = (line - previous.line) / (next.line - previous.line);
       const elementOffset = next.element.getBoundingClientRect().top - previousTop;
       scrollTo = previousTop + betweenProgress * elementOffset;
-    }
-    else {
+    } else {
       scrollTo = previousTop;
     }
     window.scroll(0, Math.max(1, window.scrollY + scrollTo));
@@ -108,14 +102,14 @@ export function getEditorLineNumberForPageOffset(offset: number) {
   const { previous, next } = getLineElementsAtPageOffset(offset);
   if (previous) {
     const previousBounds = previous.element.getBoundingClientRect();
-    const offsetFromPrevious = (offset - window.scrollY - previousBounds.top);
+    const offsetFromPrevious = offset - window.scrollY - previousBounds.top;
     if (next) {
-      const progressBetweenElements = offsetFromPrevious / (next.element.getBoundingClientRect().top - previousBounds.top);
+      const progressBetweenElements =
+        offsetFromPrevious / (next.element.getBoundingClientRect().top - previousBounds.top);
       const line = previous.line + progressBetweenElements * (next.line - previous.line);
       return clampLine(line);
-    }
-    else {
-      const progressWithinElement = offsetFromPrevious / (previousBounds.height);
+    } else {
+      const progressWithinElement = offsetFromPrevious / previousBounds.height;
       const line = previous.line + progressWithinElement;
       return clampLine(line);
     }

@@ -7,8 +7,12 @@ edit_uri: edit/main/docs/
 exclude_docs: |
   typescript/reference/README.md
 
+hooks:
+  - docs/hooks/commitlinks.py
+
 theme:
   name: material
+  custom_dir: docs/overrides
   logo: media/logo-64-white.png
   favicon: media/logo-16-purple.png
   features:
@@ -35,12 +39,16 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js
+
 plugins:
   - search
   - git-revision-date-localized:
       enable_creation_date: true
       type: timeago
   - git-authors
+  - timetoread
   - mkdocstrings:
       handlers:
         python:
@@ -56,7 +64,11 @@ plugins:
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - admonition
@@ -69,50 +81,55 @@ markdown_extensions:
 nav:
   - Getting Started: index.md
   - Tutorial:
-    - Quick Start: tutorial/quickstart.md
+      - Quick Start: tutorial/quickstart.md
+      - Travel Expense Agent:
+          - Part 1 - Build Workflow: tutorial/expense_part1.md
+          - Part 2 - Debug with VS Code Extension: tutorial/expense_part2.md
   - Language Spec:
-    - Basic Syntax: language/basic.md
-    - Template Engine: language/template.md
-    - Meta: language/meta.md
-    - Fine-grained Control:
-      - White Space Control: language/white-space.md
-      - Token Control: language/token.md
-    - References:
-      - Components: language/components.md
+      - Basic Syntax: language/basic.md
+      - Template Engine: language/template.md
+      - Meta: language/meta.md
+      - Fine-grained Control:
+          - White Space Control: language/white-space.md
+          - Token Control: language/token.md
+      - References:
+          - Components: language/components.md
   - Visual Studio Code:
-    - Overview: vscode/index.md
-    - Features: vscode/features.md
-    - Configuration: vscode/configuration.md
+      - Overview: vscode/index.md
+      - Features: vscode/features.md
+      - Configuration: vscode/configuration.md
   - Python:
-    - Overview: python/index.md
-    - Tracing: python/trace.md
-    - Integrations:
-      - OpenAI: python/integration/openai.md
-      - LangChain: python/integration/langchain.md
-      - MCP: python/integration/mcp.md
-      - MLflow: python/integration/mlflow.md
-      - AgentOps: python/integration/agentops.md
-      - Weave: python/integration/weave.md
-    - References:
-      - Core: python/reference/core.md
-      - Integration: python/reference/integration.md
-      - Prompt: python/reference/prompt.md
+      - Overview: python/index.md
+      - Tracing: python/trace.md
+      - Integrations:
+          - OpenAI: python/integration/openai.md
+          - LangChain: python/integration/langchain.md
+          - MCP: python/integration/mcp.md
+          - MLflow: python/integration/mlflow.md
+          - AgentOps: python/integration/agentops.md
+          - Weave: python/integration/weave.md
+      - References:
+          - Core: python/reference/core.md
+          - Integration: python/reference/integration.md
+          - Prompt: python/reference/prompt.md
   - TypeScript:
-    - Overview: typescript/index.md
-    - References:
-      - index: typescript/reference/index.md
-      - base: typescript/reference/base.md
-      - cli: typescript/reference/cli.md
-      - essentials: typescript/reference/essentials.md
-      - file: typescript/reference/file.md
-      - writer: typescript/reference/writer.md
-      - components: typescript/reference/components.md
+      - Overview: typescript/index.md
+      - References:
+          - index: typescript/reference/index.md
+          - base: typescript/reference/base.md
+          - cli: typescript/reference/cli.md
+          - essentials: typescript/reference/essentials.md
+          - file: typescript/reference/file.md
+          - writer: typescript/reference/writer.md
+          - components: typescript/reference/components.md
   - Deep Dive:
-    - IR Specification: deep-dive/ir.md
-    - Proposals:
-      - Extended POML: deep-dive/proposals/poml_extended.md
+      - IR Specification: deep-dive/ir.md
+      - Proposals:
+          - Extended POML: deep-dive/proposals/poml_extended.md
+  - Miscellaneous:
+      - Contributing: contributing.md
 
 extra:
   version:
     provider: mike
-    default: latest
+    default: stable

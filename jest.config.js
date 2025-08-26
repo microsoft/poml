@@ -11,5 +11,5 @@ module.exports = {
   forceExit: true,
   detectOpenHandles: true,
   // Increase timeout for async operations like PDF parsing
-  testTimeout: 30000
+  testTimeout: 30000,
 };
