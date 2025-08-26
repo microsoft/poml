@@ -58,3 +58,22 @@ include = [
 
 [project.scripts]
 poml-cli = "poml.cli:entrypoint"
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+excludes = '''
+/(
+  # Exclude auto-generated files and directories
+  python/poml/_tags\.py
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_first_party = ["poml"]
+excludes = [
+  "python/poml/_tags.py",
+]
