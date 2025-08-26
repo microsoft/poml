@@ -46,5 +46,15 @@ module.exports = {
     // 'max-len': ['warn', { code: 100 }],
     // 'indent': ['warn', 2],
   },
-  ignorePatterns: ['out', 'dist', 'node_modules', '**/*.d.ts', 'assets', 'mlartifacts', 'mlrun', 'pomlrun'],
+  ignorePatterns: [
+    // Generated files
+    'out',
+    'dist',
+    'node_modules',
+    '**/*.d.ts',
+    'assets',
+    'mlartifacts',
+    'mlrun',
+    'pomlrun',
+  ],
 };

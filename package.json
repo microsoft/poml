@@ -374,6 +374,7 @@
     "generate-component-spec": "npm run compile && node ./out/poml-vscode/lsp/parseComments.js && npm run compile && node ./out/poml-vscode/lsp/parseComments.js",
     "validate-component-spec": "npm run compile && node ./out/poml-vscode/lsp/parseComments.js --check && npm run compile && node ./out/poml-vscode/lsp/parseComments.js --check",
     "generate-vscodeignore": "node ./vscodeignore.js",
+    "prepare": "husky",
     "compile": "tspc -p ./",
     "watch": "tspc -watch -p ./",
     "package": "vsce package",
@@ -395,7 +396,7 @@
     ],
     "*.py": [
       "isort",
-      "black"
+      "black --quiet"
     ]
   },
   "devDependencies": {
