@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-undef
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
@@ -12,6 +11,10 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
   ],
+  env: {
+    browser: true,
+    node: true,
+  },
   rules: {
     // Disabled rules as requested
     '@typescript-eslint/no-explicit-any': 'off',
@@ -41,5 +44,5 @@ module.exports = {
     // 'max-len': ['warn', { code: 100 }],
     // 'indent': ['warn', 2],
   },
-  ignorePatterns: ['out', 'dist', 'node_modules', '**/*.d.ts', 'assets'],
+  ignorePatterns: ['out', 'dist', 'node_modules', '**/*.d.ts', 'assets', 'mlartifacts', 'mlrun', 'pomlrun'],
 };

@@ -3,3 +3,10 @@ dist/
 out/
 assets/
 **/*.d.ts
+mlartifacts/
+mlrun/
+pomlrun/
+
+# Generated files
+docs/language/components.md
+*.context.json
