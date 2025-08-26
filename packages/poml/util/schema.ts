@@ -24,7 +24,12 @@ export class Schema {
    * @returns A new Schema instance
    */
   public static fromOpenAPI(openApiSchema: any): Schema {
-    return new Schema(undefined, openApiSchema);
+    const schema = new Schema(undefined, openApiSchema);
+    // TODO: openapi schema full validation should be added here
+    if (typeof openApiSchema !== 'object' || openApiSchema === null) {
+      throw new Error("Invalid OpenAPI schema provided");
+    }
+    return schema;
   }
 
   /**

@@ -246,6 +246,34 @@ describe('templateEngine', () => {
 });
 
 describe('expressionEvaluation', () => {
+  test('captures expression tokens for meta lang="expr"', () => {
+    const text = `<poml>
+      <let name="fields" value='["name", "age"]' />
+      <meta type="responseSchema" lang="expr">
+        z.object({
+          name: z.string(),
+          age: z.number()
+        })
+      </meta>
+    </poml>`;
+    const file = new PomlFile(text);
+    file.react();
+    
+    const tokens = file.getExpressionTokens();
+    // Should have tokens for: let value attribute and meta expr content
+    expect(tokens.length).toBeGreaterThanOrEqual(2);
+    
+    // Find the let value token
+    const letToken = tokens.find(t => t.expression === '["name", "age"]');
+    expect(letToken).toBeDefined();
+    expect(letToken?.type).toBe('expression');
+    
+    // Find the meta expr token
+    const metaToken = tokens.find(t => t.expression?.includes('z.object'));
+    expect(metaToken).toBeDefined();
+    expect(metaToken?.type).toBe('expression');
+  });
+
   test('captures evaluation history', () => {
     ErrorCollection.clear();
     const text = '<p for="i in [1,2]">{{i}}</p>';
@@ -256,6 +284,34 @@ describe('expressionEvaluation', () => {
     const position = text.indexOf('{{i}}');
     expect(file.getExpressionEvaluations({ start: position, end: position + 4 })).toStrictEqual([1, 2]);
     expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('tracks meta expr evaluation', () => {
+    ErrorCollection.clear();
+    const text = `<poml>
+      <let name="num" value="42" />
+      <meta type="responseSchema" lang="expr">
+        z.object({ value: z.number().max(num) })
+      </meta>
+    </poml>`;
+    const file = new PomlFile(text);
+    file.react();
+    
+    // Verify the schema was created successfully
+    const schema = file.getResponseSchema();
+    expect(schema).toBeDefined();
+    
+    // Verify expression tokens are collected
+    const tokens = file.getExpressionTokens();
+    const metaToken = tokens.find(t => t.expression?.includes('z.object'));
+    expect(metaToken).toBeDefined();
+    expect(metaToken?.type).toBe('expression');
+    
+    // The expression should be the full z.object expression
+    expect(metaToken?.expression?.trim()).toContain('z.object');
+    expect(metaToken?.expression?.trim()).toContain('z.number()');
+    
+    ErrorCollection.clear();
   });
 
   test('tracks each expression separately', () => {
@@ -558,7 +614,10 @@ describe('meta elements', () => {
       </meta>
     </poml>`;
     const file = new PomlFile(text);
-    expect(() => file.react()).toThrow('name attribute is required for tool meta type');
+    file.react();
+    expect(ErrorCollection.empty()).toBe(false);
+    const error = ErrorCollection.first();
+    expect(error.message).toContain('name attribute is required for tool meta type');
     ErrorCollection.clear();
   });
 
@@ -575,5 +634,146 @@ describe('meta elements', () => {
       max_tokens: "1000",
       model: "gpt-4"
     });
+  });
+
+  test('responseSchema with expression evaluation', () => {
+    ErrorCollection.clear();
+    const text = `<poml>
+      <let name="maxAge" value="100" />
+      <meta type="responseSchema" lang="json">
+        {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "age": { 
+              "type": "number",
+              "minimum": 0,
+              "maximum": {{ maxAge }}
+            }
+          }
+        }
+      </meta>
+    </poml>`;
+    const file = new PomlFile(text);
+    file.react();
+    expect(ErrorCollection.empty()).toBe(true);
+    const schema = file.getResponseSchema();
+    expect(schema).toBeDefined();
+    expect(schema?.toOpenAPI()).toEqual({
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        age: { 
+          type: "number",
+          minimum: 0,
+          maximum: 100
+        }
+      }
+    });
+    ErrorCollection.clear();
+  });
+
+  test('tool with expression evaluation in Zod', () => {
+    ErrorCollection.clear();
+    const text = `<poml>
+      <let name="operations" value='["add", "subtract", "multiply", "divide"]' />
+      <meta type="tool" name="calculator" description="Math operations" lang="expr">
+        z.object({
+          operation: z.enum(operations),
+          a: z.number(),
+          b: z.number()
+        })
+      </meta>
+    </poml>`;
+    const file = new PomlFile(text);
+    file.react();
+    expect(ErrorCollection.empty()).toBe(true);
+    const toolsSchema = file.getToolsSchema();
+    expect(toolsSchema).toBeDefined();
+    expect(toolsSchema?.size()).toBe(1);
+    const tool = toolsSchema?.getTool('calculator');
+    expect(tool).toBeDefined();
+    expect(tool?.name).toBe('calculator');
+    expect(tool?.description).toBe('Math operations');
+    ErrorCollection.clear();
+  });
+
+  test('responseSchema Zod with z variable available', () => {
+    ErrorCollection.clear();
+    const text = `<poml>
+      <let name="fields" value='{ "name": "string", "age": "number" }' />
+      <meta type="responseSchema" lang="expr">
+        z.object({
+          name: z.string(),
+          age: z.number(),
+          timestamp: z.string().datetime()
+        })
+      </meta>
+    </poml>`;
+    const file = new PomlFile(text);
+    file.react();
+    expect(ErrorCollection.empty()).toBe(true);
+    const schema = file.getResponseSchema();
+    expect(schema).toBeDefined();
+    const zodSchema = schema?.toZod();
+    expect(zodSchema).toBeDefined();
+    ErrorCollection.clear();
+  });
+
+  test('malformed JSON syntax error', () => {
+    ErrorCollection.clear();
+    const text = `<poml>
+      <meta type="responseSchema" lang="json">
+        {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+          }
+        }
+      </meta>
+    </poml>`;
+    const file = new PomlFile(text);
+    file.react();
+    expect(ErrorCollection.empty()).toBe(false);
+    const error = ErrorCollection.first();
+    // JSON parse errors contain specific messages about the syntax error
+    expect(error.message).toBeDefined();
+    ErrorCollection.clear();
+  });
+
+  test('invalid expression evaluation error', () => {
+    ErrorCollection.clear();
+    const text = `<poml>
+      <meta type="responseSchema" lang="expr">
+        z.object({
+          name: z.nonexistent(),
+          age: z.number()
+        })
+      </meta>
+    </poml>`;
+    const file = new PomlFile(text);
+    file.react();
+    expect(ErrorCollection.empty()).toBe(false);
+    const error = ErrorCollection.first();
+    expect(error.message).toContain('z.nonexistent is not a function');
+    ErrorCollection.clear();
+  });
+
+  test('invalid OpenAPI schema structure', () => {
+    ErrorCollection.clear();
+    const text = `<poml>
+      <meta type="responseSchema" lang="json">
+        "not an object"
+      </meta>
+    </poml>`;
+    const file = new PomlFile(text);
+    file.react();
+    // Schema.fromOpenAPI should handle this - it might not error but create a schema
+    const schema = file.getResponseSchema();
+    expect(ErrorCollection.empty()).toBe(false);
+    const error = ErrorCollection.first();
+    expect(error.message).toContain('Invalid OpenAPI schema');
+    expect(schema).toBeUndefined();
+    ErrorCollection.clear();
   });
 });

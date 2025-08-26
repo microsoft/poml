@@ -97,12 +97,32 @@ export class TestCommand implements Command {
 
     // Check if language model settings are configured
     const setting = this.getLanguageModelSettings(uri);
-    if (!setting || !setting.provider || !setting.model || !setting.apiKey || !setting.apiUrl) {
-      vscode.window.showErrorMessage(
-        'Language model settings are not fully configured. Please set your provider, model, API key, and endpoint in the extension settings before testing prompts.'
-      );
-      this.log('error', 'Prompt test aborted: LLM settings not configured.');
+    if (!setting) {
+      vscode.window.showErrorMessage('Language model settings are not configured. Please configure your language model settings first.');
+      this.log('error', 'Prompt test aborted: Language model settings not found.');
       return;
+    }
+    
+    if (!setting.provider) {
+      vscode.window.showErrorMessage('Language model provider is not configured. Please set your provider in the extension settings.');
+      this.log('error', 'Prompt test aborted: setting.provider is not configured.');
+      return;
+    }
+    
+    if (!setting.model) {
+      vscode.window.showErrorMessage('Language model is not configured. Please set your model in the extension settings.');
+      this.log('error', 'Prompt test aborted: setting.model is not configured.');
+      return;
+    }
+    
+    if (!setting.apiKey) {
+      vscode.window.showErrorMessage('API key is not configured. Please set your API key in the extension settings.');
+      this.log('error', 'Prompt test aborted: setting.apiKey not configured.');
+      return;
+    }
+
+    if (!setting.apiUrl) {
+      this.log('info', 'No API URL configured, using default for the provider.');
     }
 
     this.log(
@@ -294,7 +314,8 @@ export class TestCommand implements Command {
     } else if (chunk.type === 'abort') {
       return `${newline}[Aborted]`;
     } else if (chunk.type === 'error') {
-      return `${newline}[Error: ${chunk.error}]`;
+      // errors will be thrown, so we don't need to handle them here
+      return null;
     } else {
       return `${newline}[${chunk.type} chunk: ${JSON.stringify(chunk)}]`;
     }
