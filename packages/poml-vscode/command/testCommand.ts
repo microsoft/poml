@@ -277,6 +277,10 @@ export class TestCommand implements Command {
       throw new Error('Response schema is required but not provided.');
     }
 
+    if (!this.isChatting) {
+      this.log('warn', 'Using a chat model for non-chat prompt. This may lead to suboptimal results.');
+    }
+
     const abortController = GenerationController.getNewAbortController();
 
     const stream = streamObject({
@@ -302,6 +306,10 @@ export class TestCommand implements Command {
     const vercelPrompt = this.isChatting
       ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
       : (prompt.content as string);
+
+    if (!this.isChatting) {
+      this.log('warn', 'Using a chat model for non-chat prompt. This may lead to suboptimal results.');
+    }
 
     if (prompt.responseSchema) {
       this.log(
@@ -491,7 +499,12 @@ export class TestCommand implements Command {
         return createOpenAI({
           baseURL: apiUrl,
           apiKey: apiKey,
-        });
+        }).chat;
+      case 'openaiResponse':
+        return createOpenAI({
+          baseURL: apiUrl,
+          apiKey: apiKey,
+        }).responses;
       case 'google':
         return createGoogleGenerativeAI({
           baseURL: apiUrl,

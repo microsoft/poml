@@ -135,7 +135,7 @@ The core POML processor is built with TypeScript and React:
 
 Configure in VS Code settings or `.vscode/settings.json`, if you have installed the extension:
 
-- `poml.languageModel.provider`: LLM provider (openai, microsoft, anthropic, google)
+- `poml.languageModel.provider`: LLM provider (openai, openaiResponse, microsoft, anthropic, google)
 - `poml.languageModel.model`: Model name or deployment
 - `poml.languageModel.apiKey`: API authentication key
 - `poml.languageModel.apiUrl`: Custom API endpoint

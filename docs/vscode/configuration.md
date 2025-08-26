@@ -48,7 +48,7 @@ The following settings mainly control the language model used for POML testing f
 }
 ```
 
-**Options:** `openai`, `microsoft`, `anthropic`, `google`  
+**Options:** `openai`, `openaiResponse`, `microsoft`, `anthropic`, `google`
 **Default:** `openai`
 
 ### Model Name
