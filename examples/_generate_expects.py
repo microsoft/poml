@@ -1,9 +1,10 @@
+import io
 import json
 import os
-import poml
-import io
 import sys
 from contextlib import redirect_stdout
+
+import poml
 
 
 def process_example(example_content, output_file, context):
@@ -11,7 +12,9 @@ def process_example(example_content, output_file, context):
     Process the example content and return the expected output.
     """
     # Capture stdout
-    poml.poml(example_content, context=context, format="raw", output_file=output_file, extra_args=["--prettyPrint", "true"])
+    poml.poml(
+        example_content, context=context, format="raw", output_file=output_file, extra_args=["--prettyPrint", "true"]
+    )
 
 
 def generate_expectations():
@@ -34,7 +37,7 @@ def generate_expectations():
             process_example(
                 os.path.join(examples_dir, example_file),
                 os.path.join(expect_dir, example_file.replace(".poml", ".txt")),
-                context
+                context,
             )
 
 

@@ -1,7 +1,8 @@
-import weave
 import time
 from datetime import datetime, timezone
-from common_utils import print_section, print_separator, Colors
+
+import weave
+from common_utils import Colors, print_section, print_separator
 
 
 def check_trace(must_have_ops, time_cutoff=None, delay_seconds=10, limit=10):

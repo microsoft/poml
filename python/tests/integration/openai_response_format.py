@@ -1,8 +1,10 @@
 import os
-from flask import json
-import poml
-from openai import OpenAI
+
 from common_utils import print_section
+from flask import json
+from openai import OpenAI
+
+import poml
 
 if __name__ == "__main__":
     client = OpenAI(

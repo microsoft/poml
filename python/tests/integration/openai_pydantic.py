@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Union, Optional, List
-
-from pydantic import Field, BaseModel
+from typing import List, Optional, Union
 
 import openai
+from pydantic import BaseModel, Field
+
 from poml.integration.pydantic import to_strict_json_schema
 
 

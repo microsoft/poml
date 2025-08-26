@@ -1,11 +1,11 @@
+import multiprocessing
 import os
+import re
 import subprocess
 import sys
-import re
 from pathlib import Path
-import multiprocessing
 
-from poml import poml, Prompt, set_trace, clear_trace, get_trace, trace_artifact
+from poml import Prompt, clear_trace, get_trace, poml, set_trace, trace_artifact
 
 
 def test_basic():

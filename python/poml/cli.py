@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import os
-import sys
 import subprocess
-import nodejs_wheel
+import sys
 from typing import Any, NoReturn
+
+import nodejs_wheel
 
 
 def node(*args: str, **kwargs: Any) -> subprocess.CompletedProcess[bytes | str]:
@@ -12,9 +13,9 @@ def node(*args: str, **kwargs: Any) -> subprocess.CompletedProcess[bytes | str]:
 
 
 def run(*args: str, **kwargs: Any) -> subprocess.CompletedProcess[bytes | str]:
-    script = os.path.join(os.path.dirname(__file__), 'js', 'cli.js')
+    script = os.path.join(os.path.dirname(__file__), "js", "cli.js")
     if not os.path.exists(script):
-        raise RuntimeError(f'Expected CLI entrypoint: {script} to exist')
+        raise RuntimeError(f"Expected CLI entrypoint: {script} to exist")
 
     return node(script, *args, **kwargs)
 
