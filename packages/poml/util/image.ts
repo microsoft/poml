@@ -74,10 +74,10 @@ function loadImageInBrowser(src?: string, base64?: string): Promise<HTMLImageEle
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error('Failed to load image'));
-    
+
     if (src) {
       img.src = src;
     } else if (base64) {
@@ -89,22 +89,17 @@ function loadImageInBrowser(src?: string, base64?: string): Promise<HTMLImageEle
 }
 
 // Browser-specific image processing using Canvas
-function processImageInBrowser(
-  img: HTMLImageElement, 
-  maxWidth?: number, 
-  maxHeight?: number, 
-  resize?: number
-): string {
+function processImageInBrowser(img: HTMLImageElement, maxWidth?: number, maxHeight?: number, resize?: number): string {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  
+
   if (!ctx) {
     throw new Error('Cannot get canvas context');
   }
-  
+
   let { width, height } = img;
   const resizes: number[] = [];
-  
+
   if (resize) {
     resizes.push(resize);
   }
@@ -114,31 +109,31 @@ function processImageInBrowser(
   if (maxHeight) {
     resizes.push(maxHeight / height);
   }
-  
+
   if (resizes.length > 0) {
     const resizeFactor = Math.min(...resizes);
     width = Math.round(width * resizeFactor);
     height = Math.round(height * resizeFactor);
   }
-  
+
   canvas.width = width;
   canvas.height = height;
   ctx.drawImage(img, 0, 0, width, height);
-  
+
   return canvas.toDataURL('image/png').split(',')[1];
 }
 
 // Browser implementation of preprocessImage
 async function preprocessImageBrowser(args: PreprocessImageArgs): Promise<ProcessedImage> {
   const { src, base64, maxWidth, maxHeight, resize } = args;
-  
+
   try {
     const img = await loadImageInBrowser(src, base64);
     const processedBase64 = processImageInBrowser(img, maxWidth, maxHeight, resize);
-    
+
     return {
       base64: processedBase64,
-      mimeType: 'image/png'
+      mimeType: 'image/png',
     };
   } catch (error) {
     throw new Error(`Image preprocessing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -149,9 +144,9 @@ async function preprocessImageBrowser(args: PreprocessImageArgs): Promise<Proces
 async function getImageWidthHeightBrowser(base64: string): Promise<{ width: number; height: number }> {
   try {
     const img = await loadImageInBrowser(undefined, base64);
-    return { 
-      width: img.naturalWidth, 
-      height: img.naturalHeight 
+    return {
+      width: img.naturalWidth,
+      height: img.naturalHeight,
     };
   } catch (error) {
     throw new Error(`Failed to get image dimensions: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -162,7 +157,7 @@ export async function preprocessImage(args: PreprocessImageArgs): Promise<Proces
   if (isBrowser()) {
     return preprocessImageBrowser(args);
   }
-  
+
   // Node.js implementation
   const { src, base64, type, maxWidth, maxHeight, resize } = args;
   let sharpObj = readImage(src, base64);
@@ -180,7 +175,7 @@ export async function getImageWidthHeight(base64: string): Promise<{ width: numb
   if (isBrowser()) {
     return getImageWidthHeightBrowser(base64);
   }
-  
+
   // Node.js implementation
   const image = sharp(Buffer.from(base64, 'base64'));
   const metadata = await image.metadata();

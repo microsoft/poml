@@ -12,9 +12,11 @@ export interface ConversionOptions {
 }
 
 export async function convertToHtml(_options: ConversionOptions): Promise<ConversionResult> {
-  throw new Error('convertToHtml is not available in browser context. Document conversion requires server-side processing.');
+  throw new Error(
+    'convertToHtml is not available in browser context. Document conversion requires server-side processing.',
+  );
 }
 
 export default {
-  convertToHtml
+  convertToHtml,
 };

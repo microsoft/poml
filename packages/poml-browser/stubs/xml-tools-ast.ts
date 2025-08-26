@@ -29,9 +29,11 @@ export interface XMLDocument {
 }
 
 export function buildAst(_cst: any, _tokenVector: any[]): XMLDocument {
-  throw new Error('buildAst from @xml-tools/ast is not available in browser context. XML AST building requires server-side libraries.');
+  throw new Error(
+    'buildAst from @xml-tools/ast is not available in browser context. XML AST building requires server-side libraries.',
+  );
 }
 
 export default {
-  buildAst
+  buildAst,
 };

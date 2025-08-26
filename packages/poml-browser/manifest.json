@@ -8,8 +8,24 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["sidePanel", "activeTab", "tabs", "scripting", "clipboardRead", "clipboardWrite", "identity", "webNavigation", "storage"],
-  "host_permissions": ["file:///*", "https://docs.google.com/*", "https://docs.googleapis.com/*", "http://*/*", "https://*/*"],
+  "permissions": [
+    "sidePanel",
+    "activeTab",
+    "tabs",
+    "scripting",
+    "clipboardRead",
+    "clipboardWrite",
+    "identity",
+    "webNavigation",
+    "storage"
+  ],
+  "host_permissions": [
+    "file:///*",
+    "https://docs.google.com/*",
+    "https://docs.googleapis.com/*",
+    "http://*/*",
+    "https://*/*"
+  ],
   "minimum_chrome_version": "138",
   "side_panel": {
     "default_path": "ui/index.html"
@@ -25,9 +41,7 @@
   },
   "oauth2": {
     "client_id": "542473423331-1oskhbapcri97omqcjjgcb9df3i17pbr.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/documents.readonly"
-    ]
+    "scopes": ["https://www.googleapis.com/auth/documents.readonly"]
   },
   "web_accessible_resources": [
     {

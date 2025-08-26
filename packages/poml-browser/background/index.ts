@@ -28,10 +28,8 @@ interface MessageResponse {
 }
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
-  if (reason === "install") {
-    chrome.sidePanel
-      .setPanelBehavior({ openPanelOnActionClick: true })
-      .catch((error) => console.error(error));
+  if (reason === 'install') {
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => console.error(error));
   }
 });
 
@@ -40,21 +38,21 @@ chrome.runtime.onMessage.addListener(
   (
     request: MessageRequest | NotificationMessage,
     _sender: chrome.runtime.MessageSender,
-    sendResponse: (response: MessageResponse) => void
+    sendResponse: (response: MessageResponse) => void,
   ): boolean => {
     // Handle notification messages
     if ('type' in request && request.type === 'notification') {
       const notificationMsg = request as NotificationMessage;
-      
+
       // Forward notification to all UI contexts (popup, sidebar, etc.)
       chrome.runtime.sendMessage(notificationMsg).catch(() => {
         // If no UI is open, the message will fail, which is fine
         console.debug('[Background] No UI available to receive notification');
       });
-      
+
       // Also try to send to any open extension tabs
       chrome.tabs.query({ url: chrome.runtime.getURL('*') }, (tabs) => {
-        tabs.forEach(tab => {
+        tabs.forEach((tab) => {
           if (tab.id) {
             chrome.tabs.sendMessage(tab.id, notificationMsg).catch(() => {
               // Tab might not have a listener, which is fine
@@ -62,26 +60,26 @@ chrome.runtime.onMessage.addListener(
           }
         });
       });
-      
+
       sendResponse({ success: true });
       return true;
     }
-    
+
     // Cast to MessageRequest for action-based messages
     const messageRequest = request as MessageRequest;
-    
+
     // Handle theme storage operations
-    if (messageRequest.action === "getTheme") {
+    if (messageRequest.action === 'getTheme') {
       chrome.storage.local.get(['theme'], (result) => {
         sendResponse({ success: true, theme: result.theme || 'auto' });
       });
       return true;
-    } else if (messageRequest.action === "setTheme") {
+    } else if (messageRequest.action === 'setTheme') {
       if (!messageRequest.theme) {
-        sendResponse({ success: false, error: "No theme provided" });
+        sendResponse({ success: false, error: 'No theme provided' });
         return true;
       }
-      
+
       chrome.storage.local.set({ theme: messageRequest.theme }, () => {
         // FIXME: Handle potential errors
         // const error = chrome.runtime.lastError;
@@ -93,9 +91,9 @@ chrome.runtime.onMessage.addListener(
         }
       });
       return true;
-    } else if (messageRequest.action === "readFile") {
+    } else if (messageRequest.action === 'readFile') {
       if (!messageRequest.filePath) {
-        sendResponse({ success: false, error: "No file path provided" });
+        sendResponse({ success: false, error: 'No file path provided' });
         return true;
       }
 
@@ -111,20 +109,22 @@ chrome.runtime.onMessage.addListener(
           }
         })
         .catch((error) => {
-          console.error("Error reading file:", error);
+          console.error('Error reading file:', error);
           sendResponse({ success: false, error: error.message });
         });
 
       // Return true to indicate we will send a response asynchronously
       return true;
-    } else if (messageRequest.action === "extractContent" || 
-               messageRequest.action === "extractPageContent" ||
-               messageRequest.action === "extractWordContent" || 
-               messageRequest.action === "extractMsWordContent" ||
-               messageRequest.action === "extractPdfContent" ||
-               messageRequest.action === "extractHtmlContent") {
+    } else if (
+      messageRequest.action === 'extractContent' ||
+      messageRequest.action === 'extractPageContent' ||
+      messageRequest.action === 'extractWordContent' ||
+      messageRequest.action === 'extractMsWordContent' ||
+      messageRequest.action === 'extractPdfContent' ||
+      messageRequest.action === 'extractHtmlContent'
+    ) {
       if (!messageRequest.tabId) {
-        sendResponse({ success: false, error: "No tab ID provided" });
+        sendResponse({ success: false, error: 'No tab ID provided' });
         return true;
       }
 
@@ -133,7 +133,7 @@ chrome.runtime.onMessage.addListener(
           sendResponse({ success: true, content: content });
         })
         .catch((error) => {
-          console.error("Error extracting content:", error);
+          console.error('Error extracting content:', error);
           sendResponse({ success: false, error: error.message });
         });
 
@@ -142,7 +142,7 @@ chrome.runtime.onMessage.addListener(
     }
 
     return false;
-  }
+  },
 );
 
 async function readFileContent(filePath: string, binary: boolean = false): Promise<string | ArrayBuffer> {
@@ -151,17 +151,17 @@ async function readFileContent(filePath: string, binary: boolean = false): Promi
     let normalizedPath = filePath.trim();
 
     // Handle different path formats
-    if (normalizedPath.startsWith("~/")) {
+    if (normalizedPath.startsWith('~/')) {
       // Cannot resolve ~ in browser extension context
-      throw new Error("Cannot resolve ~ path in extension context");
+      throw new Error('Cannot resolve ~ path in extension context');
     }
 
     // Ensure path starts with file:// protocol
-    if (!normalizedPath.startsWith("file://")) {
-      if (normalizedPath.startsWith("/")) {
-        normalizedPath = "file://" + normalizedPath;
+    if (!normalizedPath.startsWith('file://')) {
+      if (normalizedPath.startsWith('/')) {
+        normalizedPath = 'file://' + normalizedPath;
       } else {
-        throw new Error("Invalid file path format");
+        throw new Error('Invalid file path format');
       }
     }
 
@@ -181,12 +181,9 @@ async function readFileContent(filePath: string, binary: boolean = false): Promi
     }
   } catch (error) {
     // If fetch fails, try alternative approaches or provide helpful error
-    if (
-      error instanceof Error &&
-      error.message.includes("Not allowed to load local resource")
-    ) {
+    if (error instanceof Error && error.message.includes('Not allowed to load local resource')) {
       throw new Error(
-        "Browser security policy prevents reading local files. Try using a local server or file input instead."
+        'Browser security policy prevents reading local files. Try using a local server or file input instead.',
       );
     }
     throw error;
@@ -196,7 +193,7 @@ async function readFileContent(filePath: string, binary: boolean = false): Promi
 async function extractContent(tabId: number): Promise<any> {
   try {
     if (!chrome.scripting) {
-      throw new Error("Chrome scripting API not available");
+      throw new Error('Chrome scripting API not available');
     }
 
     console.log(`[DEBUG] Starting unified content extraction for tab ${tabId}`);
@@ -204,7 +201,7 @@ async function extractContent(tabId: number): Promise<any> {
     // Inject the content extractor script that includes all extraction capabilities
     await chrome.scripting.executeScript({
       target: { tabId: tabId },
-      files: ["contentScript.js"],
+      files: ['contentScript.js'],
     });
 
     console.log(`[DEBUG] Content extractor script injected`);
@@ -214,53 +211,47 @@ async function extractContent(tabId: number): Promise<any> {
       target: { tabId: tabId },
       func: async () => {
         // The contentScript.js should have made extractContent available globally
-        if (typeof (window as any).extractContent === "function") {
+        if (typeof (window as any).extractContent === 'function') {
           const result = await (window as any).extractContent();
           return result;
         } else {
-          console.error("[DEBUG] extractContent function not found");
+          console.error('[DEBUG] extractContent function not found');
           // Return fallback CardModel array
-          return [{
-            id: `fallback-${Date.now()}`,
-            title: document.title || "Untitled",
-            content: {
-              type: 'text',
-              value: document.body
-                ? document.body.innerText || document.body.textContent || ""
-                : ""
+          return [
+            {
+              id: `fallback-${Date.now()}`,
+              title: document.title || 'Untitled',
+              content: {
+                type: 'text',
+                value: document.body ? document.body.innerText || document.body.textContent || '' : '',
+              },
+              componentType: 'Paragraph',
+              metadata: {
+                source: 'web',
+                url: document.location.href,
+                tags: ['fallback'],
+              },
             },
-            componentType: 'Paragraph',
-            metadata: {
-              source: 'web',
-              url: document.location.href,
-              tags: ['fallback']
-            }
-          }];
+          ];
         }
       },
     });
 
-    console.log("[DEBUG] Script execution completed");
-    console.log("[DEBUG] Extraction results:", extractionResults);
+    console.log('[DEBUG] Script execution completed');
+    console.log('[DEBUG] Extraction results:', extractionResults);
 
-    if (
-      extractionResults &&
-      extractionResults[0] &&
-      extractionResults[0].result
-    ) {
+    if (extractionResults && extractionResults[0] && extractionResults[0].result) {
       const cards = extractionResults[0].result;
-      console.log("[DEBUG] Extracted cards count:", Array.isArray(cards) ? cards.length : 'not an array');
+      console.log('[DEBUG] Extracted cards count:', Array.isArray(cards) ? cards.length : 'not an array');
 
       // Return the CardModel array directly
       return cards;
     } else {
-      console.log("[DEBUG] No results returned from script execution");
-      throw new Error(
-        "Could not extract content from page - no results returned"
-      );
+      console.log('[DEBUG] No results returned from script execution');
+      throw new Error('Could not extract content from page - no results returned');
     }
   } catch (error) {
-    console.error("[DEBUG] Error in background extractContent:", error);
+    console.error('[DEBUG] Error in background extractContent:', error);
     throw error;
   }
 }

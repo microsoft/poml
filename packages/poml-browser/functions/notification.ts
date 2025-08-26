@@ -23,7 +23,7 @@ let directUIHandler: ((type: NotificationType, message: string, options?: Notifi
 
 // Register a direct UI handler (called by NotificationService when it initializes)
 export function registerDirectUIHandler(
-  handler: (type: NotificationType, message: string, options?: NotificationOptions) => void
+  handler: (type: NotificationType, message: string, options?: NotificationOptions) => void,
 ): void {
   directUIHandler = handler;
 }
@@ -41,18 +41,20 @@ function getExecutionContext(): 'background' | 'content' | 'ui' {
     if (typeof window === 'undefined' && typeof self !== 'undefined' && 'ServiceWorkerGlobalScope' in self) {
       return 'background';
     }
-    
+
     // Check if we're in the extension popup/sidebar UI
-    if (typeof window !== 'undefined' && 
-        window.location.protocol === 'chrome-extension:' && 
-        (window.location.pathname.includes('ui/') || window.location.pathname.includes('index.html'))) {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.protocol === 'chrome-extension:' &&
+      (window.location.pathname.includes('ui/') || window.location.pathname.includes('index.html'))
+    ) {
       return 'ui';
     }
-    
+
     // Otherwise, we're in a content script
     return 'content';
   }
-  
+
   // Fallback to content if chrome is not available
   return 'content';
 }
@@ -62,45 +64,47 @@ function serializeObject(obj: any, maxLength: number = 2000): string {
   if (obj === null || obj === undefined) {
     return String(obj);
   }
-  
+
   if (typeof obj === 'string') {
     return obj.length > maxLength ? obj.substring(0, maxLength) + '...' : obj;
   }
-  
+
   if (obj instanceof Error) {
     const errorInfo = {
       message: obj.message,
       name: obj.name,
-      stack: obj.stack?.split('\n').slice(0, 5).join('\n') // First 5 stack frames
+      stack: obj.stack?.split('\n').slice(0, 5).join('\n'), // First 5 stack frames
     };
     return JSON.stringify(errorInfo, null, 2);
   }
-  
+
   try {
     // Handle circular references and functions
     const seen = new WeakSet();
-    const serialized = JSON.stringify(obj, (_key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (seen.has(value)) {
-          return '[Circular Reference]';
+    const serialized = JSON.stringify(
+      obj,
+      (_key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return '[Circular Reference]';
+          }
+          seen.add(value);
         }
-        seen.add(value);
-      }
-      if (typeof value === 'function') {
-        return `[Function: ${value.name || 'anonymous'}]`;
-      }
-      if (value instanceof RegExp) {
-        return value.toString();
-      }
-      if (value instanceof Date) {
-        return value.toISOString();
-      }
-      return value;
-    }, 2);
-    
-    return serialized.length > maxLength 
-      ? serialized.substring(0, maxLength) + '...[truncated]'
-      : serialized;
+        if (typeof value === 'function') {
+          return `[Function: ${value.name || 'anonymous'}]`;
+        }
+        if (value instanceof RegExp) {
+          return value.toString();
+        }
+        if (value instanceof Date) {
+          return value.toISOString();
+        }
+        return value;
+      },
+      2,
+    );
+
+    return serialized.length > maxLength ? serialized.substring(0, maxLength) + '...[truncated]' : serialized;
   } catch (error) {
     // Fallback for objects that can't be serialized
     try {
@@ -116,7 +120,7 @@ function serializeObject(obj: any, maxLength: number = 2000): string {
 function logToConsole(type: NotificationType, message: string, objects?: any, options?: NotificationOptions): void {
   const prefix = options?.title ? `[${type.toUpperCase()}] ${options.title}: ` : `[${type.toUpperCase()}] `;
   const fullMessage = prefix + message;
-  
+
   switch (type) {
     case 'error':
       if (objects !== undefined) {
@@ -172,30 +176,30 @@ async function sendNotificationMessage(message: NotificationMessage): Promise<vo
 
 // Main notification function
 export async function notify(
-  type: NotificationType, 
-  message: string, 
-  objects?: any, 
-  options?: NotificationOptions
+  type: NotificationType,
+  message: string,
+  objects?: any,
+  options?: NotificationOptions,
 ): Promise<void> {
   // 1. Always log to console first
   logToConsole(type, message, objects, options);
-  
+
   // 2. Serialize objects if provided
   let details: string | undefined;
   if (objects !== undefined) {
     details = serializeObject(objects);
   }
-  
+
   // 3. Combine message with details
   const fullMessage = details ? `${message}\n\nDetails:\n${details}` : message;
-  
+
   // 4. Check if we have a direct UI handler available (when called from UI context)
   if (directUIHandler) {
     // Use the direct handler for immediate UI updates
     directUIHandler(type, fullMessage, options);
     return;
   }
-  
+
   // 5. Otherwise, send via messaging
   const context = getExecutionContext();
   const notificationMessage: NotificationMessage = {
@@ -205,33 +209,33 @@ export async function notify(
     details,
     options,
     source: context,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
-  
+
   await sendNotificationMessage(notificationMessage);
 }
 
 // Convenience functions for each notification type
-export const notifySuccess = (message: string, objects?: any, options?: NotificationOptions) => 
+export const notifySuccess = (message: string, objects?: any, options?: NotificationOptions) =>
   notify('success', message, objects, options);
 
-export const notifyError = (message: string, objects?: any, options?: NotificationOptions) => 
+export const notifyError = (message: string, objects?: any, options?: NotificationOptions) =>
   notify('error', message, objects, { duration: 0, autoHide: false, ...options });
 
-export const notifyWarning = (message: string, objects?: any, options?: NotificationOptions) => 
+export const notifyWarning = (message: string, objects?: any, options?: NotificationOptions) =>
   notify('warning', message, objects, options);
 
-export const notifyInfo = (message: string, objects?: any, options?: NotificationOptions) => 
+export const notifyInfo = (message: string, objects?: any, options?: NotificationOptions) =>
   notify('info', message, objects, options);
 
-export const notifyDebug = (message: string, objects?: any, options?: NotificationOptions) => 
+export const notifyDebug = (message: string, objects?: any, options?: NotificationOptions) =>
   notify('debug', message, objects, { position: 'bottom', ...options });
 
 // Error handler wrapper for async functions
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
   errorMessage?: string,
-  successMessage?: string
+  successMessage?: string,
 ): Promise<T | null> {
   try {
     const result = await operation();
@@ -247,11 +251,7 @@ export async function withErrorHandling<T>(
 }
 
 // Error handler wrapper for sync functions
-export function withSyncErrorHandling<T>(
-  operation: () => T,
-  errorMessage?: string,
-  successMessage?: string
-): T | null {
+export function withSyncErrorHandling<T>(operation: () => T, errorMessage?: string, successMessage?: string): T | null {
   try {
     const result = operation();
     if (successMessage) {

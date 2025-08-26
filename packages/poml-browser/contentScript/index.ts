@@ -12,9 +12,9 @@ async function extractContent(): Promise<CardModel[]> {
   try {
     notifyInfo('Content extractor script loaded', {
       url: document.location.href,
-      title: document.title
+      title: document.title,
     });
-    
+
     // Check if this is a PDF document
     if (isPdfDocument()) {
       notifyInfo('PDF detected, attempting PDF text extraction with visualization');
@@ -23,35 +23,36 @@ async function extractContent(): Promise<CardModel[]> {
       (window as any).pdfVisualizations = result.visualizations;
       return result.cards;
     }
-    
+
     // Check if this is a Word document
     if (isWordDocument()) {
       notifyInfo('Word document detected, extracting content');
       return extractWordContent();
     }
-    
+
     // Otherwise, extract as regular HTML
     notifyInfo('Extracting HTML content');
     return await extractHtmlContent();
-    
   } catch (error) {
     notifyError('Error in content extractor', error);
-    
+
     // Return error card
-    return [{
-      id: `error-${Date.now()}`,
-      title: 'Extraction Error',
-      content: { 
-        type: 'text', 
-        value: error instanceof Error ? error.message : String(error)
+    return [
+      {
+        id: `error-${Date.now()}`,
+        title: 'Extraction Error',
+        content: {
+          type: 'text',
+          value: error instanceof Error ? error.message : String(error),
+        },
+        componentType: 'Paragraph',
+        metadata: {
+          source: 'web',
+          url: document.location.href,
+          tags: ['error'],
+        },
       },
-      componentType: 'Paragraph',
-      metadata: {
-        source: 'web',
-        url: document.location.href,
-        tags: ['error']
-      }
-    }];
+    ];
   }
 }
 
@@ -68,4 +69,4 @@ declare global {
 // For debugging purposes
 (window as any).extractPdfContentVisualized = async () => {
   return await extractPdfContentVisualized(document.location.href, true);
-}
+};

@@ -22,14 +22,14 @@ export function base64ToUint8(base64: string): Uint8Array {
 
 export function binaryToBase64(binary: Uint8Array | ArrayBuffer): string {
   const uint8Array = binary instanceof ArrayBuffer ? new Uint8Array(binary) : binary;
-  
+
   // Use chunked approach for large arrays to avoid stack overflow
   let binaryString = '';
   for (let i = 0; i < uint8Array.length; i += CHUNK_SIZE) {
     const chunk = uint8Array.subarray(i, i + CHUNK_SIZE);
     binaryString += String.fromCharCode(...chunk);
   }
-  
+
   return btoa(binaryString);
 }
 

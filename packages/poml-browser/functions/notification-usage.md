@@ -39,7 +39,7 @@ notifyError('Critical error', errorDetails, {
   title: 'System Error',
   duration: 0, // Persistent notification
   position: 'top',
-  autoHide: false
+  autoHide: false,
 });
 ```
 
@@ -59,7 +59,7 @@ const MyComponent = () => {
       notifyError('Failed to load data', error);
     }
   };
-  
+
   return <button onClick={handleClick}>Load Data</button>;
 };
 ```
@@ -71,9 +71,9 @@ import { notify, notifyInfo } from '../functions/notification';
 
 // Extract page content
 const content = document.body.innerText;
-notifyInfo('Page content extracted', { 
+notifyInfo('Page content extracted', {
   length: content.length,
-  title: document.title 
+  title: document.title,
 });
 
 // Report errors
@@ -113,31 +113,29 @@ const result = await withErrorHandling(
     return response.json();
   },
   'Failed to fetch data', // Error message
-  'Data loaded successfully' // Success message (optional)
+  'Data loaded successfully', // Success message (optional)
 );
 
 // Sync operations with automatic error handling
-const parsed = withSyncErrorHandling(
-  () => JSON.parse(jsonString),
-  'Invalid JSON format'
-);
+const parsed = withSyncErrorHandling(() => JSON.parse(jsonString), 'Invalid JSON format');
 ```
 
 ## Notification Types and Defaults
 
-| Type | Console Method | Default Position | Auto-hide | Default Duration |
-|------|---------------|-----------------|-----------|------------------|
-| success | console.log | top | yes | 4000ms |
-| error | console.error | top | no | persistent |
-| warning | console.warn | top | yes | 4000ms |
-| info | console.info | top | yes | 4000ms |
-| debug | console.debug | bottom | yes | 4000ms |
+| Type    | Console Method | Default Position | Auto-hide | Default Duration |
+| ------- | -------------- | ---------------- | --------- | ---------------- |
+| success | console.log    | top              | yes       | 4000ms           |
+| error   | console.error  | top              | no        | persistent       |
+| warning | console.warn   | top              | yes       | 4000ms           |
+| info    | console.info   | top              | yes       | 4000ms           |
+| debug   | console.debug  | bottom           | yes       | 4000ms           |
 
 ## Advanced Features
 
 ### Complex Object Handling
 
 The system automatically handles:
+
 - Circular references
 - Functions
 - Regular expressions
@@ -151,7 +149,7 @@ const complexData = {
   timestamp: new Date(),
   pattern: /test/gi,
   callback: () => console.log('test'),
-  error: new Error('Sample error')
+  error: new Error('Sample error'),
 };
 
 notifyDebug('Complex data', complexData);

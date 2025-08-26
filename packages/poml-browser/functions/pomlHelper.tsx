@@ -8,7 +8,7 @@ import {
   isBinaryContent,
   isFileContent,
   isNestedContent,
-  getDefaultComponentType
+  getDefaultComponentType,
 } from './cardModel';
 import { notifyWarning, notifyError, notifyDebug } from './notification';
 
@@ -28,7 +28,7 @@ import {
   Newline,
   Object as POMLObject,
   Image,
-  Audio
+  Audio,
 } from 'poml/essentials';
 
 import {
@@ -53,7 +53,7 @@ import {
   HumanMessage,
   SystemMessage,
   MessageContent,
-  CaptionedParagraph
+  CaptionedParagraph,
 } from 'poml/components';
 import { ErrorCollection } from 'poml/base';
 import { binaryToBase64 } from './utils';
@@ -104,7 +104,7 @@ const ComponentMap: Record<string, React.FC<any>> = {
   Conversation,
   HumanMessage,
   SystemMessage,
-  MessageContent
+  MessageContent,
 };
 
 /**
@@ -129,7 +129,7 @@ export function cardToPOMLElement(card: CardModel): React.ReactElement {
  */
 function buildComponentProps(card: CardModel): Record<string, any> {
   const props: Record<string, any> = {
-    key: card.id
+    key: card.id,
   };
 
   // Add title for CaptionedParagraph
@@ -184,7 +184,7 @@ function buildComponentChildren(card: CardModel): React.ReactNode {
   if (isTextContent(card.content)) {
     return card.content.value;
   } else if (isNestedContent(card.content)) {
-    return card.content.children.map(child => cardToPOMLElement(child));
+    return card.content.children.map((child) => cardToPOMLElement(child));
   } else if (isBinaryContent(card.content)) {
     // Binary uncontents are passed as base64 strings
     return null;
@@ -196,22 +196,20 @@ function buildComponentChildren(card: CardModel): React.ReactNode {
  * Convert multiple cards to a POML document
  */
 export function cardsToPOMLDocument(cards: CardModel[]): React.ReactElement {
-  return <Text syntax="markdown">{cards.map(card => cardToPOMLElement(card))}</Text>;
+  return <Text syntax='markdown'>{cards.map((card) => cardToPOMLElement(card))}</Text>;
 }
 
 /**
  * Render a React element to string using renderToReadableStream
  */
-async function renderElementToString(
-  element: React.ReactElement
-): Promise<string> {
+async function renderElementToString(element: React.ReactElement): Promise<string> {
   ErrorCollection.clear(); // Clear any previous errors
   let renderError: any = null;
   const stream = await renderToReadableStream(element, {
-    onError: error => {
+    onError: (error) => {
       notifyError('Error during POML rendering', error);
       renderError = error;
-    }
+    },
   });
   await stream.allReady;
   const reader = stream.getReader();
@@ -246,7 +244,7 @@ export const richContentToString = (content: RichContent): string => {
   }
 
   return content
-    .map(item => {
+    .map((item) => {
       if (typeof item === 'string') {
         return item;
       } else if (item && item.type) {
@@ -260,9 +258,7 @@ export const richContentToString = (content: RichContent): string => {
 /**
  * Convert a single card to POML string
  */
-export async function cardToPOMLString(
-  card: CardModel
-): Promise<RichContent> {
+export async function cardToPOMLString(card: CardModel): Promise<RichContent> {
   const element = cardToPOMLElement(card);
   const ir = await renderElementToString(element);
   const written = await write(ir, { speaker: false });
@@ -272,9 +268,7 @@ export async function cardToPOMLString(
 /**
  * Convert multiple cards to POML string
  */
-export async function cardsToPOMLString(
-  cards: CardModel[]
-): Promise<RichContent> {
+export async function cardsToPOMLString(cards: CardModel[]): Promise<RichContent> {
   const document = cardsToPOMLDocument(cards);
   const ir = await renderElementToString(document);
   notifyDebug('Generated intermediate representation', { length: ir.length });
@@ -289,15 +283,13 @@ export async function cardsToPOMLString(
 export function createPOMLElement(
   componentType: string,
   props: Record<string, any>,
-  children?: React.ReactNode
+  children?: React.ReactNode,
 ): React.ReactElement {
   const Component = ComponentMap[componentType] || Text;
   return React.createElement(Component, props, children);
 }
 
-export default async function pomlHelper(
-  cards?: CardModel[]
-): Promise<RichContent | undefined> {
+export default async function pomlHelper(cards?: CardModel[]): Promise<RichContent | undefined> {
   try {
     // If cards are provided, render them as POML
     if (cards && cards.length > 0) {

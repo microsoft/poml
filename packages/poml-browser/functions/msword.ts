@@ -12,7 +12,10 @@ export function cleanText(text: string | null): string {
     return '';
   }
   // Replace non-breaking spaces with regular spaces and collapse whitespace
-  return text.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+  return text
+    .replace(/\u00A0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /**
@@ -21,25 +24,25 @@ export function cleanText(text: string | null): string {
  */
 export function extractWordContent(): CardModel[] {
   const childCards: CardModel[] = [];
-  
+
   notifyDebug('Starting Word document extraction', {
     url: document.location.href,
-    title: document.title
+    title: document.title,
   });
-  
+
   // Extract document title
   const docTitle = document.title?.replace(' - Word', '').trim();
   const documentTitle = docTitle && docTitle !== 'Word' ? docTitle : 'Word Document';
-  
+
   // Select all primary content containers, which seem to be '.OutlineElement'
   const elements = document.querySelectorAll('.OutlineElement');
-  
+
   notifyDebug('Found OutlineElement elements', { count: elements.length });
-  
+
   // If no OutlineElements found, try alternative selectors for Word content
   if (elements.length === 0) {
     notifyDebug('No OutlineElement found, trying alternative selectors');
-    
+
     // Try other common Word Online selectors
     const alternativeSelectors = [
       '.Paragraph',
@@ -48,46 +51,49 @@ export function extractWordContent(): CardModel[] {
       '.Page p',
       'p',
       'div[contenteditable="true"] *',
-      '[data-automation-id="documentCanvas"] *'
+      '[data-automation-id="documentCanvas"] *',
     ];
-    
+
     for (const selector of alternativeSelectors) {
       const altElements = document.querySelectorAll(selector);
-      
+
       if (altElements.length > 0) {
-        notifyDebug(`Found elements with selector: ${selector}`, { 
-          count: altElements.length 
+        notifyDebug(`Found elements with selector: ${selector}`, {
+          count: altElements.length,
         });
-        
+
         // Process these elements directly as paragraphs
-        altElements.forEach(element => {
+        altElements.forEach((element) => {
           const content = cleanText(element.textContent);
           if (content) {
             // Check if it's a heading
-            if (element.getAttribute('role') === 'heading' || 
-                element.tagName.match(/^H[1-6]$/)) {
-              const level = element.tagName.match(/^H([1-6])$/) ? 
-                parseInt(element.tagName.charAt(1)) : 
-                parseInt(element.getAttribute('aria-level') || '1', 10);
-              
-              childCards.push(createCard({
-                content: { type: 'text', value: content } as TextContent,
-                componentType: 'Header',
-                metadata: {
-                  source: 'web',
-                  url: document.location.href,
-                  tags: [`heading-level-${level}`]
-                }
-              }));
+            if (element.getAttribute('role') === 'heading' || element.tagName.match(/^H[1-6]$/)) {
+              const level = element.tagName.match(/^H([1-6])$/)
+                ? parseInt(element.tagName.charAt(1))
+                : parseInt(element.getAttribute('aria-level') || '1', 10);
+
+              childCards.push(
+                createCard({
+                  content: { type: 'text', value: content } as TextContent,
+                  componentType: 'Header',
+                  metadata: {
+                    source: 'web',
+                    url: document.location.href,
+                    tags: [`heading-level-${level}`],
+                  },
+                }),
+              );
             } else {
-              childCards.push(createCard({
-                content: { type: 'text', value: content } as TextContent,
-                componentType: 'Paragraph',
-                metadata: {
-                  source: 'web',
-                  url: document.location.href
-                }
-              }));
+              childCards.push(
+                createCard({
+                  content: { type: 'text', value: content } as TextContent,
+                  componentType: 'Paragraph',
+                  metadata: {
+                    source: 'web',
+                    url: document.location.href,
+                  },
+                }),
+              );
             }
           }
         });
@@ -96,23 +102,25 @@ export function extractWordContent(): CardModel[] {
     }
   } else {
     // Process OutlineElements as originally intended
-    elements.forEach(element => {
+    elements.forEach((element) => {
       // Check for Images
       const imageEl = element.querySelector('image');
       if (imageEl && imageEl.getAttribute('href')) {
-        childCards.push(createCard({
-          content: {
-            type: 'file',
-            url: imageEl.getAttribute('href')!,
-            name: 'Document image',
-            mimeType: 'image/png'
-          },
-          componentType: 'Image',
-          metadata: {
-            source: 'web',
-            url: document.location.href
-          }
-        }));
+        childCards.push(
+          createCard({
+            content: {
+              type: 'file',
+              url: imageEl.getAttribute('href')!,
+              name: 'Document image',
+              mimeType: 'image/png',
+            },
+            componentType: 'Image',
+            metadata: {
+              source: 'web',
+              url: document.location.href,
+            },
+          }),
+        );
         return;
       }
 
@@ -125,29 +133,33 @@ export function extractWordContent(): CardModel[] {
         if (!content) {
           return;
         }
-        
+
         // Check if the paragraph is a header
         if (p.getAttribute('role') === 'heading') {
           const level = parseInt(p.getAttribute('aria-level') || '1', 10);
-          childCards.push(createCard({
-            content: { type: 'text', value: content } as TextContent,
-            componentType: 'Header',
-            metadata: {
-              source: 'web',
-              url: document.location.href,
-              tags: [`heading-level-${level}`]
-            }
-          }));
+          childCards.push(
+            createCard({
+              content: { type: 'text', value: content } as TextContent,
+              componentType: 'Header',
+              metadata: {
+                source: 'web',
+                url: document.location.href,
+                tags: [`heading-level-${level}`],
+              },
+            }),
+          );
         } else {
           // Otherwise, it's a standard paragraph (or list item)
-          childCards.push(createCard({
-            content: { type: 'text', value: content } as TextContent,
-            componentType: 'Paragraph',
-            metadata: {
-              source: 'web',
-              url: document.location.href
-            }
-          }));
+          childCards.push(
+            createCard({
+              content: { type: 'text', value: content } as TextContent,
+              componentType: 'Paragraph',
+              metadata: {
+                source: 'web',
+                url: document.location.href,
+              },
+            }),
+          );
         }
       }
     });
@@ -155,22 +167,23 @@ export function extractWordContent(): CardModel[] {
 
   // Create a single parent card with all content as nested children
   const parentCard = createCard({
-    content: childCards.length > 0 ? 
-      { type: 'nested', children: childCards } : 
-      { type: 'text', value: 'No content found in Word document' } as TextContent,
+    content:
+      childCards.length > 0
+        ? { type: 'nested', children: childCards }
+        : ({ type: 'text', value: 'No content found in Word document' } as TextContent),
     componentType: 'CaptionedParagraph',
     title: documentTitle,
     metadata: {
       source: 'web',
       url: document.location.href,
-      tags: ['msword', 'document']
-    }
+      tags: ['msword', 'document'],
+    },
   });
 
-  notifyInfo('Word document extraction completed', { 
-    childCardsCount: childCards.length 
+  notifyInfo('Word document extraction completed', {
+    childCardsCount: childCards.length,
   });
-  
+
   return [parentCard];
 }
 
@@ -186,10 +199,10 @@ export function isWordDocument(): boolean {
       /onedrive\.live\.com.*\/edit/,
       /sharepoint\.com.*\/edit/,
       /officeapps\.live\.com\/we\/wordeditorframe\.aspx/,
-      /word-edit\.officeapps\.live\.com/
+      /word-edit\.officeapps\.live\.com/,
     ];
 
-    return wordPatterns.some(pattern => pattern.test(document.location.pathname));
+    return wordPatterns.some((pattern) => pattern.test(document.location.pathname));
   } catch (error) {
     notifyError('Error checking for Word document.', error);
     return false;

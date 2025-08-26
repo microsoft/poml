@@ -31,7 +31,7 @@ The POML Browser Extension (`packages/poml-browser/`) provides POML support in w
 npm run build              # Build for development
 npm run watch              # Watch mode for development
 
-# Production builds  
+# Production builds
 npm run zip                # Alias for package
 
 # Testing and linting

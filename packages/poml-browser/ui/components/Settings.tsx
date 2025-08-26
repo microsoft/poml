@@ -13,7 +13,7 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const themeOptions = [
     { value: 'light', label: 'Light' },
     { value: 'dark', label: 'Dark' },
-    { value: 'auto', label: 'Follow System' }
+    { value: 'auto', label: 'Follow System' },
   ];
 
   const handleThemeChange = (value: string | null) => {
@@ -23,35 +23,32 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   };
 
   return (
-    <Stack gap="md" style={{ padding: '16px' }}>
+    <Stack gap='md' style={{ padding: '16px' }}>
       {/* Header */}
       <Group>
-        <ActionIcon
-          variant="subtle"
-          size="sm"
-          onClick={onBack}
-          aria-label="Back"
-        >
+        <ActionIcon variant='subtle' size='sm' onClick={onBack} aria-label='Back'>
           <IconArrowLeft size={16} />
         </ActionIcon>
-        <Text size="lg" fw={600}>Settings</Text>
+        <Text size='lg' fw={600}>
+          Settings
+        </Text>
       </Group>
 
       {/* Theme Settings */}
-      <Paper p="md" withBorder>
-        <Stack gap="sm">
-          <Group gap="xs">
+      <Paper p='md' withBorder>
+        <Stack gap='sm'>
+          <Group gap='xs'>
             <IconPalette size={20} />
             <Text fw={500}>Theme</Text>
           </Group>
-          <Text size="sm" c="dimmed">
+          <Text size='sm' c='dimmed'>
             Choose how the extension should appear
           </Text>
           <Select
             value={theme}
             onChange={handleThemeChange}
             data={themeOptions}
-            placeholder="Select theme"
+            placeholder='Select theme'
             allowDeselect={false}
           />
         </Stack>

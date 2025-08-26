@@ -4,7 +4,12 @@ import { describe, expect, test } from '@jest/globals';
 import { MarkdownWriter, JsonWriter, MultiMediaWriter, YamlWriter, XmlWriter } from 'poml/writer';
 import * as cheerio from 'cheerio';
 import { readFileSync } from 'fs';
-import { ContentMultiMediaBinary, ContentMultiMediaToolResponse, ErrorCollection, richContentFromSourceMap } from 'poml/base';
+import {
+  ContentMultiMediaBinary,
+  ContentMultiMediaToolResponse,
+  ErrorCollection,
+  richContentFromSourceMap,
+} from 'poml/base';
 
 describe('markdown', () => {
   test('markdownSimple', () => {

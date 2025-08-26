@@ -26,5 +26,5 @@
     "esModuleInterop": true
   },
   "include": ["packages/**/*"],
-  "exclude": ["packages/poml-browser/**/*"],
+  "exclude": ["packages/poml-browser/**/*"]
 }

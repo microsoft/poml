@@ -33,7 +33,7 @@ class GoogleDocsManager {
 
       const authResponse = await chrome.identity.getAuthToken({
         interactive: true,
-        scopes: ['https://www.googleapis.com/auth/documents.readonly']
+        scopes: ['https://www.googleapis.com/auth/documents.readonly'],
       });
 
       if (!authResponse || typeof authResponse !== 'object' || !authResponse.token) {
@@ -90,9 +90,9 @@ class GoogleDocsManager {
 
       const response = await fetch(apiUrl, {
         headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json'
-        }
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -145,11 +145,9 @@ class GoogleDocsManager {
                   metadata: {
                     source: 'web',
                     url: tab.url,
-                    tags: isHeading
-                      ? [`heading-level-${headingLevel}`, 'google-docs']
-                      : ['paragraph', 'google-docs']
-                  }
-                })
+                    tags: isHeading ? [`heading-level-${headingLevel}`, 'google-docs'] : ['paragraph', 'google-docs'],
+                  },
+                }),
               );
             }
           } else if (element.table) {
@@ -177,9 +175,9 @@ class GoogleDocsManager {
                         metadata: {
                           source: 'web',
                           url: tab.url,
-                          tags: ['table-cell', 'google-docs']
-                        }
-                      })
+                          tags: ['table-cell', 'google-docs'],
+                        },
+                      }),
                     );
                   }
                 }
@@ -201,9 +199,9 @@ class GoogleDocsManager {
                   metadata: {
                     source: 'web',
                     url: tab.url,
-                    tags: ['table', 'google-docs']
-                  }
-                })
+                    tags: ['table', 'google-docs'],
+                  },
+                }),
               );
             }
           }
@@ -213,8 +211,7 @@ class GoogleDocsManager {
       processContent(document.body);
 
       // Create a single parent card with all content as nested children
-      const documentTitle =
-        document.title && document.title.trim() ? document.title : 'Google Docs Document';
+      const documentTitle = document.title && document.title.trim() ? document.title : 'Google Docs Document';
       const parentCard = createCard({
         content:
           childCards.length > 0
@@ -225,12 +222,12 @@ class GoogleDocsManager {
         metadata: {
           source: 'web',
           url: tab.url,
-          tags: ['google-docs', 'document']
-        }
+          tags: ['google-docs', 'document'],
+        },
       });
 
       notifyInfo('Google Docs content extracted successfully', {
-        childCardsCount: childCards.length
+        childCardsCount: childCards.length,
       });
 
       return [parentCard];

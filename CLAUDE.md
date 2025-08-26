@@ -14,6 +14,7 @@ POML (Prompt Orchestration Markup Language) is a structured markup language for 
 ## Development Commands
 
 ### Build Commands
+
 ```bash
 # Build all packages
 npm run compile           # Compile TypeScript to JavaScript
@@ -36,6 +37,7 @@ npm run watch                # Watch mode for TypeScript compilation
 ```
 
 ### Testing Commands
+
 ```bash
 npm test                   # Run all Jest tests
 npm run test-vscode        # Run VS Code extension tests
@@ -46,6 +48,7 @@ npx jest packages/poml/tests/components.test.ts
 ```
 
 ### Package Management
+
 ```bash
 npm run package            # Create VSIX package for VS Code extension
 npm run package:win        # Create Windows-specific VSIX package
@@ -54,6 +57,7 @@ cd packages/poml-browser && npm run zip  # Create browser extension ZIP
 ```
 
 ### Python Development
+
 ```bash
 pip install -e .           # Install Python package in development mode
 pytest python/tests        # Run Python tests
@@ -99,23 +103,27 @@ The core POML processor is built with TypeScript and React:
 ## Important Implementation Details
 
 ### POML Processing Flow
+
 1. **Parse**: Tokenize and build AST from POML markup, and convert AST to React elements with component resolution
 2. **Transform**: Process React tree with data loading and template evaluation, transforming components into intermediate representation
 3. **Render**: Render the intermediate representation to final output format (HTML, JSON, etc.)
 
 ### Data Component Loading
+
 - Images: Supports base64 encoding, sharp processing for resizing
 - Documents: Handles PDF, Word, Excel, CSV with specialized parsers
 - Tables: CSV/Excel processing with D3-dsv
 - Webpages: URL fetching with content extraction
 
 ### Styling System
+
 - CSS-like selectors for component styling
 - Inline style attributes on POML elements
 - Stylesheet definitions with cascading rules
 - Presentation modes (text, JSON, XML formats)
 
 ### Template Engine
+
 - Variable interpolation with `{{ variable }}`
 - Control flow: `<for>`, `<if>` conditional rendering
 - Variable definitions with `<let>` components
@@ -124,6 +132,7 @@ The core POML processor is built with TypeScript and React:
 ## Environment Configuration
 
 ### VS Code Settings
+
 Configure in VS Code settings or `.vscode/settings.json`, if you have installed the extension:
 
 - `poml.languageModel.provider`: LLM provider (openai, microsoft, anthropic, google)
@@ -143,18 +152,21 @@ Configure in VS Code settings or `.vscode/settings.json`, if you have installed 
 ## Common Development Tasks
 
 ### Adding a New POML Component
+
 1. Create component in `packages/poml/components/`
 2. Add TypeScript types
 3. Write unit tests
 4. Update component documentation by running `npm run generate-component-spec`
 
 ### Debugging the VS Code Extension
+
 1. Open project in VS Code
 2. Launch Extension Development Host
 3. Set breakpoints in TypeScript files
 4. Use Debug Console for inspection
 
 ### Updating Language Grammar
+
 1. Modify `poml.tmLanguage.json`
 2. Test in VS Code with sample files
 3. Update syntax test cases

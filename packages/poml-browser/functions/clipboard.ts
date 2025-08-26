@@ -5,7 +5,7 @@ import { arrayBufferToDataURL, base64ToUint8 } from './utils';
 export const readFileContent = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = e => resolve((e.target?.result as string) || '');
+    reader.onload = (e) => resolve((e.target?.result as string) || '');
     reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
 
     // Try to read as text, but handle different file types
@@ -27,7 +27,7 @@ export const readFileContent = async (file: File): Promise<string> => {
     } else {
       // For other file types, show file info instead of content
       resolve(
-        `File: ${file.name}\nType: ${file.type || 'Unknown'}\nSize: ${file.size} bytes\nLast Modified: ${new Date(file.lastModified).toLocaleString()}\n\n[Binary file content not displayed]`
+        `File: ${file.name}\nType: ${file.type || 'Unknown'}\nSize: ${file.size} bytes\nLast Modified: ${new Date(file.lastModified).toLocaleString()}\n\n[Binary file content not displayed]`,
       );
     }
   });
@@ -63,7 +63,7 @@ export const getFileExtensionFromType = (mimeType: string): string => {
     'video/webm': 'webm',
     'audio/mp3': 'mp3',
     'audio/wav': 'wav',
-    'audio/ogg': 'ogg'
+    'audio/ogg': 'ogg',
   };
   return typeMap[mimeType] || 'bin';
 };
@@ -105,7 +105,7 @@ export const handlePasteEvent = async (event: ClipboardEvent): Promise<PastedPay
         if (file.type.startsWith('image/')) {
           content = await new Promise<ArrayBuffer>((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = e => resolve(e.target?.result as ArrayBuffer);
+            reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
             reader.onerror = () => reject(new Error(`Failed to read image: ${file.name}`));
             reader.readAsArrayBuffer(file);
           });
@@ -119,11 +119,11 @@ export const handlePasteEvent = async (event: ClipboardEvent): Promise<PastedPay
           type: file.type,
           size: file.size,
           lastModified: file.lastModified,
-          content
+          content,
         });
       }
     } else if (item.type === 'text/plain' && !plainText) {
-      plainText = await new Promise<string>(resolve => {
+      plainText = await new Promise<string>((resolve) => {
         item.getAsString(resolve);
       });
     }
@@ -146,7 +146,7 @@ export const handleDropEvent = async (event: DragEvent): Promise<PastedPayload> 
       if (file.type.startsWith('image/')) {
         content = await new Promise<ArrayBuffer>((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = e => resolve(e.target?.result as ArrayBuffer);
+          reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
           reader.onerror = () => reject(new Error(`Failed to read image: ${file.name}`));
           reader.readAsArrayBuffer(file);
         });
@@ -160,7 +160,7 @@ export const handleDropEvent = async (event: DragEvent): Promise<PastedPayload> 
         type: file.type,
         size: file.size,
         lastModified: file.lastModified,
-        content
+        content,
       });
     }
   }
@@ -197,18 +197,10 @@ export const createGlobalPasteListener = (onPaste: (content: string, files: File
         for (const item of clipboardItems) {
           // Check for files first (including images)
           for (const type of item.types) {
-            if (
-              type.startsWith('image/') ||
-              type.startsWith('application/') ||
-              type !== 'text/plain'
-            ) {
+            if (type.startsWith('image/') || type.startsWith('application/') || type !== 'text/plain') {
               try {
                 const blob = await item.getType(type);
-                const file = new File(
-                  [blob],
-                  `clipboard-${Date.now()}.${getFileExtensionFromType(type)}`,
-                  { type }
-                );
+                const file = new File([blob], `clipboard-${Date.now()}.${getFileExtensionFromType(type)}`, { type });
                 files.push(file);
               } catch (error) {
                 console.warn('Failed to read clipboard file:', error);
@@ -243,10 +235,7 @@ export const createGlobalPasteListener = (onPaste: (content: string, files: File
 };
 
 // Hook for global paste functionality
-export const useGlobalPasteListener = (
-  onPaste: (content: string, files: File[]) => void,
-  enabled: boolean = true
-) => {
+export const useGlobalPasteListener = (onPaste: (content: string, files: File[]) => void, enabled: boolean = true) => {
   useEffect(() => {
     if (!enabled) {
       return;
@@ -270,15 +259,15 @@ export const useGlobalPasteListener = (
         console.log('Global paste event triggered');
         // Reuse the existing handlePasteEvent function
         const pastedData = await handlePasteEvent(e);
-        
+
         console.log('Processed paste data:', {
           textLength: pastedData.plainText.length,
-          fileCount: pastedData.files.length
+          fileCount: pastedData.files.length,
         });
 
         // Convert PastedFile[] to File[]
-        const files: File[] = pastedData.files.map(pf => pastedFileToFile(pf));
-        
+        const files: File[] = pastedData.files.map((pf) => pastedFileToFile(pf));
+
         if (files.length > 0 || pastedData.plainText.trim()) {
           onPaste(pastedData.plainText, files);
         } else {
@@ -301,7 +290,7 @@ export const useGlobalPasteListener = (
         ) {
           return;
         }
-        
+
         // Make sure document.body has focus to receive paste events
         if (document.activeElement !== document.body) {
           document.body.focus();
@@ -322,7 +311,7 @@ export const useGlobalPasteListener = (
 // Hook for drag and drop functionality
 export const useDragDropListener = (
   onDrop: (content: string, files: File[], insertIndex?: number) => void,
-  insertIndex?: number
+  insertIndex?: number,
 ) => {
   const dragOverRef = useRef(false);
 
@@ -363,14 +352,14 @@ export const useDragDropListener = (
     onDragOver: handleDragOver,
     onDragLeave: handleDragLeave,
     onDrop: handleDrop,
-    isDragOver: dragOverRef.current
+    isDragOver: dragOverRef.current,
   };
 };
 
 // Hook for paste event handling in specific components
 export const usePasteListener = (
   onPaste: (content: string, files: File[]) => void,
-  elementRef: React.RefObject<HTMLElement>
+  elementRef: React.RefObject<HTMLElement>,
 ) => {
   useEffect(() => {
     const element = elementRef.current;
@@ -406,7 +395,7 @@ export const usePasteListener = (
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           if (item.type === 'text/plain') {
-            textContent = await new Promise<string>(resolve => {
+            textContent = await new Promise<string>((resolve) => {
               item.getAsString(resolve);
             });
             break;
@@ -430,18 +419,18 @@ export const usePasteListener = (
 // Utility to create drag listeners for different components
 export const createDragListeners = (
   onDragStart?: (e: React.DragEvent) => void,
-  onDragEnd?: (e: React.DragEvent) => void
+  onDragEnd?: (e: React.DragEvent) => void,
 ) => ({
   onDragStart,
   onDragEnd,
-  draggable: true
+  draggable: true,
 });
 
 // Utility to create drop zone listeners
 export const createDropZoneListeners = (
   onDrop: (content: string, files: File[], insertIndex?: number) => void,
   insertIndex?: number,
-  onDragStateChange?: (isDragOver: boolean) => void
+  onDragStateChange?: (isDragOver: boolean) => void,
 ) => {
   let isDragOver = false;
 
@@ -481,7 +470,7 @@ export const createDropZoneListeners = (
 
       const content = htmlData || textData || '';
       onDrop(content.trim(), files, insertIndex);
-    }
+    },
   };
 };
 
@@ -502,7 +491,7 @@ export const pastedFileToFile = (pastedFile: PastedFile): File => {
 
   return new File([blob], pastedFile.name, {
     type: pastedFile.type,
-    lastModified: pastedFile.lastModified
+    lastModified: pastedFile.lastModified,
   });
 };
 
@@ -515,7 +504,7 @@ export function richContentToString(content: RichContent): string {
   }
 
   return content
-    .map(item => {
+    .map((item) => {
       if (typeof item === 'string') {
         return item;
       } else if (item && item.type) {
@@ -557,7 +546,7 @@ export async function writeRichContentToClipboard(content: RichContent): Promise
             // Cast to ArrayBuffer to satisfy TypeScript
             const blob = new Blob([bytes.buffer as ArrayBuffer], { type: item.type });
             imageBlobs.push(blob);
-            
+
             // Also add placeholder text for the image
             textParts.push(item.alt ? `[Image: ${item.alt}]` : `[Image: ${item.type}]`);
           } catch (error) {
@@ -580,46 +569,46 @@ export async function writeRichContentToClipboard(content: RichContent): Promise
     if (textParts.length > 0) {
       const textContent = textParts.join('');
       const clipboardData: Record<string, Blob> = {
-        'text/plain': new Blob([textContent], { type: 'text/plain' })
+        'text/plain': new Blob([textContent], { type: 'text/plain' }),
       };
       clipboardItems.push(new ClipboardItem(clipboardData));
     }
   } else if (imageBlobs.length === 1) {
     // Single image with text - combine in one ClipboardItem
     const clipboardData: Record<string, Blob> = {};
-    
+
     // Concatenate all text parts
     if (textParts.length > 0) {
       const textContent = textParts.join('');
       clipboardData['text/plain'] = new Blob([textContent], { type: 'text/plain' });
     }
-    
+
     // Add the single image
     clipboardData['image/png'] = imageBlobs[0];
-    
+
     clipboardItems.push(new ClipboardItem(clipboardData));
   } else {
     // Multiple images - try using multiple ClipboardItems
     // Note: Browser support for multiple ClipboardItems may vary
-    
+
     // First item: All text concatenated
     if (textParts.length > 0) {
       const textContent = textParts.join('');
       const textItem = new ClipboardItem({
-        'text/plain': new Blob([textContent], { type: 'text/plain' })
+        'text/plain': new Blob([textContent], { type: 'text/plain' }),
       });
       clipboardItems.push(textItem);
     }
-    
+
     // Additional items: Each image separately
     // Note: Most browsers may only support writing the first item
     for (const imageBlob of imageBlobs) {
       const imageItem = new ClipboardItem({
-        'image/png': imageBlob
+        'image/png': imageBlob,
       });
       clipboardItems.push(imageItem);
     }
-    
+
     console.warn('Multiple images detected. Browser may only copy the first clipboard item.');
   }
 
@@ -630,21 +619,21 @@ export async function writeRichContentToClipboard(content: RichContent): Promise
     // If writing multiple items fails, fall back to writing just the first text and image
     if (clipboardItems.length > 1) {
       console.warn('Failed to write multiple clipboard items, falling back to single item:', error);
-      
+
       // Create fallback with first text and first image only
       const fallbackData: Record<string, Blob> = {};
-      
+
       // Add text if available
       if (textParts.length > 0) {
         const textContent = textParts.join('');
         fallbackData['text/plain'] = new Blob([textContent], { type: 'text/plain' });
       }
-      
+
       // Add first image if available
       if (imageBlobs.length > 0) {
         fallbackData['image/png'] = imageBlobs[0];
       }
-      
+
       if (Object.keys(fallbackData).length > 0) {
         const fallbackItem = new ClipboardItem(fallbackData);
         await navigator.clipboard.write([fallbackItem]);

@@ -4,14 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import {
-  Box,
-  Paper,
-  Text
-} from '@mantine/core';
-import {
-  IconPlus
-} from '@tabler/icons-react';
+import { Box, Paper, Text } from '@mantine/core';
+import { IconPlus } from '@tabler/icons-react';
 import { handleDropEvent } from '@functions/clipboard';
 import { CardModel, createCard } from '@functions/cardModel';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -31,15 +25,15 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
   nestingLevel,
   onAddCard,
   onDropContent,
-  onDragOverDivider
+  onDragOverDivider,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const { showError, showSuccess } = useNotifications();
-  
+
   return (
     <Box
-      data-droppable-divider="true"
+      data-droppable-divider='true'
       style={{
         position: 'relative',
         height: isVisible || isHovered || isDragActive ? '40px' : '12px',
@@ -47,7 +41,7 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
         marginLeft: nestingLevel * 20,
         marginTop: '8px',
         marginBottom: '8px',
-        cursor: 'pointer'
+        cursor: 'pointer',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -71,50 +65,56 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
         e.stopPropagation();
         setIsDragActive(false);
         onDragOverDivider?.(false);
-        
+
         try {
           const dropData = await handleDropEvent(e.nativeEvent as DragEvent);
           const newCards: CardModel[] = [];
-          
+
           // Create cards for dropped files
           for (const file of dropData.files) {
             const card = createCard({
-              content: file.content instanceof ArrayBuffer 
-                ? {
-                    type: 'binary',
-                    value: file.content,
-                    mimeType: file.type,
-                    encoding: 'binary'
-                  }
-                : {
-                    type: 'text',
-                    value: file.content as string
-                  },
+              content:
+                file.content instanceof ArrayBuffer
+                  ? {
+                      type: 'binary',
+                      value: file.content,
+                      mimeType: file.type,
+                      encoding: 'binary',
+                    }
+                  : {
+                      type: 'text',
+                      value: file.content as string,
+                    },
               title: file.name,
               metadata: {
-                source: 'file'
-              }
+                source: 'file',
+              },
             });
             newCards.push(card);
           }
-          
+
           // Create card for text content if no files
           if (dropData.files.length === 0 && dropData.plainText) {
             const card = createCard({
               content: {
                 type: 'text',
-                value: dropData.plainText
+                value: dropData.plainText,
               },
               metadata: {
-                source: 'clipboard'
-              }
+                source: 'clipboard',
+              },
             });
             newCards.push(card);
           }
-          
+
           if (newCards.length > 0) {
             onDropContent(newCards, index);
-            showSuccess(`Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`, 'Content Added', undefined, 'top');
+            showSuccess(
+              `Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`,
+              'Content Added',
+              undefined,
+              'top',
+            );
           }
         } catch (error) {
           console.error('Failed to handle drop:', error);
@@ -122,8 +122,7 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
           // Fall back to regular add card
           onAddCard(index);
         }
-      }}
-    >
+      }}>
       {/* Single line when not active, double line with plus when active, hidden when drop area is visible */}
       {!isDragActive && (
         <>
@@ -138,7 +137,7 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
                 transform: 'translateY(-50%)',
                 height: '1px',
                 backgroundColor: '#e0e0e0',
-                opacity: 0.3
+                opacity: 0.3,
               }}
             />
           ) : (
@@ -151,19 +150,18 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
                 right: 0,
                 transform: 'translateY(-50%)',
                 display: 'flex',
-                alignItems: 'center'
-              }}
-            >
+                alignItems: 'center',
+              }}>
               {/* First line */}
               <Box
                 style={{
                   flex: 1,
                   height: '1px',
                   backgroundColor: isHovered ? '#666' : '#ddd',
-                  transition: 'background-color 0.2s ease'
+                  transition: 'background-color 0.2s ease',
                 }}
               />
-              
+
               {/* Plus sign */}
               <Box
                 style={{
@@ -175,29 +173,25 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <IconPlus 
-                  size={12} 
-                  color="white"
-                />
+                  transition: 'all 0.2s ease',
+                }}>
+                <IconPlus size={12} color='white' />
               </Box>
-              
+
               {/* Second line */}
               <Box
                 style={{
                   flex: 1,
                   height: '1px',
                   backgroundColor: isHovered ? '#666' : '#ddd',
-                  transition: 'background-color 0.2s ease'
+                  transition: 'background-color 0.2s ease',
                 }}
               />
             </Box>
           )}
         </>
       )}
-      
+
       {/* Droppable area overlay when dragging */}
       {isDragActive && (
         <Paper
@@ -212,15 +206,13 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
             borderRadius: '4px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Text size="xs" c="blue" fw={500}>
+            justifyContent: 'center',
+          }}>
+          <Text size='xs' c='blue' fw={500}>
             Drop to add card here
           </Text>
         </Paper>
       )}
-
     </Box>
   );
 };

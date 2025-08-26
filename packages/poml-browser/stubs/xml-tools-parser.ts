@@ -16,16 +16,20 @@ export interface ParseResult {
 }
 
 export function parse(_xmlText: string): ParseResult {
-  throw new Error('XML parsing with @xml-tools/parser is not available in browser context. XML processing requires server-side libraries.');
+  throw new Error(
+    'XML parsing with @xml-tools/parser is not available in browser context. XML processing requires server-side libraries.',
+  );
 }
 
 export class BaseXmlCstVisitor {
   constructor() {
-    throw new Error('BaseXmlCstVisitor is not available in browser context. XML AST processing requires server-side libraries.');
+    throw new Error(
+      'BaseXmlCstVisitor is not available in browser context. XML AST processing requires server-side libraries.',
+    );
   }
 }
 
 export default {
   parse,
-  BaseXmlCstVisitor
+  BaseXmlCstVisitor,
 };

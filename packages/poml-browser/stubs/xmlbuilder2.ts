@@ -15,7 +15,9 @@ class XMLBuilderStub implements XMLBuilderNode {
   private tagStack: string[] = [];
 
   end(options?: { prettyPrint?: boolean; headless?: boolean }): string {
-    throw new Error('XML building is not available in browser context. XML document creation requires server-side processing.');
+    throw new Error(
+      'XML building is not available in browser context. XML document creation requires server-side processing.',
+    );
   }
 
   ele(name: string, attributes?: Record<string, any>, content?: string): XMLBuilderNode {
@@ -45,5 +47,5 @@ export function fragment(): XMLBuilderNode {
 
 export default {
   create,
-  fragment
+  fragment,
 };

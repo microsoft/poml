@@ -53,10 +53,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       timestamp: new Date(),
       autoHide: notification.autoHide !== false, // Default to true
       duration: notification.duration ?? (notification.type === 'error' ? 0 : 4000), // Errors persist, others auto-hide
-      position: notification.position ?? 'top' // Default to top
+      position: notification.position ?? 'top', // Default to top
     };
 
-    setNotifications(prev => [newNotification, ...prev]);
+    setNotifications((prev) => [newNotification, ...prev]);
 
     // Auto-hide notification if specified
     if (newNotification.autoHide && newNotification.duration && newNotification.duration > 0) {
@@ -69,61 +69,73 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setNotifications((prev) => prev.filter((notification) => notification.id !== id));
   }, []);
 
   const clearAllNotifications = useCallback((position?: NotificationPosition) => {
     if (position) {
-      setNotifications(prev => prev.filter(notification => notification.position !== position));
+      setNotifications((prev) => prev.filter((notification) => notification.position !== position));
     } else {
       setNotifications([]);
     }
   }, []);
 
   // Computed properties for filtered notifications
-  const topNotifications = notifications.filter(n => n.position === 'top');
-  const bottomNotifications = notifications.filter(n => n.position === 'bottom');
+  const topNotifications = notifications.filter((n) => n.position === 'top');
+  const bottomNotifications = notifications.filter((n) => n.position === 'bottom');
 
   // Convenience methods
-  const showSuccess = useCallback((message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
-    return addNotification({
-      type: 'success',
-      message,
-      title,
-      duration,
-      position
-    });
-  }, [addNotification]);
+  const showSuccess = useCallback(
+    (message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
+      return addNotification({
+        type: 'success',
+        message,
+        title,
+        duration,
+        position,
+      });
+    },
+    [addNotification],
+  );
 
-  const showError = useCallback((message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
-    return addNotification({
-      type: 'error',
-      message,
-      title,
-      duration: duration ?? 0, // Errors don't auto-hide by default
-      position
-    });
-  }, [addNotification]);
+  const showError = useCallback(
+    (message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
+      return addNotification({
+        type: 'error',
+        message,
+        title,
+        duration: duration ?? 0, // Errors don't auto-hide by default
+        position,
+      });
+    },
+    [addNotification],
+  );
 
-  const showWarning = useCallback((message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
-    return addNotification({
-      type: 'warning',
-      message,
-      title,
-      duration,
-      position
-    });
-  }, [addNotification]);
+  const showWarning = useCallback(
+    (message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
+      return addNotification({
+        type: 'warning',
+        message,
+        title,
+        duration,
+        position,
+      });
+    },
+    [addNotification],
+  );
 
-  const showInfo = useCallback((message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
-    return addNotification({
-      type: 'info',
-      message,
-      title,
-      duration,
-      position
-    });
-  }, [addNotification]);
+  const showInfo = useCallback(
+    (message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
+      return addNotification({
+        type: 'info',
+        message,
+        title,
+        duration,
+        position,
+      });
+    },
+    [addNotification],
+  );
 
   // Register the service handler when provider mounts
   useEffect(() => {
@@ -134,7 +146,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         title: options?.title,
         duration: options?.duration,
         autoHide: options?.autoHide,
-        position: options?.position ?? 'top'
+        position: options?.position ?? 'top',
       });
     };
 
@@ -155,14 +167,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     showSuccess,
     showError,
     showWarning,
-    showInfo
+    showInfo,
   };
 
-  return (
-    <NotificationContext.Provider value={contextValue}>
-      {children}
-    </NotificationContext.Provider>
-  );
+  return <NotificationContext.Provider value={contextValue}>{children}</NotificationContext.Provider>;
 };
 
 // Hook to use the notification context

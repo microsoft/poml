@@ -20,11 +20,10 @@ function createArtifactDir() {
 }
 
 test.describe('generate cards with pdfs', () => {
-  
   // Discover PDF files from test-fixtures directory
   const pdfDir = path.join(testFixturesPath, 'pdf');
-  const pdfFiles = fs.readdirSync(pdfDir).filter(file => file.endsWith('.pdf'));
-  
+  const pdfFiles = fs.readdirSync(pdfDir).filter((file) => file.endsWith('.pdf'));
+
   for (const pdfFile of pdfFiles) {
     test(`extract content from ${pdfFile}`, async ({ page, browserName }) => {
       test.skip(browserName !== 'chromium', 'This approach is Chromium-only');
@@ -60,7 +59,7 @@ test.describe('generate cards with pdfs', () => {
         file: pdfFile,
         timestamp: new Date().toISOString(),
         cards: content,
-        visualizations: visualizations ? visualizations.length : 0
+        visualizations: visualizations ? visualizations.length : 0,
       };
 
       fs.writeFileSync(outputPath, JSON.stringify(testResult, null, 2));
@@ -84,7 +83,7 @@ test.describe('generate cards with pdfs', () => {
 test.describe('generate cards with html pages', () => {
   // Discover HTML files from test-fixtures directory
   const webpageDir = path.join(testFixturesPath, 'webpage');
-  const htmlFiles = fs.readdirSync(webpageDir).filter(file => file.endsWith('.html'));
+  const htmlFiles = fs.readdirSync(webpageDir).filter((file) => file.endsWith('.html'));
 
   for (const htmlFile of htmlFiles) {
     test(`extract content from ${htmlFile}`, async ({ page }) => {
@@ -113,7 +112,7 @@ test.describe('generate cards with html pages', () => {
         source: htmlUrl,
         file: htmlFile,
         timestamp: new Date().toISOString(),
-        cards: content
+        cards: content,
       };
 
       fs.writeFileSync(outputPath, JSON.stringify(testResult, null, 2));

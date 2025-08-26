@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { readFileSync, writeFileSync } from 'fs';
-import { renderToString } from "react-dom/server";
+import { renderToString } from 'react-dom/server';
 import path from 'path';
 import { EnvironmentDispatcher } from './writer';
 import {

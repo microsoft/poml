@@ -21,12 +21,12 @@ interface GlobalWorkerOptions {
 
 class PDFJSStub {
   static GlobalWorkerOptions: GlobalWorkerOptions = {
-    workerSrc: ''
+    workerSrc: '',
   };
 
   static getDocument(_src: { data: Uint8Array }): LoadingTask {
     return {
-      promise: Promise.reject(new Error('PDF processing is not available in browser extension context'))
+      promise: Promise.reject(new Error('PDF processing is not available in browser extension context')),
     };
   }
 }

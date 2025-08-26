@@ -35,9 +35,7 @@ export const CardModal: React.FC<CardModalProps> = ({ content, opened, onClose, 
 
   const handleClose = () => {
     if (hasChanges) {
-      const confirmClose = window.confirm(
-        'You have unsaved changes. Are you sure you want to close?'
-      );
+      const confirmClose = window.confirm('You have unsaved changes. Are you sure you want to close?');
       if (!confirmClose) {
         return;
       }
@@ -54,17 +52,17 @@ export const CardModal: React.FC<CardModalProps> = ({ content, opened, onClose, 
       opened={opened}
       onClose={handleClose}
       title={
-        <Stack gap="xs">
-          <Text fw={500} size="lg" truncate>
+        <Stack gap='xs'>
+          <Text fw={500} size='lg' truncate>
             {content.title}
           </Text>
           {!content.isManual && (
-            <Group gap="xs">
-              <Badge color="blue" variant="light" size="sm">
+            <Group gap='xs'>
+              <Badge color='blue' variant='light' size='sm'>
                 {content.timestamp.toLocaleString()}
               </Badge>
               {content.url && (
-                <Text size="xs" c="dimmed" truncate style={{ maxWidth: '400px' }}>
+                <Text size='xs' c='dimmed' truncate style={{ maxWidth: '400px' }}>
                   {content.url}
                 </Text>
               )}
@@ -72,43 +70,38 @@ export const CardModal: React.FC<CardModalProps> = ({ content, opened, onClose, 
           )}
         </Stack>
       }
-      size="100%"
+      size='100%'
       fullScreen
-      transitionProps={{ transition: 'fade', duration: 200 }}
-    >
-      <Stack gap="md" style={{ height: '100%' }}>
+      transitionProps={{ transition: 'fade', duration: 200 }}>
+      <Stack gap='md' style={{ height: '100%' }}>
         <Textarea
           value={editedContent}
-          onChange={event => handleContentChange(event.currentTarget.value)}
-          placeholder="Enter content here..."
+          onChange={(event) => handleContentChange(event.currentTarget.value)}
+          placeholder='Enter content here...'
           autosize
           minRows={20}
           maxRows={50}
           style={{
-            flex: 1,
+            'flex': 1,
             '& textarea': {
               minHeight: 'calc(100vh - 200px)',
               fontFamily: 'monospace',
               fontSize: '14px',
-              lineHeight: 1.5
-            }
+              lineHeight: 1.5,
+            },
           }}
         />
 
-        <Group justify="space-between">
-          <Text size="sm" c="dimmed">
+        <Group justify='space-between'>
+          <Text size='sm' c='dimmed'>
             {editedContent.length} characters
           </Text>
 
           <Group>
-            <Button variant="outline" onClick={handleClose}>
+            <Button variant='outline' onClick={handleClose}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!hasChanges}
-              variant={hasChanges ? 'filled' : 'light'}
-            >
+            <Button onClick={handleSave} disabled={!hasChanges} variant={hasChanges ? 'filled' : 'light'}>
               {hasChanges ? 'Save Changes' : 'Close'}
             </Button>
           </Group>

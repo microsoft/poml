@@ -5,14 +5,21 @@
  */
 
 import { NotificationType, NotificationPosition } from '../contexts/NotificationContext';
-import { registerDirectUIHandler, unregisterDirectUIHandler, NotificationMessage, NotificationOptions } from '../../functions/notification';
+import {
+  registerDirectUIHandler,
+  unregisterDirectUIHandler,
+  NotificationMessage,
+  NotificationOptions,
+} from '../../functions/notification';
 
 type NotificationHandler = (type: NotificationType, message: string, options?: NotificationOptions) => string;
 
 class NotificationService {
   private static instance: NotificationService;
   private handler: NotificationHandler | null = null;
-  private messageListener: ((message: any, sender: chrome.runtime.MessageSender, sendResponse: () => void) => boolean) | null = null;
+  private messageListener:
+    | ((message: any, sender: chrome.runtime.MessageSender, sendResponse: () => void) => boolean)
+    | null = null;
 
   private constructor() {
     this.setupMessageListener();
@@ -34,35 +41,37 @@ class NotificationService {
         // Check if this is a notification message
         if (message && message.type === 'notification') {
           const notificationMsg = message as NotificationMessage;
-          
+
           // Combine message with details if available
-          const fullMessage = notificationMsg.details 
+          const fullMessage = notificationMsg.details
             ? `${notificationMsg.message}\n\nDetails:\n${notificationMsg.details}`
             : notificationMsg.message;
-          
+
           // Map debug to info type since NotificationContext doesn't have debug
-          const notificationType: NotificationType = 
-            notificationMsg.notificationType === 'debug' ? 'info' : notificationMsg.notificationType as NotificationType;
-          
+          const notificationType: NotificationType =
+            notificationMsg.notificationType === 'debug'
+              ? 'info'
+              : (notificationMsg.notificationType as NotificationType);
+
           // Add source info to the title if from background or content script and title exists
           const options = { ...notificationMsg.options };
           if (notificationMsg.source !== 'ui' && options.title) {
             options.title = `${options.title}`;
           }
-          
+
           // Use debug messages at bottom by default
           if (notificationMsg.notificationType === 'debug' && !options.position) {
             options.position = 'bottom';
           }
-          
+
           // Notify using the handler
           this.notify(notificationType, fullMessage, options);
         }
-        
+
         // Return false to indicate we're not sending a response
         return false;
       };
-      
+
       chrome.runtime.onMessage.addListener(this.messageListener as any);
     }
   }
@@ -72,11 +81,11 @@ class NotificationService {
    */
   public setHandler(handler: NotificationHandler): void {
     this.handler = handler;
-    
+
     // Register as direct UI handler for notifications from the same context
     registerDirectUIHandler((type, message, options) => {
       // Map debug to info since NotificationContext doesn't have debug type
-      const notificationType: NotificationType = type === 'debug' ? 'info' : type as NotificationType;
+      const notificationType: NotificationType = type === 'debug' ? 'info' : (type as NotificationType);
       this.notify(notificationType, message, options);
     });
   }
@@ -86,10 +95,10 @@ class NotificationService {
    */
   public removeHandler(): void {
     this.handler = null;
-    
+
     // Unregister direct UI handler
     unregisterDirectUIHandler();
-    
+
     // Clean up message listener
     if (this.messageListener && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
       chrome.runtime.onMessage.removeListener(this.messageListener as any);
@@ -108,11 +117,11 @@ class NotificationService {
    * Show an error notification
    */
   public error(message: string, options?: NotificationOptions): string {
-    return this.notify('error', message, { 
+    return this.notify('error', message, {
       autoHide: false,
       duration: 0,
       position: 'top',
-      ...options 
+      ...options,
     });
   }
 
@@ -141,11 +150,11 @@ class NotificationService {
    * Show error notification at the bottom
    */
   public bottomError(message: string, options?: Omit<NotificationOptions, 'position'>): string {
-    return this.notify('error', message, { 
+    return this.notify('error', message, {
       autoHide: false,
       duration: 0,
       position: 'bottom',
-      ...options 
+      ...options,
     });
   }
 
@@ -169,9 +178,7 @@ class NotificationService {
   private notify(type: NotificationType, message: string, options?: NotificationOptions): string {
     if (!this.handler) {
       // Fallback to console if no handler is registered
-      const logMethod = type === 'error' ? 'error' : 
-                       type === 'warning' ? 'warn' : 
-                       type === 'success' ? 'log' : 'info';
+      const logMethod = type === 'error' ? 'error' : type === 'warning' ? 'warn' : type === 'success' ? 'log' : 'info';
       console[logMethod](`[${type.toUpperCase()}]${options?.title ? ` ${options.title}:` : ''} ${message}`);
       return `console-${Date.now()}`;
     }
@@ -183,9 +190,9 @@ class NotificationService {
    * Convenience method for handling async operations
    */
   public async withErrorHandling<T>(
-    operation: () => Promise<T>, 
+    operation: () => Promise<T>,
     errorMessage?: string,
-    successMessage?: string
+    successMessage?: string,
   ): Promise<T | null> {
     try {
       const result = await operation();
@@ -203,11 +210,7 @@ class NotificationService {
   /**
    * Convenience method for handling sync operations
    */
-  public withSyncErrorHandling<T>(
-    operation: () => T, 
-    errorMessage?: string,
-    successMessage?: string
-  ): T | null {
+  public withSyncErrorHandling<T>(operation: () => T, errorMessage?: string, successMessage?: string): T | null {
     try {
       const result = operation();
       if (successMessage) {
@@ -232,12 +235,16 @@ export const notify = {
   error: (message: string, options?: NotificationOptions) => notificationService.error(message, options),
   warning: (message: string, options?: NotificationOptions) => notificationService.warning(message, options),
   info: (message: string, options?: NotificationOptions) => notificationService.info(message, options),
-  
+
   // Bottom notifications
-  bottomSuccess: (message: string, options?: Omit<NotificationOptions, 'position'>) => notificationService.bottomSuccess(message, options),
-  bottomError: (message: string, options?: Omit<NotificationOptions, 'position'>) => notificationService.bottomError(message, options),
-  bottomWarning: (message: string, options?: Omit<NotificationOptions, 'position'>) => notificationService.bottomWarning(message, options),
-  topInfo: (message: string, options?: Omit<NotificationOptions, 'position'>) => notificationService.topInfo(message, options),
+  bottomSuccess: (message: string, options?: Omit<NotificationOptions, 'position'>) =>
+    notificationService.bottomSuccess(message, options),
+  bottomError: (message: string, options?: Omit<NotificationOptions, 'position'>) =>
+    notificationService.bottomError(message, options),
+  bottomWarning: (message: string, options?: Omit<NotificationOptions, 'position'>) =>
+    notificationService.bottomWarning(message, options),
+  topInfo: (message: string, options?: Omit<NotificationOptions, 'position'>) =>
+    notificationService.topInfo(message, options),
 };
 
 export default notificationService;

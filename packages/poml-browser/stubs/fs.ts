@@ -49,5 +49,5 @@ export default {
   closeSync,
   writeSync,
   symlinkSync,
-  readdirSync
+  readdirSync,
 };

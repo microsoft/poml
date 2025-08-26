@@ -1,14 +1,6 @@
 import '@mantine/core/styles.css';
 import React, { useState, useEffect } from 'react';
-import {
-  MantineProvider,
-  Stack,
-  Button,
-  Group,
-  ActionIcon,
-  Title,
-  useMantineTheme
-} from '@mantine/core';
+import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme } from '@mantine/core';
 import { useListState } from '@mantine/hooks';
 import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
 import EditableCardList from './components/EditableCardList';
@@ -24,7 +16,7 @@ import {
   useGlobalPasteListener,
   arrayBufferToDataUrl,
   writeRichContentToClipboard,
-  handleDropEvent
+  handleDropEvent,
 } from '@functions/clipboard';
 import { contentManager } from '@functions/html';
 import { NotificationProvider, useNotifications } from './contexts/NotificationContext';
@@ -94,16 +86,16 @@ const AppContent: React.FC = () => {
                       type: 'binary',
                       value: file.content,
                       mimeType: file.type,
-                      encoding: 'binary'
+                      encoding: 'binary',
                     }
                   : {
                       type: 'text',
-                      value: file.content as string
+                      value: file.content as string,
                     },
               title: file.name,
               metadata: {
-                source: 'file'
-              }
+                source: 'file',
+              },
             });
             newCards.push(card);
           }
@@ -113,11 +105,11 @@ const AppContent: React.FC = () => {
             const card = createCard({
               content: {
                 type: 'text',
-                value: dropData.plainText
+                value: dropData.plainText,
               },
               metadata: {
-                source: 'clipboard'
-              }
+                source: 'clipboard',
+              },
             });
             newCards.push(card);
           }
@@ -129,7 +121,7 @@ const AppContent: React.FC = () => {
               `Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`,
               'Content Added',
               undefined,
-              'top'
+              'top',
             );
           }
         } catch (error) {
@@ -172,7 +164,7 @@ const AppContent: React.FC = () => {
 
       if (extractedCards && extractedCards.length > 0) {
         // Add the extracted cards to the cards state
-        extractedCards.forEach(card => {
+        extractedCards.forEach((card) => {
           cardsHandlers.append(card);
         });
 
@@ -209,12 +201,7 @@ const AppContent: React.FC = () => {
 
       // Copy to clipboard with support for images and text
       await writeRichContentToClipboard(pomlContent);
-      showSuccess(
-        `Copied ${cards.length} cards to clipboard`,
-        'POML Content Copied',
-        undefined,
-        'bottom'
-      );
+      showSuccess(`Copied ${cards.length} cards to clipboard`, 'POML Content Copied', undefined, 'bottom');
     } catch (error) {
       showError(`Failed to copy cards: ${(error as Error).message}`, 'Copy Failed');
     }
@@ -230,7 +217,7 @@ const AppContent: React.FC = () => {
       url: card.metadata?.url,
       timestamp: card.timestamp || new Date(),
       isManual: card.metadata?.source === 'manual',
-      debug: card.metadata?.debug
+      debug: card.metadata?.debug,
     };
 
     setSelectedCard(extractedContent);
@@ -238,11 +225,11 @@ const AppContent: React.FC = () => {
   };
 
   const handleSaveCard = (id: string, newContent: string) => {
-    const index = cards.findIndex(card => card.id === id);
+    const index = cards.findIndex((card) => card.id === id);
     if (index !== -1) {
       const updatedCard: CardModel = {
         ...cards[index],
-        content: { type: 'text', value: newContent }
+        content: { type: 'text', value: newContent },
       };
       cardsHandlers.setItem(index, updatedCard);
     }
@@ -261,13 +248,13 @@ const AppContent: React.FC = () => {
           metadata: {
             source: 'clipboard',
             excerpt: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
-            ...metadata
-          }
+            ...metadata,
+          },
         });
 
       // Handle text content
       if (textContent) {
-        const lines = textContent.split('\n').filter(line => line.trim());
+        const lines = textContent.split('\n').filter((line) => line.trim());
         const title = lines[0]?.substring(0, 100) || 'Pasted Content';
         cardsHandlers.append(createCardHelper(title, textContent));
       }
@@ -284,11 +271,11 @@ const AppContent: React.FC = () => {
                   type: 'binary',
                   value: dataUrl.split(',')[1], // Remove data:image/...;base64, prefix
                   mimeType: file.type,
-                  encoding: 'base64'
+                  encoding: 'base64',
                 },
                 metadata: {
-                  source: 'clipboard'
-                }
+                  source: 'clipboard',
+                },
               });
               cardsHandlers.append(card);
             } else {
@@ -316,7 +303,7 @@ const AppContent: React.FC = () => {
   const theme = useMantineTheme();
   return (
     <Stack
-      p="md"
+      p='md'
       style={{
         width: '100%',
         minWidth: '200px',
@@ -327,30 +314,21 @@ const AppContent: React.FC = () => {
           ? {
               backgroundColor: `${theme.colors.purple[5]}20`,
               border: `2px dashed ${theme.colors.purple[8]}50`,
-              borderRadius: theme.radius.sm
+              borderRadius: theme.radius.sm,
             }
-          : {})
-      }}
-    >
+          : {}),
+      }}>
       {/* Header with title and action buttons */}
-      <Group justify="space-between" mb="md">
+      <Group justify='space-between' mb='md'>
         <Title order={4}>POMPad</Title>
-        <Group gap="xs">
-          <ActionIcon
-            variant="subtle"
-            onClick={() => console.log('Open history')}
-            aria-label="History"
-          >
+        <Group gap='xs'>
+          <ActionIcon variant='subtle' onClick={() => console.log('Open history')} aria-label='History'>
             <IconHistory fontSize={theme.fontSizes.lg} />
           </ActionIcon>
-          <ActionIcon
-            variant="subtle"
-            onClick={() => console.log('Open notifications')}
-            aria-label="Notifications"
-          >
+          <ActionIcon variant='subtle' onClick={() => console.log('Open notifications')} aria-label='Notifications'>
             <IconBell fontSize={theme.fontSizes.lg} />
           </ActionIcon>
-          <ActionIcon variant="subtle" onClick={() => setShowSettings(true)} aria-label="Settings">
+          <ActionIcon variant='subtle' onClick={() => setShowSettings(true)} aria-label='Settings'>
             <IconSettings fontSize={theme.fontSizes.lg} />
           </ActionIcon>
         </Group>
@@ -372,23 +350,16 @@ const AppContent: React.FC = () => {
       />
 
       <Group>
-        <Button
-          fullWidth
-          variant="outline"
-          fz="md"
-          loading={loading}
-          onClick={handleExtractContent}
-        >
+        <Button fullWidth variant='outline' fz='md' loading={loading} onClick={handleExtractContent}>
           Extract Page Content
         </Button>
         <Button
           fullWidth
-          variant="filled"
-          fz="md"
+          variant='filled'
+          fz='md'
           leftSection={<IconClipboard />}
           disabled={cards.length === 0}
-          onClick={handleCopyAllCards}
-        >
+          onClick={handleCopyAllCards}>
           Export to Clipboard
         </Button>
       </Group>
@@ -410,11 +381,7 @@ const AppContent: React.FC = () => {
 // Main App component with providers
 const App: React.FC = () => {
   return (
-    <MantineProvider
-      theme={shadcnTheme}
-      cssVariablesResolver={shadcnCssVariableResolver}
-      defaultColorScheme="auto"
-    >
+    <MantineProvider theme={shadcnTheme} cssVariablesResolver={shadcnCssVariableResolver} defaultColorScheme='auto'>
       <ThemeProvider>
         <NotificationProvider>
           <AppContent />

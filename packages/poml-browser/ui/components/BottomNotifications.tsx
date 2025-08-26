@@ -4,23 +4,8 @@
  */
 
 import React from 'react';
-import {
-  Box,
-  Text,
-  Group,
-  ActionIcon,
-  Stack,
-  Alert,
-  Transition,
-  useMantineColorScheme
-} from '@mantine/core';
-import {
-  IconX,
-  IconCheck,
-  IconExclamationCircle,
-  IconAlertCircle,
-  IconInfoCircle
-} from '@tabler/icons-react';
+import { Box, Text, Group, ActionIcon, Stack, Alert, Transition, useMantineColorScheme } from '@mantine/core';
+import { IconX, IconCheck, IconExclamationCircle, IconAlertCircle, IconInfoCircle } from '@tabler/icons-react';
 import { useNotifications, Notification, NotificationType } from '../contexts/NotificationContext';
 
 // Icon and color mapping using Mantine theme colors
@@ -29,23 +14,23 @@ const getNotificationConfig = (type: NotificationType) => {
     success: {
       icon: IconCheck,
       color: 'green',
-      variant: 'light' as const
+      variant: 'light' as const,
     },
     error: {
       icon: IconAlertCircle,
       color: 'red',
-      variant: 'light' as const
+      variant: 'light' as const,
     },
     warning: {
       icon: IconExclamationCircle,
       color: 'yellow',
-      variant: 'light' as const
+      variant: 'light' as const,
     },
     info: {
       icon: IconInfoCircle,
       color: 'blue',
-      variant: 'light' as const
-    }
+      variant: 'light' as const,
+    },
   };
 
   return configs[type];
@@ -68,42 +53,27 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRem
       color={config.color}
       icon={<IconComponent size={16} />}
       withCloseButton={false}
-      mb="sm"
+      mb='sm'
       style={{
         backdropFilter: 'blur(8px)',
-        backgroundColor: isDark 
-          ? 'rgba(26, 27, 30, 0.7)' 
-          : 'rgba(255, 255, 255, 0.7)',
-        border: isDark 
-          ? '1px solid rgba(255, 255, 255, 0.08)' 
-          : '1px solid rgba(255, 255, 255, 0.15)',
-        boxShadow: isDark 
-          ? '0 4px 16px rgba(0, 0, 0, 0.2)' 
-          : '0 4px 16px rgba(0, 0, 0, 0.05)',
-      }}
-    >
-      <Group justify="space-between" align="flex-start">
+        backgroundColor: isDark ? 'rgba(26, 27, 30, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+        border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(255, 255, 255, 0.15)',
+        boxShadow: isDark ? '0 4px 16px rgba(0, 0, 0, 0.2)' : '0 4px 16px rgba(0, 0, 0, 0.05)',
+      }}>
+      <Group justify='space-between' align='flex-start'>
         <Box style={{ flex: 1 }}>
           {notification.title && (
-            <Text fw={600} size="sm" mb={4}>
+            <Text fw={600} size='sm' mb={4}>
               {notification.title}
             </Text>
           )}
-          <Text size="sm">
-            {notification.message}
-          </Text>
-          <Text size="xs" c="dimmed" mt={4}>
+          <Text size='sm'>{notification.message}</Text>
+          <Text size='xs' c='dimmed' mt={4}>
             {notification.timestamp.toLocaleTimeString()}
           </Text>
         </Box>
-        
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="sm"
-          onClick={() => onRemove(notification.id)}
-          ml="xs"
-        >
+
+        <ActionIcon variant='subtle' color='gray' size='sm' onClick={() => onRemove(notification.id)} ml='xs'>
           <IconX size={14} />
         </ActionIcon>
       </Group>
@@ -122,59 +92,39 @@ export const BottomNotifications: React.FC = () => {
 
   const glassStyle = {
     backdropFilter: 'blur(8px)',
-    backgroundColor: isDark 
-      ? 'rgba(26, 27, 30, 0.65)' 
-      : 'rgba(255, 255, 255, 0.65)',
-    border: isDark 
-      ? '1px solid rgba(255, 255, 255, 0.06)' 
-      : '1px solid rgba(255, 255, 255, 0.15)',
-    boxShadow: isDark 
-      ? '0 4px 16px rgba(0, 0, 0, 0.15)' 
-      : '0 4px 16px rgba(0, 0, 0, 0.05)',
+    backgroundColor: isDark ? 'rgba(26, 27, 30, 0.65)' : 'rgba(255, 255, 255, 0.65)',
+    border: isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(255, 255, 255, 0.15)',
+    boxShadow: isDark ? '0 4px 16px rgba(0, 0, 0, 0.15)' : '0 4px 16px rgba(0, 0, 0, 0.05)',
   };
 
   return (
-    <Box mt="lg">
+    <Box mt='lg'>
       {/* Header with clear all button if more than 3 notifications */}
       {bottomNotifications.length > 3 && (
-        <Alert
-          variant="light"
-          color="gray"
-          mb="sm"
-          style={glassStyle}
-        >
-          <Group justify="space-between" align="center">
-            <Text size="sm" fw={500}>
+        <Alert variant='light' color='gray' mb='sm' style={glassStyle}>
+          <Group justify='space-between' align='center'>
+            <Text size='sm' fw={500}>
               Status Messages ({bottomNotifications.length})
             </Text>
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              color="gray"
-              onClick={() => clearAllNotifications('bottom')}
-            >
+            <ActionIcon variant='subtle' size='sm' color='gray' onClick={() => clearAllNotifications('bottom')}>
               <IconX size={14} />
             </ActionIcon>
           </Group>
         </Alert>
       )}
-      
+
       {/* Notification list with transitions */}
-      <Stack gap="xs">
+      <Stack gap='xs'>
         {bottomNotifications.map((notification) => (
           <Transition
             key={notification.id}
             mounted={true}
-            transition="slide-up"
+            transition='slide-up'
             duration={300}
-            timingFunction="ease-out"
-          >
+            timingFunction='ease-out'>
             {(styles) => (
               <div style={styles}>
-                <NotificationItem
-                  notification={notification}
-                  onRemove={removeNotification}
-                />
+                <NotificationItem notification={notification} onRemove={removeNotification} />
               </div>
             )}
           </Transition>

@@ -13,23 +13,23 @@ class Sharp {
   constructor(input?: string | Buffer) {
     console.warn('Sharp image processing is not available in browser context');
   }
-  
+
   resize(width?: number, height?: number): Sharp {
     return this;
   }
-  
+
   toFormat(format: string): Sharp {
     return this;
   }
-  
+
   async metadata(): Promise<Metadata> {
     return {
       width: 100,
       height: 100,
-      format: 'png'
+      format: 'png',
     };
   }
-  
+
   toBuffer(): Promise<Buffer> {
     return Promise.resolve(Buffer.from(''));
   }

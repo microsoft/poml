@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import path from "path";
+import path from 'path';
 
 export const deepMerge = (target: any, source: any): any => {
   // Object can not be array or class instance (like children).

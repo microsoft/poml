@@ -1,18 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist';
-import type {
-  PDFDocumentProxy,
-  PDFPageProxy,
-  TextItem as PDFTextItem
-} from 'pdfjs-dist/types/src/display/api';
+import type { PDFDocumentProxy, PDFPageProxy, TextItem as PDFTextItem } from 'pdfjs-dist/types/src/display/api';
 import { base64ToBinary } from './utils';
 import { notifyDebug, notifyError, notifyInfo } from './notification';
-import {
-  CardModel,
-  CardModelSlim,
-  TextContent,
-  BinaryContent,
-  createCardFromSlim
-} from './cardModel';
+import { CardModel, CardModelSlim, TextContent, BinaryContent, createCardFromSlim } from './cardModel';
 
 /**
  * Check if the current URL is a PDF document
@@ -91,9 +81,8 @@ type ContentBlock = TextBlock | GraphicBlock;
  */
 export async function extractPdfContentVisualized(
   pdfUrl?: string,
-  visualization?: boolean
+  visualization?: boolean,
 ): Promise<{ cards: CardModel[]; visualizations: PageVisualization[] }> {
-
   try {
     const targetUrl = pdfUrl || document.location.href;
     notifyDebug('Starting PDF structured extraction', { url: targetUrl });
@@ -112,7 +101,7 @@ export async function extractPdfContentVisualized(
       const response = (await chrome.runtime.sendMessage({
         action: 'readFile',
         filePath: targetUrl,
-        binary: true
+        binary: true,
       })) as { success: boolean; base64Data?: string; error?: string };
 
       if (!response.success || !response.base64Data) {
@@ -154,7 +143,7 @@ export async function extractPdfContentVisualized(
           if (block.text.trim()) {
             allCards.push({
               content: { type: 'text', value: block.text } as TextContent,
-              componentType: block.isHeading ? 'Header' : 'Paragraph'
+              componentType: block.isHeading ? 'Header' : 'Paragraph',
             });
           }
         } else if (block.type === 'image') {
@@ -163,15 +152,15 @@ export async function extractPdfContentVisualized(
               type: 'binary',
               value: block.base64,
               mimeType: block.mimeType,
-              encoding: 'base64'
+              encoding: 'base64',
             } as BinaryContent,
-            componentType: 'Image'
+            componentType: 'Image',
           });
         }
       }
 
       notifyDebug(`Processed page ${pageNum}/${pageCount}`, {
-        contentBlocks: contentBlocks.length
+        contentBlocks: contentBlocks.length,
       });
     }
 
@@ -185,8 +174,8 @@ export async function extractPdfContentVisualized(
         : [
             {
               content: { type: 'text', value: 'No content found in PDF' } as TextContent,
-              componentType: 'Paragraph'
-            } as CardModelSlim
+              componentType: 'Paragraph',
+            } as CardModelSlim,
           ];
 
     // Generate visualizations if requested
@@ -202,17 +191,17 @@ export async function extractPdfContentVisualized(
     }
 
     return {
-      cards: finalCards.map(slim =>
-      createCardFromSlim(slim, {
-        timestamp,
-        metadata: {
-          source: 'file',
-          url: targetUrl,
-          tags: ['pdf']
-        }
-      })
-    ),
-      visualizations
+      cards: finalCards.map((slim) =>
+        createCardFromSlim(slim, {
+          timestamp,
+          metadata: {
+            source: 'file',
+            url: targetUrl,
+            tags: ['pdf'],
+          },
+        }),
+      ),
+      visualizations,
     };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -221,22 +210,22 @@ export async function extractPdfContentVisualized(
     const slimCard: CardModelSlim = {
       content: {
         type: 'text',
-        value: `Failed to extract PDF: ${errorMsg}`
+        value: `Failed to extract PDF: ${errorMsg}`,
       } as TextContent,
-      componentType: 'Paragraph'
+      componentType: 'Paragraph',
     };
 
     return {
       cards: [
-      createCardFromSlim(slimCard, {
-        metadata: {
-          source: 'file',
-          url: pdfUrl || document.location.href,
-          tags: ['error', 'pdf']
-        }
-      })
-    ],
-      visualizations: []
+        createCardFromSlim(slimCard, {
+          metadata: {
+            source: 'file',
+            url: pdfUrl || document.location.href,
+            tags: ['error', 'pdf'],
+          },
+        }),
+      ],
+      visualizations: [],
     };
   }
 }
@@ -260,7 +249,7 @@ async function extractPageContent(page: PDFPageProxy, viewport: any): Promise<Co
       x: graphicBlock.x,
       y: graphicBlock.y,
       width: graphicBlock.width,
-      height: graphicBlock.height
+      height: graphicBlock.height,
     });
   }
 
@@ -279,7 +268,7 @@ async function extractPageContent(page: PDFPageProxy, viewport: any): Promise<Co
 async function extractTextBlocks(
   page: PDFPageProxy,
   viewport: any,
-  graphicBlocks: GraphicBlock[]
+  graphicBlocks: GraphicBlock[],
 ): Promise<TextBlock[]> {
   const textContent = await page.getTextContent();
   const items = textContent.items as PDFTextItem[];
@@ -341,14 +330,14 @@ function detectPageNumbers(items: PDFTextItem[], viewport: any): PageNumberDetec
     pattern,
     topNumbers,
     bottomNumbers,
-    candidates: pageNumberCandidates.slice(0, 3)
+    candidates: pageNumberCandidates.slice(0, 3),
   });
 
   return {
     shouldFilter,
     pattern,
     yThresholdTop: topThreshold,
-    yThresholdBottom: bottomThreshold
+    yThresholdBottom: bottomThreshold,
   };
 }
 
@@ -376,7 +365,7 @@ function extractFilteredLines(
   items: PDFTextItem[],
   viewport: any,
   pageNumberInfo: PageNumberDetectionResult,
-  graphicBlocks: GraphicBlock[]
+  graphicBlocks: GraphicBlock[],
 ): LineItem[] {
   const lines: LineItem[] = [];
   let currentLine: LineItem | null = null;
@@ -407,7 +396,7 @@ function extractFilteredLines(
         y: y,
         x: x,
         fontSize: fontSize,
-        width: item.width || 0
+        width: item.width || 0,
       };
     } else {
       // Append to current line
@@ -429,28 +418,16 @@ function extractFilteredLines(
 /**
  * Check if text should be skipped as page number
  */
-function shouldSkipAsPageNumber(
-  item: PDFTextItem,
-  y: number,
-  pageNumberInfo: PageNumberDetectionResult
-): boolean {
+function shouldSkipAsPageNumber(item: PDFTextItem, y: number, pageNumberInfo: PageNumberDetectionResult): boolean {
   if (!pageNumberInfo.shouldFilter) return false;
 
   const text = item.str.trim();
   if (!isLikelyPageNumber(text)) return false;
 
-  if (
-    pageNumberInfo.pattern === 'top' &&
-    pageNumberInfo.yThresholdTop &&
-    y > pageNumberInfo.yThresholdTop
-  ) {
+  if (pageNumberInfo.pattern === 'top' && pageNumberInfo.yThresholdTop && y > pageNumberInfo.yThresholdTop) {
     return true;
   }
-  if (
-    pageNumberInfo.pattern === 'bottom' &&
-    pageNumberInfo.yThresholdBottom &&
-    y < pageNumberInfo.yThresholdBottom
-  ) {
+  if (pageNumberInfo.pattern === 'bottom' && pageNumberInfo.yThresholdBottom && y < pageNumberInfo.yThresholdBottom) {
     return true;
   }
   if (pageNumberInfo.pattern === 'both') {
@@ -491,13 +468,7 @@ function groupLinesIntoBlocks(lines: LineItem[], viewport: any): TextBlock[] {
     if (!text) continue;
 
     const isHeading = detectHeading(text, line.fontSize, lastFontSize);
-    const startsNewParagraph = shouldStartNewParagraph(
-      text,
-      isHeading,
-      line.y,
-      lastY,
-      currentParagraph
-    );
+    const startsNewParagraph = shouldStartNewParagraph(text, isHeading, line.y, lastY, currentParagraph);
 
     if (startsNewParagraph && currentParagraph.length > 0) {
       // Create block from current paragraph
@@ -532,14 +503,14 @@ function groupLinesIntoBlocks(lines: LineItem[], viewport: any): TextBlock[] {
 function createTextBlock(lines: LineItem[], isHeading: boolean): TextBlock | null {
   if (lines.length === 0) return null;
 
-  const text = joinParagraphLines(lines.map(l => l.text));
+  const text = joinParagraphLines(lines.map((l) => l.text));
   if (!text.trim()) return null;
 
   // Calculate bounding box
-  const minX = Math.min(...lines.map(l => l.x));
-  const maxX = Math.max(...lines.map(l => l.x + l.width));
-  const minY = Math.min(...lines.map(l => l.y));
-  const maxY = Math.max(...lines.map(l => l.y));
+  const minX = Math.min(...lines.map((l) => l.x));
+  const maxX = Math.max(...lines.map((l) => l.x + l.width));
+  const minY = Math.min(...lines.map((l) => l.y));
+  const maxY = Math.max(...lines.map((l) => l.y));
 
   return {
     type: 'text',
@@ -548,7 +519,7 @@ function createTextBlock(lines: LineItem[], isHeading: boolean): TextBlock | nul
     x: minX,
     y: (minY + maxY) / 2, // Use center Y for sorting
     width: maxX - minX,
-    height: maxY - minY
+    height: maxY - minY,
   };
 }
 
@@ -573,10 +544,10 @@ function isHeadingPattern(text: string): boolean {
     /^[A-Z][A-Z\s]{3,}$/,
     /^(Chapter|Section|Part|Article|Appendix)\s+\d+/i,
     /^(Introduction|Conclusion|Abstract|Summary|References|Bibliography)$/i,
-    /^[IVXLCDM]+\.\s/
+    /^[IVXLCDM]+\.\s/,
   ];
 
-  return headingPatterns.some(pattern => pattern.test(text));
+  return headingPatterns.some((pattern) => pattern.test(text));
 }
 
 function shouldStartNewParagraph(
@@ -584,7 +555,7 @@ function shouldStartNewParagraph(
   isHeading: boolean,
   currentY: number,
   lastY: number | null,
-  currentParagraph: LineItem[]
+  currentParagraph: LineItem[],
 ): boolean {
   if (isHeading) return true;
   if (isParagraphBoundary(text)) return true;
@@ -599,9 +570,10 @@ function shouldStartNewParagraph(
 }
 
 function isParagraphBoundary(text: string): boolean {
+  // eslint-disable-next-line no-useless-escape
   const boundaryPatterns = [/^[\•\-\*\d]+[\.\)]\s/, /^[a-z]\)\s/, /^(Figure|Table|Example)\s/];
 
-  return boundaryPatterns.some(pattern => pattern.test(text));
+  return boundaryPatterns.some((pattern) => pattern.test(text));
 }
 
 function endsWithPunctuation(text: string): boolean {
@@ -667,7 +639,7 @@ async function detectGraphicsRegions(page: PDFPageProxy): Promise<GraphicBlock[]
   await page.render({
     canvasContext: context,
     canvas: canvas,
-    viewport: viewport
+    viewport: viewport,
   }).promise;
 
   // Get text items for text coverage analysis
@@ -690,15 +662,11 @@ async function detectGraphicsRegions(page: PDFPageProxy): Promise<GraphicBlock[]
     0,
     0,
     downsampledCanvas.width,
-    downsampledCanvas.height
+    downsampledCanvas.height,
   );
 
   // Find inked regions using flood fill
-  const inkedRegions = findInkedRegions(
-    downsampledCtx,
-    downsampledCanvas.width,
-    downsampledCanvas.height
-  );
+  const inkedRegions = findInkedRegions(downsampledCtx, downsampledCanvas.width, downsampledCanvas.height);
 
   // Scale regions back to original size and filter
   const graphicBlocks: GraphicBlock[] = [];
@@ -709,7 +677,7 @@ async function detectGraphicsRegions(page: PDFPageProxy): Promise<GraphicBlock[]
       x: region.x * downsampleFactor,
       y: region.y * downsampleFactor,
       width: region.width * downsampleFactor,
-      height: region.height * downsampleFactor
+      height: region.height * downsampleFactor,
     };
 
     // Calculate text coverage for this region
@@ -740,7 +708,7 @@ async function detectGraphicsRegions(page: PDFPageProxy): Promise<GraphicBlock[]
       0,
       0,
       scaledRegion.width,
-      scaledRegion.height
+      scaledRegion.height,
     );
 
     const dataUrl = regionCanvas.toDataURL('image/png');
@@ -752,18 +720,14 @@ async function detectGraphicsRegions(page: PDFPageProxy): Promise<GraphicBlock[]
       width: scaledRegion.width / scale,
       height: scaledRegion.height / scale,
       base64,
-      mimeType: 'image/png'
+      mimeType: 'image/png',
     });
   }
 
   return graphicBlocks;
 }
 
-function findInkedRegions(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): BoundingBox[] {
+function findInkedRegions(ctx: CanvasRenderingContext2D, width: number, height: number): BoundingBox[] {
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
   const visited = new Uint8Array(width * height);
@@ -823,7 +787,7 @@ function findInkedRegions(
       x: minX,
       y: minY,
       width: maxX - minX + 1,
-      height: maxY - minY + 1
+      height: maxY - minY + 1,
     };
   }
 
@@ -891,7 +855,7 @@ function mergeNearbyRegions(regions: BoundingBox[]): BoundingBox[] {
             x: minX,
             y: minY,
             width: maxX - minX,
-            height: maxY - minY
+            height: maxY - minY,
           };
 
           used.add(j);
@@ -917,7 +881,7 @@ function getTextBoundingBoxes(textContent: TextContent, viewport: any): Bounding
       // Calculate bounding box - PDF coordinates have origin at bottom-left
       const x = tx[4];
       const y = tx[5];
-      const width = item.width || (item.str.length * fontSize * 0.6); // Fallback width estimation
+      const width = item.width || item.str.length * fontSize * 0.6; // Fallback width estimation
       const height = fontSize;
 
       // Convert from PDF coordinates (bottom-left origin) to canvas coordinates (top-left origin)
@@ -925,7 +889,7 @@ function getTextBoundingBoxes(textContent: TextContent, viewport: any): Bounding
         x: x,
         y: viewport.height - y - height, // Flip Y and adjust for height
         width: width,
-        height: height
+        height: height,
       });
     }
   }
@@ -939,14 +903,8 @@ function calculateTextCoverage(region: BoundingBox, textBounds: BoundingBox[]): 
 
   for (const text of textBounds) {
     // Calculate intersection
-    const xOverlap = Math.max(
-      0,
-      Math.min(region.x + region.width, text.x + text.width) - Math.max(region.x, text.x)
-    );
-    const yOverlap = Math.max(
-      0,
-      Math.min(region.y + region.height, text.y + text.height) - Math.max(region.y, text.y)
-    );
+    const xOverlap = Math.max(0, Math.min(region.x + region.width, text.x + text.width) - Math.max(region.x, text.x));
+    const yOverlap = Math.max(0, Math.min(region.y + region.height, text.y + text.height) - Math.max(region.y, text.y));
 
     if (xOverlap > 0 && yOverlap > 0) {
       textArea += xOverlap * yOverlap;
@@ -956,11 +914,7 @@ function calculateTextCoverage(region: BoundingBox, textBounds: BoundingBox[]): 
   return textArea / regionArea;
 }
 
-function isRegionTooSimple(
-  ctx: CanvasRenderingContext2D,
-  region: BoundingBox,
-  textBounds: BoundingBox[]
-): boolean {
+function isRegionTooSimple(ctx: CanvasRenderingContext2D, region: BoundingBox, textBounds: BoundingBox[]): boolean {
   // Sample the region excluding text areas
   const sampleSize = 10;
   const samples: [number, number, number][] = [];
@@ -991,14 +945,12 @@ function isRegionTooSimple(
   // Calculate color variance
   const avgColor = samples
     .reduce((acc, color) => [acc[0] + color[0], acc[1] + color[1], acc[2] + color[2]], [0, 0, 0])
-    .map(v => v / samples.length);
+    .map((v) => v / samples.length);
 
   const variance =
     samples.reduce((acc, color) => {
       const diff =
-        Math.abs(color[0] - avgColor[0]) +
-        Math.abs(color[1] - avgColor[1]) +
-        Math.abs(color[2] - avgColor[2]);
+        Math.abs(color[0] - avgColor[0]) + Math.abs(color[1] - avgColor[1]) + Math.abs(color[2] - avgColor[2]);
       return acc + diff;
     }, 0) / samples.length;
 
@@ -1009,10 +961,7 @@ function isRegionTooSimple(
 /**
  * Generate visualization for a page showing detected regions
  */
-async function generatePageVisualization(
-  page: PDFPageProxy,
-  pageNumber: number
-): Promise<PageVisualization | null> {
+async function generatePageVisualization(page: PDFPageProxy, pageNumber: number): Promise<PageVisualization | null> {
   try {
     const scale = 2; // Higher scale for better quality
     const viewport = page.getViewport({ scale });
@@ -1027,7 +976,7 @@ async function generatePageVisualization(
     await page.render({
       canvasContext: context,
       canvas: canvas,
-      viewport: viewport
+      viewport: viewport,
     }).promise;
 
     // Get text bounds for visualization
@@ -1045,7 +994,7 @@ async function generatePageVisualization(
       textBounds,
       graphicBlocks,
       inkedRegions,
-      scale
+      scale,
     });
 
     // Convert to base64
@@ -1055,7 +1004,7 @@ async function generatePageVisualization(
     return {
       pageNumber,
       base64,
-      mimeType: 'image/png'
+      mimeType: 'image/png',
     };
   } catch (error) {
     notifyDebug(`Failed to generate visualization for page ${pageNumber}`, error);
@@ -1069,10 +1018,10 @@ async function generatePageVisualization(
 async function findInkedRegionsForVisualization(
   ctx: CanvasRenderingContext2D,
   width: number,
-  height: number
+  height: number,
 ): Promise<BoundingBox[]> {
   const downsampleFactor = 4;
-  
+
   // Create downsampled canvas
   const downsampledCanvas = document.createElement('canvas');
   const downsampledCtx = downsampledCanvas.getContext('2d', { willReadFrequently: true })!;
@@ -1080,31 +1029,17 @@ async function findInkedRegionsForVisualization(
   downsampledCanvas.height = Math.floor(height / downsampleFactor);
 
   // Downsample the image
-  downsampledCtx.drawImage(
-    ctx.canvas,
-    0,
-    0,
-    width,
-    height,
-    0,
-    0,
-    downsampledCanvas.width,
-    downsampledCanvas.height
-  );
+  downsampledCtx.drawImage(ctx.canvas, 0, 0, width, height, 0, 0, downsampledCanvas.width, downsampledCanvas.height);
 
   // Find inked regions
-  const regions = findInkedRegions(
-    downsampledCtx,
-    downsampledCanvas.width,
-    downsampledCanvas.height
-  );
+  const regions = findInkedRegions(downsampledCtx, downsampledCanvas.width, downsampledCanvas.height);
 
   // Scale regions back to original size
-  return regions.map(region => ({
+  return regions.map((region) => ({
     x: region.x * downsampleFactor,
     y: region.y * downsampleFactor,
     width: region.width * downsampleFactor,
-    height: region.height * downsampleFactor
+    height: region.height * downsampleFactor,
   }));
 }
 
@@ -1118,7 +1053,7 @@ function drawVisualizationOverlays(
     graphicBlocks: GraphicBlock[];
     inkedRegions: BoundingBox[];
     scale: number;
-  }
+  },
 ): void {
   const { textBounds, graphicBlocks, inkedRegions, scale } = data;
 
@@ -1172,18 +1107,18 @@ function drawLegend(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHe
   const legendItems = [
     { color: 'rgba(0, 100, 255, 0.6)', label: 'Inked Regions' },
     { color: 'rgba(0, 255, 100, 0.6)', label: 'Graphics/Images' },
-    { color: 'rgba(255, 0, 100, 0.4)', label: 'Text Bounds' }
+    { color: 'rgba(255, 0, 100, 0.4)', label: 'Text Bounds' },
   ];
 
   const padding = 20;
   const boxSize = 15;
   const lineHeight = 25;
   const fontSize = 14;
-  
+
   // Calculate legend dimensions
   const legendWidth = 150;
   const legendHeight = padding * 2 + legendItems.length * lineHeight;
-  
+
   // Position legend in top-right corner
   const legendX = canvasWidth - legendWidth - padding;
   const legendY = padding;
@@ -1191,7 +1126,7 @@ function drawLegend(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHe
   // Draw semi-transparent background
   ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
   ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
-  
+
   // Draw border
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
   ctx.lineWidth = 1;
@@ -1200,16 +1135,16 @@ function drawLegend(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHe
   // Draw legend items
   ctx.font = `${fontSize}px Arial`;
   ctx.textBaseline = 'middle';
-  
+
   legendItems.forEach((item, index) => {
     const y = legendY + padding + index * lineHeight + boxSize / 2;
-    
+
     // Draw color box
     ctx.fillStyle = item.color;
     ctx.fillRect(legendX + padding, y - boxSize / 2, boxSize, boxSize);
     ctx.strokeStyle = item.color;
     ctx.strokeRect(legendX + padding, y - boxSize / 2, boxSize, boxSize);
-    
+
     // Draw label
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     ctx.fillText(item.label, legendX + padding + boxSize + 10, y);
