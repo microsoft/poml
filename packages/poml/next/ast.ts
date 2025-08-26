@@ -1,61 +1,158 @@
 import { Tokenizer, Token } from './tokenizer';
 import componentDocs from '../assets/componentDocs.json';
+import { Range } from './types';
 
-// Source position and attribute interfaces
-export interface SourceRange {
-  start: number;
-  end: number;
+export interface Node {
+  kind:
+    | 'META'
+    | 'EXPRESSION'
+    | 'VALUE'
+    | 'STRING'
+    | 'VALUE'
+    | 'FORLOOP'
+    | 'OPEN'
+    | 'CLOSE'
+    | 'SELFCLOSE'
+    | 'ELEMENT'
+    | 'TEXT'
+    | 'POML'
+    | 'ATTRIBUTE'
+    | 'TEMPLATE';
+  range: Range; // Range of the entire node in source
 }
 
-export interface AttributeInfo {
-  key: string;
-  value: (ASTNode & { kind: 'TEXT' | 'TEMPLATE' })[]; // Mixed content: array of text/template nodes
-  keyRange: SourceRange; // Position of attribute name
-  valueRange: SourceRange; // Position of attribute value (excluding quotes)
-  fullRange: SourceRange; // Full attribute including key="value"
+export interface ExpressionNode extends Node {
+  kind: 'EXPRESSION';
+  value: string;
 }
 
-// Main AST node interface
-export interface ASTNode {
-  id: string; // Unique ID for caching and React keys
-  kind: 'META' | 'TEXT' | 'POML' | 'TEMPLATE';
-  start: number; // Source position start of entire node
-  end: number; // Source position end of entire node
-  content: string; // The raw string content
-  parent?: ASTNode; // Reference to the parent node
-  children: ASTNode[]; // Child nodes
-
-  // For POML and META nodes
-  tagName?: string; // Tag name (e.g., 'task', 'meta')
-  attributes?: AttributeInfo[]; // Detailed attribute information
-
-  // Detailed source positions
-  openingTag?: {
-    start: number; // Position of '<'
-    end: number; // Position after '>'
-    nameRange: SourceRange; // Position of tag name
-  };
-
-  closingTag?: {
-    start: number; // Position of '</'
-    end: number; // Position after '>'
-    nameRange: SourceRange; // Position of tag name in closing tag
-  };
-
-  contentRange?: SourceRange; // Position of content between tags (excluding nested tags)
-
-  // For TEXT nodes
-  textSegments?: SourceRange[]; // Multiple ranges for text content (excluding nested POML)
-
-  // For TEMPLATE nodes
-  expression?: string; // The full expression content between {{}}
+/**
+ * A template node could be:
+ *
+ * 1. the value in an attribute like `if="i > 0"` -> `"i > 0"` with quotes
+ * 2. a standalone template variable like `{{ userName }}`
+ * 3.
+ */
+export interface TemplateNode extends Node {
+  kind: 'TEMPLATE';
+  value: ExpressionNode;
 }
 
-// AST Parser class
+/**
+ * A string node represents a pure text, without any quotes or template variables.
+ *
+ * It's also sometimes reused to represent a key, an identifier, or a tag name.
+ */
+export interface StringNode extends Node {
+  kind: 'STRING';
+  value: string;
+}
+
+/**
+ * A value node could be:
+ *
+ * 1. a quoted attribute value: "some text" or 'some text'
+ * 2. text content between tags with white spaces: >  some text<nested-tag>
+ * 3. quoted or not quoted template values: {{ someVar }} or "{{ var }}"
+ * 4. mixture of text and template variables: "Hello, {{ userName }}!"
+ *
+ * The value node always include the full range, including quotes if any.
+ * But it's children only include the inner parts, excluding quotes.
+ */
+export interface ValueNode extends Node {
+  kind: 'VALUE';
+  children: (StringNode | TemplateNode)[];
+}
+
+/**
+ * A for loop node could be like:
+ *
+ * ```
+ * <task for="item in items.everything">
+ * ```
+ *
+ * More advanced versions are not supported yet.
+ */
+export interface ForLoopNode extends Node {
+  kind: 'FORLOOP';
+  iterator: StringNode;
+  collection: ExpressionNode;
+}
+
+export interface AttributeNode extends Node {
+  kind: 'ATTRIBUTE';
+  key: StringNode;
+  value: ValueNode;
+}
+
+export interface ForLoopAttributeNode extends Node {
+  kind: 'ATTRIBUTE';
+  key: StringNode; // Always "for"
+  value: ForLoopNode;
+}
+
+export interface OpenTagNode extends Node {
+  kind: 'OPEN';
+  value: StringNode;
+  attributes: (AttributeNode | ForLoopAttributeNode)[];
+}
+
+export interface CloseTagNode extends Node {
+  kind: 'CLOSE';
+  value: StringNode;
+}
+
+export interface SelfCloseTagNode extends Node {
+  kind: 'SELFCLOSE';
+  value: StringNode;
+  attributes: (AttributeNode | ForLoopAttributeNode)[];
+}
+
+export interface ElementNode extends Node {
+  kind: 'ELEMENT';
+  tagName: StringNode;
+  children: (ElementNode | ValueNode)[];
+}
+
+export interface TextNode extends Node {
+  kind: 'TEXT';
+  tagName: StringNode; // Always "text"
+  // We don't allow anything here yet.
+  attributes: AttributeNode[];
+  value: StringNode;
+}
+
+export interface MetaNode extends Node {
+  kind: 'META';
+  tagName: StringNode;
+  attributes: AttributeNode[];
+}
+
 class ASTParser {
   private tokens: Token[];
   private position: number;
   private nextId: number;
+
+  // These are the tags that are always valid in POML.
+  // You can not disable them.
+  private alwaysValidTags = new Set<string>(['text', 'meta']);
+
+  // These semantics are handled right here.
+  private nonComponentTags = new Set<string>([
+    'let',
+    'include',
+    'template',
+    'context',
+    'stylesheet',
+    'output-schema',
+    'outputschema',
+    'tool',
+    'tool-def',
+    'tool-definition',
+    'tooldef',
+    'tooldefinition',
+  ]);
+
   private validPomlTags: Set<string>;
 
   constructor(tokens: Token[]) {
@@ -66,7 +163,7 @@ class ASTParser {
   }
 
   private buildValidTagsSet(): Set<string> {
-    const validTags = new Set<string>();
+    const validTags = new Set<string>(this.alwaysValidTags);
 
     for (const doc of componentDocs) {
       if (doc.name) {
