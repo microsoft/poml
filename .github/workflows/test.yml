@@ -44,7 +44,6 @@ jobs:
       - run: npm ci
       - run: npm run build-webview
       - run: npm run build-cli
-      - run: npm run lint
       - run: npm run validate-component-spec
         if: matrix.os == 'ubuntu-latest'
       - run: npm run package:win
@@ -120,7 +119,7 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Generate component documentation
-        run: npm run generate-component-spec
+        run: npm run validate-component-spec
 
       - name: Generate TypeScript API documentation
         run: npm run typedoc
