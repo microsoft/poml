@@ -13,8 +13,8 @@ export interface PomlContext {
   variables: { [key: string]: any }; // For {{ substitutions }} and <let> (Read/Write)
   texts: { [key: string]: React.ReactElement }; // Maps TEXT_ID to content for <text> replacement (Read/Write)
   stylesheet: { [key: string]: string }; // Merged styles from all <meta> tags (Read-Only during render)
-  minimalPomlVersion?: string;      // From <meta> (Read-Only)
-  sourcePath: string;                // File path for resolving includes (Read-Only)
+  minimalPomlVersion?: string; // From <meta> (Read-Only)
+  sourcePath: string; // File path for resolving includes (Read-Only)
 }
 
 export class Reader {

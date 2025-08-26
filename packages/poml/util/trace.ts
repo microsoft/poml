@@ -1,7 +1,9 @@
 import { mkdirSync, writeFileSync, openSync, closeSync, writeSync, symlinkSync, readdirSync } from './fs';
 import path from 'path';
 
-interface Base64Wrapper { __base64__: string }
+interface Base64Wrapper {
+  __base64__: string;
+}
 
 function replaceBuffers(value: any): any {
   if (Buffer.isBuffer(value)) {
@@ -95,7 +97,14 @@ function nextIndex(sourcePath?: string): [number, string, number] {
   }
 }
 
-export function dumpTrace(markup: string, context?: any, stylesheet?: any, result?: any, sourcePath?: string, prettyResult?: string) {
+export function dumpTrace(
+  markup: string,
+  context?: any,
+  stylesheet?: any,
+  result?: any,
+  sourcePath?: string,
+  prettyResult?: string,
+) {
   if (!isTracing()) {
     return;
   }

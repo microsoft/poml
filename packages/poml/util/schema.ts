@@ -6,13 +6,12 @@ import { jsonSchemaToZod } from 'json-schema-to-zod';
  * Provides conversion methods between different schema formats.
  */
 export class Schema {
-
   private constructor(
     private zodSchema?: z.ZodTypeAny,
-    private openApiSchema?: any
+    private openApiSchema?: any,
   ) {
     if (!zodSchema && !openApiSchema) {
-      throw new Error("At least one schema must be provided");
+      throw new Error('At least one schema must be provided');
     }
     this.zodSchema = zodSchema;
     this.openApiSchema = openApiSchema;
@@ -27,7 +26,7 @@ export class Schema {
     const schema = new Schema(undefined, openApiSchema);
     // TODO: openapi schema full validation should be added here
     if (typeof openApiSchema !== 'object' || openApiSchema === null) {
-      throw new Error("Invalid OpenAPI schema provided");
+      throw new Error('Invalid OpenAPI schema provided');
     }
     return schema;
   }
@@ -57,7 +56,7 @@ export class Schema {
       const evalWithZ = new Function('z', `return ${zodSchemaString}`);
       return evalWithZ(z) as z.ZodTypeAny;
     } else {
-      throw new Error("No Zod schema available");
+      throw new Error('No Zod schema available');
     }
   }
 
@@ -77,7 +76,7 @@ export class Schema {
       }
       return schema;
     } else {
-      throw new Error("No schema available");
+      throw new Error('No schema available');
     }
   }
 }
@@ -116,7 +115,7 @@ export class ToolsSchema {
     this.tools.set(name, {
       name,
       description,
-      inputSchema: schema
+      inputSchema: schema,
     });
   }
 
@@ -134,7 +133,7 @@ export class ToolsSchema {
     this.tools.set(name, {
       name,
       description,
-      inputSchema: schema
+      inputSchema: schema,
     });
   }
 
@@ -151,7 +150,7 @@ export class ToolsSchema {
     this.tools.set(name, {
       name,
       description,
-      inputSchema: schema
+      inputSchema: schema,
     });
   }
 
@@ -161,14 +160,14 @@ export class ToolsSchema {
    */
   public toVercel(): any {
     const vercelTools: Record<string, any> = {};
-    
+
     for (const [name, tool] of this.tools) {
       vercelTools[name] = {
         description: tool.description,
-        parameters: tool.inputSchema.toZod()
+        parameters: tool.inputSchema.toZod(),
       };
     }
-    
+
     return vercelTools;
   }
 
@@ -203,10 +202,10 @@ export class ToolsSchema {
         type: 'function',
         name: tool.name,
         description: tool.description,
-        parameters: tool.inputSchema.toOpenAPI()
+        parameters: tool.inputSchema.toOpenAPI(),
       });
     }
-    
+
     return openAITools;
   }
 
@@ -250,5 +249,4 @@ export class ToolsSchema {
   public clear(): void {
     this.tools.clear();
   }
-
 }

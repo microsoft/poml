@@ -1,13 +1,22 @@
 import * as React from 'react';
 import { readFileSync, writeFileSync } from './util/fs';
-import { renderToString } from "react-dom/server";
+import { renderToString } from 'react-dom/server';
 import path from 'path';
-import { EnvironmentDispatcher } from "./writer";
-import { ErrorCollection, Message, RichContent, StyleSheetProvider, SystemError, SourceMapRichContent, SourceMapMessage, richContentFromSourceMap } from './base';
+import { EnvironmentDispatcher } from './writer';
+import {
+  ErrorCollection,
+  Message,
+  RichContent,
+  StyleSheetProvider,
+  SystemError,
+  SourceMapRichContent,
+  SourceMapMessage,
+  richContentFromSourceMap,
+} from './base';
 import { PomlFile, PomlReaderOptions } from './file';
 import './presentation';
 import './essentials';
-import "./components";
+import './components';
 import { reactRender } from './util/reactRender';
 import { dumpTrace, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
 
@@ -60,10 +69,7 @@ export const _readWithFile = async (
   if (stylesheet) {
     readElement = React.createElement(StyleSheetProvider, { stylesheet }, readElement);
   }
-  return [
-    await reactRender(readElement),
-    pomlFile
-  ];
+  return [await reactRender(readElement), pomlFile];
 };
 
 interface WriteOptions {
@@ -77,7 +83,6 @@ interface WriteOptionsNoSpeakerMode extends WriteOptions {
 interface WriteOptionsSpeakerMode extends WriteOptions {
   speaker: true;
 }
-
 
 export function write(ir: string, options?: WriteOptionsNoSpeakerMode): RichContent;
 export function write(ir: string, options: WriteOptionsSpeakerMode): Message[];
@@ -93,7 +98,7 @@ export function write(ir: string, options?: WriteOptions): RichContent | Message
   } else {
     return writer.write(ir);
   }
-};
+}
 
 export function writeWithSourceMap(ir: string, options?: WriteOptionsNoSpeakerMode): SourceMapRichContent[];
 export function writeWithSourceMap(ir: string, options: WriteOptionsSpeakerMode): SourceMapMessage[];
@@ -109,7 +114,7 @@ export function writeWithSourceMap(ir: string, options?: WriteOptions): SourceMa
   } else {
     return writer.writeWithSourceMap(ir);
   }
-};
+}
 
 export const poml = async (element: React.ReactElement | string): Promise<RichContent> => {
   ErrorCollection.clear();
@@ -119,7 +124,7 @@ export const poml = async (element: React.ReactElement | string): Promise<RichCo
     throw ErrorCollection.first();
   }
   return result;
-}
+};
 
 interface CliArgs {
   input?: string;
@@ -211,14 +216,16 @@ export async function commandLine(args: CliArgs) {
   const prettyPrint = args.prettyPrint === true;
   let resultMessages = write(ir, { speaker: speakerMode });
   const prettyOutput = speakerMode
-    ? (resultMessages as Message[]).map((message) => `===== ${message.speaker} =====\n\n${renderContent(message.content)}`).join('\n\n')
+    ? (resultMessages as Message[])
+        .map((message) => `===== ${message.speaker} =====\n\n${renderContent(message.content)}`)
+        .join('\n\n')
     : renderContent(resultMessages as RichContent);
   const result: CliResult = {
     messages: resultMessages,
     schema: pomlFile.getResponseSchema()?.toOpenAPI(),
     tools: pomlFile.getToolsSchema()?.toOpenAI(),
     runtime: pomlFile.getRuntimeParameters(),
-  }
+  };
   const output = prettyPrint ? prettyOutput : JSON.stringify(result);
 
   if (isTracing()) {
@@ -260,6 +267,6 @@ const renderContent = (content: RichContent) => {
     }
   });
   return outputs.join('\n\n');
-}
+};
 
 export { setTrace, clearTrace, parseJsonWithBuffers, dumpTrace };

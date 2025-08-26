@@ -11,7 +11,7 @@ import { ErrorCollection, ReadError, WriteError } from 'poml/base';
 
 // Add a finalizer to allow any lingering async operations (like from pdf-parse) to complete.
 afterAll(async () => {
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 });
 
 describe('endToEnd', () => {
@@ -52,7 +52,7 @@ describe('endToEnd', () => {
 
 This text will have normalized spacing. New lines will also be reduced to a space.
 
-This text will have leading    and trailing spaces removed.`
+This text will have leading    and trailing spaces removed.`,
     );
   });
 
@@ -70,26 +70,21 @@ This text will have leading    and trailing spaces removed.`
 
   test('customTruncationOptions', async () => {
     const element = await poml(
-      <Markup.Paragraph
-        charLimit={3}
-        writerOptions={{ truncateDirection: 'start', truncateMarker: '[cut]' }}
-      >
+      <Markup.Paragraph charLimit={3} writerOptions={{ truncateDirection: 'start', truncateMarker: '[cut]' }}>
         abcdef
-      </Markup.Paragraph>
+      </Markup.Paragraph>,
     );
     expect(element).toBe('[cut]def');
   });
 
   test('priorityEndToEnd', async () => {
-    const text =
-      '<p charLimit="5"><span priority="1">hello</span><span priority="2">world</span></p>';
+    const text = '<p charLimit="5"><span priority="1">hello</span><span priority="2">world</span></p>';
     const element = await poml(text);
     expect(element).toBe('world');
   });
 
   test('priorityTokenEndToEnd', async () => {
-    const text =
-      '<p tokenLimit="1"><span priority="1">hello</span><span priority="2">world</span></p>';
+    const text = '<p tokenLimit="1"><span priority="1">hello</span><span priority="2">world</span></p>';
     const element = await poml(text);
     expect(element).toBe('world');
   });
@@ -103,19 +98,18 @@ This text will have leading    and trailing spaces removed.`
   <p tokenLimit="10">This paragraph will be truncated based on token count rather than character count, which is more accurate for AI model processing.</p>
 </poml>`;
     const element = await poml(text);
-    expect(element).toBe(`This is a very long paragraph that will be truncated if it exceeds the character limit. The truncati (...truncated)
+    expect(element)
+      .toBe(`This is a very long paragraph that will be truncated if it exceeds the character limit. The truncati (...truncated)
 
 This paragraph will be truncated based on token count rather (...truncated)`);
   });
 
   test('tokenControlDocExample2', async () => {
     const element = await poml(
-      <Markup.Paragraph
-        charLimit={20}
-        writerOptions={{ truncateMarker: ' [...] ', truncateDirection: 'middle' }}
-      >
-        This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add a marker to indicate that content was cut off.
-      </Markup.Paragraph>
+      <Markup.Paragraph charLimit={20} writerOptions={{ truncateMarker: ' [...] ', truncateDirection: 'middle' }}>
+        This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add
+        a marker to indicate that content was cut off.
+      </Markup.Paragraph>,
     );
     expect(element).toBe('This is a  [...] s cut off.');
   });
@@ -138,7 +132,7 @@ This content has high priority and will be preserved longer.
 
 This content has medium priority.`;
     expect(element).toBe(expected);
-  })
+  });
 
   test('tokenControlDocExample4', async () => {
     const text = `<poml tokenLimit="40">
@@ -169,20 +163,20 @@ Optional additional context that can (...truncated)`;
     const markup = '<p><p className="myClass">hello</p><p className="myClassB">world</p></p>';
     const stylesheet = {
       '.myClass': {
-        speaker: 'ai'
+        speaker: 'ai',
       },
       '.myClassB': {
-        speaker: 'human'
-      }
+        speaker: 'human',
+      },
     };
     const ir = await read(markup, undefined, undefined, stylesheet);
     expect(ir).toBe(
-      '<env presentation=\"markup\" markup-lang=\"markdown\" original-start-index=\"0\" original-end-index=\"71\"><p original-start-index=\"0\" original-end-index=\"71\"><p speaker=\"ai\" original-start-index=\"3\" original-end-index=\"34\">hello</p><p speaker=\"human\" original-start-index=\"35\" original-end-index=\"67\">world</p></p></env>'
+      '<env presentation="markup" markup-lang="markdown" original-start-index="0" original-end-index="71"><p original-start-index="0" original-end-index="71"><p speaker="ai" original-start-index="3" original-end-index="34">hello</p><p speaker="human" original-start-index="35" original-end-index="67">world</p></p></env>',
     );
     const result = write(ir, { speaker: true });
     expect(result).toStrictEqual([
       { speaker: 'ai', content: 'hello' },
-      { speaker: 'human', content: 'world' }
+      { speaker: 'human', content: 'world' },
     ]);
   });
 
@@ -192,9 +186,7 @@ Optional additional context that can (...truncated)`;
 <!-- some comment -->
 </poml>`;
     const element = write(await read(text), { speaker: true });
-    expect(element).toStrictEqual([
-      { speaker: 'system', content: 'Be brief and clear in your responses' }
-    ]);
+    expect(element).toStrictEqual([{ speaker: 'system', content: 'Be brief and clear in your responses' }]);
   });
 
   test('empty', async () => {
@@ -258,7 +250,7 @@ Optional additional context that can (...truncated)`;
     </tool-response>`;
     const result = await poml(text);
     expect(result).toHaveLength(1);
-    const response = (result[0] as any);
+    const response = result[0] as any;
     expect(response.type).toBe('application/vnd.poml.toolresponse');
     expect(Array.isArray(response.content)).toBe(true);
     expect(response.content).toHaveLength(3);
@@ -289,7 +281,7 @@ Optional additional context that can (...truncated)`;
     expect(result).toStrictEqual([
       {
         speaker: 'system',
-        content: 'What is my horoscope? I am an Aquarius.'
+        content: 'What is my horoscope? I am an Aquarius.',
       },
       {
         speaker: 'ai',
@@ -298,9 +290,9 @@ Optional additional context that can (...truncated)`;
             type: 'application/vnd.poml.toolrequest',
             content: { sign: 'Aquarius' },
             id: 'call_rui1PrufCQS25KZxLkt7hXWA',
-            name: 'get_horoscope'
-          }
-        ]
+            name: 'get_horoscope',
+          },
+        ],
       },
       {
         speaker: 'tool',
@@ -309,10 +301,10 @@ Optional additional context that can (...truncated)`;
             type: 'application/vnd.poml.toolresponse',
             content: '{\n  "horoscope": ": Next Tuesday you will befriend a baby otter."\n}',
             id: 'call_rui1PrufCQS25KZxLkt7hXWA',
-            name: 'get_horoscope'
-          }
-        ]
-      }
+            name: 'get_horoscope',
+          },
+        ],
+      },
     ]);
   });
 
@@ -338,88 +330,87 @@ Optional additional context that can (...truncated)`;
 
 </poml>`;
     const context = {
-      "system": "You are a helpful DM assistant. Use the dice-rolling tool when needed.",
-      "input": "Roll 2d4+1",
-      "tools": [
+      system: 'You are a helpful DM assistant. Use the dice-rolling tool when needed.',
+      input: 'Roll 2d4+1',
+      tools: [
         {
-          "name": "roll",
-          "description": "\n  Given a string of text describing a dice roll in \n  Dungeons and Dragons, provide a result of the roll.\n\n  Example input: 2d6 + 1d4\n  Example output: 14\n",
-          "schema": {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "type": "object",
-            "properties": {
-              "diceRollExpression": {
-                "type": "string"
-              }
+          name: 'roll',
+          description:
+            '\n  Given a string of text describing a dice roll in \n  Dungeons and Dragons, provide a result of the roll.\n\n  Example input: 2d6 + 1d4\n  Example output: 14\n',
+          schema: {
+            $schema: 'https://json-schema.org/draft/2020-12/schema',
+            type: 'object',
+            properties: {
+              diceRollExpression: {
+                type: 'string',
+              },
             },
-            "required": [
-              "diceRollExpression"
-            ],
-            "additionalProperties": false
-          }
-        }
+            required: ['diceRollExpression'],
+            additionalProperties: false,
+          },
+        },
       ],
-      "interactions": [] as any
+      interactions: [] as any,
     };
     ErrorCollection.clear();
     const result = await write(await read(text, undefined, context), { speaker: true });
     expect(ErrorCollection.empty()).toBe(true);
-    expect(result).toStrictEqual( [
+    expect(result).toStrictEqual([
       {
         speaker: 'system',
-        content: 'You are a helpful DM assistant. Use the dice-rolling tool when needed.\n' +
-          '\n' +
-          'Roll 2d4+1'
-      }
+        content: 'You are a helpful DM assistant. Use the dice-rolling tool when needed.\n' + '\n' + 'Roll 2d4+1',
+      },
     ]);
 
     context.interactions.push([
       {
-        "id": "call_FFzB6ZTXqOsaKeSN5x6KyXyC",
-        "name": "roll",
-        "input": {
-          "diceRollExpression": "2d4+1"
+        id: 'call_FFzB6ZTXqOsaKeSN5x6KyXyC',
+        name: 'roll',
+        input: {
+          diceRollExpression: '2d4+1',
         },
-        "output": {
-          "meta": null,
-          "content": [
+        output: {
+          meta: null,
+          content: [
             {
-              "type": "text",
-              "text": "5",
-              "annotations": null,
-              "meta": null
-            }
+              type: 'text',
+              text: '5',
+              annotations: null,
+              meta: null,
+            },
           ],
-          "structuredContent": null,
-          "isError": false
-        }
-      }
+          structuredContent: null,
+          isError: false,
+        },
+      },
     ]);
     ErrorCollection.clear();
     const result2 = await write(await read(text, undefined, context), { speaker: true });
     expect(ErrorCollection.empty()).toBe(true);
-    expect(result2.slice(-2)).toStrictEqual([{
+    expect(result2.slice(-2)).toStrictEqual([
+      {
         speaker: 'ai',
         content: [
           {
             type: 'application/vnd.poml.toolrequest',
             content: { diceRollExpression: '2d4+1' },
             id: 'call_FFzB6ZTXqOsaKeSN5x6KyXyC',
-            name: 'roll'
-          }
-        ]
+            name: 'roll',
+          },
+        ],
       },
       {
         speaker: 'tool',
         content: [
           {
             type: 'application/vnd.poml.toolresponse',
-            content: '{"meta":null,"content":[{"type":"text","text":"5","annotations":null,"meta":null}],"structuredContent":null,"isError":false}',
+            content:
+              '{"meta":null,"content":[{"type":"text","text":"5","annotations":null,"meta":null}],"structuredContent":null,"isError":false}',
             id: 'call_FFzB6ZTXqOsaKeSN5x6KyXyC',
-            name: 'roll'
-          }
-        ]
-      }
+            name: 'roll',
+          },
+        ],
+      },
     ]);
   });
 });
@@ -531,16 +522,16 @@ describe('diagnosis', () => {
             endIndex: p1End,
             irStartIndex: 170,
             irEndIndex: 293,
-            content: 'hello '
+            content: 'hello ',
           },
           {
             startIndex: bStart,
             endIndex: bEnd,
             irStartIndex: 228,
             irEndIndex: 289,
-            content: '**world**'
-          }
-        ]
+            content: '**world**',
+          },
+        ],
       },
       {
         startIndex: p2Start,
@@ -554,10 +545,10 @@ describe('diagnosis', () => {
             endIndex: p2End,
             irStartIndex: 294,
             irEndIndex: 378,
-            content: 'how are you?'
-          }
-        ]
-      }
+            content: 'how are you?',
+          },
+        ],
+      },
     ];
     expect(segments).toStrictEqual(expects);
   });
@@ -591,38 +582,38 @@ describe('diagnosis', () => {
             endIndex: pEnd,
             irStartIndex: 170,
             irEndIndex: 230,
-            content: 'hello'
+            content: 'hello',
           },
           {
             startIndex: 0,
             endIndex: original.length - 1,
             irStartIndex: 99,
             irEndIndex: 439,
-            content: '\n\n'
+            content: '\n\n',
           },
           {
             startIndex: taskStart,
             endIndex: taskEnd,
             irStartIndex: 325,
             irEndIndex: 421,
-            content: '# Task'
+            content: '# Task',
           },
           {
             startIndex: taskStart,
             endIndex: taskEnd,
             irStartIndex: 231,
             irEndIndex: 435,
-            content: '\n\n'
+            content: '\n\n',
           },
           {
             startIndex: taskStart,
             endIndex: taskEnd,
             irStartIndex: 422,
             irEndIndex: 431,
-            content: '123'
-          }
-        ]
-      }
+            content: '123',
+          },
+        ],
+      },
     ];
     expect(segments).toStrictEqual(expects);
   });
@@ -648,9 +639,7 @@ describe('cli', () => {
   test('contextSpeaker', async () => {
     const text = '<Markup.Paragraph>{{name}}</Markup.Paragraph>';
     await commandLine({ input: text, context: ['name=world'] });
-    expect(process.stdout.write).toHaveBeenCalledWith(
-      '{"messages":[{\"speaker\":\"human\",\"content\":\"world\"}]}'
-    );
+    expect(process.stdout.write).toHaveBeenCalledWith('{"messages":[{"speaker":"human","content":"world"}]}');
   });
 
   test('contentWithResponseSchema', async () => {
@@ -658,7 +647,7 @@ describe('cli', () => {
       '<poml>Hello, world!<output-schema>z.object({ operation: z.enum(["add", "subtract"]), a: z.number(), b: z.number() })</output-schema></poml>';
     await commandLine({ input: text, speakerMode: true });
     expect(process.stdout.write).toHaveBeenCalledWith(
-      '{"messages":[{"speaker":"human","content":"Hello, world!"}],"schema":{"type":"object","properties":{"operation":{"type":"string","enum":["add","subtract"]},"a":{"type":"number"},"b":{"type":"number"}},"required":["operation","a","b"],"additionalProperties":false}}'
+      '{"messages":[{"speaker":"human","content":"Hello, world!"}],"schema":{"type":"object","properties":{"operation":{"type":"string","enum":["add","subtract"]},"a":{"type":"number"},"b":{"type":"number"}},"required":["operation","a","b"],"additionalProperties":false}}',
     );
   });
 });
@@ -711,7 +700,7 @@ function parseExpects(expectFile: string): ExpectMessage[] {
           contents.push(prefix);
         } catch (e) {
           // Fallback: extract base64 with regex
-          const base64Match = match[0].match(/"base64":"([^"\.]+)/);
+          const base64Match = match[0].match(/"base64":"([^"\.]+)/); // eslint-disable-line
           if (base64Match) {
             const prefix = base64Match[1].slice(0, 50);
             contents.push(prefix);
@@ -791,9 +780,9 @@ describe('message components', () => {
       type: 'application/vnd.poml.toolrequest' as const,
       id: 'test-123',
       name: 'search',
-      content: { query: 'hello', limit: 10 }
+      content: { query: 'hello', limit: 10 },
     };
-    
+
     const text = '<MessageContent content="{{toolRequestContent}}" />';
     const ir = await read(text, undefined, { toolRequestContent: [toolRequest] });
     const element = write(ir);
@@ -809,9 +798,9 @@ describe('message components', () => {
       type: 'application/vnd.poml.toolresponse' as const,
       id: 'test-123',
       name: 'search',
-      content: 'Search completed successfully'
+      content: 'Search completed successfully',
     };
-    
+
     const text = '<MessageContent content="{{toolResponseContent}}" />';
     const ir = await read(text, undefined, { toolResponseContent: [toolResponse] });
     const messages = write(ir, { speaker: true });
@@ -830,15 +819,11 @@ describe('message components', () => {
       type: 'application/vnd.poml.toolrequest' as const,
       id: 'req-456',
       name: 'calculate',
-      content: { expression: '2+2' }
+      content: { expression: '2+2' },
     };
-    
-    const mixedContent = [
-      'Making a calculation: ',
-      toolRequest,
-      ' Please wait...'
-    ];
-    
+
+    const mixedContent = ['Making a calculation: ', toolRequest, ' Please wait...'];
+
     const text = '<MessageContent content="{{mixedContent}}" />';
     ErrorCollection.clear();
     const ir = await read(text, undefined, { mixedContent: mixedContent });
@@ -857,23 +842,23 @@ describe('message components', () => {
       type: 'application/vnd.poml.toolrequest' as const,
       id: 'search-789',
       name: 'web_search',
-      content: { query: 'TypeScript', limit: 5 }
+      content: { query: 'TypeScript', limit: 5 },
     };
-    
+
     const toolResponse = {
       type: 'application/vnd.poml.toolresponse' as const,
       id: 'search-789',
       name: 'web_search',
-      content: 'Found 5 results about TypeScript'
+      content: 'Found 5 results about TypeScript',
     };
-    
+
     const messages = [
       { speaker: 'human', content: 'Search for TypeScript information' },
       { speaker: 'ai', content: [toolRequest] },
       { speaker: 'tool', content: [toolResponse] },
-      { speaker: 'ai', content: 'Based on the search results, TypeScript is great!' }
+      { speaker: 'ai', content: 'Based on the search results, TypeScript is great!' },
     ];
-    
+
     const text = '<Conversation messages="{{messages}}" />';
     const element = write(await read(text, undefined, { messages }), { speaker: true });
     expect(element).toHaveLength(4);
@@ -888,21 +873,21 @@ describe('message components', () => {
   test('tool with runtime parameters and template variables', async () => {
     const tool_name = 'get_weather';
     const tool_schema = {
-      "type": "object",
-      "properties": {
-        "location": {
-          "type": "string",
-          "description": "The city and state, e.g. San Francisco, CA"
+      type: 'object',
+      properties: {
+        location: {
+          type: 'string',
+          description: 'The city and state, e.g. San Francisco, CA',
         },
-        "unit": {
-          "type": "string",
-          "enum": ["celsius", "fahrenheit"],
-          "description": "The unit of temperature"
-        }
+        unit: {
+          type: 'string',
+          enum: ['celsius', 'fahrenheit'],
+          description: 'The unit of temperature',
+        },
       },
-      "required": ["location"]
+      required: ['location'],
     };
-    
+
     const text = `<poml>
 <p>What is the weather in San Francisco?</p>
 <tool parser="eval" name="{{ tool_name }}" description="Get the current weather in a specified location.">
@@ -910,25 +895,25 @@ describe('message components', () => {
 </tool>
 <runtime model="gpt-4.1" provider="microsoft" />
 </poml>`;
-    
+
     ErrorCollection.clear();
     const [ir, file] = await _readWithFile(text, undefined, { tool_name, tool_schema });
     const result = write(ir, { speaker: true });
     const runtime = file?.getRuntimeParameters();
     const tools = file?.getToolsSchema()?.toOpenAI();
     expect(ErrorCollection.empty()).toBe(true);
-    
+
     // Check runtime parameters
     expect(runtime).toBeDefined();
     expect(runtime?.model).toBe('gpt-4.1');
     expect(runtime?.provider).toBe('microsoft');
-    
+
     // Check tool definition
     expect(tools).toHaveLength(1);
     expect(tools?.[0].name).toBe('get_weather');
     expect(tools?.[0].description).toBe('Get the current weather in a specified location.');
     expect(tools?.[0].parameters).toBeDefined();
-    
+
     // Verify the schema was properly parsed
     const schema = tools?.[0].parameters;
     expect(schema?.type).toBe('object');
@@ -936,7 +921,7 @@ describe('message components', () => {
     expect(schema?.properties?.location?.type).toBe('string');
     expect(schema?.properties?.unit?.enum).toEqual(['celsius', 'fahrenheit']);
     expect(schema?.required).toEqual(['location']);
-    
+
     // Check the rendered message
     const messages = write(ir, { speaker: true });
     expect(messages).toHaveLength(1);
@@ -972,30 +957,33 @@ describe('message components', () => {
         ai: 'assistant',
         human: 'user',
         system: 'system',
-        tool: 'tool'
+        tool: 'tool',
       };
-      return messages.map(msg => {
+      return messages.map((msg) => {
         const role = speakerToRole[msg.speaker as keyof typeof speakerToRole];
-        const contents = typeof msg.content === 'string' ? msg.content : msg.content.map((part: any) => {
-          if (typeof part === 'string') {
-            return { type: 'text', text: part };
-          } else if (part.type === 'application/vnd.poml.toolrequest') {
-            return {
-              type: 'tool-call',
-              toolCallId: part.id,
-              toolName: part.name,
-              input: part.content
-            };
-          } else if (part.type === 'application/vnd.poml.toolresponse') {
-            return {
-              type: 'tool-result',
-              toolCallId: part.id,
-              toolName: part.name,
-              result: richContentToToolResult(part.content)
-            };
-          }
-          return part;
-        });
+        const contents =
+          typeof msg.content === 'string'
+            ? msg.content
+            : msg.content.map((part: any) => {
+                if (typeof part === 'string') {
+                  return { type: 'text', text: part };
+                } else if (part.type === 'application/vnd.poml.toolrequest') {
+                  return {
+                    type: 'tool-call',
+                    toolCallId: part.id,
+                    toolName: part.name,
+                    input: part.content,
+                  };
+                } else if (part.type === 'application/vnd.poml.toolresponse') {
+                  return {
+                    type: 'tool-result',
+                    toolCallId: part.id,
+                    toolName: part.name,
+                    result: richContentToToolResult(part.content),
+                  };
+                }
+                return part;
+              });
         return { role, content: contents };
       });
     };
@@ -1004,41 +992,41 @@ describe('message components', () => {
       type: 'application/vnd.poml.toolrequest' as const,
       id: 'req-123',
       name: 'search',
-      content: { query: 'test', limit: 10 }
+      content: { query: 'test', limit: 10 },
     };
-    
+
     const toolResponse = {
       type: 'application/vnd.poml.toolresponse' as const,
       id: 'req-123',
       name: 'search',
-      content: 'Search completed successfully'
+      content: 'Search completed successfully',
     };
-    
+
     const messages = [
       { speaker: 'human', content: 'Please search for something' },
       { speaker: 'ai', content: [toolRequest] },
       { speaker: 'tool', content: [toolResponse] },
-      { speaker: 'ai', content: 'Here are the results' }
+      { speaker: 'ai', content: 'Here are the results' },
     ];
-    
+
     const converted = convertMessage(messages);
-    
+
     expect(converted).toHaveLength(4);
     expect(converted[0].role).toBe('user');
     expect(converted[0].content).toBe('Please search for something');
-    
+
     expect(converted[1].role).toBe('assistant');
     expect(converted[1].content[0].type).toBe('tool-call');
     expect(converted[1].content[0].toolCallId).toBe('req-123');
     expect(converted[1].content[0].toolName).toBe('search');
     expect(converted[1].content[0].input).toEqual({ query: 'test', limit: 10 });
-    
+
     expect(converted[2].role).toBe('tool');
     expect(converted[2].content[0].type).toBe('tool-result');
     expect(converted[2].content[0].toolCallId).toBe('req-123');
     expect(converted[2].content[0].toolName).toBe('search');
     expect(converted[2].content[0].result).toBe('Search completed successfully');
-    
+
     expect(converted[3].role).toBe('assistant');
     expect(converted[3].content).toBe('Here are the results');
   });
@@ -1076,20 +1064,20 @@ describe('message components', () => {
         {
           type: 'image/png',
           base64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-          alt: 'chart'
+          alt: 'chart',
         },
-        'The trend is positive.'
-      ]
+        'The trend is positive.',
+      ],
     };
 
     const result = richContentToToolResult(toolResponseWithRichContent.content);
-    
+
     expect(Array.isArray(result)).toBe(true);
     expect(result).toHaveLength(3);
     expect(result[0]).toEqual({ type: 'text', text: 'Analysis results:' });
-    expect(result[1]).toEqual({ 
-      type: 'image', 
-      image: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' 
+    expect(result[1]).toEqual({
+      type: 'image',
+      image: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
     });
     expect(result[2]).toEqual({ type: 'text', text: 'The trend is positive.' });
 
@@ -1098,7 +1086,7 @@ describe('message components', () => {
       type: 'application/vnd.poml.toolresponse' as const,
       id: 'req-789',
       name: 'search',
-      content: 'Simple text result'
+      content: 'Simple text result',
     };
 
     const textResult = richContentToToolResult(toolResponseWithText.content);
@@ -1109,7 +1097,7 @@ describe('message components', () => {
       type: 'application/vnd.poml.toolresponse' as const,
       id: 'req-999',
       name: 'process',
-      content: ['Single line result']
+      content: ['Single line result'],
     };
 
     const singleTextResult = richContentToToolResult(toolResponseWithSingleText.content);
@@ -1127,16 +1115,14 @@ describe('examples correctness', () => {
   const expectsDir = path.join(examplesDir, 'expects');
   const exampleFiles = fs
     .readdirSync(examplesDir)
-    .filter(file => file.endsWith('.poml'))
+    .filter((file) => file.endsWith('.poml'))
     .sort(); // Sort for consistent test order
 
-  exampleFiles.forEach(fileName => {
+  exampleFiles.forEach((fileName) => {
     test(`${fileName} produces correct output`, async () => {
       // FIXME: Skip 301_generate_poml on Windows due to CRLF handling issue
       if (process.platform === 'win32' && fileName === '301_generate_poml.poml') {
-        console.warn(
-          'Skipping 301_generate_poml on Windows due to CRLF handling issue in txt files'
-        );
+        console.warn('Skipping 301_generate_poml on Windows due to CRLF handling issue in txt files');
         return;
       }
 
@@ -1163,7 +1149,7 @@ describe('examples correctness', () => {
         await commandLine({
           file: filePath,
           speakerMode: true,
-          contextFile: fs.existsSync(contextFilePath) ? contextFilePath : undefined
+          contextFile: fs.existsSync(contextFilePath) ? contextFilePath : undefined,
         });
 
         const output = outputs.join('');

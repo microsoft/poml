@@ -11,7 +11,7 @@ module.exports = [
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: 'extension.js',
-      libraryTarget: 'commonjs2'
+      libraryTarget: 'commonjs2',
     },
     externals: {
       vscode: 'commonjs vscode', // the vscode-module is created on-the-fly and must be excluded
@@ -20,8 +20,8 @@ module.exports = [
       extensions: ['.ts', '.tsx', '.js'],
       alias: {
         'poml': path.resolve(__dirname, 'packages/poml'),
-        'poml-vscode': path.resolve(__dirname, 'packages/poml-vscode')
-      }
+        'poml-vscode': path.resolve(__dirname, 'packages/poml-vscode'),
+      },
     },
     module: {
       rules: [
@@ -33,20 +33,20 @@ module.exports = [
               loader: 'ts-loader',
               options: {
                 configFile: path.resolve(__dirname, 'tsconfig.json'),
-                transpileOnly: true
-              }
-            }
-          ]
-        }
-      ]
+                transpileOnly: true,
+              },
+            },
+          ],
+        },
+      ],
     },
     plugins: [],
     optimization: {
-      minimize: false // Keep readable for debugging
+      minimize: false, // Keep readable for debugging
     },
-    devtool: 'source-map'
+    devtool: 'source-map',
   },
-  
+
   // LSP Server bundle
   {
     name: 'server',
@@ -56,11 +56,11 @@ module.exports = [
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: 'server.js',
-      libraryTarget: 'commonjs2'
+      libraryTarget: 'commonjs2',
     },
     externals: {
-      vscode: 'commonjs vscode',
-      sharp: 'commonjs sharp',
+      'vscode': 'commonjs vscode',
+      'sharp': 'commonjs sharp',
       'pdf-parse': 'commonjs pdf-parse',
       'pdfjs-dist': 'commonjs pdfjs-dist',
       'canvas': 'commonjs canvas',
@@ -69,8 +69,8 @@ module.exports = [
       extensions: ['.ts', '.tsx', '.js'],
       alias: {
         'poml': path.resolve(__dirname, 'packages/poml'),
-        'poml-vscode': path.resolve(__dirname, 'packages/poml-vscode')
-      }
+        'poml-vscode': path.resolve(__dirname, 'packages/poml-vscode'),
+      },
     },
     module: {
       rules: [
@@ -82,17 +82,17 @@ module.exports = [
               loader: 'ts-loader',
               options: {
                 configFile: path.resolve(__dirname, 'tsconfig.json'),
-                transpileOnly: true
-              }
-            }
-          ]
-        }
-      ]
+                transpileOnly: true,
+              },
+            },
+          ],
+        },
+      ],
     },
     plugins: [],
     optimization: {
-      minimize: false // Keep readable for debugging
+      minimize: false, // Keep readable for debugging
     },
-    devtool: 'source-map'
-  }
+    devtool: 'source-map',
+  },
 ];

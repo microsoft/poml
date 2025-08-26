@@ -24,7 +24,13 @@ function readImage(src?: string, base64?: string) {
   throw new Error('src or base64 is required');
 }
 
-function resizeImage(image: sharp.Sharp, metadata: sharp.Metadata, maxWidth?: number, maxHeight?: number, resize?: number): sharp.Sharp {
+function resizeImage(
+  image: sharp.Sharp,
+  metadata: sharp.Metadata,
+  maxWidth?: number,
+  maxHeight?: number,
+  resize?: number,
+): sharp.Sharp {
   let width = metadata.width || 1;
   let height = metadata.height || 1;
   const resizes: number[] = [];
@@ -66,9 +72,9 @@ export async function preprocessImage(args: PreprocessImageArgs): Promise<Proces
   const [converted, fileType] = convertType(resizedImage, metadata, type);
 
   return {
-    base64: await converted.toBuffer().then(buffer => buffer.toString('base64')),
-    mimeType: 'image/' + fileType
-  }
+    base64: await converted.toBuffer().then((buffer) => buffer.toString('base64')),
+    mimeType: 'image/' + fileType,
+  };
 }
 
 export async function getImageWidthHeight(base64: string): Promise<{ width: number; height: number }> {

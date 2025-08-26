@@ -23,9 +23,7 @@ export enum TelemetryEvent {
 
 export class TelemetryBase {
   protected formatProperties(properties: { [key: string]: any }) {
-    const normalizedProperties: { [key: string]: string | undefined } = Object.entries(
-      properties
-    ).reduce(
+    const normalizedProperties: { [key: string]: string | undefined } = Object.entries(properties).reduce(
       (acc: { [key: string]: string | undefined }, [key, value]) => {
         if (typeof value === 'object') {
           value = JSON.stringify(value);
@@ -35,23 +33,25 @@ export class TelemetryBase {
         acc[key] = value;
         return acc;
       },
-      {} as { [key: string]: string | undefined }
+      {} as { [key: string]: string | undefined },
     );
     return normalizedProperties;
   }
 
   protected formatError(error: any): { [key: string]: string | undefined } {
     let errorInfo: { [key: string]: string | undefined } = {
-      message: error ? error.toString() : 'unknown'
+      message: error ? error.toString() : 'unknown',
     };
     try {
       errorInfo = {
         name: error.name,
         message: error.message,
         stack: error.stack,
-        cause: error.cause ? error.cause.toString() : undefined
+        cause: error.cause ? error.cause.toString() : undefined,
       };
-    } catch (e) {}
+    } catch (e) {
+      // ignore
+    }
     return errorInfo;
   }
 
@@ -76,7 +76,7 @@ export class TelemetryServer extends TelemetryBase {
     return await this.sender({
       type: 'telemetry',
       event,
-      properties: this.formatProperties(properties)
+      properties: this.formatProperties(properties),
     });
   }
 
@@ -84,7 +84,7 @@ export class TelemetryServer extends TelemetryBase {
     return await this.sender({
       type: 'error',
       event,
-      properties: this.formatError(error)
+      properties: this.formatError(error),
     });
   }
 }
@@ -102,16 +102,13 @@ export class DelayedTelemetryReporter {
   }
 
   /** Do not wait for this. It can take quite long. */
-  public async reportTelemetry(
-    event: string,
-    properties: { [key: string]: any }
-  ): Promise<boolean> {
+  public async reportTelemetry(event: string, properties: { [key: string]: any }): Promise<boolean> {
     // It waits for the specified delay before sending the telemetry event.
     // If another event is sent during this delay, the previous report is canceled.
     ++this.counter;
     const currentCounter = this.counter;
     if (Date.now() - this.lastReportedTime < this.delayMilliseconds) {
-      await new Promise(resolve => setTimeout(resolve, this.delayMilliseconds));
+      await new Promise((resolve) => setTimeout(resolve, this.delayMilliseconds));
     }
     if (currentCounter === this.counter) {
       await this.reporter.reportTelemetry(event, properties);

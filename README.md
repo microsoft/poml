@@ -16,13 +16,13 @@
 
 ## Key Features
 
-* **Structured Prompting Markup**: Employs an HTML-like syntax with semantic components such as `<role>`, `<task>`, and `<example>` to encourage modular design, enhancing prompt readability, reusability, and maintainability.
-* **Comprehensive Data Handling**: Incorporates specialized data components (e.g., `<document>`, `<table>`, `<img>`) that seamlessly embed or reference external data sources like text files, spreadsheets, and images, with customizable formatting options.
-* **Decoupled Presentation Styling**: Features a CSS-like styling system that separates content from presentation. This allows developers to modify styling (e.g., verbosity, syntax format) via `<stylesheet>` definitions or inline attributes without altering core prompt logic, mitigating LLM format sensitivity.
-* **Integrated Templating Engine**: Includes a built-in templating engine with support for variables (`{{ }}`), loops (`for`), conditionals (`if`), and variable definitions (`<let>`) for dynamically generating complex, data-driven prompts.
-* **Rich Development Toolkit**:
-    * **IDE Extension (Visual Studio Code)**: Provides essential development aids like syntax highlighting, context-aware auto-completion, hover documentation, real-time previews, inline diagnostics for error checking, and integrated interactive testing.
-    * **Software Development Kits (SDKs)**: Offers SDKs for Node.js (JavaScript/TypeScript) and Python for seamless integration into various application workflows and popular LLM frameworks.
+- **Structured Prompting Markup**: Employs an HTML-like syntax with semantic components such as `<role>`, `<task>`, and `<example>` to encourage modular design, enhancing prompt readability, reusability, and maintainability.
+- **Comprehensive Data Handling**: Incorporates specialized data components (e.g., `<document>`, `<table>`, `<img>`) that seamlessly embed or reference external data sources like text files, spreadsheets, and images, with customizable formatting options.
+- **Decoupled Presentation Styling**: Features a CSS-like styling system that separates content from presentation. This allows developers to modify styling (e.g., verbosity, syntax format) via `<stylesheet>` definitions or inline attributes without altering core prompt logic, mitigating LLM format sensitivity.
+- **Integrated Templating Engine**: Includes a built-in templating engine with support for variables (`{{ }}`), loops (`for`), conditionals (`if`), and variable definitions (`<let>`) for dynamically generating complex, data-driven prompts.
+- **Rich Development Toolkit**:
+  - **IDE Extension (Visual Studio Code)**: Provides essential development aids like syntax highlighting, context-aware auto-completion, hover documentation, real-time previews, inline diagnostics for error checking, and integrated interactive testing.
+  - **Software Development Kits (SDKs)**: Offers SDKs for Node.js (JavaScript/TypeScript) and Python for seamless integration into various application workflows and popular LLM frameworks.
 
 ## Quick Start
 
@@ -55,6 +55,7 @@ You can also install the extension manually by downloading the `.vsix` file from
 Before testing prompts with the POML toolkit, make sure you have configured your preferred LLM model, API key, and endpoint. If these are not set, prompt testing will not work.
 
 **To configure in Visual Studio Code:**
+
 - Open the extension settings (open "Settings" and search for "POML").
 - Set your model provider (e.g., OpenAI, Azure, Google), API key, and endpoint URL in the POML section.
 - Alternatively, you can add these settings directly to your `settings.json` file.
@@ -81,10 +82,10 @@ For detailed information on POML syntax, components, styling, templating, SDKs, 
 
 ## Learn More
 
-* **Watch our Demo Video on YouTube:** [POML Introduction & Demo](https://youtu.be/b9WDcFsKixo)
-* **Join our Discord community:** Connect with the team and other users on our [Discord server](https://discord.gg/FhMCqWzAn6).
-* **Read the Prompt Orchestration Markup Language paper:** [Prompt Orchestration Markup Language](https://arxiv.org/abs/2508.13948) presents the design of POML and its impact on prompt engineering.
-* **Explore Content-Format Integrated Prompt Optimization:** [Beyond Prompt Content: Enhancing LLM Performance via Content-Format Integrated Prompt Optimization](https://arxiv.org/abs/2502.04295) proposes an iterative approach that jointly optimizes prompt content and formatting to improve LLM performance.
+- **Watch our Demo Video on YouTube:** [POML Introduction & Demo](https://youtu.be/b9WDcFsKixo)
+- **Join our Discord community:** Connect with the team and other users on our [Discord server](https://discord.gg/FhMCqWzAn6).
+- **Read the Prompt Orchestration Markup Language paper:** [Prompt Orchestration Markup Language](https://arxiv.org/abs/2508.13948) presents the design of POML and its impact on prompt engineering.
+- **Explore Content-Format Integrated Prompt Optimization:** [Beyond Prompt Content: Enhancing LLM Performance via Content-Format Integrated Prompt Optimization](https://arxiv.org/abs/2502.04295) proposes an iterative approach that jointly optimizes prompt content and formatting to improve LLM performance.
 
 ## Citation
 
@@ -92,13 +93,13 @@ If you find POML useful or related to your research, please cite the following p
 
 ```bibtex
 @misc{zhang2025promptorchestrationmarkuplanguage,
-      title={Prompt Orchestration Markup Language}, 
+      title={Prompt Orchestration Markup Language},
       author={Yuge Zhang and Nan Chen and Jiahang Xu and Yuqing Yang},
       year={2025},
       eprint={2508.13948},
       archivePrefix={arXiv},
       primaryClass={cs.HC},
-      url={https://arxiv.org/abs/2508.13948}, 
+      url={https://arxiv.org/abs/2508.13948},
 }
 ```
 

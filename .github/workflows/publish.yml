@@ -27,111 +27,111 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js 22.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
-        cache: 'npm'
-    - name: Use Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-    - run: npm ci
-    - run: npm run build-webview
-    - run: npm run build-cli
-    - name: Package VSCode Extension for Windows
-      if: matrix.platform == 'win32-x64'
-      run: npm run package:win
-    - name: Package VSCode Extension for ${{ matrix.platform }}
-      if: matrix.platform != 'win32-x64'
-      run: npm run package -- --target ${{ matrix.platform }}
-    - run: python -m pip install -e .[dev]
-    - run: hatch build -t wheel
-    
-    # Upload VSIX files individually (not as zip)
-    - name: Find VSIX file
-      id: find-vsix
-      shell: bash
-      run: |
-        VSIX_FILE=$(find . -name "*.vsix" -type f | head -1)
-        if [ -z "$VSIX_FILE" ]; then
-          echo "No VSIX file found!"
-          exit 1
-        fi
-        echo "vsix-file=$VSIX_FILE" >> $GITHUB_OUTPUT
-        # Extract base name and create platform-specific name
-        BASE_NAME=$(basename "$VSIX_FILE" .vsix)
-        PLATFORM_VSIX="${BASE_NAME}.vsix"
-        echo "platform-vsix-name=$PLATFORM_VSIX" >> $GITHUB_OUTPUT
-    
-    - name: Upload VSIX for ${{ matrix.platform }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ steps.find-vsix.outputs.platform-vsix-name }}
-        path: ${{ steps.find-vsix.outputs.vsix-file }}
-        compression-level: 0
-    
-    # Upload Python wheel files individually
-    - name: Find and upload Python wheel
-      shell: bash
-      run: |
-        WHEEL_FILE=$(find dist -name "*.whl" -type f | head -1)
-        if [ -z "$WHEEL_FILE" ]; then
-          echo "No wheel file found!"
-          exit 1
-        fi
-        echo "wheel-file=$WHEEL_FILE" >> $GITHUB_OUTPUT
-        
-        # Parse the original wheel filename to extract components
-        WHEEL_NAME=$(basename "$WHEEL_FILE" .whl)
-        
-        # Split wheel name into components: name-version-python_tag-abi_tag-platform_tag
-        # Example: poml-999.0-py3-none-any -> poml, 999.0, py3, none, any
-        IFS='-' read -ra PARTS <<< "$WHEEL_NAME"
-        
-        if [ ${#PARTS[@]} -ge 5 ]; then
-          # Standard format: name-version-python_tag-abi_tag-platform_tag
-          DIST_NAME="${PARTS[0]}"
-          VERSION="${PARTS[1]}"
-          PYTHON_TAG="${PARTS[2]}"
-          ABI_TAG="${PARTS[3]}"
-          # Join remaining parts as platform tag (in case there are extra hyphens)
-          PLATFORM_TAG=$(IFS='-'; echo "${PARTS[*]:4}")
-        else
-          echo "Warning: Unexpected wheel filename format: $WHEEL_NAME"
-          # Fallback to original naming
-          echo "platform-wheel-name=$WHEEL_NAME-${{ matrix.platform }}.whl" >> $GITHUB_OUTPUT
-          exit 0
-        fi
-        
-        # Create platform-specific wheel name with proper platform tag
-        PLATFORM_WHEEL="${DIST_NAME}-${VERSION}-${PYTHON_TAG}-${ABI_TAG}-${{ matrix.wheel_platform }}.whl"
-        echo "platform-wheel-name=$PLATFORM_WHEEL" >> $GITHUB_OUTPUT
-        
-        # Rename the wheel file to platform-specific name
-        cp "$WHEEL_FILE" "dist/$PLATFORM_WHEEL"
-        echo "renamed-wheel-file=dist/$PLATFORM_WHEEL" >> $GITHUB_OUTPUT
-      id: find-wheel
-    
-    - name: Upload Python wheel for ${{ matrix.platform }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ steps.find-wheel.outputs.platform-wheel-name }}
-        path: ${{ steps.find-wheel.outputs.renamed-wheel-file }}
-        compression-level: 0
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+      - name: Use Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: npm ci
+      - run: npm run build-webview
+      - run: npm run build-cli
+      - name: Package VSCode Extension for Windows
+        if: matrix.platform == 'win32-x64'
+        run: npm run package:win
+      - name: Package VSCode Extension for ${{ matrix.platform }}
+        if: matrix.platform != 'win32-x64'
+        run: npm run package -- --target ${{ matrix.platform }}
+      - run: python -m pip install -e .[dev]
+      - run: hatch build -t wheel
 
-    # Build and pack npm library only once
-    - name: Pack NPM package
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        cd packages/poml-build
-        npm pack
+      # Upload VSIX files individually (not as zip)
+      - name: Find VSIX file
+        id: find-vsix
+        shell: bash
+        run: |
+          VSIX_FILE=$(find . -name "*.vsix" -type f | head -1)
+          if [ -z "$VSIX_FILE" ]; then
+            echo "No VSIX file found!"
+            exit 1
+          fi
+          echo "vsix-file=$VSIX_FILE" >> $GITHUB_OUTPUT
+          # Extract base name and create platform-specific name
+          BASE_NAME=$(basename "$VSIX_FILE" .vsix)
+          PLATFORM_VSIX="${BASE_NAME}.vsix"
+          echo "platform-vsix-name=$PLATFORM_VSIX" >> $GITHUB_OUTPUT
 
-    - name: Upload NPM package
-      if: matrix.os == 'ubuntu-latest'
-      uses: actions/upload-artifact@v4
-      with:
-        name: poml-npm-universal.tgz
-        path: packages/poml-build/pomljs-*.tgz
-        compression-level: 0
+      - name: Upload VSIX for ${{ matrix.platform }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.find-vsix.outputs.platform-vsix-name }}
+          path: ${{ steps.find-vsix.outputs.vsix-file }}
+          compression-level: 0
+
+      # Upload Python wheel files individually
+      - name: Find and upload Python wheel
+        shell: bash
+        run: |
+          WHEEL_FILE=$(find dist -name "*.whl" -type f | head -1)
+          if [ -z "$WHEEL_FILE" ]; then
+            echo "No wheel file found!"
+            exit 1
+          fi
+          echo "wheel-file=$WHEEL_FILE" >> $GITHUB_OUTPUT
+
+          # Parse the original wheel filename to extract components
+          WHEEL_NAME=$(basename "$WHEEL_FILE" .whl)
+
+          # Split wheel name into components: name-version-python_tag-abi_tag-platform_tag
+          # Example: poml-999.0-py3-none-any -> poml, 999.0, py3, none, any
+          IFS='-' read -ra PARTS <<< "$WHEEL_NAME"
+
+          if [ ${#PARTS[@]} -ge 5 ]; then
+            # Standard format: name-version-python_tag-abi_tag-platform_tag
+            DIST_NAME="${PARTS[0]}"
+            VERSION="${PARTS[1]}"
+            PYTHON_TAG="${PARTS[2]}"
+            ABI_TAG="${PARTS[3]}"
+            # Join remaining parts as platform tag (in case there are extra hyphens)
+            PLATFORM_TAG=$(IFS='-'; echo "${PARTS[*]:4}")
+          else
+            echo "Warning: Unexpected wheel filename format: $WHEEL_NAME"
+            # Fallback to original naming
+            echo "platform-wheel-name=$WHEEL_NAME-${{ matrix.platform }}.whl" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Create platform-specific wheel name with proper platform tag
+          PLATFORM_WHEEL="${DIST_NAME}-${VERSION}-${PYTHON_TAG}-${ABI_TAG}-${{ matrix.wheel_platform }}.whl"
+          echo "platform-wheel-name=$PLATFORM_WHEEL" >> $GITHUB_OUTPUT
+
+          # Rename the wheel file to platform-specific name
+          cp "$WHEEL_FILE" "dist/$PLATFORM_WHEEL"
+          echo "renamed-wheel-file=dist/$PLATFORM_WHEEL" >> $GITHUB_OUTPUT
+        id: find-wheel
+
+      - name: Upload Python wheel for ${{ matrix.platform }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.find-wheel.outputs.platform-wheel-name }}
+          path: ${{ steps.find-wheel.outputs.renamed-wheel-file }}
+          compression-level: 0
+
+      # Build and pack npm library only once
+      - name: Pack NPM package
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd packages/poml-build
+          npm pack
+
+      - name: Upload NPM package
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: poml-npm-universal.tgz
+          path: packages/poml-build/pomljs-*.tgz
+          compression-level: 0

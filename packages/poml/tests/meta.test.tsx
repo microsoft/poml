@@ -3,7 +3,6 @@ import { describe, expect, test } from '@jest/globals';
 import { poml, read, write } from 'poml';
 import { ErrorCollection, ReadError, component, unregisterComponent } from 'poml/base';
 
-
 describe('meta tag', () => {
   test('version check pass', async () => {
     const result = await poml('<meta minVersion="0.0.1" maxVersion="999.0.0"/><p>hi</p>');
@@ -34,7 +33,9 @@ describe('meta tag', () => {
 
   test('re-enable component', async () => {
     const result = write(
-      await read('<poml><meta components="-table"/><meta components="+table"/><table records="a,b\n1,2" parser="csv"/></poml>')
+      await read(
+        '<poml><meta components="-table"/><meta components="+table"/><table records="a,b\n1,2" parser="csv"/></poml>',
+      ),
     );
     expect(result).toMatch(/\|/);
   });

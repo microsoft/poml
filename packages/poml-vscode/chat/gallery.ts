@@ -26,7 +26,10 @@ export class PromptGalleryProvider implements vscode.TreeDataProvider<TreeNode> 
   private _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(private context: vscode.ExtensionContext, private defaultEntries: PromptEntry[]) { }
+  constructor(
+    private context: vscode.ExtensionContext,
+    private defaultEntries: PromptEntry[],
+  ) {}
 
   private get userEntries(): PromptEntry[] {
     return this.context.globalState.get<PromptEntry[]>(STORAGE_KEY, []);
@@ -45,9 +48,7 @@ export class PromptGalleryProvider implements vscode.TreeDataProvider<TreeNode> 
       ];
     }
     if (isCategory(element)) {
-      return element.label === DEFAULT_PROMPTS_LABEL
-        ? this.defaultEntries
-        : this.userEntries;
+      return element.label === DEFAULT_PROMPTS_LABEL ? this.defaultEntries : this.userEntries;
     }
     return [];
   }
@@ -76,16 +77,16 @@ export class PromptGalleryProvider implements vscode.TreeDataProvider<TreeNode> 
   }
 
   removePrompt(entry: PromptEntry) {
-    this.update(this.userEntries.filter(e => e !== entry));
+    this.update(this.userEntries.filter((e) => e !== entry));
   }
 
   updatePrompt(entry: PromptEntry, newEntry: PromptEntry) {
-    const list = this.userEntries.map(e => (e === entry ? newEntry : e));
+    const list = this.userEntries.map((e) => (e === entry ? newEntry : e));
     this.update(list);
   }
 
   hasPrompt(name: string): boolean {
-    return this.userEntries.some(e => e.name === name) || this.defaultEntries.some(e => e.name === name);
+    return this.userEntries.some((e) => e.name === name) || this.defaultEntries.some((e) => e.name === name);
   }
 
   get prompts(): PromptEntry[] {
@@ -100,9 +101,21 @@ export function registerPromptGallery(context: vscode.ExtensionContext): PromptG
     { name: 'edit', file: vscode.Uri.joinPath(galleryDir, 'edit.poml').fsPath, category: 'default' },
     { name: 'latex-edit', file: vscode.Uri.joinPath(galleryDir, 'latex_edit.poml').fsPath, category: 'default' },
     { name: 'latex-write', file: vscode.Uri.joinPath(galleryDir, 'latex_write.poml').fsPath, category: 'default' },
-    { name: 'pdf-understanding', file: vscode.Uri.joinPath(galleryDir, 'pdf_understanding.poml').fsPath, category: 'default' },
-    { name: 'word-understanding', file: vscode.Uri.joinPath(galleryDir, 'word_understanding.poml').fsPath, category: 'default' },
-    { name: 'table-understanding', file: vscode.Uri.joinPath(galleryDir, 'table_understanding.poml').fsPath, category: 'default' },
+    {
+      name: 'pdf-understanding',
+      file: vscode.Uri.joinPath(galleryDir, 'pdf_understanding.poml').fsPath,
+      category: 'default',
+    },
+    {
+      name: 'word-understanding',
+      file: vscode.Uri.joinPath(galleryDir, 'word_understanding.poml').fsPath,
+      category: 'default',
+    },
+    {
+      name: 'table-understanding',
+      file: vscode.Uri.joinPath(galleryDir, 'table_understanding.poml').fsPath,
+      category: 'default',
+    },
   ];
   const provider = new PromptGalleryProvider(context, defaultEntries);
   const view = vscode.window.createTreeView('pomlPromptGallery', { treeDataProvider: provider });

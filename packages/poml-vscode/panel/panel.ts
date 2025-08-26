@@ -1,7 +1,15 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
-import { WebviewConfig, WebviewState, WebviewUserOptions, WebviewMessage, PreviewMethodName, PreviewParams, PreviewResponse } from './types';
+import {
+  WebviewConfig,
+  WebviewState,
+  WebviewUserOptions,
+  WebviewMessage,
+  PreviewMethodName,
+  PreviewParams,
+  PreviewResponse,
+} from './types';
 import { headlessPomlVscodePanelContent, pomlVscodePanelContent } from './content';
 import { SettingsManager } from '../settings';
 import { isPomlFile } from '../util/file';
@@ -41,7 +49,7 @@ export class POMLWebviewPanel {
     context: vscode.ExtensionContext,
     previewConfigurations: SettingsManager,
     logger: Logger,
-    topmostLineMonitor: HTMLFileTopmostLineMonitor
+    topmostLineMonitor: HTMLFileTopmostLineMonitor,
   ): Promise<POMLWebviewPanel> {
     // Unpack the state.
     const config = state;
@@ -57,12 +65,12 @@ export class POMLWebviewPanel {
         speakerMode: state.speakerMode,
         displayFormat: state.displayFormat,
         contexts: state.contexts ?? [],
-        stylesheets: state.stylesheets ?? []
+        stylesheets: state.stylesheets ?? [],
       },
       context,
       previewConfigurations,
       logger,
-      topmostLineMonitor
+      topmostLineMonitor,
     );
 
     preview.editor.webview.options = POMLWebviewPanel.getWebviewOptions(resource, context);
@@ -81,7 +89,7 @@ export class POMLWebviewPanel {
     context: vscode.ExtensionContext,
     previewConfigurations: SettingsManager,
     logger: Logger,
-    topmostLineMonitor: HTMLFileTopmostLineMonitor
+    topmostLineMonitor: HTMLFileTopmostLineMonitor,
   ): POMLWebviewPanel {
     const webview = vscode.window.createWebviewPanel(
       POMLWebviewPanel.viewType,
@@ -89,15 +97,15 @@ export class POMLWebviewPanel {
       previewColumn,
       {
         enableFindWidget: true,
-        ...POMLWebviewPanel.getWebviewOptions(resource, context)
-      }
+        ...POMLWebviewPanel.getWebviewOptions(resource, context),
+      },
     );
 
     const userOptions: WebviewUserOptions = {
       speakerMode: true,
       displayFormat: 'plain',
       contexts: [],
-      stylesheets: []
+      stylesheets: [],
     };
 
     return new POMLWebviewPanel(
@@ -108,7 +116,7 @@ export class POMLWebviewPanel {
       context,
       previewConfigurations,
       logger,
-      topmostLineMonitor
+      topmostLineMonitor,
     );
   }
 
@@ -120,7 +128,7 @@ export class POMLWebviewPanel {
     private readonly _context: vscode.ExtensionContext,
     private readonly _previewConfigurations: SettingsManager,
     private readonly _logger: Logger,
-    topmostLineMonitor: HTMLFileTopmostLineMonitor
+    topmostLineMonitor: HTMLFileTopmostLineMonitor,
   ) {
     this._pomlUri = resource;
     this._locked = locked;
@@ -132,19 +140,19 @@ export class POMLWebviewPanel {
         this.dispose();
       },
       null,
-      this.disposables
+      this.disposables,
     );
 
     this.editor.onDidChangeViewState(
-      e => {
+      (e) => {
         this._onDidChangeViewStateEmitter.fire(e);
       },
       null,
-      this.disposables
+      this.disposables,
     );
 
     this.editor.webview.onDidReceiveMessage(
-      e => {
+      (e) => {
         if (e.source !== this._pomlUri.toString()) {
           return;
         }
@@ -169,51 +177,51 @@ export class POMLWebviewPanel {
         }
       },
       null,
-      this.disposables
+      this.disposables,
     );
 
     vscode.workspace.onDidChangeTextDocument(
-      event => {
+      (event) => {
         if (this.isPreviewOf(event.document.uri)) {
           this.refresh();
         }
       },
       null,
-      this.disposables
+      this.disposables,
     );
 
     topmostLineMonitor.onDidChangeTopmostLine(
-      event => {
+      (event) => {
         if (this.isPreviewOf(event.resource)) {
           this.updateForView(event.resource, event.line);
         }
       },
       null,
-      this.disposables
+      this.disposables,
     );
 
     vscode.window.onDidChangeTextEditorSelection(
-      event => {
+      (event) => {
         if (this.isPreviewOf(event.textEditor.document.uri)) {
           this.postMessage({
             type: 'onDidChangeTextEditorSelection',
             line: event.selections[0].active.line,
-            source: this._pomlUri.toString()
+            source: this._pomlUri.toString(),
           });
         }
       },
       null,
-      this.disposables
+      this.disposables,
     );
 
     vscode.window.onDidChangeActiveTextEditor(
-      editor => {
+      (editor) => {
         if (editor && isPomlFile(editor.document) && !this._locked) {
           this.update(editor.document.uri);
         }
       },
       null,
-      this.disposables
+      this.disposables,
     );
   }
 
@@ -294,7 +302,7 @@ export class POMLWebviewPanel {
   public matchesResource(
     otherResource: vscode.Uri,
     otherPosition: vscode.ViewColumn | undefined,
-    otherLocked: boolean
+    otherLocked: boolean,
   ): boolean {
     if (this.position !== otherPosition) {
       return false;
@@ -350,7 +358,7 @@ export class POMLWebviewPanel {
 
   public removeContext(file: string) {
     if (this._userOptions.contexts) {
-      this._userOptions.contexts = this._userOptions.contexts.filter(f => f !== file);
+      this._userOptions.contexts = this._userOptions.contexts.filter((f) => f !== file);
       this._previewConfigurations.setResourceOptions(this._pomlUri, {
         contexts: [...this._userOptions.contexts],
         stylesheets: [...(this._userOptions.stylesheets ?? [])],
@@ -361,7 +369,7 @@ export class POMLWebviewPanel {
 
   public removeStylesheet(file: string) {
     if (this._userOptions.stylesheets) {
-      this._userOptions.stylesheets = this._userOptions.stylesheets.filter(f => f !== file);
+      this._userOptions.stylesheets = this._userOptions.stylesheets.filter((f) => f !== file);
       this._previewConfigurations.setResourceOptions(this._pomlUri, {
         contexts: [...(this._userOptions.contexts ?? [])],
         stylesheets: [...this._userOptions.stylesheets],
@@ -374,7 +382,7 @@ export class POMLWebviewPanel {
     const root = path.join(this._context.extensionPath, 'media');
     return {
       light: vscode.Uri.file(path.join(root, 'icon', 'preview.svg')),
-      dark: vscode.Uri.file(path.join(root, 'icon', 'preview-inverse.svg'))
+      dark: vscode.Uri.file(path.join(root, 'icon', 'preview-inverse.svg')),
     };
   }
 
@@ -383,9 +391,7 @@ export class POMLWebviewPanel {
   }
 
   private static getPreviewTitle(resource: vscode.Uri, locked: boolean): string {
-    return locked
-      ? `[Preview] ${path.basename(resource.fsPath)}`
-      : `Preview ${path.basename(resource.fsPath)}`;
+    return locked ? `[Preview] ${path.basename(resource.fsPath)}` : `Preview ${path.basename(resource.fsPath)}`;
   }
 
   private updateForView(resource: vscode.Uri, topLine: number | undefined) {
@@ -404,7 +410,7 @@ export class POMLWebviewPanel {
       this.postMessage({
         type: 'updateView',
         line: topLine,
-        source: resource.toString()
+        source: resource.toString(),
       });
     }
   }
@@ -424,7 +430,7 @@ export class POMLWebviewPanel {
       locked: this._locked,
       scrollPreviewWithEditor: settings.scrollPreviewWithEditor,
       scrollEditorWithPreview: settings.scrollEditorWithPreview,
-      doubleClickToSwitchToEditor: settings.doubleClickToSwitchToEditor
+      doubleClickToSwitchToEditor: settings.doubleClickToSwitchToEditor,
     };
   }
 
@@ -470,7 +476,7 @@ export class POMLWebviewPanel {
     const requestParams: PreviewParams = {
       uri: resource.toString(),
       returnTokenCounts: { model: languageModelSettings.model },
-      ...this._userOptions
+      ...this._userOptions,
     };
 
     const response = await getClient().sendRequest<PreviewResponse>(PreviewMethodName, requestParams);
@@ -480,7 +486,7 @@ export class POMLWebviewPanel {
       ...this._userOptions,
       ...response,
       extensionResourcePath: this.extensionResourcePath.bind(this),
-      localResourcePath: this.localResourcePath.bind(this)
+      localResourcePath: this.localResourcePath.bind(this),
     });
 
     if (this._pomlUri === resource) {
@@ -491,21 +497,15 @@ export class POMLWebviewPanel {
     }
   }
 
-  private static getWebviewOptions(
-    resource: vscode.Uri,
-    context: vscode.ExtensionContext
-  ): vscode.WebviewOptions {
+  private static getWebviewOptions(resource: vscode.Uri, context: vscode.ExtensionContext): vscode.WebviewOptions {
     return {
       enableScripts: true,
       enableCommandUris: true,
-      localResourceRoots: POMLWebviewPanel.getLocalResourceRoots(resource, context)
+      localResourceRoots: POMLWebviewPanel.getLocalResourceRoots(resource, context),
     };
   }
 
-  private static getLocalResourceRoots(
-    resource: vscode.Uri,
-    context: vscode.ExtensionContext
-  ): vscode.Uri[] {
+  private static getLocalResourceRoots(resource: vscode.Uri, context: vscode.ExtensionContext): vscode.Uri[] {
     const baseRoots: vscode.Uri[] = [vscode.Uri.joinPath(context.extensionUri, 'media')];
 
     const folder = vscode.workspace.getWorkspaceFolder(resource);
@@ -532,20 +532,14 @@ export class POMLWebviewPanel {
       const fraction = line - sourceLine;
       const text = editor.document.lineAt(sourceLine).text;
       const start = Math.floor(fraction * text.length);
-      editor.revealRange(
-        new vscode.Range(sourceLine, start, sourceLine + 1, 0),
-        vscode.TextEditorRevealType.AtTop
-      );
+      editor.revealRange(new vscode.Range(sourceLine, start, sourceLine + 1, 0), vscode.TextEditorRevealType.AtTop);
     }
   }
 
   private async onDidClickPreview(line: number): Promise<void> {
     for (const visibleEditor of vscode.window.visibleTextEditors) {
       if (this.isPreviewOf(visibleEditor.document.uri)) {
-        const editor = await vscode.window.showTextDocument(
-          visibleEditor.document,
-          visibleEditor.viewColumn
-        );
+        const editor = await vscode.window.showTextDocument(visibleEditor.document, visibleEditor.viewColumn);
         const position = new vscode.Position(line, 0);
         editor.selection = new vscode.Selection(position, position);
         return;
@@ -561,7 +555,7 @@ export class POMLWebviewPanel {
     const requestParams: PreviewParams = {
       uri: resource.toString(),
       returnTokenCounts: { model: languageModelSettings.model },
-      ...this._userOptions
+      ...this._userOptions,
     };
 
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.PreviewUserOptionsChange, this._userOptions);
@@ -572,8 +566,15 @@ export class POMLWebviewPanel {
       ...this._userOptions,
       ...response,
     });
-    this.editor.webview.postMessage({ type: WebviewMessage.UpdateContent, content: content, source: resource.toString() });
-    this.editor.webview.postMessage({ type: WebviewMessage.UpdateUserOptions, options: this._userOptions, source: resource.toString() });
+    this.editor.webview.postMessage({
+      type: WebviewMessage.UpdateContent,
+      content: content,
+      source: resource.toString(),
+    });
+    this.editor.webview.postMessage({
+      type: WebviewMessage.UpdateUserOptions,
+      options: this._userOptions,
+      source: resource.toString(),
+    });
   }
-
 }

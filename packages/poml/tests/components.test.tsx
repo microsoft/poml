@@ -16,12 +16,12 @@ describe('document', () => {
     expect((document.props as any).children).toMatch(/1 Your Chapter\nLorem ipsum dolor sit amet/g);
 
     const document2 = await readPdfFromPath(__dirname + '/assets/pdfLatexImage.pdf', {
-      selectedPages: '1:'
+      selectedPages: '1:',
     });
     expect((document2.props as any).children).toMatch('');
 
     const document3 = await readPdfFromPath(__dirname + '/assets/pdfLatexImage.pdf', {
-      selectedPages: ':1'
+      selectedPages: ':1',
     });
     expect((document3.props as any).children).toMatch('1 Your Chapter\nLorem ipsum dolor sit amet');
   });
@@ -35,9 +35,7 @@ describe('document', () => {
     const document = await poml(<Document buffer={'123\n456'} />);
     expect(document).toBe('123\n456');
 
-    const documentJson = await poml(
-      <Document src={__dirname + '/assets/peopleList.json'} parser="txt" />
-    );
+    const documentJson = await poml(<Document src={__dirname + '/assets/peopleList.json'} parser='txt' />);
     expect(documentJson).toBe(readFileSync(__dirname + '/assets/peopleList.json', 'utf-8'));
   });
 
@@ -45,18 +43,14 @@ describe('document', () => {
     const result = await poml(<Document src={__dirname + '/assets/sampleWord.docx'} />);
     expect(result.length).toEqual(5);
     expect((result[3] as any).base64).toBeTruthy();
-    expect(result[4]).toMatch(
-      /without any merged cells:\n\n\| Screen Reader \| Responses \| Share \|\n/g
-    );
+    expect(result[4]).toMatch(/without any merged cells:\n\n\| Screen Reader \| Responses \| Share \|\n/g);
   });
 
   test('docx from base64', async () => {
     const buffer = readFileSync(__dirname + '/assets/sampleWord.docx');
     const base64 = buffer.toString('base64');
-    const result = await poml(<Document base64={base64} parser="docx" />);
-    expect(result[4]).toMatch(
-      /without any merged cells:\n\n\| Screen Reader \| Responses \| Share \|\n/g
-    );
+    const result = await poml(<Document base64={base64} parser='docx' />);
+    expect(result[4]).toMatch(/without any merged cells:\n\n\| Screen Reader \| Responses \| Share \|\n/g);
   });
 
   test('buffer caching', async () => {
@@ -92,7 +86,7 @@ describe('message', () => {
     expect(write(element, { speaker: true })).toStrictEqual([
       { speaker: 'system', content: 'start' },
       { speaker: 'ai', content: 'hello' },
-      { speaker: 'human', content: 'yes' }
+      { speaker: 'human', content: 'yes' },
     ]);
   });
 
@@ -103,7 +97,7 @@ describe('message', () => {
     const element = await read(text);
     expect(write(element, { speaker: true })).toStrictEqual([
       { speaker: 'human', content: 'What is the capital of France?' },
-      { speaker: 'ai', content: 'Paris' }
+      { speaker: 'ai', content: 'Paris' },
     ]);
   });
 
@@ -138,20 +132,17 @@ describe('tree', () => {
       children: [
         { name: 'data-grid' },
         { name: 'data-grid-pro', value: 'Content Grid Pro' },
-        { name: 'data-grid-premium' }
-      ]
+        { name: 'data-grid-premium' },
+      ],
     },
     {
       name: 'Date and Time Pickers',
-      children: [
-        { name: 'date-pickers', value: 'Content Date Pickers' },
-        { name: 'date-pickers-pro' }
-      ]
+      children: [{ name: 'date-pickers', value: 'Content Date Pickers' }, { name: 'date-pickers-pro' }],
     },
     {
       name: 'Tree.view',
-      value: 'Content Tree View'
-    }
+      value: 'Content Tree View',
+    },
   ];
 
   const backticks = '```';
@@ -247,37 +238,37 @@ Tree.view: null`;
 }`;
 
   test('tree markdown with content', async () => {
-    const markup = <Tree items={treeData} syntax="markdown" showContent={true} />;
+    const markup = <Tree items={treeData} syntax='markdown' showContent={true} />;
     const result = await poml(markup);
     expect(result).toBe(treeMarkdownWithContent);
   });
 
   test('tree markdown without content', async () => {
-    const markup = <Tree items={treeData} syntax="markdown" />;
+    const markup = <Tree items={treeData} syntax='markdown' />;
     const result = await poml(markup);
     expect(result).toBe(treeMarkdownWithoutContent);
   });
 
   test('tree text with content', async () => {
-    const markup = <Tree items={treeData} syntax="text" showContent={true} />;
+    const markup = <Tree items={treeData} syntax='text' showContent={true} />;
     const result = await poml(markup);
     expect(result).toBe(treeTextWithContent);
   });
 
   test('tree text without content', async () => {
-    const markup = <Tree items={treeData} syntax="text" />;
+    const markup = <Tree items={treeData} syntax='text' />;
     const result = await poml(markup);
     expect(result).toBe(treeTextWithoutContent);
   });
 
   test('tree yaml without content', async () => {
-    const markup = <Tree items={treeData} syntax="yaml" />;
+    const markup = <Tree items={treeData} syntax='yaml' />;
     const result = await poml(markup);
     expect(result).toBe(treeYamlWithoutContent);
   });
 
   test('tree json with content', async () => {
-    const markup = <Tree items={treeData} syntax="json" showContent={true} />;
+    const markup = <Tree items={treeData} syntax='json' showContent={true} />;
     const result = await poml(markup);
     expect(result).toBe(testJsonWithContent);
   });
@@ -287,14 +278,8 @@ describe('folder', () => {
   const directory = __dirname + '/assets/directory';
   const content123jsx = readFileSync(directory + '/anotherdirectory/123.jsx', 'utf-8');
   const content456cpp = readFileSync(directory + '/anotherdirectory/456.cpp', 'utf-8');
-  const contentNestedFileTxt = readFileSync(
-    directory + '/nested1/nested2/nested3/nested5/nestedFile.txt',
-    'utf-8'
-  );
-  const contentIgnoreplease = readFileSync(
-    directory + '/nested1/nested2/nested4/.ignoreplease',
-    'utf-8'
-  );
+  const contentNestedFileTxt = readFileSync(directory + '/nested1/nested2/nested3/nested5/nestedFile.txt', 'utf-8');
+  const contentIgnoreplease = readFileSync(directory + '/nested1/nested2/nested4/.ignoreplease', 'utf-8');
   const contentIgnoremeplease = readFileSync(directory + '/.ignoremeplease', 'utf-8');
 
   // Create directory structure if it doesn't exist
@@ -307,11 +292,11 @@ describe('folder', () => {
       path.join(directory, 'nested1', 'nested2', 'nested3'),
       path.join(directory, 'nested1', 'nested2', 'nested3', 'nested5'),
       path.join(directory, 'nested1', 'nested2', 'nested4'),
-      path.join(directory, 'nested1', 'nested6')
+      path.join(directory, 'nested1', 'nested6'),
     ];
 
     // Create each directory if it doesn't exist
-    directories.forEach(dir => {
+    directories.forEach((dir) => {
       if (!existsSync(dir)) {
         mkdirSync(dir, { recursive: true });
       }
@@ -319,7 +304,7 @@ describe('folder', () => {
   });
 
   test('basic folder structure', async () => {
-    const markup = <Folder src={directory} syntax="text" maxDepth={10} />;
+    const markup = <Folder src={directory} syntax='text' maxDepth={10} />;
     const result = await poml(markup);
 
     expect(result).toBe(`directory
@@ -338,38 +323,39 @@ describe('folder', () => {
   });
 
   test('test file contents', async () => {
-    const markup = <Folder src={directory} syntax="json" maxDepth={10} showContent={true} />;
+    const markup = <Folder src={directory} syntax='json' maxDepth={10} showContent={true} />;
     const result = await poml(markup);
     expect(JSON.parse(result as string)).toStrictEqual({
       directory: {
-        anotherdirectory: {
+        'anotherdirectory': {
           '123.jsx': content123jsx,
-          '456.cpp': content456cpp
+          '456.cpp': content456cpp,
         },
-        nested1: {
+        'nested1': {
           nested2: {
             nested3: {
               nested5: {
                 'nestedFile.txt': contentNestedFileTxt,
-              }
+              },
             },
             nested4: {
-              '.ignoreplease': contentIgnoreplease
-            }
+              '.ignoreplease': contentIgnoreplease,
+            },
           },
-          nested6: null
+          nested6: null,
         },
-        '.ignoremeplease': contentIgnoremeplease
-      }
+        '.ignoremeplease': contentIgnoremeplease,
+      },
     });
   });
 
   test('folder with maxDepth=1', async () => {
-    const markup = <Folder src={directory} maxDepth={1} syntax="markdown" showContent={true} />;
+    const markup = <Folder src={directory} maxDepth={1} syntax='markdown' showContent={true} />;
     const result = await poml(markup);
 
     const backticks = '```';
-    expect((result as string).replace(/\r\n/g, '\n')).toBe(`# directory
+    expect((result as string).replace(/\r\n/g, '\n')).toBe(
+      `# directory
 
 ## directory/anotherdirectory
 
@@ -380,11 +366,12 @@ describe('folder', () => {
 ${backticks}
 abcde
 fhijk
-${backticks}`.replace(/\r\n/g, '\n'));
+${backticks}`.replace(/\r\n/g, '\n'),
+    );
   });
 
   test('folder with maxDepth=2', async () => {
-    const markup = <Folder src={directory} maxDepth={2} syntax="xml" showContent={false} />;
+    const markup = <Folder src={directory} maxDepth={2} syntax='xml' showContent={false} />;
     const result = await poml(markup);
 
     expect(result).toBe(`<directory>
@@ -401,7 +388,7 @@ ${backticks}`.replace(/\r\n/g, '\n'));
   });
 
   test('folder with filter=jsx', async () => {
-    const markup = <Folder src={directory} filter={/.*\.jsx$/} syntax="text" maxDepth={4} />;
+    const markup = <Folder src={directory} filter={/.*\.jsx$/} syntax='text' maxDepth={4} />;
     const result = await poml(markup);
 
     // Using full text match with JSX filter
@@ -411,7 +398,7 @@ ${backticks}`.replace(/\r\n/g, '\n'));
   });
 
   test('folder with filter not starting with dot', async () => {
-    const markup = <Folder src={directory} filter={/^[^.].*$/} syntax="text" maxDepth={10} />;
+    const markup = <Folder src={directory} filter={/^[^.].*$/} syntax='text' maxDepth={10} />;
     const result = await poml(markup);
 
     // Using a filter that excludes files starting with dot
@@ -427,14 +414,14 @@ ${backticks}`.replace(/\r\n/g, '\n'));
   });
 
   test('folder with filter and maxDepth combined', async () => {
-    const markup = <Folder src={directory} filter={/.*\.txt$/} maxDepth={3} syntax="text" />;
+    const markup = <Folder src={directory} filter={/.*\.txt$/} maxDepth={3} syntax='text' />;
     const result = await poml(markup);
 
     expect(result).toBe(`directory`);
   });
 
   test('folder with different syntax (markdown)', async () => {
-    const markup = <Folder src={directory} maxDepth={2} syntax="markdown" />;
+    const markup = <Folder src={directory} maxDepth={2} syntax='markdown' />;
     const result = await poml(markup);
 
     // Using full text match with markdown syntax
@@ -451,7 +438,7 @@ ${backticks}`.replace(/\r\n/g, '\n'));
 
 describe('webpage', () => {
   const webpagePath = __dirname + '/assets/sampleWebpage.html';
-  
+
   test('extracting text from HTML', async () => {
     const markup = <Webpage src={webpagePath} />;
     const result = await poml(markup);
@@ -471,21 +458,21 @@ Finally, link to another page in your own Web site.
 
 © Wiley Publishing, 2011`);
   });
-  
+
   test('using selector to extract specific content', async () => {
-    const markup = <Webpage src={webpagePath} selector="ul" />;
+    const markup = <Webpage src={webpagePath} selector='ul' />;
     const result = await poml(markup);
     expect(result).toBe(`- The first item in your list
 - The second item; *italicize* key words`);
   });
-  
+
   test('selector with no matches', async () => {
-    const markup = <Webpage src={webpagePath} selector=".non-existent-class" />;
+    const markup = <Webpage src={webpagePath} selector='.non-existent-class' />;
     const result = await poml(markup);
-    
+
     expect(result).toContain('No elements found matching selector: .non-existent-class');
   });
-  
+
   test('extract text from HTML', async () => {
     const markup = <Webpage src={webpagePath} extractText={true} />;
     const result = await poml(markup);
@@ -505,10 +492,10 @@ Finally, link to another page in your own Web site.
 
 © Wiley Publishing, 2011`);
   });
-  
+
   test('loading HTML from buffer', async () => {
     const htmlContent = readFileSync(webpagePath, 'utf-8');
-    const markup = <Webpage buffer={htmlContent} selector="h1" syntax="html" />;
+    const markup = <Webpage buffer={htmlContent} selector='h1' syntax='html' />;
     const result = await poml(markup);
 
     expect(result).toContain('<h1>Enter the main heading, usually the same as the title.</h1>');
@@ -517,7 +504,7 @@ Finally, link to another page in your own Web site.
   test('loading HTML from base64', async () => {
     const htmlContent = readFileSync(webpagePath, 'utf-8');
     const base64Content = Buffer.from(htmlContent).toString('base64');
-    const markup = <Webpage base64={base64Content} selector="h1" syntax="html" />;
+    const markup = <Webpage base64={base64Content} selector='h1' syntax='html' />;
     const result = await poml(markup);
 
     expect(result).toContain('<h1>Enter the main heading, usually the same as the title.</h1>');

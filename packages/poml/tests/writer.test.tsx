@@ -4,7 +4,12 @@ import { describe, expect, test } from '@jest/globals';
 import { MarkdownWriter, JsonWriter, MultiMediaWriter, YamlWriter, XmlWriter } from 'poml/writer';
 import * as cheerio from 'cheerio';
 import { readFileSync } from '../util/fs';
-import { ContentMultiMediaBinary, ContentMultiMediaToolResponse, ErrorCollection, richContentFromSourceMap } from 'poml/base';
+import {
+  ContentMultiMediaBinary,
+  ContentMultiMediaToolResponse,
+  ErrorCollection,
+  richContentFromSourceMap,
+} from 'poml/base';
 
 describe('markdown', () => {
   test('markdownSimple', () => {
@@ -12,7 +17,7 @@ describe('markdown', () => {
     const testIr = `<p><p>hello <b>world</b><nl count="4"/>hahaha</p><h level="3">heading</h><p>new paragraph <code inline="false"> this code </code></p><code lang="ts">console.log("hello world")</code></p>`;
     const result = writer.write(testIr);
     expect(result).toBe(
-      'hello **world**\n\n\n\nhahaha\n\n### heading\n\nnew paragraph \n\n```\n this code \n```\n\n`console.log("hello world")`'
+      'hello **world**\n\n\n\nhahaha\n\n### heading\n\nnew paragraph \n\n```\n this code \n```\n\n`console.log("hello world")`',
     );
   });
 
@@ -61,7 +66,7 @@ describe('markdown', () => {
     const result = writer.writeWithSourceMap(simple);
     expect(result).toStrictEqual([
       { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 28, content: 'hello world ' },
-      { startIndex: 0, endIndex: 0, irStartIndex: 15, irEndIndex: 24, content: '**foo**' }
+      { startIndex: 0, endIndex: 0, irStartIndex: 15, irEndIndex: 24, content: '**foo**' },
     ]);
   });
 
@@ -74,7 +79,7 @@ describe('markdown', () => {
       { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 87, content: '\n\n' },
       { startIndex: 0, endIndex: 0, irStartIndex: 38, irEndIndex: 67, content: 'foo bar' },
       { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 87, content: '\n\n' },
-      { startIndex: 0, endIndex: 0, irStartIndex: 68, irEndIndex: 83, content: 'something' }
+      { startIndex: 0, endIndex: 0, irStartIndex: 68, irEndIndex: 83, content: 'something' },
     ]);
   });
 
@@ -89,9 +94,7 @@ describe('markdown', () => {
         irStartIndex: 3,
         irEndIndex: 37,
         speaker: 'system',
-        content: [
-          { startIndex: 0, endIndex: 0, irStartIndex: 3, irEndIndex: 37, content: 'hello world' }
-        ]
+        content: [{ startIndex: 0, endIndex: 0, irStartIndex: 3, irEndIndex: 37, content: 'hello world' }],
       },
       {
         startIndex: 0,
@@ -102,9 +105,9 @@ describe('markdown', () => {
         content: [
           { startIndex: 0, endIndex: 0, irStartIndex: 38, irEndIndex: 67, content: 'foo bar' },
           { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 87, content: '\n\n' },
-          { startIndex: 0, endIndex: 0, irStartIndex: 68, irEndIndex: 83, content: 'something' }
-        ]
-      }
+          { startIndex: 0, endIndex: 0, irStartIndex: 68, irEndIndex: 83, content: 'something' },
+        ],
+      },
     ]);
   });
 
@@ -122,13 +125,13 @@ describe('markdown', () => {
       const ir = `<p><p speaker="human"></p><p speaker="ai"></p></p>`;
       const direct = writer.writeMessages(ir);
       const segs = writer.writeMessagesWithSourceMap(ir);
-      const reconstructed = segs.map(m => ({
+      const reconstructed = segs.map((m) => ({
         speaker: m.speaker,
-        content: richContentFromSourceMap(m.content)
+        content: richContentFromSourceMap(m.content),
       }));
       expect(direct).toStrictEqual(reconstructed);
       expect(segs).toStrictEqual([
-        { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 0, speaker: 'human', content: [] }
+        { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: 0, speaker: 'human', content: [] },
       ]);
     } finally {
       console.warn = originalWarn; // Restore console.warn
@@ -149,9 +152,9 @@ describe('markdown', () => {
     const ir = `<p><p speaker="system">hello</p><p speaker="ai">world</p></p>`;
     const direct = writer.writeMessages(ir);
     const segs = writer.writeMessagesWithSourceMap(ir);
-    const reconstructed = segs.map(m => ({
+    const reconstructed = segs.map((m) => ({
       speaker: m.speaker,
-      content: richContentFromSourceMap(m.content)
+      content: richContentFromSourceMap(m.content),
     }));
     expect(direct).toStrictEqual(reconstructed);
   });
@@ -171,9 +174,9 @@ describe('markdown', () => {
         endIndex: 0,
         irStartIndex: imgStart,
         irEndIndex: imgEnd,
-        content: [{ type: 'image', base64, alt: 'img' }]
+        content: [{ type: 'image', base64, alt: 'img' }],
       },
-      { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: rootEnd, content: 'world' }
+      { startIndex: 0, endIndex: 0, irStartIndex: 0, irEndIndex: rootEnd, content: 'world' },
     ]);
   });
 
@@ -202,9 +205,9 @@ describe('markdown', () => {
             endIndex: 0,
             irStartIndex: humanStart,
             irEndIndex: humanEnd,
-            content: 'hello'
-          }
-        ]
+            content: 'hello',
+          },
+        ],
       },
       {
         startIndex: 0,
@@ -218,11 +221,11 @@ describe('markdown', () => {
             endIndex: 0,
             irStartIndex: imgStart,
             irEndIndex: imgEnd,
-            content: [{ type: 'image', base64, alt: 'img' }]
+            content: [{ type: 'image', base64, alt: 'img' }],
           },
-          { startIndex: 0, endIndex: 0, irStartIndex: aiStart, irEndIndex: aiEnd, content: 'world' }
-        ]
-      }
+          { startIndex: 0, endIndex: 0, irStartIndex: aiStart, irEndIndex: aiEnd, content: 'world' },
+        ],
+      },
     ]);
   });
 
@@ -252,16 +255,16 @@ describe('markdown', () => {
             endIndex: 0,
             irStartIndex: img1Start,
             irEndIndex: img1End,
-            content: [{ type: 'image', base64, alt: 'img1' }]
+            content: [{ type: 'image', base64, alt: 'img1' }],
           },
           {
             startIndex: 0,
             endIndex: 0,
             irStartIndex: humanStart,
             irEndIndex: humanEnd,
-            content: 'Hello'
-          }
-        ]
+            content: 'Hello',
+          },
+        ],
       },
       {
         startIndex: 0,
@@ -275,11 +278,11 @@ describe('markdown', () => {
             endIndex: 0,
             irStartIndex: img2Start,
             irEndIndex: img2End,
-            content: [{ type: 'image', base64, alt: 'img2' }]
+            content: [{ type: 'image', base64, alt: 'img2' }],
           },
-          { startIndex: 0, endIndex: 0, irStartIndex: aiStart, irEndIndex: aiEnd, content: 'World' }
-        ]
-      }
+          { startIndex: 0, endIndex: 0, irStartIndex: aiStart, irEndIndex: aiEnd, content: 'World' },
+        ],
+      },
     ]);
   });
 
@@ -313,7 +316,11 @@ describe('markdown', () => {
 
   test('markdownPriorityProperty', () => {
     const writer: any = new MarkdownWriter();
-    const $ = cheerio.load('<p priority="2">abc</p>', { xml: { xmlMode: true, withStartIndices: true, withEndIndices: true } }, false);
+    const $ = cheerio.load(
+      '<p priority="2">abc</p>',
+      { xml: { xmlMode: true, withStartIndices: true, withEndIndices: true } },
+      false,
+    );
     const box = writer.makeBox('abc', 'inline', $('p'));
     expect(box.priority).toBe(2);
   });
@@ -387,9 +394,7 @@ describe('serialize', () => {
     const writer = new XmlWriter();
     const testIr = `<any><any name="hello">world</any><any name="foo"><any type="integer">123</any><any type="boolean">false</any></any></any>`;
     const result = writer.write(testIr);
-    expect(result).toBe(
-      '<hello>world</hello>\n<foo>\n  <item>123</item>\n  <item>false</item>\n</foo>'
-    );
+    expect(result).toBe('<hello>world</hello>\n<foo>\n  <item>123</item>\n  <item>false</item>\n</foo>');
   });
 
   test('xmlNestMultimedia', async () => {
@@ -444,7 +449,7 @@ describe('multimedia', () => {
     expect(result1).toStrictEqual([
       'hello\nworld',
       { type: 'image', base64, alt: 'example1' },
-      { type: 'image', base64, alt: 'example2' }
+      { type: 'image', base64, alt: 'example2' },
     ]);
 
     const ir2 = `<env presentation="markup" markup-lang="markdown">hello\nworld<env presentation="multimedia"><img base64="${base64}" alt="example1"/></env><p>hahaha</p><env presentation="multimedia"><img base64="${base64}" alt="example2"/></env></env>`;
@@ -453,7 +458,7 @@ describe('multimedia', () => {
       'hello\nworld',
       { type: 'image', base64, alt: 'example1' },
       'hahaha',
-      { type: 'image', base64, alt: 'example2' }
+      { type: 'image', base64, alt: 'example2' },
     ]);
   });
 
@@ -467,7 +472,7 @@ describe('multimedia', () => {
     expect(result).toStrictEqual([
       { type: 'image', base64, alt: 'example1' },
       'helloworld\n\nfoo',
-      { type: 'image', base64, alt: 'example2' }
+      { type: 'image', base64, alt: 'example2' },
     ]);
   });
 
@@ -477,12 +482,14 @@ describe('multimedia', () => {
     ErrorCollection.clear();
     const result = writer.write(testIr);
     expect(ErrorCollection.empty()).toBe(true);
-    expect(result).toStrictEqual([{ 
-      type: 'application/vnd.poml.toolrequest', 
-      id: 'test-123',
-      name: 'search',
-      content: { query: 'hello', limit: 10 }
-    }]);
+    expect(result).toStrictEqual([
+      {
+        type: 'application/vnd.poml.toolrequest',
+        id: 'test-123',
+        name: 'search',
+        content: { query: 'hello', limit: 10 },
+      },
+    ]);
   });
 
   test('toolResponse', () => {
@@ -491,12 +498,14 @@ describe('multimedia', () => {
     ErrorCollection.clear();
     const result = writer.write(testIr);
     expect(ErrorCollection.empty()).toBe(true);
-    expect(result).toStrictEqual([{ 
-      type: 'application/vnd.poml.toolresponse', 
-      id: 'test-123',
-      name: 'search',
-      content: 'Found 3 results'
-    }]);
+    expect(result).toStrictEqual([
+      {
+        type: 'application/vnd.poml.toolresponse',
+        id: 'test-123',
+        name: 'search',
+        content: 'Found 3 results',
+      },
+    ]);
   });
 
   test('toolResponseWithMixedContent', () => {
@@ -540,13 +549,13 @@ describe('multimedia', () => {
     expect(ErrorCollection.empty()).toBe(true);
     expect(result).toStrictEqual([
       'Calling tool:',
-      { 
+      {
         type: 'application/vnd.poml.toolrequest',
         id: 'call-456',
         name: 'calculate',
-        content: { expression: '2+2' }
+        content: { expression: '2+2' },
       },
-      'Done.'
+      'Done.',
     ]);
   });
 
@@ -558,13 +567,13 @@ describe('multimedia', () => {
     expect(ErrorCollection.empty()).toBe(true);
     expect(result).toStrictEqual([
       'Response:',
-      { 
+      {
         type: 'application/vnd.poml.toolresponse',
         id: 'call-456',
         name: 'calculate',
-        content: 'The result is **4**'
+        content: 'The result is **4**',
       },
-      'Complete.'
+      'Complete.',
     ]);
   });
 
