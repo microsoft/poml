@@ -2,6 +2,7 @@
 
 import { binaryToBase64 } from '../functions/utils';
 import { NotificationMessage } from '../functions/notification';
+import { SettingsBundle } from '../functions/types';
 
 interface FileData {
   name: string;
@@ -17,6 +18,7 @@ interface MessageRequest {
   files?: FileData[];
   binary?: boolean;
   theme?: string;
+  settings?: any;
 }
 
 interface MessageResponse {
@@ -25,6 +27,7 @@ interface MessageResponse {
   base64Data?: string;
   error?: string;
   theme?: string;
+  settings?: any;
 }
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
@@ -86,6 +89,36 @@ chrome.runtime.onMessage.addListener(
         const error = { message: 'unknown error' }; // Mock error for demonstration
         if (error) {
           sendResponse({ success: false, error: error.message });
+        } else {
+          sendResponse({ success: true });
+        }
+      });
+      return true;
+    } else if (messageRequest.action === 'getSettings') {
+      chrome.storage.local.get(['settings'], (result) => {
+        const defaultSettings: SettingsBundle = {
+          theme: 'auto',
+          uiNotificationLevel: 'warning',
+          consoleNotificationLevel: 'warning',
+        };
+        sendResponse({
+          success: true,
+          settings: result.settings || defaultSettings,
+        });
+      });
+      return true;
+    } else if (messageRequest.action === 'setSettings') {
+      if (!messageRequest.settings) {
+        sendResponse({ success: false, error: 'No settings provided' });
+        return true;
+      }
+
+      chrome.storage.local.set({ settings: messageRequest.settings }, () => {
+        // FIXME: Handle potential errors
+        // const error = chrome.runtime.lastError;
+        const error = undefined; // Mock error handling for consistency
+        if (error) {
+          sendResponse({ success: false, error: 'Storage error' });
         } else {
           sendResponse({ success: true });
         }

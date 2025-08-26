@@ -1,5 +1,4 @@
-export type NotificationPosition = 'top' | 'bottom';
-export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'debug';
+import { NotificationLevel, NotificationPosition, NotificationType } from './types';
 
 export interface NotificationOptions {
   title?: string; // Optional title for the notification
