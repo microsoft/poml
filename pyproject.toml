@@ -13,6 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "black",
+  "isort",
   "flake8",
   "pytest",
   "hatch",
@@ -76,8 +77,8 @@ extend-exclude = '''
 profile = "black"
 line_length = 120
 known_first_party = ["poml"]
-excludes = [
+extend_skip_glob = [
   "python/poml/_tags.py",
-  "assets",
+  "assets/*",
   "_version.py",
 ]
