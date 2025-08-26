@@ -29,8 +29,8 @@ poml.set_trace(trace_dir="pomlruns")
 client = OpenAI()
 
 # Every POML call is now automatically traced
-params = poml.poml("calculator.poml", 
-                   context={"question": "What is 15% of 200?"}, 
+params = poml.poml("calculator.poml",
+                   context={"question": "What is 15% of 200?"},
                    format="openai_chat")
 response = client.chat.completions.create(model="gpt-4", **params)
 ```
@@ -59,6 +59,7 @@ pomlruns/
 ### File Naming Convention
 
 Files are labeled with a sequential execution number (0001, 0002, etc.) and the POML source name:
+
 - **Sequential Number**: Four-digit counter (0001, 0002, ...) indicating execution order within the session
 - **Source Name**: The base name of the POML file being executed
 
@@ -67,6 +68,7 @@ Files are labeled with a sequential execution number (0001, 0002, etc.) and the 
 Each POML execution generates six files:
 
 #### `.context.json`
+
 The context variables passed to the POML file. This captures all dynamic data injected into the source file at runtime.
 
 ```json
@@ -78,6 +80,7 @@ The context variables passed to the POML file. This captures all dynamic data in
 ```
 
 #### `.env`
+
 Environment metadata including the source file path and any environment-specific configuration. For example:
 
 ```
@@ -86,21 +89,24 @@ POML_VERSION=1.0.0
 ```
 
 #### `.poml`
+
 The original POML source content before any processing. This is the raw source as it exists in your source files.
 
 #### `.result.json`
+
 The structured output after POML processing, showing the conversation messages in JSON format. This is what gets sent to the LLM API.
 
 ```json
 {
   "messages": [
-    {"speaker": "system", "content": "You are a helpful calculator."},
-    {"speaker": "human", "content": "What is 15% of 200?"}
+    { "speaker": "system", "content": "You are a helpful calculator." },
+    { "speaker": "human", "content": "What is 15% of 200?" }
   ]
 }
 ```
 
 #### `.result.txt`
+
 Human-readable representation of the processed prompt, showing the conversation flow with clear role separators.
 
 ```
@@ -112,6 +118,7 @@ What is 15% of 200?
 ```
 
 #### `.source.poml`
+
 A symbolic link to the original POML source file, allowing quick navigation and editing to the POML definition.
 
 ## Integration with Observability Frameworks

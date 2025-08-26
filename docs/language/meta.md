@@ -23,6 +23,7 @@ Meta elements are typically placed at the beginning of a POML document and don't
 ### Meta Element Usage
 
 Meta elements are used for general document configuration:
+
 - Version control (`minVersion`, `maxVersion`)
 - Component management (`components`)
 
@@ -77,7 +78,7 @@ The following sections describe components that behave like meta elements - they
 
 ### Stylesheet
 
-POML allows you to define styles for your elements using the `<stylesheet>` tag.  This enables you to apply CSS-like styles (or, more generally, component attributes) to your markup.
+POML allows you to define styles for your elements using the `<stylesheet>` tag. This enables you to apply CSS-like styles (or, more generally, component attributes) to your markup.
 
 You can define styles within a `<stylesheet>` tag. The stylesheet must be a valid JSON object and must be placed directly under the root `<poml>` element.
 
@@ -98,7 +99,7 @@ In this example, all `<p>` elements will have their `syntax` attribute set to `"
 
 #### ClassName Attribute
 
-Elements can be identified with a `className` attribute for styling.  The stylesheet can then target elements with specific class names using a CSS-like selector syntax (using a dot `.` before the class name).
+Elements can be identified with a `className` attribute for styling. The stylesheet can then target elements with specific class names using a CSS-like selector syntax (using a dot `.` before the class name).
 
 ```xml
 <poml>
@@ -114,14 +115,14 @@ Elements can be identified with a `className` attribute for styling.  The styles
 </poml>
 ```
 
-Here, the `<table>` element has the class name "csv".  The stylesheet targets elements with the class "csv" (using `.csv`) and sets their `syntax` to "csv" and `writerOptions` to a specific JSON string. Note the escaped backslashes (`\\`) in the `writerOptions` value, which are necessary because the stylesheet itself is a JSON string.  This example will render to:
+Here, the `<table>` element has the class name "csv". The stylesheet targets elements with the class "csv" (using `.csv`) and sets their `syntax` to "csv" and `writerOptions` to a specific JSON string. Note the escaped backslashes (`\\`) in the `writerOptions` value, which are necessary because the stylesheet itself is a JSON string. This example will render to:
 
 ```
 1;2;3
 4;5;6
 ```
 
-**NOTE:** *The writerOptions API is experimental and is subject to change.*
+**NOTE:** _The writerOptions API is experimental and is subject to change._
 
 ### Response Schema
 
@@ -158,6 +159,7 @@ Use the `parser="eval"` attribute (or omit it for auto-detection) to evaluate Ja
 ```
 
 When `parser` is omitted, POML auto-detects the format:
+
 - If the content starts with `{`, it's treated as JSON
 - Otherwise, it's treated as an expression
 
@@ -174,7 +176,7 @@ JSON schemas support template expressions using `{{ }}` syntax:
     "type": "object",
     "properties": {
       "name": { "type": "string" },
-      "age": { 
+      "age": {
         "type": "number",
         "minimum": 0,
         "maximum": {{ maxAge }}
@@ -198,16 +200,19 @@ Expression schemas are evaluated as JavaScript code with access to context varia
 ```
 
 The expression can return either:
+
 - A Zod schema object (detected by the presence of `_def` property)
 - A plain JavaScript object treated as JSON Schema
 
 **Important limitations:**
+
 - Only one `output-schema` element is allowed per document. Multiple response schemas will result in an error.
 
 ### Tool Registration
 
 Tool registration enables AI models to interact with external functions during conversation. Tools are function definitions that tell the AI model what functions are available, what parameters they expect, and what they do. Tool registration is done using the `<tool-definition>` or `<tool>` tag (both are equivalent).
 
+<!-- prettier-ignore -->
 !!! note
 
     Using tools together with response schema is only supported for some models, e.g., those from OpenAI.
@@ -220,9 +225,9 @@ Tool registration enables AI models to interact with external functions during c
     "type": "object",
     "properties": {
       "location": { "type": "string" },
-      "unit": { 
-        "type": "string", 
-        "enum": ["celsius", "fahrenheit"] 
+      "unit": {
+        "type": "string",
+        "enum": ["celsius", "fahrenheit"]
       }
     },
     "required": ["location"]
@@ -254,7 +259,7 @@ Tool schemas support the same evaluation modes as response schemas:
   {
     "type": "object",
     "properties": {
-      "value": { 
+      "value": {
         "type": "number",
         "maximum": {{ maxValue }}
       }
@@ -279,6 +284,7 @@ Tool schemas support the same evaluation modes as response schemas:
 In expression mode, the `z` variable is automatically available for constructing Zod schemas, and you have direct access to all context variables.
 
 **Required attributes for tools:**
+
 - **name**: Tool identifier (required)
 - **description**: Tool description (optional but recommended)
 - **parser**: Schema parser, either "json" or "eval" (optional, auto-detected based on content)
@@ -325,8 +331,8 @@ You can define multiple tools in a single document.
 Runtime parameters configure the language model's behavior during execution. These parameters are automatically used in [VSCode's test command](../vscode/features.md) functionality, which is based on the [Vercel AI SDK](https://ai-sdk.dev/).
 
 ```xml
-<runtime temperature="0.7" 
-         max-output-tokens="1000" 
+<runtime temperature="0.7"
+         max-output-tokens="1000"
          model="gpt-5"
          top-p="0.9" />
 ```
@@ -334,10 +340,12 @@ Runtime parameters configure the language model's behavior during execution. The
 All attributes are passed as runtime parameters with automatic type conversion:
 
 #### Key Conversion
+
 - Keys are converted from kebab-case to camelCase
 - Examples: `max-tokens` → `maxTokens`, `top-p` → `topP`, `frequency-penalty` → `frequencyPenalty`
 
 #### Value Conversion
+
 - **Boolean strings**: `"true"` and `"false"` → `true` and `false`
 - **Number strings**: `"1000"`, `"0.7"` → `1000`, `0.7`
 - **JSON strings**: `'["END", "STOP"]'`, `'{"key": "value"}'` → parsed JSON objects/arrays

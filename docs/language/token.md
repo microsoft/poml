@@ -2,12 +2,14 @@
 
 ## Controlling Characters and Tokens
 
+<!-- prettier-ignore -->
 !!! warning
 
     This feature is experimental and may change in future releases. Use with caution.
 
 POML controls content length through character limits, token limits, and priority-based truncation. These features are particularly useful when working with AI models that have input constraints or when you need to ensure content fits within specific bounds.
 
+<!-- prettier-ignore -->
 !!! note
 
     Token control is only supported on components rendered with `syntax="text"` or `syntax="markdown"`.
@@ -20,7 +22,7 @@ You can set soft limits on content using `charLimit` and `tokenLimit` attributes
 <poml>
   <!-- Limit content to 100 characters -->
   <p charLimit="100">This is a very long paragraph that will be truncated if it exceeds the character limit. The truncation will add a marker to indicate that content was cut off.</p>
-  
+
   <!-- Limit content to 50 tokens -->
   <p tokenLimit="10">This paragraph will be truncated based on token count rather than character count, which is more accurate for AI model processing.</p>
 </poml>
@@ -39,7 +41,7 @@ You can customize truncation behavior using `writerOptions` to control how conte
 - **`truncateMarker`**: The string to append when content is truncated (default: ` (...truncated)`)
 - **`truncateDirection`**: Where to truncate the content:
   - `"end"` (default): Keep the beginning, truncate the end
-  - `"start"`: Keep the end, truncate the beginning  
+  - `"start"`: Keep the end, truncate the beginning
   - `"middle"`: Keep both beginning and end, truncate the middle
 - **`tokenEncodingModel`**: The model to use for token counting (default: `"gpt-4o"` which uses `o200k_base` encoding)
 
@@ -53,6 +55,7 @@ Renders to:
 This is a  [...] s cut off.
 ```
 
+<!-- prettier-ignore -->
 !!! note
 
     The default tokenizer for counting tokens is based on `js-tiktoken` with `o200k_base` encoding (used in `gpt-4o` through `o3` models). You can customize it by specifying the model name in `tokenEncodingModel` within `writerOptions`.
@@ -64,11 +67,11 @@ The `priority` attribute allows you to control which content is preserved when s
 ```xml
 <poml tokenLimit="40">
   <p priority="1">This content has low priority and may be removed first to save space.</p>
-  
+
   <p priority="3">This content has high priority and will be preserved longer.</p>
-  
+
   <p priority="2">This content has medium priority.</p>
-  
+
   <!-- Content without priority defaults to priority 0 (lowest) -->
   <p>This content will be truncated first since it has no explicit priority.</p>
 </poml>
@@ -94,6 +97,7 @@ This content has high priority and will be (...truncated)
 
 You can combine different types of limits with priority settings for sophisticated content management.
 
+<!-- prettier-ignore -->
 !!! important "Token Calculation Order"
 
     Token limits are applied hierarchically from parent to child components. When a parent component has a token limit:
@@ -108,11 +112,11 @@ You can combine different types of limits with priority settings for sophisticat
 ```xml
 <poml tokenLimit="40">
   <h priority="5">Critical Section Header</h>
-  
+
   <p priority="4" charLimit="10">
     Important introduction that should be preserved but can be shortened individually.
   </p>
-  
+
   <list priority="2">
     <item priority="3">High priority item</item>
     <item priority="1">Lower priority item</item>
