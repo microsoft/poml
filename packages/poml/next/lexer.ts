@@ -24,15 +24,16 @@ export const Backslash = createToken({ name: 'Backslash', pattern: /\\/ });
 */
 export const Identifier = createToken({
   name: 'Identifier',
-  pattern: /[a-zA-Z_][a-zA-Z0-9_-]*/
+  pattern: /[a-zA-Z_][a-zA-Z0-9_-]*/,
 });
 
 export const Whitespace = createToken({
   name: 'Whitespace',
   pattern: /[ \t\r\n]+/,
-  line_breaks: true
+  line_breaks: true,
 });
 
+/* eslint-disable no-irregular-whitespace */
 /* Catch-all for arbitrary text content
    - Match any char except:
        <          — starts a tag
@@ -43,8 +44,9 @@ export const Whitespace = createToken({
 export const TextContent = createToken({
   name: 'TextContent',
   pattern: /(?:[^<"'{}]|{(?!{)|}(?!}))+/,
-  line_breaks: true
+  line_breaks: true,
 });
+/* eslint-enable no-irregular-whitespace */
 
 // Define token order - more specific patterns first
 export const allTokens = [
@@ -61,7 +63,7 @@ export const allTokens = [
   Backslash,
   Identifier,
   Whitespace,
-  TextContent
+  TextContent,
 ];
 
 // Extended POML Lexer class
@@ -82,7 +84,7 @@ export class ExtendedPomlLexer {
     return {
       tokens: lexingResult.tokens,
       errors: lexingResult.errors,
-      groups: lexingResult.groups
+      groups: lexingResult.groups,
     };
   }
 }

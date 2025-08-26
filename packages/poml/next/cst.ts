@@ -1,9 +1,18 @@
 import { IToken } from 'chevrotain';
-import { 
-  extendedPomlLexer, 
-  TemplateOpen, TemplateClose, TagClosingOpen, TagSelfClose, 
-  TagOpen, TagClose, Equals, DoubleQuote, SingleQuote, 
-  Identifier, Whitespace, TextContent 
+import {
+  extendedPomlLexer,
+  TemplateOpen,
+  TemplateClose,
+  TagClosingOpen,
+  TagSelfClose,
+  TagOpen,
+  TagClose,
+  Equals,
+  DoubleQuote,
+  SingleQuote,
+  Identifier,
+  Whitespace,
+  TextContent,
 } from './lexer';
 
 import { listComponentAliases } from '../base';
@@ -31,29 +40,29 @@ export interface ASTNode {
   content: string;
   parent?: ASTNode;
   children: ASTNode[];
-  
+
   // For POML and META nodes
   tagName?: string;
   attributes?: AttributeInfo[];
-  
+
   // Detailed source positions
   openingTag?: {
     start: number;
     end: number;
     nameRange: SourceRange;
   };
-  
+
   closingTag?: {
     start: number;
     end: number;
     nameRange: SourceRange;
   };
-  
+
   contentRange?: SourceRange;
-  
+
   // For TEXT nodes
   textSegments?: SourceRange[];
-  
+
   // For TEMPLATE nodes
   expression?: string;
 }
@@ -126,7 +135,7 @@ export class CSTParser {
       end: text.length,
       content: text,
       children: [],
-      textSegments: []
+      textSegments: [],
     };
 
     this.parseDocument(rootNode);
@@ -144,7 +153,7 @@ export class CSTParser {
         const nextToken = this.peekToken();
         if (nextToken?.tokenType === Identifier) {
           const tagName = nextToken.image;
-          
+
           if (tagName === 'meta') {
             const metaNode = this.parseMetaTag();
             if (metaNode) {
@@ -188,10 +197,10 @@ export class CSTParser {
   private parseMetaTag(): ASTNode | null {
     const startPos = this.position;
     const openTagStart = this.currentToken()?.startOffset || 0;
-    
+
     this.consumeToken(); // consume '<'
     this.skipWhitespace();
-    
+
     const nameToken = this.consumeToken(); // consume 'meta'
     if (!nameToken || nameToken.image !== 'meta') {
       return null;
@@ -199,20 +208,20 @@ export class CSTParser {
 
     const nameRange: SourceRange = {
       start: nameToken.startOffset || 0,
-      end: (nameToken.endOffset || 0) + 1
+      end: (nameToken.endOffset || 0) + 1,
     };
 
     this.skipWhitespace();
-    
+
     const attributes = this.parseAttributes();
-    
+
     this.skipWhitespace();
-    
+
     // Check for self-closing or regular closing
     const closeToken = this.currentToken();
     let openTagEnd = 0;
     let hasContent = false;
-    
+
     if (closeToken?.tokenType === TagSelfClose) {
       this.consumeToken(); // consume '/>'
       openTagEnd = (closeToken.endOffset || 0) + 1;
@@ -234,8 +243,8 @@ export class CSTParser {
       openingTag: {
         start: openTagStart,
         end: openTagEnd,
-        nameRange
-      }
+        nameRange,
+      },
     };
 
     if (hasContent) {
@@ -250,7 +259,7 @@ export class CSTParser {
         }
         this.position++;
       }
-      
+
       // Parse closing tag
       if (this.currentToken()?.tokenType === TagClosingOpen) {
         const closingTagStart = this.currentToken()?.startOffset || 0;
@@ -258,15 +267,15 @@ export class CSTParser {
         const closingNameToken = this.consumeToken(); // consume 'meta'
         this.skipWhitespace();
         const finalClose = this.consumeToken(); // consume '>'
-        
+
         if (closingNameToken && finalClose) {
           metaNode.closingTag = {
             start: closingTagStart,
             end: (finalClose.endOffset || 0) + 1,
             nameRange: {
               start: closingNameToken.startOffset || 0,
-              end: (closingNameToken.endOffset || 0) + 1
-            }
+              end: (closingNameToken.endOffset || 0) + 1,
+            },
           };
           metaNode.end = (finalClose.endOffset || 0) + 1;
         }
@@ -279,10 +288,10 @@ export class CSTParser {
 
   private parsePomlElement(): ASTNode | null {
     const openTagStart = this.currentToken()?.startOffset || 0;
-    
+
     this.consumeToken(); // consume '<'
     this.skipWhitespace();
-    
+
     const nameToken = this.consumeToken();
     if (!nameToken) {
       return null;
@@ -291,20 +300,20 @@ export class CSTParser {
     const tagName = nameToken.image;
     const nameRange: SourceRange = {
       start: nameToken.startOffset || 0,
-      end: (nameToken.endOffset || 0) + 1
+      end: (nameToken.endOffset || 0) + 1,
     };
 
     this.skipWhitespace();
-    
+
     const attributes = this.parseAttributes();
-    
+
     this.skipWhitespace();
-    
+
     // Check for self-closing or regular closing
     const closeToken = this.currentToken();
     let openTagEnd = 0;
     let hasContent = false;
-    
+
     if (closeToken?.tokenType === TagSelfClose) {
       this.consumeToken(); // consume '/>'
       openTagEnd = (closeToken.endOffset || 0) + 1;
@@ -326,8 +335,8 @@ export class CSTParser {
       openingTag: {
         start: openTagStart,
         end: openTagEnd,
-        nameRange
-      }
+        nameRange,
+      },
     };
 
     if (hasContent) {
@@ -338,7 +347,7 @@ export class CSTParser {
         // Parse mixed content (POML and text)
         this.parseMixedContent(pomlNode);
       }
-      
+
       // Parse closing tag
       if (this.currentToken()?.tokenType === TagClosingOpen) {
         const closingTagStart = this.currentToken()?.startOffset || 0;
@@ -346,15 +355,15 @@ export class CSTParser {
         const closingNameToken = this.consumeToken();
         this.skipWhitespace();
         const finalClose = this.consumeToken(); // consume '>'
-        
+
         if (closingNameToken && finalClose) {
           pomlNode.closingTag = {
             start: closingTagStart,
             end: (finalClose.endOffset || 0) + 1,
             nameRange: {
               start: closingNameToken.startOffset || 0,
-              end: (closingNameToken.endOffset || 0) + 1
-            }
+              end: (closingNameToken.endOffset || 0) + 1,
+            },
           };
           pomlNode.end = (finalClose.endOffset || 0) + 1;
         }
@@ -469,7 +478,11 @@ export class CSTParser {
       if (token.tokenType === TextContent || token.tokenType === Whitespace) {
         endOffset = (token.endOffset || 0) + 1;
         this.position++;
-      } else if (token.tokenType === TagOpen || token.tokenType === TemplateOpen || token.tokenType === TagClosingOpen) {
+      } else if (
+        token.tokenType === TagOpen ||
+        token.tokenType === TemplateOpen ||
+        token.tokenType === TagClosingOpen
+      ) {
         break;
       } else {
         // Other tokens treated as text in this context
@@ -489,7 +502,7 @@ export class CSTParser {
       end: endOffset,
       content: this.text.slice(startOffset, endOffset),
       children: [],
-      textSegments: [{ start: startOffset, end: endOffset }]
+      textSegments: [{ start: startOffset, end: endOffset }],
     };
 
     return textNode;
@@ -532,7 +545,7 @@ export class CSTParser {
       end: endOffset,
       content: this.text.slice(startOffset, endOffset),
       children: [],
-      expression: expression.trim()
+      expression: expression.trim(),
     };
 
     return templateNode;
@@ -543,7 +556,7 @@ export class CSTParser {
 
     while (this.position < this.tokens.length) {
       this.skipWhitespace();
-      
+
       const token = this.currentToken();
       if (!token || token.tokenType !== Identifier) {
         break;
@@ -552,7 +565,7 @@ export class CSTParser {
       const keyToken = this.consumeToken()!;
       const keyRange: SourceRange = {
         start: keyToken.startOffset || 0,
-        end: (keyToken.endOffset || 0) + 1
+        end: (keyToken.endOffset || 0) + 1,
       };
 
       this.skipWhitespace();
@@ -561,17 +574,19 @@ export class CSTParser {
         // Boolean attribute
         attributes.push({
           key: keyToken.image,
-          value: [{
-            id: this.generateId(),
-            kind: 'TEXT',
-            start: keyRange.start,
-            end: keyRange.end,
-            content: 'true',
-            children: []
-          }],
+          value: [
+            {
+              id: this.generateId(),
+              kind: 'TEXT',
+              start: keyRange.start,
+              end: keyRange.end,
+              content: 'true',
+              children: [],
+            },
+          ],
           keyRange,
           valueRange: keyRange,
-          fullRange: keyRange
+          fullRange: keyRange,
         });
         continue;
       }
@@ -595,11 +610,10 @@ export class CSTParser {
       while (this.position < this.tokens.length) {
         const token = this.currentToken();
         if (!token) {
-        break;
-      }
+          break;
+        }
 
-        if ((isDoubleQuote && token.tokenType === DoubleQuote) || 
-            (!isDoubleQuote && token.tokenType === SingleQuote)) {
+        if ((isDoubleQuote && token.tokenType === DoubleQuote) || (!isDoubleQuote && token.tokenType === SingleQuote)) {
           valueEnd = token.startOffset || valueEnd;
           this.consumeToken(); // consume closing quote
           break;
@@ -613,22 +627,24 @@ export class CSTParser {
           const textStart = token.startOffset || 0;
           let textEnd = (token.endOffset || 0) + 1;
           let textContent = token.image;
-          
+
           this.consumeToken();
-          
+
           // Collect more text tokens
           while (this.position < this.tokens.length) {
             const nextToken = this.currentToken();
             if (!nextToken) {
               break;
             }
-            
-            if ((isDoubleQuote && nextToken.tokenType === DoubleQuote) ||
-                (!isDoubleQuote && nextToken.tokenType === SingleQuote) ||
-                nextToken.tokenType === TemplateOpen) {
+
+            if (
+              (isDoubleQuote && nextToken.tokenType === DoubleQuote) ||
+              (!isDoubleQuote && nextToken.tokenType === SingleQuote) ||
+              nextToken.tokenType === TemplateOpen
+            ) {
               break;
             }
-            
+
             textContent += nextToken.image;
             textEnd = (nextToken.endOffset || 0) + 1;
             this.consumeToken();
@@ -640,15 +656,15 @@ export class CSTParser {
             start: textStart,
             end: textEnd,
             content: textContent,
-            children: []
+            children: [],
           });
         }
       }
 
       const valueRange: SourceRange = { start: valueStart, end: valueEnd };
-      const fullRange: SourceRange = { 
-        start: keyRange.start, 
-        end: (this.tokens[this.position - 1]?.endOffset || 0) + 1 
+      const fullRange: SourceRange = {
+        start: keyRange.start,
+        end: (this.tokens[this.position - 1]?.endOffset || 0) + 1,
       };
 
       attributes.push({
@@ -656,7 +672,7 @@ export class CSTParser {
         value: valueNodes,
         keyRange,
         valueRange,
-        fullRange
+        fullRange,
       });
     }
 
@@ -674,7 +690,7 @@ export class CSTParser {
           this.processComponentsAttribute(attr.value);
           break;
         case 'unknownComponents':
-          const behavior = attr.value[0]?.content;
+          const behavior = attr.value[0]?.content; // eslint-disable-line
           if (behavior === 'error' || behavior === 'warning' || behavior === 'ignore') {
             this.context.unknownComponentBehavior = behavior;
           }
@@ -689,8 +705,8 @@ export class CSTParser {
 
   private processComponentsAttribute(value: (ASTNode & { kind: 'TEXT' | 'TEMPLATE' })[]): void {
     const components = value[0]?.content || '';
-    const parts = components.split(',').map(s => s.trim());
-    
+    const parts = components.split(',').map((s) => s.trim());
+
     for (const part of parts) {
       if (part.startsWith('+')) {
         this.context.enabledComponents.add(part.slice(1));
@@ -722,7 +738,7 @@ export function parseExtendedPoml(text: string, context: Partial<PomlContext> = 
     sourcePath: '',
     enabledComponents: new Set(),
     unknownComponentBehavior: 'warning',
-    ...context
+    ...context,
   };
 
   const parser = new CSTParser(fullContext);

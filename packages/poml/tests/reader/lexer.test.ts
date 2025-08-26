@@ -14,19 +14,19 @@ import {
   Backslash,
   Identifier,
   Whitespace,
-  TextContent
-} from 'poml/reader/lexer';
+  TextContent,
+} from 'poml/next/lexer';
 
 // Helper function to extract token images
 function tokenImages(input: string): string[] {
   const result = extendedPomlLexer.tokenize(input);
-  return result.tokens.map(t => t.image);
+  return result.tokens.map((t) => t.image);
 }
 
 // Helper function to extract token types
 function tokenTypes(input: string): any[] {
   const result = extendedPomlLexer.tokenize(input);
-  return result.tokens.map(t => t.tokenType);
+  return result.tokens.map((t) => t.tokenType);
 }
 
 // Helper function to get full tokenization result
@@ -85,7 +85,7 @@ describe('Edge Cases', () => {
       'poml',
       '>',
       'ghi',
-      '"'
+      '"',
     ]);
   });
 
@@ -103,7 +103,7 @@ describe('Edge Cases', () => {
       'ghi',
       '</',
       'poml',
-      '>'
+      '>',
     ]);
   });
 
@@ -121,7 +121,7 @@ describe('Edge Cases', () => {
       '内容',
       '<',
       ' ',
-      '标签>'
+      '标签>',
     ]);
   });
 
@@ -143,7 +143,7 @@ describe('Edge Cases', () => {
       '"',
       'test',
       '"',
-      '>'
+      '>',
     ]);
   });
 
@@ -161,7 +161,7 @@ describe('Edge Cases', () => {
       '"',
       ' ',
       'quotes',
-      '"'
+      '"',
     ]);
   });
 
@@ -191,16 +191,16 @@ describe('Edge Cases', () => {
   <li class="item-{{@index}}">
     <span title="{{description}}">{{name}}</span>
   </li>
-{{/each}}`
+{{/each}}`,
     ];
 
-    realWorldTests.forEach(test => {
+    realWorldTests.forEach((test) => {
       const result = tokenize(test);
       expect(result.errors).toHaveLength(0);
       expect(result.tokens.length).toBeGreaterThan(0);
 
       // Verify position integrity
-      result.tokens.forEach(token => {
+      result.tokens.forEach((token) => {
         expect(token.startOffset).toBeGreaterThanOrEqual(0);
         expect(token.endOffset).toBeGreaterThanOrEqual(token.startOffset!);
       });
@@ -216,14 +216,14 @@ describe('Edge Cases', () => {
       'first=one second=two',
       '=standalone',
       'text=content',
-      'a=b=c'
+      'a=b=c',
     ];
 
-    equalsTests.forEach(test => {
+    equalsTests.forEach((test) => {
       const result = tokenize(test);
       expect(result.errors).toHaveLength(0);
 
-      const equalsTokens = result.tokens.filter(t => t.tokenType.name === 'Equals');
+      const equalsTokens = result.tokens.filter((t) => t.tokenType.name === 'Equals');
       expect(equalsTokens.length).toBeGreaterThan(0);
     });
   });
@@ -231,7 +231,7 @@ describe('Edge Cases', () => {
   test('should handle edge cases with zero-length matches', () => {
     const edgeCases = ['', ' ', '\n', '\t', '\r', '{{}}', '<!---->', '<>', '""', "''", '\\'];
 
-    edgeCases.forEach(test => {
+    edgeCases.forEach((test) => {
       const result = tokenize(test);
       expect(result.errors).toHaveLength(0);
 
@@ -295,7 +295,7 @@ line2 <tag>
 line3`;
     const result = tokenize(input);
 
-    const tagToken = result.tokens.find(t => t.tokenType === TagOpen);
+    const tagToken = result.tokens.find((t) => t.tokenType === TagOpen);
     expect(tagToken).toBeDefined();
     expect(tagToken!.startLine).toBe(2);
     expect(tagToken!.startColumn).toBe(7); // After "line2 "
@@ -368,7 +368,7 @@ Analyze data
       'content',
       '</',
       'task',
-      '>'
+      '>',
     ]);
   });
 
@@ -385,7 +385,7 @@ Analyze data
       '}}',
       '/file.txt',
       '"',
-      '>'
+      '>',
     ]);
   });
 });
@@ -491,18 +491,7 @@ describe('Unicode and Special Characters', () => {
   test('should handle unicode', () => {
     expect(tokenImages('<こんにちは>')).toEqual(['<', 'こんにちは>']);
     expect(tokenImages('{{你好}}')).toEqual(['{{', '你好', '}}']);
-    expect(tokenImages('<tag attr="café">')).toEqual([
-      '<',
-      'tag',
-      ' ',
-      'attr',
-      '=',
-      '"',
-      'caf',
-      'é',
-      '"',
-      '>'
-    ]);
+    expect(tokenImages('<tag attr="café">')).toEqual(['<', 'tag', ' ', 'attr', '=', '"', 'caf', 'é', '"', '>']);
   });
 
   test('should maintain lexer stability with all edge cases', () => {
@@ -514,7 +503,7 @@ describe('Unicode and Special Characters', () => {
     expect(result.tokens.length).toBeGreaterThan(0);
 
     // Verify token integrity
-    result.tokens.forEach(token => {
+    result.tokens.forEach((token) => {
       expect(token.startOffset).toBeGreaterThanOrEqual(0);
       if (token.endOffset !== undefined) {
         expect(token.endOffset).toBeGreaterThanOrEqual(token.startOffset);
@@ -566,31 +555,14 @@ describe('Malformed Patterns', () => {
   test('should handle nested malformed patterns', () => {
     expect(tokenImages('<!-- <tag> -->')).toEqual(['<!-- <tag> -->']);
     expect(tokenImages('<!-- {{template}} -->')).toEqual(['<!-- {{template}} -->']);
-    expect(tokenImages('<tag><!-- comment</tag>')).toEqual([
-      '<',
-      'tag',
-      '>',
-      '<',
-      '!-- comment',
-      '</',
-      'tag',
-      '>'
-    ]);
+    expect(tokenImages('<tag><!-- comment</tag>')).toEqual(['<', 'tag', '>', '<', '!-- comment', '</', 'tag', '>']);
     expect(tokenImages('{{<tag>}}')).toEqual(['{{', '<', 'tag', '>', '}}']);
   });
 
   test('should handle quotes without proper pairing', () => {
     expect(tokenImages('"orphan quote')).toEqual(['"', 'orphan', ' ', 'quote']);
     expect(tokenImages("'another orphan")).toEqual(["'", 'another', ' ', 'orphan']);
-    expect(tokenImages('mixed "quote\' types')).toEqual([
-      'mixed',
-      ' ',
-      '"',
-      'quote',
-      "'",
-      ' ',
-      'types'
-    ]);
+    expect(tokenImages('mixed "quote\' types')).toEqual(['mixed', ' ', '"', 'quote', "'", ' ', 'types']);
     expect(tokenImages('escaped \\"quote\\" in text')).toEqual([
       'escaped',
       ' ',
@@ -602,7 +574,7 @@ describe('Malformed Patterns', () => {
       ' ',
       'in',
       ' ',
-      'text'
+      'text',
     ]);
   });
 
@@ -639,7 +611,7 @@ describe('Malformed Patterns', () => {
       '>',
       '{{',
       ' ',
-      'broken'
+      'broken',
     ]);
     expect(tokenImages('<!--comment--><tag>more{{ content')).toEqual([
       '<!--comment-->',
@@ -649,7 +621,7 @@ describe('Malformed Patterns', () => {
       'more',
       '{{',
       ' ',
-      'content'
+      'content',
     ]);
     expect(tokenImages("\"quoted text<tag attr='mixed'>end")).toEqual([
       '"',
@@ -665,7 +637,7 @@ describe('Malformed Patterns', () => {
       'mixed',
       "'",
       '>',
-      'end'
+      'end',
     ]);
   });
 
@@ -693,11 +665,11 @@ describe('Position Tracking Accuracy', () => {
 final line`;
     const result = tokenize(input);
 
-    const tagOpenToken = result.tokens.find(t => t.image === '<' && t.startLine === 2);
+    const tagOpenToken = result.tokens.find((t) => t.image === '<' && t.startLine === 2);
     expect(tagOpenToken).toBeDefined();
     expect(tagOpenToken!.startColumn).toBe(1);
 
-    const variableToken = result.tokens.find(t => t.image === 'variable');
+    const variableToken = result.tokens.find((t) => t.image === 'variable');
     expect(variableToken).toBeDefined();
     expect(variableToken!.startLine).toBe(3);
   });
@@ -707,7 +679,7 @@ final line`;
     const result = tokenize(input);
 
     expect(result.tokens.length).toBeGreaterThan(0);
-    result.tokens.forEach(token => {
+    result.tokens.forEach((token) => {
       expect(token.startOffset).toBeGreaterThanOrEqual(0);
       expect(token.endOffset).toBeGreaterThanOrEqual(token.startOffset!);
       expect(token.startLine).toBeGreaterThanOrEqual(1);
@@ -720,7 +692,7 @@ final line`;
     const result = tokenize(input);
 
     // Verify all tokens have valid positions
-    result.tokens.forEach(token => {
+    result.tokens.forEach((token) => {
       expect(token.startOffset).toBeGreaterThanOrEqual(0);
       expect(token.endOffset).toBeGreaterThanOrEqual(token.startOffset!);
       expect(token.startLine).toBeGreaterThanOrEqual(1);
@@ -733,8 +705,8 @@ final line`;
     const result = tokenize(input);
 
     // Find tokens and verify their positions make sense
-    const tagOpen = result.tokens.find(t => t.image === '<' && t.startLine === 1);
-    const innerOpen = result.tokens.find(t => t.image === '<' && t.startLine === 2);
+    const tagOpen = result.tokens.find((t) => t.image === '<' && t.startLine === 1);
+    const innerOpen = result.tokens.find((t) => t.image === '<' && t.startLine === 2);
 
     expect(tagOpen).toBeDefined();
     expect(innerOpen).toBeDefined();
@@ -751,7 +723,7 @@ final line`;
 
     // Verify complete coverage
     let expectedOffset = 0;
-    sortedTokens.forEach(token => {
+    sortedTokens.forEach((token) => {
       expect(token.startOffset).toBeGreaterThanOrEqual(expectedOffset);
       expectedOffset = token.endOffset! + 1;
     });
@@ -768,7 +740,7 @@ comment -->
 more text`;
 
     const result = tokenize(input);
-    const commentToken = result.tokens.find(t => t.tokenType.name === 'Comment');
+    const commentToken = result.tokens.find((t) => t.tokenType.name === 'Comment');
 
     expect(commentToken).toBeDefined();
     expect(commentToken!.startLine).toBe(2);
@@ -780,11 +752,11 @@ more text`;
     const result = tokenize(input);
 
     // Check that line numbers increase correctly
-    const lines = new Set(result.tokens.map(t => t.startLine));
+    const lines = new Set(result.tokens.map((t) => t.startLine));
     expect(lines.size).toBeGreaterThan(1);
 
     // Verify positions are sequential
-    result.tokens.forEach(token => {
+    result.tokens.forEach((token) => {
       expect(token.startOffset).toBeGreaterThanOrEqual(0);
       expect(token.endOffset).toBeGreaterThanOrEqual(token.startOffset!);
     });
@@ -862,10 +834,10 @@ describe('Performance and Stress Tests', () => {
       '<'.repeat(1000) + '>',
       '"'.repeat(2000),
       '<!--' + 'x'.repeat(10000) + '-->',
-      Array(1000).fill('{{}}').join('')
+      Array(1000).fill('{{}}').join(''),
     ];
 
-    backtrackingTests.forEach(test => {
+    backtrackingTests.forEach((test) => {
       const start = performance.now();
       const result = tokenize(test);
       const end = performance.now();
@@ -879,7 +851,7 @@ describe('Performance and Stress Tests', () => {
     const sizes = [1000, 5000, 10000, 20000];
     const times: number[] = [];
 
-    sizes.forEach(size => {
+    sizes.forEach((size) => {
       const content = 'x'.repeat(size);
       const start = performance.now();
       tokenize(content);
@@ -914,7 +886,7 @@ describe('Error Recovery', () => {
     expect(result.errors).toHaveLength(0);
     expect(result.tokens.length).toBeGreaterThan(0);
 
-    const types = result.tokens.map(t => t.tokenType);
+    const types = result.tokens.map((t) => t.tokenType);
     expect(types).toContain(Identifier);
     expect(types).toContain(TemplateOpen);
   });
@@ -930,7 +902,7 @@ describe('Error Recovery', () => {
     expect(result.tokens.length).toBeGreaterThan(0);
 
     // Should tokenize the valid parts
-    const images = result.tokens.map(t => t.image);
+    const images = result.tokens.map((t) => t.image);
     expect(images).toContain('<');
     expect(images).toContain('valid');
     expect(images).toContain('>');
@@ -941,7 +913,7 @@ describe('Error Recovery', () => {
     const input = 'text with @#$%^&*()[]{}|;:,.<>?/~`';
     const result = tokenize(input);
     expect(result.errors).toHaveLength(0);
-    const images = result.tokens.map(t => t.image);
+    const images = result.tokens.map((t) => t.image);
     expect(images).toEqual(['text', ' ', 'with', ' ', '@#$%^&*()[]{}|;:,.', '<', '>', '?/~`']);
   });
 });

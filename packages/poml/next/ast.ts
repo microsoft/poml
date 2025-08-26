@@ -9,48 +9,47 @@ export interface SourceRange {
 
 export interface AttributeInfo {
   key: string;
-  value: (ASTNode & { kind: 'TEXT' | 'TEMPLATE' })[];  // Mixed content: array of text/template nodes
-  keyRange: SourceRange;      // Position of attribute name
-  valueRange: SourceRange;    // Position of attribute value (excluding quotes)
-  fullRange: SourceRange;     // Full attribute including key="value"
+  value: (ASTNode & { kind: 'TEXT' | 'TEMPLATE' })[]; // Mixed content: array of text/template nodes
+  keyRange: SourceRange; // Position of attribute name
+  valueRange: SourceRange; // Position of attribute value (excluding quotes)
+  fullRange: SourceRange; // Full attribute including key="value"
 }
 
 // Main AST node interface
 export interface ASTNode {
-  id: string;                      // Unique ID for caching and React keys
+  id: string; // Unique ID for caching and React keys
   kind: 'META' | 'TEXT' | 'POML' | 'TEMPLATE';
-  start: number;                   // Source position start of entire node
-  end: number;                     // Source position end of entire node
-  content: string;                 // The raw string content
-  parent?: ASTNode;                // Reference to the parent node
-  children: ASTNode[];             // Child nodes
-  
+  start: number; // Source position start of entire node
+  end: number; // Source position end of entire node
+  content: string; // The raw string content
+  parent?: ASTNode; // Reference to the parent node
+  children: ASTNode[]; // Child nodes
+
   // For POML and META nodes
-  tagName?: string;                // Tag name (e.g., 'task', 'meta')
-  attributes?: AttributeInfo[];    // Detailed attribute information
-  
+  tagName?: string; // Tag name (e.g., 'task', 'meta')
+  attributes?: AttributeInfo[]; // Detailed attribute information
+
   // Detailed source positions
   openingTag?: {
-    start: number;                 // Position of '<'
-    end: number;                   // Position after '>'
-    nameRange: SourceRange;        // Position of tag name
+    start: number; // Position of '<'
+    end: number; // Position after '>'
+    nameRange: SourceRange; // Position of tag name
   };
-  
-  closingTag?: {
-    start: number;                 // Position of '</'
-    end: number;                   // Position after '>'
-    nameRange: SourceRange;        // Position of tag name in closing tag
-  };
-  
-  contentRange?: SourceRange;      // Position of content between tags (excluding nested tags)
-  
-  // For TEXT nodes
-  textSegments?: SourceRange[];    // Multiple ranges for text content (excluding nested POML)
-  
-  // For TEMPLATE nodes
-  expression?: string;             // The full expression content between {{}}
-}
 
+  closingTag?: {
+    start: number; // Position of '</'
+    end: number; // Position after '>'
+    nameRange: SourceRange; // Position of tag name in closing tag
+  };
+
+  contentRange?: SourceRange; // Position of content between tags (excluding nested tags)
+
+  // For TEXT nodes
+  textSegments?: SourceRange[]; // Multiple ranges for text content (excluding nested POML)
+
+  // For TEMPLATE nodes
+  expression?: string; // The full expression content between {{}}
+}
 
 // AST Parser class
 class ASTParser {
@@ -68,20 +67,25 @@ class ASTParser {
 
   private buildValidTagsSet(): Set<string> {
     const validTags = new Set<string>();
-    
+
     for (const doc of componentDocs) {
       if (doc.name) {
         validTags.add(doc.name.toLowerCase());
         // Convert camelCase to kebab-case
-        validTags.add(doc.name.toLowerCase().replace(/([A-Z])/g, '-$1').toLowerCase());
+        validTags.add(
+          doc.name
+            .toLowerCase()
+            .replace(/([A-Z])/g, '-$1')
+            .toLowerCase(),
+        );
       }
     }
-    
+
     // Add special tags
     validTags.add('poml');
     validTags.add('text');
     validTags.add('meta');
-    
+
     return validTags;
   }
 
@@ -108,10 +112,10 @@ class ASTParser {
     // Parse attribute value for mixed text and template variables
     const result: (ASTNode & { kind: 'TEXT' | 'TEMPLATE' })[] = [];
     let currentPos = 0;
-    
+
     while (currentPos < value.length) {
       const templateStart = value.indexOf('{{', currentPos);
-      
+
       if (templateStart === -1) {
         // No more template variables, add remaining text
         if (currentPos < value.length) {
@@ -121,12 +125,12 @@ class ASTParser {
             start: currentPos,
             end: value.length,
             content: value.substring(currentPos),
-            children: []
+            children: [],
           });
         }
         break;
       }
-      
+
       // Add text before template variable
       if (templateStart > currentPos) {
         result.push({
@@ -135,10 +139,10 @@ class ASTParser {
           start: currentPos,
           end: templateStart,
           content: value.substring(currentPos, templateStart),
-          children: []
+          children: [],
         });
       }
-      
+
       // Find end of template variable
       const templateEnd = value.indexOf('}}', templateStart + 2);
       if (templateEnd === -1) {
@@ -149,11 +153,11 @@ class ASTParser {
           start: templateStart,
           end: value.length,
           content: value.substring(templateStart),
-          children: []
+          children: [],
         });
         break;
       }
-      
+
       // Add template variable
       const templateContent = value.substring(templateStart + 2, templateEnd);
       result.push({
@@ -163,78 +167,78 @@ class ASTParser {
         end: templateEnd + 2,
         content: value.substring(templateStart, templateEnd + 2),
         expression: templateContent.trim(),
-        children: []
+        children: [],
       });
-      
+
       currentPos = templateEnd + 2;
     }
-    
+
     return result;
   }
 
   private parseAttributes(tagContent: string): AttributeInfo[] {
     const attributes: AttributeInfo[] = [];
-    
+
     // Simple attribute parsing - can be enhanced later
     const attrRegex = /(\w+)=["']([^"']*?)["']/g;
     let match;
-    
+
     while ((match = attrRegex.exec(tagContent)) !== null) {
       const key = match[1];
       const value = match[2];
       const fullMatch = match[0];
       const matchStart = match.index;
-      
+
       attributes.push({
         key,
         value: this.parseAttributeValue(value),
         keyRange: { start: matchStart, end: matchStart + key.length },
         valueRange: { start: matchStart + key.length + 2, end: matchStart + key.length + 2 + value.length },
-        fullRange: { start: matchStart, end: matchStart + fullMatch.length }
+        fullRange: { start: matchStart, end: matchStart + fullMatch.length },
       });
     }
-    
+
     return attributes;
   }
 
   parse(): ASTNode {
     const children = this.parseNodes();
-    
+
     if (children.length === 1 && children[0].kind === 'POML') {
       return children[0];
     }
-    
+
     // Create root text node
     const rootNode: ASTNode = {
       id: this.generateId(),
       kind: 'TEXT',
       start: 0,
       end: this.tokens.length > 0 ? this.tokens[this.tokens.length - 1].end : 0,
-      content: this.tokens.map(t => t.value).join(''),
+      content: this.tokens.map((t) => t.value).join(''),
       children,
-      textSegments: []
+      textSegments: [],
     };
-    
+
     // Set parent references
-    children.forEach(child => {
+    children.forEach((child) => {
       child.parent = rootNode;
     });
-    
+
     return rootNode;
   }
 
   private parseNodes(): ASTNode[] {
     const nodes: ASTNode[] = [];
-    
+
     while (this.position < this.tokens.length) {
       const token = this.peek();
       if (!token) break;
-      
+
       if (token.type === 'TEMPLATE_VAR') {
         nodes.push(this.parseTemplateVariable());
       } else if (token.type === 'TAG_OPEN') {
         const tagName = this.extractTagName(token.value);
-        
+
         if (this.validPomlTags.has(tagName.toLowerCase())) {
           const node = this.parsePomlNode();
           if (node) {
@@ -251,14 +255,14 @@ class ASTParser {
         this.advance();
       }
     }
-    
+
     return nodes;
   }
 
   private parseTemplateVariable(): ASTNode {
     const token = this.advance()!;
     const expression = token.value.slice(2, -2).trim(); // Remove {{ and }}
-    
+
     return {
       id: this.generateId(),
       kind: 'TEMPLATE',
@@ -266,13 +270,13 @@ class ASTParser {
       end: token.end,
       content: token.value,
       expression,
-      children: []
+      children: [],
     };
   }
 
   private parseTextFromToken(): ASTNode {
     const token = this.advance()!;
-    
+
     return {
       id: this.generateId(),
       kind: 'TEXT',
@@ -280,20 +284,20 @@ class ASTParser {
       end: token.end,
       content: token.value,
       children: [],
-      textSegments: [{ start: token.start, end: token.end }]
+      textSegments: [{ start: token.start, end: token.end }],
     };
   }
 
   private parsePomlNode(): ASTNode | null {
     const openToken = this.advance()!;
     const tagName = this.extractTagName(openToken.value);
-    
+
     // Parse attributes
     const attributes = this.parseAttributes(openToken.value);
-    
+
     // Determine node kind
     const kind = tagName.toLowerCase() === 'meta' ? 'META' : 'POML';
-    
+
     const node: ASTNode = {
       id: this.generateId(),
       kind,
@@ -306,27 +310,27 @@ class ASTParser {
       openingTag: {
         start: openToken.start,
         end: openToken.end,
-        nameRange: { 
-          start: openToken.start + 1, 
-          end: openToken.start + 1 + tagName.length 
-        }
-      }
+        nameRange: {
+          start: openToken.start + 1,
+          end: openToken.start + 1 + tagName.length,
+        },
+      },
     };
-    
+
     // Parse children until we find the closing tag
     const children: ASTNode[] = [];
     let depth = 1;
-    
+
     while (this.position < this.tokens.length && depth > 0) {
       const token = this.peek();
       if (!token) break;
-      
+
       if (token.type === 'TAG_OPEN') {
         const childTagName = this.extractTagName(token.value);
         if (childTagName.toLowerCase() === tagName.toLowerCase()) {
           depth++;
         }
-        
+
         // Special handling for text tags - don't process template variables
         if (tagName.toLowerCase() === 'text') {
           children.push(this.parseTextFromToken());
@@ -352,8 +356,8 @@ class ASTParser {
               end: closeToken.end,
               nameRange: {
                 start: closeToken.start + 2,
-                end: closeToken.start + 2 + tagName.length
-              }
+                end: closeToken.start + 2 + tagName.length,
+              },
             };
             break;
           }
@@ -370,17 +374,20 @@ class ASTParser {
         children.push(textNode);
       }
     }
-    
+
     node.children = children;
-    
+
     // Update content to include full tag
     if (node.closingTag) {
-      node.content = this.tokens.slice(
-        this.tokens.findIndex(t => t.start === node.start),
-        this.tokens.findIndex(t => t.end === node.end) + 1
-      ).map(t => t.value).join('');
+      node.content = this.tokens
+        .slice(
+          this.tokens.findIndex((t) => t.start === node.start),
+          this.tokens.findIndex((t) => t.end === node.end) + 1,
+        )
+        .map((t) => t.value)
+        .join('');
     }
-    
+
     return node;
   }
 }
