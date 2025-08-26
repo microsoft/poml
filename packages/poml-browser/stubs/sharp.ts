@@ -10,7 +10,7 @@ interface Metadata {
 }
 
 class Sharp {
-  constructor(input?: string | Buffer) {
+  constructor(input?: string | Uint8Array) {
     console.warn('Sharp image processing is not available in browser context');
   }
 
@@ -30,12 +30,12 @@ class Sharp {
     };
   }
 
-  toBuffer(): Promise<Buffer> {
-    return Promise.resolve(Buffer.from(''));
+  toBuffer(): Promise<Uint8Array> {
+    return Promise.resolve(new Uint8Array(0));
   }
 }
 
-function sharp(input?: string | Buffer): Sharp {
+function sharp(input?: string | Uint8Array): Sharp {
   return new Sharp(input);
 }
 
