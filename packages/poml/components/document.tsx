@@ -157,7 +157,7 @@ export function htmlToPoml(
       // URL or local file path
       try {
         if (options?.multimedia || options?.multimedia === undefined) {
-          return <Image syntax="multimedia" src={src} alt={element.attr('alt')} />;
+          return <Image syntax='multimedia' src={src} alt={element.attr('alt')} />;
         } else {
           return <Image src={src} alt={element.attr('alt')} />;
         }

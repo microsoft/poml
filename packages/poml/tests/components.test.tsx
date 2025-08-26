@@ -454,14 +454,14 @@ Improve your image by including an image. `,
       expect.objectContaining({
         alt: 'A Great HTML Resource',
         type: 'image/png',
-        base64: expect.stringMatching(/^.{27}/)
+        base64: expect.stringMatching(/^.{27}/),
       }),
       `Add a link to your favorite Web site.
 Break up your page with a horizontal rule or two. 
 
 Finally, link to another page in your own Web site.
 
-© Wiley Publishing, 2011`
+© Wiley Publishing, 2011`,
     ]);
   });
 

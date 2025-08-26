@@ -57,7 +57,8 @@ describe('content', () => {
 
 describe('preprocessImage', () => {
   const sampleImagePath = __dirname + '/assets/tomCat.jpg';
-  const sampleImageURL = 'https://raw.githubusercontent.com/ultmaster/poml-test-fixtures/e2bed155890e4cf853a515a990660328799ee5e3/image/gpt-5-random-image.png';
+  const sampleImageURL =
+    'https://raw.githubusercontent.com/ultmaster/poml-test-fixtures/e2bed155890e4cf853a515a990660328799ee5e3/image/gpt-5-random-image.png';
   const sampleImageBase64 = readFileSync(sampleImagePath).toString('base64');
 
   test('should process an image from a supported file path', async () => {
