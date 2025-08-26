@@ -56,5 +56,7 @@ module.exports = {
     'mlartifacts',
     'mlrun',
     'pomlrun',
+    '*.context.json',
+    'python/poml/js/cli.js',
   ],
 };

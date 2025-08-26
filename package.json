@@ -382,7 +382,7 @@
     "pretest": "npm run compile",
     "lint": "eslint packages",
     "format": "prettier --write '**/*.{ts,tsx,js,json,md,yml}'",
-    "format:py": "isort . && black .",
+    "format:check": "prettier --check '**/*.{ts,tsx,js,json,md,yml}'",
     "test": "jest",
     "test-vscode": "vscode-test",
     "typedoc": "typedoc",
