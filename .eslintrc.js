@@ -32,7 +32,7 @@ module.exports = {
     // ],
     // '@typescript-eslint/semi': 'warn',
     // 'eqeqeq': 'off',
-    
+
     // 'max-len': 'off',
     // 'quotes': 'off',
     // 'indent': 'off',
