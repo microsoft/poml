@@ -508,7 +508,7 @@ export function richContentToString(content: RichContent): string {
       if (typeof item === 'string') {
         return item;
       } else if (item && item.type) {
-        return `[Image: ${item.type}${item.alt ? ` - ${item.alt}` : ''}]`;
+        return `[Image: ${item.type}${(item as any).alt ? ` - ${(item as any).alt}` : ''}]`;
       }
       return '[Unknown media]';
     })
@@ -533,7 +533,7 @@ export async function writeRichContentToClipboard(content: RichContent): Promise
   for (const item of content) {
     if (typeof item === 'string') {
       textParts.push(item);
-    } else if (item && item.type && item.base64) {
+    } else if (item && item.type && (item as any).base64) {
       // Handle images
       if (item.type.startsWith('image/')) {
         // Only accept PNG images
@@ -556,7 +556,7 @@ export async function writeRichContentToClipboard(content: RichContent): Promise
         }
       } else {
         // Non-image media, add as text placeholder
-        textParts.push(item.alt ? `[Media: ${item.alt}]` : `[Media: ${item.type}]`);
+        textParts.push((item as any).alt ? `[Media: ${(item as any).alt}]` : `[Media: ${item.type}]`);
       }
     }
   }

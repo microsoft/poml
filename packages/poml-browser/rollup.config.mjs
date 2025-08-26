@@ -65,12 +65,15 @@ export default [
         return;
       }
       // Suppress circular dependency warnings from chevrotain
-      // if (
-      //   warning.code === 'CIRCULAR_DEPENDENCY' &&
-      //   (warning.message.includes('chevrotain') || warning.message.includes('xmlbuilder'))
-      // ) {
-      //   return;
-      // }
+      if (
+        warning.code === 'CIRCULAR_DEPENDENCY' &&
+        (warning.message.includes('chevrotain') ||
+          warning.message.includes('xmlbuilder') ||
+          warning.message.includes('zod') ||
+          warning.message.includes('polyfill-node'))
+      ) {
+        return;
+      }
       // // Suppress this rewriting warnings
       // if (warning.code === 'THIS_IS_UNDEFINED') {
       //   return;

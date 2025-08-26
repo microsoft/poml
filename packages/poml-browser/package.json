@@ -1,6 +1,6 @@
 {
   "name": "poml-browser",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "description": "POML Browser Extension",
   "main": "background.js",
   "scripts": {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs'); // eslint-disable-line
+const path = require('path'); // eslint-disable-line
 
 function updateNodeJSVersions(baseVersion, timestamp) {
   const version = timestamp ? `${baseVersion}-nightly.${timestamp}` : baseVersion;
@@ -22,6 +22,15 @@ function updateNodeJSVersions(baseVersion, timestamp) {
     console.log(`Updated packages/poml-build/package.json version to: ${version}`);
   }
 
+  // Update packages/poml-browser/package.json
+  const browserPackageJsonPath = path.join(__dirname, 'packages/poml-browser/package.json');
+  if (fs.existsSync(browserPackageJsonPath)) {
+    let browserContent = fs.readFileSync(browserPackageJsonPath, 'utf8');
+    browserContent = browserContent.replace(/"version": ".*?"/, `"version": "${version}"`);
+    fs.writeFileSync(browserPackageJsonPath, browserContent);
+    console.log(`Updated packages/poml-browser/package.json version to: ${version}`);
+  }
+
   // Update packages/poml/version.ts
   const versionTsPath = path.join(__dirname, 'packages/poml/version.ts');
   if (fs.existsSync(versionTsPath)) {
@@ -36,11 +45,27 @@ function updateNodeJSVersions(baseVersion, timestamp) {
   if (fs.existsSync(packageLockPath)) {
     let content = fs.readFileSync(packageLockPath, 'utf8');
     // Update root version
+    // eslint-disable-next-line no-regex-spaces
     content = content.replace(/^  "version": ".*?",$/m, `  "version": "${version}",`);
     // Update packages."" version
+    // eslint-disable-next-line no-regex-spaces
     content = content.replace(/^      "version": ".*?",$/m, `      "version": "${version}",`);
     fs.writeFileSync(packageLockPath, content);
     console.log(`Updated package-lock.json version to: ${version}`);
+  }
+
+  // Update packages/poml-browser/package-lock.json (both root version and packages."" version)
+  const browserPackageLockPath = path.join(__dirname, 'packages/poml-browser/package-lock.json');
+  if (fs.existsSync(browserPackageLockPath)) {
+    let browserLockContent = fs.readFileSync(browserPackageLockPath, 'utf8');
+    // Update root version
+    // eslint-disable-next-line no-regex-spaces
+    browserLockContent = browserLockContent.replace(/^  "version": ".*?",$/m, `  "version": "${version}",`);
+    // Update packages."" version
+    // eslint-disable-next-line no-regex-spaces
+    browserLockContent = browserLockContent.replace(/^      "version": ".*?",$/m, `      "version": "${version}",`);
+    fs.writeFileSync(browserPackageLockPath, browserLockContent);
+    console.log(`Updated packages/poml-browser/package-lock.json version to: ${version}`);
   }
 }
 
