@@ -16,62 +16,14 @@ import {
 } from './lexer';
 
 import { listComponentAliases } from '../base';
-
-// Source position interfaces
-export interface SourceRange {
-  start: number;
-  end: number;
-}
-
-export interface AttributeInfo {
-  key: string;
-  value: (ASTNode & { kind: 'TEXT' | 'TEMPLATE' })[];
-  keyRange: SourceRange;
-  valueRange: SourceRange;
-  fullRange: SourceRange;
-}
-
-// Core AST node interface
-export interface ASTNode {
-  id: string;
-  kind: 'META' | 'TEXT' | 'POML' | 'TEMPLATE';
-  start: number;
-  end: number;
-  content: string;
-  parent?: ASTNode;
-  children: ASTNode[];
-
-  // For POML and META nodes
-  tagName?: string;
-  attributes?: AttributeInfo[];
-
-  // Detailed source positions
-  openingTag?: {
-    start: number;
-    end: number;
-    nameRange: SourceRange;
-  };
-
-  closingTag?: {
-    start: number;
-    end: number;
-    nameRange: SourceRange;
-  };
-
-  contentRange?: SourceRange;
-
-  // For TEXT nodes
-  textSegments?: SourceRange[];
-
-  // For TEMPLATE nodes
-  expression?: string;
-}
+import * as Nodes from './nodes';
 
 // Context for parsing configuration
 export interface PomlContext {
   variables: { [key: string]: any };
   stylesheet: { [key: string]: string };
-  minimalPomlVersion?: string;
+  minPomlVersion?: string;
+  maxPomlVersion?: string;
   sourcePath: string;
   enabledComponents: Set<string>;
   unknownComponentBehavior: 'error' | 'warning' | 'ignore';
@@ -84,6 +36,26 @@ export class CSTParser {
   private text: string;
   private context: PomlContext;
   private nodeIdCounter: number;
+
+  // These are the tags that are always valid in POML.
+  // You can not disable them.
+  private alwaysValidTags = new Set<string>(['text', 'meta']);
+
+  // These semantics are handled right here.
+  private nonComponentTags = new Set<string>([
+    'let',
+    'include',
+    'template',
+    'context',
+    'stylesheet',
+    'output-schema',
+    'outputschema',
+    'tool',
+    'tool-def',
+    'tool-definition',
+    'tooldef',
+    'tooldefinition',
+  ]);
 
   constructor(context: PomlContext) {
     this.tokens = [];
