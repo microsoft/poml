@@ -27,6 +27,11 @@ jobs:
         with:
           node-version: 22.x
           cache: 'npm'
+      # This step should not be necessary, but without it,
+      # currently ../poml won't be able to locate dependencies
+      - name: Install base dependencies
+        run: |
+          npm ci
       - name: Install dependencies
         run: |
           cd packages/poml-browser
