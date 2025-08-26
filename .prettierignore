@@ -10,3 +10,4 @@ pomlrun/
 # Generated files
 docs/language/components.md
 *.context.json
+python/poml/js/cli.js

@@ -21,6 +21,8 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/no-namespace': 'off',
+    'prefer-const': 'off',
+    'no-constant-condition': 'off',
     // '@typescript-eslint/naming-convention': [
     //   'warn',
     //   {
@@ -30,7 +32,7 @@ module.exports = {
     // ],
     // '@typescript-eslint/semi': 'warn',
     // 'eqeqeq': 'off',
-    // 'prefer-const': 'off',
+    
     // 'max-len': 'off',
     // 'quotes': 'off',
     // 'indent': 'off',
