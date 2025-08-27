@@ -230,6 +230,12 @@ export const notifyInfo = (message: string, objects?: any, options?: Notificatio
 export const notifyDebug = (message: string, objects?: any, options?: NotificationOptions) =>
   notify('debug', message, objects, { position: 'bottom', ...options });
 
+export const notifyDebugVerbose = (message: string, objects?: any, options?: NotificationOptions) =>
+  notify('debug+', message, objects, { position: 'bottom', ...options });
+
+export const notifyDebugDetail = (message: string, objects?: any, options?: NotificationOptions) =>
+  notify('debug++', message, objects, { position: 'bottom', ...options });
+
 // Error handler wrapper for async functions
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
