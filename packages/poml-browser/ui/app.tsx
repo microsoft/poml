@@ -320,7 +320,7 @@ const AppContent: React.FC = () => {
       }}>
       {/* Header with title and action buttons */}
       <Group justify='space-between' mb='md'>
-        <Title order={4}>POMPad</Title>
+        <Title order={4}>Prompt Orchestration Scratchpad</Title>
         <Group gap='xs'>
           <ActionIcon variant='subtle' onClick={() => console.log('Open history')} aria-label='History'>
             <IconHistory fontSize={theme.fontSizes.lg} />

@@ -2,7 +2,6 @@
 
 import './registry';
 import { binaryToBase64 } from '../functions/utils';
-import { NotificationMessage } from '../functions/notification';
 
 interface FileData {
   name: string;
@@ -35,48 +34,20 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 // Handle messages from content script/sidepanel
 chrome.runtime.onMessage.addListener(
   (
-    request: MessageRequest | NotificationMessage,
+    request: MessageRequest,
     _sender: chrome.runtime.MessageSender,
     sendResponse: (response: MessageResponse) => void,
   ): boolean => {
-    // Handle notification messages
-    if ('type' in request && request.type === 'notification') {
-      const notificationMsg = request as NotificationMessage;
-
-      // Forward notification to all UI contexts (popup, sidebar, etc.)
-      chrome.runtime.sendMessage(notificationMsg).catch(() => {
-        // If no UI is open, the message will fail, which is fine
-        console.debug('[Background] No UI available to receive notification');
-      });
-
-      // Also try to send to any open extension tabs
-      chrome.tabs.query({ url: chrome.runtime.getURL('*') }, (tabs) => {
-        tabs.forEach((tab) => {
-          if (tab.id) {
-            chrome.tabs.sendMessage(tab.id, notificationMsg).catch(() => {
-              // Tab might not have a listener, which is fine
-            });
-          }
-        });
-      });
-
-      sendResponse({ success: true });
-      return true;
-    }
-
-    // Cast to MessageRequest for action-based messages
-    const messageRequest = request as MessageRequest;
-
     // Handle file operations
-    if (messageRequest.action === 'readFile') {
-      if (!messageRequest.filePath) {
+    if (request.action === 'readFile') {
+      if (!request.filePath) {
         sendResponse({ success: false, error: 'No file path provided' });
         return true;
       }
 
-      readFileContent(messageRequest.filePath, messageRequest.binary)
+      readFileContent(request.filePath, request.binary)
         .then((result) => {
-          if (messageRequest.binary) {
+          if (request.binary) {
             // Convert ArrayBuffer to base64 for message passing
             const arrayBuffer = result as ArrayBuffer;
             const base64 = binaryToBase64(arrayBuffer);
@@ -93,19 +64,19 @@ chrome.runtime.onMessage.addListener(
       // Return true to indicate we will send a response asynchronously
       return true;
     } else if (
-      messageRequest.action === 'extractContent' ||
-      messageRequest.action === 'extractPageContent' ||
-      messageRequest.action === 'extractWordContent' ||
-      messageRequest.action === 'extractMsWordContent' ||
-      messageRequest.action === 'extractPdfContent' ||
-      messageRequest.action === 'extractHtmlContent'
+      request.action === 'extractContent' ||
+      request.action === 'extractPageContent' ||
+      request.action === 'extractWordContent' ||
+      request.action === 'extractMsWordContent' ||
+      request.action === 'extractPdfContent' ||
+      request.action === 'extractHtmlContent'
     ) {
-      if (!messageRequest.tabId) {
+      if (!request.tabId) {
         sendResponse({ success: false, error: 'No tab ID provided' });
         return true;
       }
 
-      extractContentProxy(messageRequest.tabId)
+      extractContentProxy(request.tabId)
         .then((content) => {
           sendResponse({ success: true, content: content });
         })
