@@ -132,7 +132,9 @@ export async function extractPdfContentVisualized(
       contentBlocks.sort((a, b) => {
         // First sort by Y position (with some tolerance for same line)
         const yDiff = b.y - a.y; // Note: PDF Y coordinates are bottom-up
-        if (Math.abs(yDiff) > 5) return yDiff;
+        if (Math.abs(yDiff) > 5) {
+          return yDiff;
+        }
         // Then by X position for items on same line
         return a.x - b.x;
       });
@@ -320,9 +322,13 @@ function detectPageNumbers(items: PDFTextItem[], viewport: any): PageNumberDetec
 
   // Determine pattern
   let pattern: 'top' | 'bottom' | 'both' | null = null;
-  if (topNumbers > 0 && bottomNumbers > 0) pattern = 'both';
-  else if (topNumbers > 0) pattern = 'top';
-  else if (bottomNumbers > 0) pattern = 'bottom';
+  if (topNumbers > 0 && bottomNumbers > 0) {
+    pattern = 'both';
+  } else if (topNumbers > 0) {
+    pattern = 'top';
+  } else if (bottomNumbers > 0) {
+    pattern = 'bottom';
+  }
 
   const shouldFilter = pattern !== null;
 
@@ -346,14 +352,22 @@ function detectPageNumbers(items: PDFTextItem[], viewport: any): PageNumberDetec
  */
 function isLikelyPageNumber(text: string): boolean {
   // Simple page number
-  if (/^\d{1,4}$/.test(text)) return true;
+  if (/^\d{1,4}$/.test(text)) {
+    return true;
+  }
 
   // Page number with prefix/suffix: "Page 1", "- 1 -", "1 of 10"
-  if (/^(Page\s+)?\d{1,4}(\s+of\s+\d{1,4})?$/i.test(text)) return true;
-  if (/^[-–—]\s*\d{1,4}\s*[-–—]$/.test(text)) return true;
+  if (/^(Page\s+)?\d{1,4}(\s+of\s+\d{1,4})?$/i.test(text)) {
+    return true;
+  }
+  if (/^[-–—]\s*\d{1,4}\s*[-–—]$/.test(text)) {
+    return true;
+  }
 
   // Roman numerals
-  if (/^[ivxlcdm]+$/i.test(text) && text.length <= 10) return true;
+  if (/^[ivxlcdm]+$/i.test(text) && text.length <= 10) {
+    return true;
+  }
 
   return false;
 }
@@ -419,10 +433,14 @@ function extractFilteredLines(
  * Check if text should be skipped as page number
  */
 function shouldSkipAsPageNumber(item: PDFTextItem, y: number, pageNumberInfo: PageNumberDetectionResult): boolean {
-  if (!pageNumberInfo.shouldFilter) return false;
+  if (!pageNumberInfo.shouldFilter) {
+    return false;
+  }
 
   const text = item.str.trim();
-  if (!isLikelyPageNumber(text)) return false;
+  if (!isLikelyPageNumber(text)) {
+    return false;
+  }
 
   if (pageNumberInfo.pattern === 'top' && pageNumberInfo.yThresholdTop && y > pageNumberInfo.yThresholdTop) {
     return true;
@@ -465,7 +483,9 @@ function groupLinesIntoBlocks(lines: LineItem[], viewport: any): TextBlock[] {
 
   for (const line of lines) {
     const text = line.text.trim();
-    if (!text) continue;
+    if (!text) {
+      continue;
+    }
 
     const isHeading = detectHeading(text, line.fontSize, lastFontSize);
     const startsNewParagraph = shouldStartNewParagraph(text, isHeading, line.y, lastY, currentParagraph);
@@ -473,7 +493,9 @@ function groupLinesIntoBlocks(lines: LineItem[], viewport: any): TextBlock[] {
     if (startsNewParagraph && currentParagraph.length > 0) {
       // Create block from current paragraph
       const block = createTextBlock(currentParagraph, false);
-      if (block) blocks.push(block);
+      if (block) {
+        blocks.push(block);
+      }
       currentParagraph = [];
     }
 
@@ -491,7 +513,9 @@ function groupLinesIntoBlocks(lines: LineItem[], viewport: any): TextBlock[] {
   // Add remaining paragraph
   if (currentParagraph.length > 0) {
     const block = createTextBlock(currentParagraph, false);
-    if (block) blocks.push(block);
+    if (block) {
+      blocks.push(block);
+    }
   }
 
   return blocks;
@@ -501,10 +525,14 @@ function groupLinesIntoBlocks(lines: LineItem[], viewport: any): TextBlock[] {
  * Create a text block from lines
  */
 function createTextBlock(lines: LineItem[], isHeading: boolean): TextBlock | null {
-  if (lines.length === 0) return null;
+  if (lines.length === 0) {
+    return null;
+  }
 
   const text = joinParagraphLines(lines.map((l) => l.text));
-  if (!text.trim()) return null;
+  if (!text.trim()) {
+    return null;
+  }
 
   // Calculate bounding box
   const minX = Math.min(...lines.map((l) => l.x));
@@ -537,7 +565,9 @@ function detectHeading(text: string, fontSize: number, lastFontSize: number | nu
 }
 
 function isHeadingPattern(text: string): boolean {
-  if (text.length >= 100) return false;
+  if (text.length >= 100) {
+    return false;
+  }
 
   const headingPatterns = [
     /^\d+\.?\d*\.?\s/,
@@ -557,20 +587,27 @@ function shouldStartNewParagraph(
   lastY: number | null,
   currentParagraph: LineItem[],
 ): boolean {
-  if (isHeading) return true;
-  if (isParagraphBoundary(text)) return true;
-  if (lastY !== null && Math.abs(currentY - lastY) > 15) return true;
+  if (isHeading) {
+    return true;
+  }
+  if (isParagraphBoundary(text)) {
+    return true;
+  }
+  if (lastY !== null && Math.abs(currentY - lastY) > 15) {
+    return true;
+  }
 
   if (currentParagraph.length > 0) {
     const lastLine = currentParagraph[currentParagraph.length - 1];
-    if (endsWithPunctuation(lastLine.text)) return true;
+    if (endsWithPunctuation(lastLine.text)) {
+      return true;
+    }
   }
 
   return false;
 }
 
 function isParagraphBoundary(text: string): boolean {
-  // eslint-disable-next-line no-useless-escape
   const boundaryPatterns = [/^[\•\-\*\d]+[\.\)]\s/, /^[a-z]\)\s/, /^(Figure|Table|Example)\s/];
 
   return boundaryPatterns.some((pattern) => pattern.test(text));
@@ -581,8 +618,12 @@ function endsWithPunctuation(text: string): boolean {
 }
 
 function joinParagraphLines(lines: string[]): string {
-  if (lines.length === 0) return '';
-  if (lines.length === 1) return lines[0];
+  if (lines.length === 0) {
+    return '';
+  }
+  if (lines.length === 1) {
+    return lines[0];
+  }
 
   let result = '';
 
@@ -795,7 +836,9 @@ function findInkedRegions(ctx: CanvasRenderingContext2D, width: number, height: 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const idx = y * width + x;
-      if (visited[idx]) continue;
+      if (visited[idx]) {
+        continue;
+      }
 
       const pixelIdx = idx * 4;
       const luminance = getLuminance(pixelIdx);
@@ -814,14 +857,18 @@ function findInkedRegions(ctx: CanvasRenderingContext2D, width: number, height: 
 }
 
 function mergeNearbyRegions(regions: BoundingBox[]): BoundingBox[] {
-  if (regions.length <= 1) return regions;
+  if (regions.length <= 1) {
+    return regions;
+  }
 
   const merged: BoundingBox[] = [];
   const used = new Set<number>();
   const proximityThreshold = 10; // pixels
 
   for (let i = 0; i < regions.length; i++) {
-    if (used.has(i)) continue;
+    if (used.has(i)) {
+      continue;
+    }
 
     let current = { ...regions[i] };
     let didMerge = true;
@@ -830,7 +877,9 @@ function mergeNearbyRegions(regions: BoundingBox[]): BoundingBox[] {
       didMerge = false;
 
       for (let j = 0; j < regions.length; j++) {
-        if (i === j || used.has(j)) continue;
+        if (i === j || used.has(j)) {
+          continue;
+        }
 
         const other = regions[j];
 
@@ -940,7 +989,9 @@ function isRegionTooSimple(ctx: CanvasRenderingContext2D, region: BoundingBox, t
     }
   }
 
-  if (samples.length === 0) return true;
+  if (samples.length === 0) {
+    return true;
+  }
 
   // Calculate color variance
   const avgColor = samples

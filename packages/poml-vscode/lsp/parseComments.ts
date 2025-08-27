@@ -46,7 +46,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
 
   // Recognize description, @param and @example in the comment.
   const descriptionRegex = /([\s\S]*?)(?=@param|@example|@see|$)/;
-  // eslint-disable-next-line no-useless-escape
+
   const paramRegex = /@param\s+(\{([\S'"\|]+?)\}\s+)?(\w+)\s+-\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
   const exampleRegex = /@example\s+([\s\S]*?)(?=@param|@example|@see|$)/;
   const seeRegex = /@see\s+([\s\S]*?)(?=@param|@example|@see|$)/g;

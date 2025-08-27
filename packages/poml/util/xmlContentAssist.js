@@ -1,8 +1,8 @@
 // Adapted from https://github.com/SAP/xml-tools/blob/master/packages/content-assist/lib/content-assist.js
 
-const { defaultsDeep, forEach, isArray, find, findIndex, flatMap, identity, last, isEmpty } = require('lodash'); // eslint-disable-line
-const { BaseXmlCstVisitor } = require('@xml-tools/parser'); // eslint-disable-line
-const { findNextTextualToken } = require('@xml-tools/common'); // eslint-disable-line
+const { defaultsDeep, forEach, isArray, find, findIndex, flatMap, identity, last, isEmpty } = require('lodash');
+const { BaseXmlCstVisitor } = require('@xml-tools/parser');
+const { findNextTextualToken } = require('@xml-tools/common');
 
 function getSuggestions(options) {
   const actualOptions = defaultsDeep(options, {
@@ -42,7 +42,7 @@ function computeCompletionSyntacticContext({ cst, ast: docAst, offset, tokenVect
   return contextVisitor.result;
 }
 
-/* eslint-disable no-unused-vars -- consistent signatures in visitor methods even if they are empty placeholders */
+
 class SuggestionContextVisitorWithClose extends BaseXmlCstVisitor {
   constructor(docAst, offset, tokenVector) {
     super();
@@ -187,7 +187,7 @@ class SuggestionContextVisitorWithClose extends BaseXmlCstVisitor {
   /* istanbul ignore next - place holder*/
   misc(ctx, astNode) {}
 }
-/* eslint-enable no-unused-vars -- see matching pair above */
+
 
 function handleElementNameWithoutPrefixScenario(ctx, astNode, visitor) {
   /* istanbul ignore else - Very difficult to reproduce specific partial CSTs */

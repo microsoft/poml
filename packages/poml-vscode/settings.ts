@@ -74,7 +74,7 @@ export class Settings {
 
   public isEqualTo(otherSettings: Settings) {
     for (let key in this) {
-      // eslint-disable-next-line no-prototype-builtins
+
       if (this.hasOwnProperty(key) && key !== 'styles' && key !== 'languageModel') {
         if (this[key] !== otherSettings[key]) {
           return false;

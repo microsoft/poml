@@ -727,7 +727,7 @@ function parseExpects(expectFile: string): ExpectMessage[] {
           contents.push(prefix);
         } catch (e) {
           // Fallback: extract base64 with regex
-          const base64Match = match[0].match(/"base64":"([^"\.]+)/); // eslint-disable-line
+          const base64Match = match[0].match(/"base64":"([^"\.]+)/);
           if (base64Match) {
             const prefix = base64Match[1].slice(0, 50);
             contents.push(prefix);
