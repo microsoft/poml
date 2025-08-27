@@ -16,6 +16,8 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         headless: false,
+        deviceScaleFactor: undefined,
+        viewport: null,
       },
     },
   ],

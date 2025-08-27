@@ -148,7 +148,7 @@ export default [
       sourcemap: true,
     },
     watch: {
-      include: 'background/**',
+      include: ['background/**', 'functions/**'],
       exclude: 'node_modules/**',
     },
     plugins: [

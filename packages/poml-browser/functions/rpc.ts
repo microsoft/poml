@@ -73,37 +73,18 @@ class EverywhereManager {
       console.error('Error setting up message listener:', error);
       return false;
     }
-    // console.log('Chrome:', chrome);
-    // console.log('Chrome runtime:', chrome.runtime);
-    // print traceback
-    // console.trace('Setting up message listener in', this.currentRole);
-    if (this.currentRole === 'background' || this.currentRole === 'sidebar') {
-      // Both background and sidebar listen to runtime messages
-      chrome.runtime.onMessage.addListener(
-        (message: Message, _sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
-          if (message.type === 'everywhere-request') {
-            this.handleIncomingRequest(message, sendResponse);
-            return true; // Keep channel open for async response
-          } else if (message.type === 'everywhere-response') {
-            this.handleResponse(message);
-          }
-          return false;
-        },
-      );
-    } else if (this.currentRole === 'content') {
-      // Content scripts listen to both runtime messages and tab messages
-      chrome.runtime.onMessage.addListener(
-        (message: Message, _sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
-          if (message.type === 'everywhere-request') {
-            this.handleIncomingRequest(message, sendResponse);
-            return true; // Keep channel open for async response
-          } else if (message.type === 'everywhere-response') {
-            this.handleResponse(message);
-          }
-          return false;
-        },
-      );
-    }
+    chrome.runtime.onMessage.addListener(
+      (message: Message, _sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
+        if (message.type === 'everywhere-request') {
+          this.handleIncomingRequest(message, sendResponse);
+          return true; // Keep channel open for async response
+        } else if (message.type === 'everywhere-response') {
+          // This should generally not happen because we handle responses in sendRequest
+          console.warn('Received unexpected everywhere-response message:', message);
+        }
+        return false;
+      },
+    );
     return true;
   }
 
@@ -160,22 +141,18 @@ class EverywhereManager {
     }
   }
 
-  private handleResponse(message: Message): void {
-    const { id, result, error } = message;
-    const pending = this.pendingRequests.get(id);
-
-    if (pending) {
-      if (error) {
-        pending.reject(new Error(error));
-      } else {
-        pending.resolve(result);
-      }
-      this.pendingRequests.delete(id);
-    }
-    // Otherwise, the result is thrown away because we didn't initiate the request
-  }
-
   private async sendToContentScript(message: Message, sendResponse: (response: any) => void): Promise<void> {
+    // Only service worker (background) can do this
+    if (this.currentRole !== 'background') {
+      sendResponse({
+        type: 'everywhere-response',
+        id: message.id,
+        error: 'Only background can forward messages to content script',
+        functionName: message.functionName,
+        sourceRole: this.currentRole,
+      });
+    }
+
     const { id, functionName } = message;
     try {
       // Get active tab
@@ -228,8 +205,9 @@ class EverywhereManager {
         }
       }
 
-      // Now send the actual message
+      // Now send the actual message and collect the response
       const response = await chrome.tabs.sendMessage(tab.id, message);
+      // If has error, create an error response
       if ((chrome.runtime as any).lastError) {
         sendResponse({
           type: 'everywhere-response',
@@ -272,7 +250,11 @@ class EverywhereManager {
     }
   }
 
-  private async sendRequest(functionName: string, args: any[], targetRole?: Role): Promise<any> {
+  private async sendRequest<K extends keyof GlobalFunctions>(
+    functionName: K,
+    args: Input<K>,
+    targetRole?: Role,
+  ): Promise<AwaitedOutput<K>> {
     // Ensure initialization
     const isInitialized = await this.initialized;
     if (!isInitialized) {
@@ -283,14 +265,14 @@ class EverywhereManager {
     const message: Message = {
       type: 'everywhere-request',
       id,
-      functionName,
+      functionName: functionName as string,
       args,
       targetRole,
       sourceRole: this.currentRole,
     };
 
     // Wrap sendMessage in a Promise
-    const response = await new Promise<any>((resolve, reject) => {
+    const response = await new Promise<Message>((resolve, reject) => {
       this.pendingRequests.set(id, { resolve, reject });
 
       chrome.runtime.sendMessage(message, undefined, (resp: any) => {
@@ -316,8 +298,30 @@ class EverywhereManager {
     });
 
     // Process response
-    this.handleResponse(response);
-    return response;
+    if (response.id !== id) {
+      throw new Error(`Mismatched response ID: expected ${id}, got ${response.id}`);
+    }
+    const { result, error } = response;
+    const pending = this.pendingRequests.get(id);
+
+    if (pending) {
+      if (error) {
+        pending.reject(new Error(error));
+      } else {
+        pending.resolve(result);
+      }
+      this.pendingRequests.delete(id);
+    }
+
+    if (error) {
+      if (typeof error === 'string') {
+        throw new Error(error);
+      } else {
+        throw error;
+      }
+    }
+
+    return result;
   }
 
   public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRoles?: Role[]): EverywhereFn<K> {
@@ -335,7 +339,7 @@ class EverywhereManager {
           );
         }
       } else {
-        return this.sendRequest(functionName as string, args, targetRoles[0]);
+        return this.sendRequest<K>(functionName, args, targetRoles[0]);
       }
     };
   }

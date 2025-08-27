@@ -56,7 +56,7 @@ export const test = base.extend<Fixtures>({
     await contentPage.click('#openSidePanel');
 
     // Wait for sidebar to appear
-    await contentPage.waitForTimeout(1000);
+    await contentPage.waitForTimeout(500);
 
     // Find the sidebar page
     const pages = extContext.pages();
@@ -65,12 +65,13 @@ export const test = base.extend<Fixtures>({
     if (!sidebar) {
       throw new Error('Sidebar page not found');
     }
-    // const frame = sidebar.mainFrame();
-    // await frame.waitForFunction(() => !!window.chrome?.runtime?.id, { timeout: 5000 });
-    await sidebar.waitForTimeout(50000); // Wait for sidebar to load
+
+    // The internal page opened by the service worker does not work.
+    // We have to reload it here. Don't ask me why.
+    await sidebar.goto(`chrome-extension://${extensionId}/ui/index.html`);
+    await sidebar.waitForTimeout(1000); // Wait for sidebar to load
 
     await use(sidebar);
-    // Do not close between tests to keep state (MV3 workers can unload)
   },
 
   contentPage: async ({ extContext }, use) => {
