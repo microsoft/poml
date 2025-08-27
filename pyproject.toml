@@ -24,6 +24,8 @@ dev = [
   "mkdocs-git-authors-plugin",
   "mkdocs-timetoread-plugin",
   "mkdocstrings[python]",
+  "mdformat",
+  "mdformat-mkdocs",
   "mike",
 ]
 agent = [
