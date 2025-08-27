@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 import * as path from 'path';
 
 const testFixturesPath = path.resolve(__dirname, '../../test-fixtures');
+const extensionPath = path.resolve(__dirname, 'dist');
 
 export default defineConfig({
   webServer: {
@@ -11,10 +12,16 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'Chrome',
+      name: 'Chrome Extension',
       use: {
-        channel: 'chrome',
+        ...require('@playwright/test').devices['Desktop Chrome'],
         headless: false,
+        args: [
+          `--disable-extensions-except=${extensionPath}`,
+          `--load-extension=${extensionPath}`,
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+        ],
       },
     },
   ],
@@ -23,5 +30,6 @@ export default defineConfig({
   },
   metadata: {
     testFixturesPath,
+    extensionPath,
   },
 });

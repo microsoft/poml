@@ -178,7 +178,43 @@ class EverywhereManager {
         return;
       }
 
-      // This is simplified, without timeouts.
+      // Check if content script is ready by checking the global flag
+      let isContentScriptReady = false;
+      try {
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: () => {
+            return (window as any).__pomlContentScriptReady === true;
+          },
+        });
+        isContentScriptReady = results[0]?.result === true;
+      } catch (error) {
+        isContentScriptReady = false;
+      }
+
+      // Inject content script if not ready
+      if (!isContentScriptReady) {
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: ['contentScript.js'],
+          });
+
+          // Wait a moment for the script to initialize
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        } catch (injectError) {
+          sendResponse({
+            type: 'everywhere-response',
+            id,
+            error: `Failed to inject content script: ${injectError instanceof Error ? injectError.message : injectError}`,
+            functionName,
+            sourceRole: this.currentRole,
+          });
+          return;
+        }
+      }
+
+      // Now send the actual message
       const response = await chrome.tabs.sendMessage(tab.id, message);
       if ((chrome.runtime as any).lastError) {
         sendResponse({
@@ -326,27 +362,39 @@ export function callInRole<K extends keyof GlobalFunctions>(
 }
 
 export const pingPong: Record<Role, (message: string, delay: number) => Promise<string>> = {
-  content: everywhere('pingPongContent', (message: string, delay: number) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`Content received: ${message}`);
-      }, delay);
-    });
-  }),
-  background: everywhere('pingPongBackground', (message: string, delay: number) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`Background received: ${message}`);
-      }, delay);
-    });
-  }),
-  sidebar: everywhere('pingPongSidebar', (message: string, delay: number) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(`Sidebar received: ${message}`);
-      }, delay);
-    });
-  }),
+  content: everywhere(
+    'pingPongContent',
+    (message: string, delay: number) => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(`Content received: ${message}`);
+        }, delay);
+      });
+    },
+    ['content'],
+  ),
+  background: everywhere(
+    'pingPongBackground',
+    (message: string, delay: number) => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(`Background received: ${message}`);
+        }, delay);
+      });
+    },
+    ['background'],
+  ),
+  sidebar: everywhere(
+    'pingPongSidebar',
+    (message: string, delay: number) => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(`Sidebar received: ${message}`);
+        }, delay);
+      });
+    },
+    ['sidebar'],
+  ),
 };
 
 // Export types for use in implementation files
