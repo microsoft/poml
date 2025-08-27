@@ -34,13 +34,6 @@ export const test = base.extend<Fixtures>({
     await context.close();
   },
 
-  rootPage: async ({ extContext }, use) => {
-    const page = await extContext.newPage();
-    await page.goto(FIXTURE_ENDPOINT);
-    await page.waitForLoadState('networkidle');
-    await use(page);
-  },
-
   serviceWorker: async ({ extContext }, use) => {
     const worker = extContext.serviceWorkers().find((w) => w.url().includes(EXTENSION_ID));
     if (worker) {
@@ -72,7 +65,9 @@ export const test = base.extend<Fixtures>({
     if (!sidebar) {
       throw new Error('Sidebar page not found');
     }
-    await sidebar.waitForTimeout(30000); // Wait for sidebar to load
+    // const frame = sidebar.mainFrame();
+    // await frame.waitForFunction(() => !!window.chrome?.runtime?.id, { timeout: 5000 });
+    await sidebar.waitForTimeout(50000); // Wait for sidebar to load
 
     await use(sidebar);
     // Do not close between tests to keep state (MV3 workers can unload)

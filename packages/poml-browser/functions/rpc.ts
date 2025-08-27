@@ -1,4 +1,5 @@
 import { GlobalFunctions, FunctionRegistry } from './types';
+import { waitForChromeRuntime } from './utils';
 
 type Role = 'content' | 'background' | 'sidebar';
 
@@ -55,19 +56,26 @@ export function detectCurrentRole(): Role {
 }
 
 class EverywhereManager {
+  private initialized: Promise<boolean>;
   private currentRole: Role;
   private handlers: Map<string, (...args: any[]) => any> = new Map();
   private pendingRequests: Map<string, { resolve: (value: any) => void; reject: (reason?: any) => void }> = new Map();
 
   constructor() {
     this.currentRole = detectCurrentRole();
-    this.setupMessageListener();
+    this.initialized = this.setupMessageListener();
   }
 
-  private setupMessageListener(): void {
+  private async setupMessageListener(): Promise<boolean> {
+    try {
+      await waitForChromeRuntime();
+    } catch (error) {
+      console.error('Error setting up message listener:', error);
+      return false;
+    }
     // console.log('Chrome:', chrome);
     // console.log('Chrome runtime:', chrome.runtime);
-    // // print traceback
+    // print traceback
     // console.trace('Setting up message listener in', this.currentRole);
     if (this.currentRole === 'background' || this.currentRole === 'sidebar') {
       // Both background and sidebar listen to runtime messages
@@ -96,6 +104,7 @@ class EverywhereManager {
         },
       );
     }
+    return true;
   }
 
   /* Implement for message listener (incoming request end) */
@@ -263,31 +272,37 @@ class EverywhereManager {
     }
   }
 
-  private sendRequest(functionName: string, args: any[], targetRole?: Role): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const id = this.generateId();
-      const message: Message = {
-        type: 'everywhere-request',
-        id,
-        functionName,
-        args,
-        targetRole,
-        sourceRole: this.currentRole,
-      };
+  private async sendRequest(functionName: string, args: any[], targetRole?: Role): Promise<any> {
+    // Ensure initialization
+    const isInitialized = await this.initialized;
+    if (!isInitialized) {
+      throw new Error('EverywhereManager not initialized properly');
+    }
 
+    const id = this.generateId();
+    const message: Message = {
+      type: 'everywhere-request',
+      id,
+      functionName,
+      args,
+      targetRole,
+      sourceRole: this.currentRole,
+    };
+
+    // Wrap sendMessage in a Promise
+    const response = await new Promise<any>((resolve, reject) => {
       this.pendingRequests.set(id, { resolve, reject });
 
-      // Send the message
-      chrome.runtime.sendMessage(message, undefined, (response: any) => {
+      chrome.runtime.sendMessage(message, undefined, (resp: any) => {
         const lastError = (chrome.runtime as any).lastError;
         if (lastError) {
+          this.pendingRequests.delete(id);
           reject(new Error(lastError.message));
-          this.pendingRequests.delete(id);
-        } else if (response) {
-          this.handleResponse(response);
+        } else if (resp) {
+          resolve(resp);
         } else {
-          reject(new Error('Unknown error'));
           this.pendingRequests.delete(id);
+          reject(new Error('Unknown error'));
         }
       });
 
@@ -299,6 +314,10 @@ class EverywhereManager {
         }
       }, 30000);
     });
+
+    // Process response
+    this.handleResponse(response);
+    return response;
   }
 
   public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRoles?: Role[]): EverywhereFn<K> {

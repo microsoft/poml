@@ -3,7 +3,7 @@ import { expect, Page, BrowserContext, Worker } from '@playwright/test';
 import { test } from '../extension.spec';
 
 test.describe('RPC System Tests', () => {
-  test('sidebar -> background pingPong', async ({ rootPage, sidebarPage }) => {
+  test('sidebar -> background pingPong', async ({ sidebarPage }) => {
     const result = await sidebarPage.evaluate(async () => {
       const { pingPong } = window as any;
       return await pingPong.background('Hello from sidebar', 100);

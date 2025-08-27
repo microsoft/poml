@@ -43,11 +43,9 @@ chrome.runtime.onMessage.addListener(
     // Handle sidebar open request for testing
     if ((request as any).type === 'open_side_panel') {
       (async () => {
-        if (sender.tab?.id) {
-          // Open tab-specific side panel
-          await (chrome as any).sidePanel.open({ tabId: sender.tab.id });
+        if (sender.tab) {
+          await (chrome as any).sidePanel.open({ windowId: sender.tab.windowId });
           await chrome.sidePanel.setOptions({
-            tabId: sender.tab.id,
             path: 'ui/index.html',
             enabled: true,
           });
