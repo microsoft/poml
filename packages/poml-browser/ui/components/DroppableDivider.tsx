@@ -19,6 +19,72 @@ interface DroppableDividerProps {
   onDragOverDivider?: (isOver: boolean) => void;
 }
 
+const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
+  return !isHovered ? (
+    // Single line with very low opacity when inactive
+    <Box
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: 0,
+        right: 0,
+        transform: 'translateY(-50%)',
+        height: '1px',
+        backgroundColor: '#e0e0e0',
+        opacity: 0.3,
+      }}
+    />
+  ) : (
+    // Double line divider with plus sign when active
+    <Box
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: 0,
+        right: 0,
+        transform: 'translateY(-50%)',
+        display: 'flex',
+        alignItems: 'center',
+      }}>
+      {/* First line */}
+      <Box
+        style={{
+          flex: 1,
+          height: '1px',
+          backgroundColor: isHovered ? '#666' : '#ddd',
+          transition: 'background-color 0.2s ease',
+        }}
+      />
+
+      {/* Plus sign */}
+      <Box
+        style={{
+          margin: '0 12px',
+          width: '20px',
+          height: '20px',
+          borderRadius: '50%',
+          backgroundColor: isHovered ? '#666' : '#ddd',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s ease',
+        }}>
+        <IconPlus size={12} color='white' />
+      </Box>
+
+      {/* Second line */}
+      <Box
+        style={{
+          flex: 1,
+          height: '1px',
+          backgroundColor: isHovered ? '#666' : '#ddd',
+          transition: 'background-color 0.2s ease',
+        }}
+      />
+    </Box>
+  );
+};
+
 export const DroppableDivider: React.FC<DroppableDividerProps> = ({
   index,
   isVisible,
@@ -124,73 +190,7 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
         }
       }}>
       {/* Single line when not active, double line with plus when active, hidden when drop area is visible */}
-      {!isDragActive && (
-        <>
-          {!isVisible && !isHovered ? (
-            // Single line with very low opacity when inactive
-            <Box
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: 0,
-                right: 0,
-                transform: 'translateY(-50%)',
-                height: '1px',
-                backgroundColor: '#e0e0e0',
-                opacity: 0.3,
-              }}
-            />
-          ) : (
-            // Double line divider with plus sign when active
-            <Box
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: 0,
-                right: 0,
-                transform: 'translateY(-50%)',
-                display: 'flex',
-                alignItems: 'center',
-              }}>
-              {/* First line */}
-              <Box
-                style={{
-                  flex: 1,
-                  height: '1px',
-                  backgroundColor: isHovered ? '#666' : '#ddd',
-                  transition: 'background-color 0.2s ease',
-                }}
-              />
-
-              {/* Plus sign */}
-              <Box
-                style={{
-                  margin: '0 12px',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  backgroundColor: isHovered ? '#666' : '#ddd',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                }}>
-                <IconPlus size={12} color='white' />
-              </Box>
-
-              {/* Second line */}
-              <Box
-                style={{
-                  flex: 1,
-                  height: '1px',
-                  backgroundColor: isHovered ? '#666' : '#ddd',
-                  transition: 'background-color 0.2s ease',
-                }}
-              />
-            </Box>
-          )}
-        </>
-      )}
+      {!isDragActive && <>{!isVisible && <StyledDivider isHovered={isHovered} />}</>}
 
       {/* Droppable area overlay when dragging */}
       {isDragActive && (

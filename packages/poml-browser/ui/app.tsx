@@ -313,14 +313,32 @@ const AppContent: React.FC = () => {
         height: '100vh',
         overflow: 'auto',
         position: 'relative',
-        ...(isDraggingOver
-          ? {
-              backgroundColor: `${theme.colors.purple[5]}20`,
-              border: `2px dashed ${theme.colors.purple[8]}50`,
-              borderRadius: theme.radius.sm,
-            }
-          : {}),
       }}>
+      {/* Drag overlay */}
+      {isDraggingOver && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '16px',
+            left: '16px',
+            right: '16px',
+            bottom: '16px',
+            backgroundColor: `${theme.colors.purple[5]}15`,
+            border: `3px dashed ${theme.colors.purple[6]}`,
+            borderRadius: theme.radius.md,
+            zIndex: 1000,
+            pointerEvents: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: theme.fontSizes.lg,
+            color: theme.colors.purple[8],
+            fontWeight: 600,
+          }}>
+          Drop files here to add them as cards
+        </div>
+      )}
+
       {/* Header with title and action buttons */}
       <Group justify='space-between' mb='md'>
         <Title order={4}>Prompt Orchestration Scratchpad</Title>
