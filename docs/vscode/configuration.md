@@ -31,7 +31,7 @@ For multiple providers with different API keys, which is useful when overriding 
   },
   "poml.languageModel.apiUrl": {
     "openai": "https://api.openai.com/v1/",
-    "microsoft": "https://your-resource.openai.azure.com/"
+    "microsoft": "https://your-resource.openai.azure.com/openai"
   }
 }
 ```
@@ -168,7 +168,7 @@ The API URL can be:
   "poml.languageModel.provider": "microsoft",
   "poml.languageModel.model": "my-gpt4-deployment",
   "poml.languageModel.apiKey": "your-azure-api-key",
-  "poml.languageModel.apiUrl": "https://your-resource.openai.azure.com/",
+  "poml.languageModel.apiUrl": "https://your-resource.openai.azure.com/openai",
   "poml.languageModel.apiVersion": "2024-02-15-preview"
 }
 ```
