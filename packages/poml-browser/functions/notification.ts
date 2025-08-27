@@ -16,7 +16,7 @@ const _displayNotificationImpl: HandlerType = async (type, message, options) => 
 };
 
 // Register the everywhere function - it will only execute in UI context (sidebar)
-export const displayNotification = everywhere('displayNotification', _displayNotificationImpl, ['sidebar']);
+export const displayNotification = everywhere('displayNotification', _displayNotificationImpl, 'sidebar');
 
 // Register a direct UI handler (called by NotificationService when it initializes)
 export function registerDirectUIHandler(handler: HandlerType): void {

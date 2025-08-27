@@ -76,8 +76,21 @@ class EverywhereManager {
     chrome.runtime.onMessage.addListener(
       (message: Message, _sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
         if (message.type === 'everywhere-request') {
-          this.handleIncomingRequest(message, sendResponse);
-          return true; // Keep channel open for async response
+          const { targetRole } = message;
+
+          // Only return true (keep channel open) if we're going to handle this message
+          const shouldHandle =
+            !targetRole || // No specific target, everyone handles
+            targetRole === this.currentRole || // We are the target
+            (this.currentRole === 'background' && targetRole === 'content'); // Special case: background forwards to content
+
+          if (shouldHandle) {
+            this.handleIncomingRequest(message, sendResponse);
+            return true; // Keep channel open for async response
+          }
+
+          // Not for us, don't handle
+          return false;
         } else if (message.type === 'everywhere-response') {
           // This should generally not happen because we handle responses in sendRequest
           console.warn('Received unexpected everywhere-response message:', message);
@@ -92,7 +105,8 @@ class EverywhereManager {
   private async handleIncomingRequest(message: Message, sendResponse: (response: any) => void): Promise<void> {
     const { functionName, args, id, targetRole } = message;
 
-    // Check if this role should handle the request
+    // The messages are broadcast to all roles.
+    // Check if this role should handle the request.
     if (targetRole && targetRole !== this.currentRole) {
       // If we're background and target is content, send message to content script
       if (this.currentRole === 'background' && targetRole === 'content') {
@@ -109,32 +123,20 @@ class EverywhereManager {
     }
 
     // Execute if I am the target or no specific target
-    const handler = this.handlers.get(functionName);
-    if (handler) {
-      try {
-        const result = await handler(...args);
-        sendResponse({
-          type: 'everywhere-response',
-          id,
-          result,
-          functionName,
-          sourceRole: this.currentRole,
-        });
-      } catch (error) {
-        sendResponse({
-          type: 'everywhere-response',
-          id,
-          error: error instanceof Error ? error.message : error,
-          functionName,
-          sourceRole: this.currentRole,
-        });
-      }
-    } else {
-      const availableHandlers = Array.from(this.handlers.keys()).join(', ');
+    try {
+      const result = await this.executeLocally(functionName, args);
       sendResponse({
         type: 'everywhere-response',
         id,
-        error: `No handler registered for ${functionName} in ${this.currentRole}. Available handlers: ${availableHandlers}`,
+        result,
+        functionName,
+        sourceRole: this.currentRole,
+      });
+    } catch (error) {
+      sendResponse({
+        type: 'everywhere-response',
+        id,
+        error: error instanceof Error ? error.message : error,
         functionName,
         sourceRole: this.currentRole,
       });
@@ -151,6 +153,7 @@ class EverywhereManager {
         functionName: message.functionName,
         sourceRole: this.currentRole,
       });
+      return;
     }
 
     const { id, functionName } = message;
@@ -243,9 +246,9 @@ class EverywhereManager {
     return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
-  public register<K extends keyof GlobalFunctions>(functionName: K, handler: GlobalFunctions[K], roles?: Role[]): void {
-    // Register handler if current role is in the specified roles (or if no roles specified)
-    if (!roles || roles.includes(this.currentRole)) {
+  public register<K extends keyof GlobalFunctions>(functionName: K, handler: GlobalFunctions[K], role: Role): void {
+    // Register handler only if current role matches the specified role
+    if (role === this.currentRole) {
       this.handlers.set(functionName as string, handler);
     }
   }
@@ -253,7 +256,7 @@ class EverywhereManager {
   private async sendRequest<K extends keyof GlobalFunctions>(
     functionName: K,
     args: Input<K>,
-    targetRole?: Role,
+    targetRole: Role,
   ): Promise<AwaitedOutput<K>> {
     // Ensure initialization
     const isInitialized = await this.initialized;
@@ -324,22 +327,29 @@ class EverywhereManager {
     return result;
   }
 
-  public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRoles?: Role[]): EverywhereFn<K> {
+  private async executeLocally<K extends keyof GlobalFunctions>(
+    functionName: K,
+    args: Input<K>,
+  ): Promise<AwaitedOutput<K>> {
+    const handler = this.handlers.get(functionName as string);
+    if (handler) {
+      return await handler(...args);
+    } else {
+      const availableHandlers = Array.from(this.handlers.keys()).join(', ');
+      throw new Error(
+        `No handler registered for ${functionName} in ${this.currentRole}. Available handlers: ${availableHandlers}`,
+      );
+    }
+  }
+
+  public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRole: Role): EverywhereFn<K> {
     return async (...args: Input<K>): Promise<AwaitedOutput<K>> => {
-      // If target roles specified, try to run in first available role
-      if (!targetRoles || targetRoles.length === 0 || targetRoles.includes(this.currentRole)) {
-        // Execute locally if current role is in targetRoles or no specific target
-        const handler = this.handlers.get(functionName as string);
-        if (handler) {
-          return await handler(...args);
-        } else {
-          const availableHandlers = Array.from(this.handlers.keys()).join(', ');
-          throw new Error(
-            `No handler registered for ${functionName} in ${this.currentRole}. Available handlers: ${availableHandlers}`,
-          );
-        }
+      // If target role matches current role, execute locally
+      if (targetRole === this.currentRole) {
+        return this.executeLocally(functionName, args);
       } else {
-        return this.sendRequest<K>(functionName, args, targetRoles[0]);
+        // Otherwise, send request to the target role
+        return this.sendRequest<K>(functionName, args, targetRole);
       }
     };
   }
@@ -349,37 +359,41 @@ class EverywhereManager {
 const everywhereManager = new EverywhereManager();
 
 // Type-safe everywhere function with overloads
-export function everywhere<K extends keyof GlobalFunctions>(functionName: K): EverywhereFn<K>;
+export function everywhere<K extends keyof GlobalFunctions>(functionName: K, role: Role): EverywhereFn<K>;
 export function everywhere<K extends keyof GlobalFunctions>(
   functionName: K,
   handler: GlobalFunctions[K],
-  roles?: Role[],
+  role: Role,
 ): EverywhereFn<K>;
 export function everywhere<K extends keyof GlobalFunctions>(
   functionName: K,
-  handler?: GlobalFunctions[K],
-  roles?: Role[],
+  handlerOrRole: GlobalFunctions[K] | Role,
+  role?: Role,
 ): EverywhereFn<K> {
-  if (handler) {
-    // Register the handler
-    everywhereManager.register(functionName, handler, roles);
+  if (typeof handlerOrRole === 'string') {
+    // First overload: everywhere(functionName, role)
+    return everywhereManager.createFunction(functionName, handlerOrRole as Role);
+  } else {
+    // Second overload: everywhere(functionName, handler, role)
+    if (!role) {
+      throw new Error('Role is required when registering a handler');
+    }
+    everywhereManager.register(functionName, handlerOrRole as GlobalFunctions[K], role);
+    return everywhereManager.createFunction(functionName, role);
   }
-
-  // Return a callable function
-  return everywhereManager.createFunction(functionName, roles);
 }
 
 // Helper function to register multiple handlers at once
 export function registerHandlers<K extends keyof GlobalFunctions>(handlers: {
   [P in K]: {
     handler: GlobalFunctions[P];
-    roles?: Role[];
+    role: Role;
   };
 }): void {
   for (const [functionName, config] of Object.entries(handlers) as Array<
-    [K, { handler: GlobalFunctions[K]; roles?: Role[] }]
+    [K, { handler: GlobalFunctions[K]; role: Role }]
   >) {
-    everywhereManager.register(functionName, config.handler, config.roles);
+    everywhereManager.register(functionName, config.handler, config.role);
   }
 }
 
@@ -402,7 +416,7 @@ export const pingPong: Record<Role, (message: string, delay: number) => Promise<
         }, delay);
       });
     },
-    ['content'],
+    'content',
   ),
   background: everywhere(
     'pingPongBackground',
@@ -413,7 +427,7 @@ export const pingPong: Record<Role, (message: string, delay: number) => Promise<
         }, delay);
       });
     },
-    ['background'],
+    'background',
   ),
   sidebar: everywhere(
     'pingPongSidebar',
@@ -424,7 +438,7 @@ export const pingPong: Record<Role, (message: string, delay: number) => Promise<
         }, delay);
       });
     },
-    ['sidebar'],
+    'sidebar',
   ),
 };
 

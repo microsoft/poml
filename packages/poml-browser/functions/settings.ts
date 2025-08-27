@@ -56,8 +56,8 @@ async function _setSettingsImpl(settings: Partial<SettingsBundle>): Promise<void
 
 // Register these functions with the everywhere system
 // They will only actually execute in the background context (service worker)
-export const getSettingsEverywhere = everywhere('getSettings', _getSettingsImpl, ['background']);
-export const setSettingsEverywhere = everywhere('setSettings', _setSettingsImpl, ['background']);
+export const getSettingsEverywhere = everywhere('getSettings', _getSettingsImpl, 'background');
+export const setSettingsEverywhere = everywhere('setSettings', _setSettingsImpl, 'background');
 
 /**
  * Get settings with caching support.
