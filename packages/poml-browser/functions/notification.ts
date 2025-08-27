@@ -1,36 +1,26 @@
-import { NotificationLevel, NotificationPosition, NotificationType } from './types';
+import { NotificationLevel, NotificationType, NotificationOptions } from './types';
 import { getSettings } from './settings';
+import { detectCurrentRole, everywhere } from './rpc';
 
-export interface NotificationOptions {
-  title?: string; // Optional title for the notification
-  duration?: number; // Duration in milliseconds, 0 means persistent
-  position?: NotificationPosition; // Position on the screen
-  autoHide?: boolean; // Whether to auto-hide the notification
-}
+type HandlerType = (type: NotificationType, message: string, options?: NotificationOptions) => void;
 
-export interface NotificationMessage {
-  type: 'notification';
-  notificationType: NotificationType;
-  message: string;
-  details?: string; // Serialized objects/additional data
-  options?: NotificationOptions;
-  source: 'background' | 'content' | 'ui';
-  timestamp: number;
-}
+let uiHandler: HandlerType | null = null;
 
-// Global handler for direct UI notifications
-let directUIHandler: ((type: NotificationType, message: string, options?: NotificationOptions) => void) | null = null;
+const _displayNotificationImpl: HandlerType = async (type, message, options) => {
+  if (uiHandler) {
+    uiHandler(type, message, options);
+  } else {
+    // No UI handler registered - likely something wrong
+    console.error('[Notification] No UI handler registered to display notification:', type, message, options);
+  }
+};
+
+// Register the everywhere function - it will only execute in UI context (sidebar)
+export const displayNotification = everywhere('displayNotification', _displayNotificationImpl, ['sidebar']);
 
 // Register a direct UI handler (called by NotificationService when it initializes)
-export function registerDirectUIHandler(
-  handler: (type: NotificationType, message: string, options?: NotificationOptions) => void,
-): void {
-  directUIHandler = handler;
-}
-
-// Unregister the direct UI handler
-export function unregisterDirectUIHandler(): void {
-  directUIHandler = null;
+export function registerDirectUIHandler(handler: HandlerType): void {
+  uiHandler = handler;
 }
 
 // Define notification level hierarchy (lower index = higher priority)
@@ -55,32 +45,6 @@ function shouldShowNotification(notificationType: NotificationType, threshold: N
 
   // Show if notification level index is less than or equal to threshold index
   return notificationIndex <= thresholdIndex;
-}
-
-// Determine the current execution context
-function getExecutionContext(): 'background' | 'content' | 'ui' {
-  if (typeof chrome !== 'undefined' && chrome.runtime) {
-    // Check if we're in a service worker (background)
-    // In service workers, 'window' is undefined and 'self' is a ServiceWorkerGlobalScope
-    if (typeof window === 'undefined' && typeof self !== 'undefined' && 'ServiceWorkerGlobalScope' in self) {
-      return 'background';
-    }
-
-    // Check if we're in the extension popup/sidebar UI
-    if (
-      typeof window !== 'undefined' &&
-      window.location.protocol === 'chrome-extension:' &&
-      (window.location.pathname.includes('ui/') || window.location.pathname.includes('index.html'))
-    ) {
-      return 'ui';
-    }
-
-    // Otherwise, we're in a content script
-    return 'content';
-  }
-
-  // Fallback to content if chrome is not available
-  return 'content';
 }
 
 // Serialize objects with intelligent truncation
@@ -199,20 +163,6 @@ async function logToConsole(
   }
 }
 
-// Send notification via Chrome runtime messaging
-// This should work for both background -> UI and content -> background -> UI
-async function sendNotificationMessage(message: NotificationMessage): Promise<void> {
-  try {
-    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-      // Try to send the message
-      await chrome.runtime.sendMessage(message);
-    }
-  } catch (error) {
-    // If sending fails (e.g., popup not open), just log it
-    console.debug('[Notification] Failed to send to UI:', error);
-  }
-}
-
 // Main notification function
 export async function notify(
   type: NotificationType,
@@ -237,29 +187,20 @@ export async function notify(
     details = serializeObject(objects);
   }
 
-  // 5. Combine message with details
-  const fullMessage = details ? `${message}\n\nDetails:\n${details}` : message;
-
-  // 6. Check if we have a direct UI handler available (when called from UI context)
-  if (directUIHandler) {
-    // Use the direct handler for immediate UI updates
-    directUIHandler(type, fullMessage, options);
-    return;
-  }
-
-  // 7. Otherwise, send via messaging
-  const context = getExecutionContext();
-  const notificationMessage: NotificationMessage = {
-    type: 'notification',
-    notificationType: type,
-    message,
+  // 5. Prepare notification options with details
+  const notificationOptions: NotificationOptions = {
+    ...options,
+    source: detectCurrentRole(),
     details,
-    options,
-    source: context,
-    timestamp: Date.now(),
   };
 
-  await sendNotificationMessage(notificationMessage);
+  // 6. Send to UI using the everywhere system
+  try {
+    await displayNotification(type, message, notificationOptions);
+  } catch (error) {
+    // If UI is not available, just log it
+    console.debug('[Notification] Failed to display notification:', error);
+  }
 }
 
 // Convenience functions for each notification type
@@ -281,7 +222,7 @@ export const notifyDebug = (message: string, objects?: any, options?: Notificati
 export const notifyDebugVerbose = (message: string, objects?: any, options?: NotificationOptions) =>
   notify('debug+', message, objects, { position: 'bottom', ...options });
 
-export const notifyDebugDetail = (message: string, objects?: any, options?: NotificationOptions) =>
+export const notifyDebugMoreVerbose = (message: string, objects?: any, options?: NotificationOptions) =>
   notify('debug++', message, objects, { position: 'bottom', ...options });
 
 // Error handler wrapper for async functions
@@ -297,7 +238,7 @@ export async function withErrorHandling<T>(
     }
     return result;
   } catch (error) {
-    const message = errorMessage || (error instanceof Error ? error.message : 'An error occurred');
+    const message = errorMessage || (error instanceof Error ? error.message : 'An unknown error occurred');
     notifyError(message, error);
     return null;
   }
@@ -312,11 +253,8 @@ export function withSyncErrorHandling<T>(operation: () => T, errorMessage?: stri
     }
     return result;
   } catch (error) {
-    const message = errorMessage || (error instanceof Error ? error.message : 'An error occurred');
+    const message = errorMessage || (error instanceof Error ? error.message : 'An unknown error occurred');
     notifyError(message, error);
     return null;
   }
 }
-
-// Export default notify function
-export default notify;

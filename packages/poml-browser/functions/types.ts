@@ -26,9 +26,20 @@ export type FunctionRegistry = {
   [K: string]: (...args: any[]) => any;
 };
 
+// Notification Options interface
+export interface NotificationOptions {
+  title?: string;
+  source?: string;
+  details?: string;
+  duration?: number;
+  position?: NotificationPosition;
+  autoHide?: boolean;
+}
+
 // Global registry type that will be extended by users
 export interface GlobalFunctions extends FunctionRegistry {
   // Please put the signatures of global functions here
   getSettings: (refresh?: boolean) => Promise<SettingsBundle>;
   setSettings: (settings: Partial<SettingsBundle>) => Promise<void>;
+  displayNotification: (type: NotificationType, message: string, options?: NotificationOptions) => void;
 }
