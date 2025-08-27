@@ -110,7 +110,7 @@ class EverywhereManager {
     if (targetRole && targetRole !== this.currentRole) {
       // If we're background and target is content, send message to content script
       if (this.currentRole === 'background' && targetRole === 'content') {
-        await this.sendToContentScript(message, sendResponse);
+        await this.forwardToContentScript(message, sendResponse);
         // The response is already sent, we don't need to handle it again here
       }
       // Otherwise, we do NOT forward to other roles:
@@ -143,7 +143,7 @@ class EverywhereManager {
     }
   }
 
-  private async sendToContentScript(message: Message, sendResponse: (response: any) => void): Promise<void> {
+  private async forwardToContentScript(message: Message, sendResponse: (response: any) => void): Promise<void> {
     // Only service worker (background) can do this
     if (this.currentRole !== 'background') {
       sendResponse({
@@ -156,81 +156,17 @@ class EverywhereManager {
       return;
     }
 
-    const { id, functionName } = message;
+    const { id, functionName, args } = message;
     try {
-      // Get active tab
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-      if (!tab?.id) {
-        sendResponse({
-          type: 'everywhere-response',
-          id,
-          error: 'No active tab found',
-          functionName,
-          sourceRole: this.currentRole,
-        });
-        return;
-      }
-
-      // Check if content script is ready by checking the global flag
-      let isContentScriptReady = false;
-      try {
-        const results = await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          func: () => {
-            return (window as any).__pomlContentScriptReady === true;
-          },
-        });
-        isContentScriptReady = results[0]?.result === true;
-      } catch (error) {
-        isContentScriptReady = false;
-      }
-
-      // Inject content script if not ready
-      if (!isContentScriptReady) {
-        try {
-          await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            files: ['contentScript.js'],
-          });
-
-          // Wait a moment for the script to initialize
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        } catch (injectError) {
-          sendResponse({
-            type: 'everywhere-response',
-            id,
-            error: `Failed to inject content script: ${injectError instanceof Error ? injectError.message : injectError}`,
-            functionName,
-            sourceRole: this.currentRole,
-          });
-          return;
-        }
-      }
-
-      // Now send the actual message and collect the response
-      const response = await chrome.tabs.sendMessage(tab.id, message);
-      // If has error, create an error response
-      if ((chrome.runtime as any).lastError) {
-        sendResponse({
-          type: 'everywhere-response',
-          id,
-          error: (chrome.runtime as any).lastError.message,
-          functionName,
-          sourceRole: this.currentRole,
-        });
-      } else if (response) {
-        // Forward the response from content script
-        sendResponse(response);
-      } else {
-        sendResponse({
-          type: 'everywhere-response',
-          id,
-          error: 'No response from content script',
-          functionName,
-          sourceRole: this.currentRole,
-        });
-      }
+      // Use the shared logic to send to content script
+      const result = await this.executeInContentScript(functionName, args);
+      sendResponse({
+        type: 'everywhere-response',
+        id,
+        result,
+        functionName,
+        sourceRole: this.currentRole,
+      });
     } catch (error) {
       sendResponse({
         type: 'everywhere-response',
@@ -240,6 +176,79 @@ class EverywhereManager {
         sourceRole: this.currentRole,
       });
     }
+  }
+
+  private async executeInContentScript<K extends keyof GlobalFunctions>(
+    functionName: K | string,
+    args: any[],
+  ): Promise<any> {
+    // Get active tab
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    if (!tab?.id) {
+      throw new Error('No active tab found');
+    }
+
+    // Check if content script is ready by checking the global flag
+    let isContentScriptReady = false;
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          return (window as any).__pomlContentScriptReady === true;
+        },
+      });
+      isContentScriptReady = results[0]?.result === true;
+    } catch (error) {
+      isContentScriptReady = false;
+    }
+
+    // Inject content script if not ready
+    if (!isContentScriptReady) {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['contentScript.js'],
+        });
+
+        // Wait a moment for the script to initialize
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (injectError) {
+        throw new Error(
+          `Failed to inject content script: ${injectError instanceof Error ? injectError.message : injectError}`,
+        );
+      }
+    }
+
+    // Create a message for the content script
+    const id = this.generateId();
+    const message: Message = {
+      type: 'everywhere-request',
+      id,
+      functionName: functionName as string,
+      args,
+      targetRole: 'content',
+      sourceRole: this.currentRole,
+    };
+
+    // Send the message and wait for response
+    const response = await chrome.tabs.sendMessage(tab.id, message);
+
+    // Check for Chrome runtime errors
+    if ((chrome.runtime as any).lastError) {
+      throw new Error((chrome.runtime as any).lastError.message);
+    }
+
+    if (!response) {
+      throw new Error('No response from content script');
+    }
+
+    // Handle the response
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return response.result;
   }
 
   private generateId(): string {
@@ -262,6 +271,11 @@ class EverywhereManager {
     const isInitialized = await this.initialized;
     if (!isInitialized) {
       throw new Error('EverywhereManager not initialized properly');
+    }
+
+    // Special case: If we're background and target is content, send directly to content script
+    if (this.currentRole === 'background' && targetRole === 'content') {
+      return this.executeInContentScript(functionName, args);
     }
 
     const id = this.generateId();
