@@ -26,7 +26,9 @@ export function detectCurrentRole(): Role {
     typeof (self as any).clients === 'object' &&
     typeof (self as any).registration === 'object';
 
-  if (isServiceWorker) return 'background';
+  if (isServiceWorker) {
+return 'background';
+}
 
   // Anything with a DOM isn't a service worker.
   const hasDOM = typeof document !== 'undefined';
@@ -42,7 +44,9 @@ export function detectCurrentRole(): Role {
   }
 
   // Fallbacks
-  if (isExtension) return 'background';
+  if (isExtension) {
+return 'background';
+}
   return 'content';
 }
 

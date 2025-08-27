@@ -1,8 +1,8 @@
 /// <reference types="chrome-types" />
 
+import './registry';
 import { binaryToBase64 } from '../functions/utils';
-import { NotificationMessage, clearSettingsCache } from '../functions/notification';
-import { SettingsBundle } from '../functions/types';
+import { NotificationMessage } from '../functions/notification';
 
 interface FileData {
   name: string;
@@ -17,8 +17,6 @@ interface MessageRequest {
   prompt?: string;
   files?: FileData[];
   binary?: boolean;
-  theme?: string;
-  settings?: any;
 }
 
 interface MessageResponse {
@@ -26,8 +24,6 @@ interface MessageResponse {
   content?: string;
   base64Data?: string;
   error?: string;
-  theme?: string;
-  settings?: any;
 }
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
@@ -71,62 +67,8 @@ chrome.runtime.onMessage.addListener(
     // Cast to MessageRequest for action-based messages
     const messageRequest = request as MessageRequest;
 
-    // Handle theme storage operations
-    if (messageRequest.action === 'getTheme') {
-      chrome.storage.local.get(['theme'], (result) => {
-        sendResponse({ success: true, theme: result.theme || 'auto' });
-      });
-      return true;
-    } else if (messageRequest.action === 'setTheme') {
-      if (!messageRequest.theme) {
-        sendResponse({ success: false, error: 'No theme provided' });
-        return true;
-      }
-
-      chrome.storage.local.set({ theme: messageRequest.theme }, () => {
-        // FIXME: Handle potential errors
-        // const error = chrome.runtime.lastError;
-        const error = { message: 'unknown error' }; // Mock error for demonstration
-        if (error) {
-          sendResponse({ success: false, error: error.message });
-        } else {
-          sendResponse({ success: true });
-        }
-      });
-      return true;
-    } else if (messageRequest.action === 'getSettings') {
-      chrome.storage.local.get(['settings'], (result) => {
-        const defaultSettings: SettingsBundle = {
-          theme: 'auto',
-          uiNotificationLevel: 'warning',
-          consoleNotificationLevel: 'warning',
-        };
-        sendResponse({
-          success: true,
-          settings: result.settings || defaultSettings,
-        });
-      });
-      return true;
-    } else if (messageRequest.action === 'setSettings') {
-      if (!messageRequest.settings) {
-        sendResponse({ success: false, error: 'No settings provided' });
-        return true;
-      }
-
-      chrome.storage.local.set({ settings: messageRequest.settings }, () => {
-        // FIXME: Handle potential errors
-        // const error = chrome.runtime.lastError;
-        const error = undefined; // Mock error handling for consistency
-        if (error) {
-          sendResponse({ success: false, error: 'Storage error' });
-        } else {
-          // Clear notification settings cache when settings are updated
-          clearSettingsCache();
-          sendResponse({ success: true });
-        }
-      });
-      return true;
-    } else if (messageRequest.action === 'readFile') {
+    // Handle file operations
+    if (messageRequest.action === 'readFile') {
       if (!messageRequest.filePath) {
         sendResponse({ success: false, error: 'No file path provided' });
         return true;

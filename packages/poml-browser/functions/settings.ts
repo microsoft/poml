@@ -1,5 +1,5 @@
 import { SettingsBundle } from './types';
-import { everywhere } from './everywhere';
+import { everywhere } from './rpc';
 
 // Cache for settings to avoid repeated storage calls
 let cachedSettings: SettingsBundle | null = null;
@@ -48,11 +48,6 @@ async function _setSettingsImpl(settings: Partial<SettingsBundle>): Promise<void
 
     // Clear cache since settings have changed
     cachedSettings = null;
-
-    // Clear notification settings cache (from notification.ts)
-    if (typeof (globalThis as any).clearSettingsCache === 'function') {
-      (globalThis as any).clearSettingsCache();
-    }
   } catch (error) {
     console.error('Failed to set settings:', error);
     throw error;

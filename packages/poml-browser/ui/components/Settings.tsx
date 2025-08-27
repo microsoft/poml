@@ -3,6 +3,7 @@ import { Stack, Text, Select, Paper, Group, ActionIcon } from '@mantine/core';
 import { IconArrowLeft, IconPalette, IconBell } from '@tabler/icons-react';
 import { useTheme, ThemeMode } from '../contexts/ThemeContext';
 import { NotificationLevel, SettingsBundle } from '@functions/types';
+import { getSettings, setSettings } from '@functions/settings';
 
 interface SettingsProps {
   onBack: () => void;
@@ -24,47 +25,38 @@ const Settings: React.FC<SettingsProps> = ({ onBack }) => {
     { value: 'warning', label: 'Warning' },
     { value: 'info', label: 'Info' },
     { value: 'debug', label: 'Debug' },
-    { value: 'debug+', label: 'Debug+' },
-    { value: 'debug++', label: 'Debug++' },
+    { value: 'debug+', label: 'Debug Verbose' },
+    { value: 'debug++', label: 'Debug More Verbose' },
   ];
 
   // Load all settings on component mount
   useEffect(() => {
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-      chrome.runtime
-        .sendMessage({ action: 'getSettings' })
-        .then((response: any) => {
-          if (response && response.success && response.settings) {
-            const settings: SettingsBundle = response.settings;
-            if (settings.theme) {
-              setTheme(settings.theme);
-            }
-            if (settings.uiNotificationLevel) {
-              setUiNotificationLevel(settings.uiNotificationLevel);
-            }
-            if (settings.consoleNotificationLevel) {
-              setConsoleNotificationLevel(settings.consoleNotificationLevel);
-            }
-          }
-        })
-        .catch(() => {
-          // Use defaults if loading fails
-        });
-    }
-  }, [setTheme]);
-
-  const saveSettings = (updatedSettings: Partial<SettingsBundle>) => {
-    const newSettings: SettingsBundle = {
-      theme: theme || 'auto',
-      uiNotificationLevel,
-      consoleNotificationLevel,
-      ...updatedSettings,
+    const loadSettings = async () => {
+      try {
+        const settings = await getSettings();
+        if (settings.theme) {
+          setTheme(settings.theme);
+        }
+        if (settings.uiNotificationLevel) {
+          setUiNotificationLevel(settings.uiNotificationLevel);
+        }
+        if (settings.consoleNotificationLevel) {
+          setConsoleNotificationLevel(settings.consoleNotificationLevel);
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+        // Use defaults if loading fails
+      }
     };
 
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-      chrome.runtime.sendMessage({ action: 'setSettings', settings: newSettings }).catch((error) => {
-        console.error('Failed to save settings:', error);
-      });
+    loadSettings();
+  }, [setTheme]);
+
+  const saveSettings = async (updatedSettings: Partial<SettingsBundle>) => {
+    try {
+      await setSettings(updatedSettings);
+    } catch (error) {
+      console.error('Failed to save settings:', error);
     }
   };
 

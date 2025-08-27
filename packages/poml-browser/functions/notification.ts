@@ -1,4 +1,5 @@
-import { NotificationLevel, NotificationPosition, NotificationType, SettingsBundle } from './types';
+import { NotificationLevel, NotificationPosition, NotificationType } from './types';
+import { getSettings } from './settings';
 
 export interface NotificationOptions {
   title?: string; // Optional title for the notification
@@ -20,16 +21,6 @@ export interface NotificationMessage {
 // Global handler for direct UI notifications
 let directUIHandler: ((type: NotificationType, message: string, options?: NotificationOptions) => void) | null = null;
 
-// Global settings cache
-let cachedSettings: SettingsBundle | null = null;
-
-// Default settings
-const defaultSettings: SettingsBundle = {
-  theme: 'auto',
-  uiNotificationLevel: 'warning',
-  consoleNotificationLevel: 'warning',
-};
-
 // Register a direct UI handler (called by NotificationService when it initializes)
 export function registerDirectUIHandler(
   handler: (type: NotificationType, message: string, options?: NotificationOptions) => void,
@@ -40,36 +31,6 @@ export function registerDirectUIHandler(
 // Unregister the direct UI handler
 export function unregisterDirectUIHandler(): void {
   directUIHandler = null;
-}
-
-// Get current settings (cached or from storage)
-async function getSettings(): Promise<SettingsBundle> {
-  if (cachedSettings) {
-    return cachedSettings;
-  }
-
-  try {
-    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-      return new Promise((resolve) => {
-        chrome.storage.local.get(['settings'], (result) => {
-          const settings = result.settings || defaultSettings;
-          cachedSettings = settings;
-          resolve(settings);
-        });
-      });
-    }
-  } catch (error) {
-    console.debug('[Notification] Failed to retrieve settings:', error);
-  }
-
-  // Fallback to default settings
-  cachedSettings = defaultSettings;
-  return defaultSettings;
-}
-
-// Clear settings cache (to be called when settings are updated)
-export function clearSettingsCache(): void {
-  cachedSettings = null;
 }
 
 // Define notification level hierarchy (lower index = higher priority)
