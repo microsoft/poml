@@ -42,4 +42,9 @@ export interface GlobalFunctions extends FunctionRegistry {
   getSettings: (refresh?: boolean) => Promise<SettingsBundle>;
   setSettings: (settings: Partial<SettingsBundle>) => Promise<void>;
   displayNotification: (type: NotificationType, message: string, options?: NotificationOptions) => void;
+
+  // Functions for testing purposes
+  pingPongContent: (message: string, delay: number) => Promise<string>;
+  pingPongBackground: (message: string, delay: number) => Promise<string>;
+  pingPongSidebar: (message: string, delay: number) => Promise<string>;
 }

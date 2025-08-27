@@ -325,5 +325,29 @@ export function callInRole<K extends keyof GlobalFunctions>(
   return (everywhereManager as any).sendRequest(functionName as string, args, role);
 }
 
+export const pingPong: Record<Role, (message: string, delay: number) => Promise<string>> = {
+  content: everywhere('pingPongContent', (message: string, delay: number) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(`Content received: ${message}`);
+      }, delay);
+    });
+  }),
+  background: everywhere('pingPongBackground', (message: string, delay: number) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(`Background received: ${message}`);
+      }, delay);
+    });
+  }),
+  sidebar: everywhere('pingPongSidebar', (message: string, delay: number) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(`Sidebar received: ${message}`);
+      }, delay);
+    });
+  }),
+};
+
 // Export types for use in implementation files
 export type { Role, Message, GlobalFunctions };
