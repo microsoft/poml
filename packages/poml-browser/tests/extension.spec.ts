@@ -2,6 +2,8 @@ import { test as base, chromium, BrowserContext, Page, Worker } from '@playwrigh
 
 import * as path from 'path';
 
+process.env.PW_CHROMIUM_ATTACH_TO_OTHER = '1';
+
 const FIXTURE_ENDPOINT = 'http://localhost:8023';
 const EXTENTION_PATH = path.resolve(process.cwd(), 'dist');
 const EXTENSION_ID = 'acelbeblkcnjkojlhcljeldpoifcjoil';
@@ -55,12 +57,24 @@ export const test = base.extend<Fixtures>({
     await use(extensionId);
   },
 
-  sidebarPage: async ({ extContext, extensionId }, use) => {
-    // Either ask SW to open a tab OR just open it directly—direct open is simpler and wakes SW too.
-    const page = await extContext.newPage();
-    await page.goto(`chrome-extension://${extensionId}/ui/index.html`);
-    await page.waitForTimeout(1000); // wait for the sidebar to initialize
-    await use(page);
+  sidebarPage: async ({ extContext, extensionId, contentPage }, use) => {
+    // First click the button in content page to open sidebar
+    await contentPage.waitForSelector('#openSidePanel', { timeout: 5000 });
+    await contentPage.click('#openSidePanel');
+
+    // Wait for sidebar to appear
+    await contentPage.waitForTimeout(1000);
+
+    // Find the sidebar page
+    const pages = extContext.pages();
+    const sidebar = pages.find((page) => page.url().includes(extensionId) && page.url().includes('ui/index.html'));
+
+    if (!sidebar) {
+      throw new Error('Sidebar page not found');
+    }
+    await sidebar.waitForTimeout(30000); // Wait for sidebar to load
+
+    await use(sidebar);
     // Do not close between tests to keep state (MV3 workers can unload)
   },
 

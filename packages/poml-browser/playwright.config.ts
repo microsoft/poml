@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 import * as path from 'path';
 
 const testFixturesPath = path.resolve(__dirname, '../../test-fixtures');
@@ -14,7 +14,7 @@ export default defineConfig({
     {
       name: 'Chrome Extension',
       use: {
-        ...require('@playwright/test').devices['Desktop Chrome'],
+        ...devices['Desktop Chrome'],
         headless: false,
       },
     },

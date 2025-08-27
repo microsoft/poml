@@ -65,6 +65,10 @@ class EverywhereManager {
   }
 
   private setupMessageListener(): void {
+    // console.log('Chrome:', chrome);
+    // console.log('Chrome runtime:', chrome.runtime);
+    // // print traceback
+    // console.trace('Setting up message listener in', this.currentRole);
     if (this.currentRole === 'background' || this.currentRole === 'sidebar') {
       // Both background and sidebar listen to runtime messages
       chrome.runtime.onMessage.addListener(
@@ -136,10 +140,11 @@ class EverywhereManager {
         });
       }
     } else {
+      const availableHandlers = Array.from(this.handlers.keys()).join(', ');
       sendResponse({
         type: 'everywhere-response',
         id,
-        error: `No handler registered for ${functionName} in ${this.currentRole}`,
+        error: `No handler registered for ${functionName} in ${this.currentRole}. Available handlers: ${availableHandlers}`,
         functionName,
         sourceRole: this.currentRole,
       });
@@ -305,7 +310,10 @@ class EverywhereManager {
         if (handler) {
           return await handler(...args);
         } else {
-          throw new Error(`No handler registered for ${functionName} in ${this.currentRole}`);
+          const availableHandlers = Array.from(this.handlers.keys()).join(', ');
+          throw new Error(
+            `No handler registered for ${functionName} in ${this.currentRole}. Available handlers: ${availableHandlers}`,
+          );
         }
       } else {
         return this.sendRequest(functionName as string, args, targetRoles[0]);

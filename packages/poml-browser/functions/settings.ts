@@ -86,6 +86,7 @@ export async function getSettings(refresh?: boolean): Promise<SettingsBundle> {
  * @param settings Partial settings to update
  */
 export async function setSettings(settings: Partial<SettingsBundle>): Promise<void> {
+  cachedSettings = { ...cachedSettings, ...settings } as SettingsBundle;
   await setSettingsEverywhere(settings);
   // Cache is cleared in the implementation
 }

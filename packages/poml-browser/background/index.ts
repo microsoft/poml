@@ -1,6 +1,6 @@
 /// <reference types="chrome-types" />
 
-import { pingPong } from '@functions/rpc';
+import { pingPong } from './registry';
 import { binaryToBase64 } from '@functions/utils';
 
 interface FileData {
@@ -37,9 +37,25 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 chrome.runtime.onMessage.addListener(
   (
     request: MessageRequest,
-    _sender: chrome.runtime.MessageSender,
+    sender: chrome.runtime.MessageSender,
     sendResponse: (response: MessageResponse) => void,
   ): boolean => {
+    // Handle sidebar open request for testing
+    if ((request as any).type === 'open_side_panel') {
+      (async () => {
+        if (sender.tab?.id) {
+          // Open tab-specific side panel
+          await (chrome as any).sidePanel.open({ tabId: sender.tab.id });
+          await chrome.sidePanel.setOptions({
+            tabId: sender.tab.id,
+            path: 'ui/index.html',
+            enabled: true,
+          });
+        }
+      })();
+      return false; // No response needed
+    }
+
     // Handle file operations
     if (request.action === 'readFile') {
       if (!request.filePath) {
@@ -147,14 +163,6 @@ async function extractContentProxy(tabId: number): Promise<any> {
     }
 
     console.log(`[DEBUG] Starting unified content extraction for tab ${tabId}`);
-
-    // Inject the content extractor script that includes all extraction capabilities
-    await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['contentScript.js'],
-    });
-
-    console.log(`[DEBUG] Content extractor script injected`);
 
     // Now execute the extraction function - the content script will auto-detect document type
     const extractionResults = await chrome.scripting.executeScript({

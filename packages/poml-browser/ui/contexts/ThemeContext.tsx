@@ -1,6 +1,7 @@
 /// <reference types="chrome-types" />
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useMantineColorScheme } from '@mantine/core';
+import { getSettings, setSettings } from '@functions/settings';
 
 export type ThemeMode = 'light' | 'dark' | 'auto';
 
@@ -21,51 +22,24 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   // Load theme from background worker on mount
   useEffect(() => {
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-      chrome.runtime
-        .sendMessage({ action: 'getTheme' })
-        .then((response: any) => {
-          if (response && response.success && response.theme) {
-            const savedTheme = response.theme as ThemeMode;
-            if (['light', 'dark', 'auto'].includes(savedTheme)) {
-              setThemeState(savedTheme);
-              setColorScheme(savedTheme);
-            }
-          } else {
-            // Set default theme if none is saved
-            setThemeState('auto');
-            setColorScheme('auto');
-          }
-        })
-        .catch(() => {
-          // Fallback if message fails
-          setThemeState('auto');
-          setColorScheme('auto');
-        });
-    } else {
-      // Fallback for non-extension environments
-      setThemeState('auto');
-      setColorScheme('auto');
+    async function fetchTheme() {
+      const settings = await getSettings();
+      if (settings.theme && ['light', 'dark', 'auto'].includes(settings.theme)) {
+        setThemeState(settings.theme);
+        setColorScheme(settings.theme);
+      } else {
+        setThemeState('auto');
+        setColorScheme('auto');
+      }
     }
+    fetchTheme().catch(console.error);
   }, [setColorScheme]);
 
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
     setColorScheme(newTheme);
 
-    // Save to storage via background worker
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-      chrome.runtime
-        .sendMessage({ action: 'setTheme', theme: newTheme })
-        .then((response: any) => {
-          if (!response || !response.success) {
-            console.error('Failed to save theme:', response?.error);
-          }
-        })
-        .catch((error) => {
-          console.error('Failed to send theme message:', error);
-        });
-    }
+    setSettings({ theme: newTheme }).catch(console.error);
   };
 
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
