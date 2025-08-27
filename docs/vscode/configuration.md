@@ -127,7 +127,7 @@ Or use provider-specific URLs:
 {
   "poml.languageModel.apiUrl": {
     "openai": "https://api.openai.com/v1/",
-    "microsoft": "https://westeurope.api.cognitive.microsoft.com/",
+    "microsoft": "https://westeurope.api.cognitive.microsoft.com/openai",
     "anthropic": "https://api.anthropic.com/"
   }
 }
