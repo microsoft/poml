@@ -247,12 +247,14 @@
           "description": "Language Model Provider",
           "enum": [
             "openai",
+            "openaiResponse",
             "microsoft",
             "anthropic",
             "google"
           ],
           "enumItemLabels": [
-            "OpenAI",
+            "OpenAI Chat Completion",
+            "OpenAI Response API",
             "Azure OpenAI",
             "Anthropic",
             "Google GenAI"

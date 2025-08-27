@@ -1497,7 +1497,7 @@
         "name": "src",
         "type": "string",
         "choices": [],
-        "description": "The path to the image file.",
+        "description": "The path or URL to the image file.",
         "required": false
       },
       {

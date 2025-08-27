@@ -630,7 +630,7 @@ interface ImageProps extends PropsSyntaxBase, MultiMedia.ImageProps {
  *
  * @see {@link Inline} for other props available.
  *
- * @param {string} src - The path to the image file.
+ * @param {string} src - The path or URL to the image file.
  * @param {string} alt - The alternative text to show when the image cannot be displayed.
  * @param {string} base64 - The base64 encoded image data. It can not be specified together with `src`.
  * @param {string} type - The MIME type of the image **to be shown**. If not specified, it will be inferred from the file extension.
@@ -658,9 +658,12 @@ export const Image = component('Image', { aliases: ['img'], asynchorous: true })
       if (base64) {
         throw ReadError.fromProps('Cannot specify both `src` and `base64`.', others);
       }
-      src = expandRelative(src);
-      if (!fs.existsSync(src)) {
-        throw ReadError.fromProps(`Image file not found: ${src}`, others);
+      const isUrl = /^https?:\/\//i.test(src);
+      if (!isUrl) {
+        src = expandRelative(src);
+        if (!fs.existsSync(src)) {
+          throw ReadError.fromProps(`Image file not found: ${src}`, others);
+        }
       }
     } else if (!base64) {
       throw ReadError.fromProps('Either `src` or `base64` must be specified.', others);

@@ -19,9 +19,22 @@ interface ProcessedImage {
   mimeType: string;
 }
 
-function readImage(src?: string, base64?: string) {
+async function readImage(src?: string, base64?: string): Promise<sharp.Sharp> {
   if (src) {
-    return sharp(src);
+    const isUrl = /^https?:\/\//i.test(src);
+    if (isUrl) {
+      // Fetch from URL
+      const response = await fetch(src);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image from URL: ${src} (${response.status} ${response.statusText})`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      return sharp(buffer);
+    } else {
+      // Local file path
+      return sharp(src);
+    }
   }
   if (base64) {
     return sharp(Buffer.from(base64, 'base64'));
@@ -160,7 +173,7 @@ export async function preprocessImage(args: PreprocessImageArgs): Promise<Proces
 
   // Node.js implementation
   const { src, base64, type, maxWidth, maxHeight, resize } = args;
-  let sharpObj = readImage(src, base64);
+  let sharpObj = await readImage(src, base64);
   const metadata = await sharpObj.metadata();
   const resizedImage = resizeImage(sharpObj, metadata, maxWidth, maxHeight, resize);
   const [converted, fileType] = convertType(resizedImage, metadata, type);
