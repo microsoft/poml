@@ -1,7 +1,7 @@
 /// <reference types="chrome-types" />
 
 import { binaryToBase64 } from '../functions/utils';
-import { NotificationMessage } from '../functions/notification';
+import { NotificationMessage, clearSettingsCache } from '../functions/notification';
 import { SettingsBundle } from '../functions/types';
 
 interface FileData {
@@ -120,6 +120,8 @@ chrome.runtime.onMessage.addListener(
         if (error) {
           sendResponse({ success: false, error: 'Storage error' });
         } else {
+          // Clear notification settings cache when settings are updated
+          clearSettingsCache();
           sendResponse({ success: true });
         }
       });
@@ -161,7 +163,7 @@ chrome.runtime.onMessage.addListener(
         return true;
       }
 
-      extractContent(messageRequest.tabId)
+      extractContentProxy(messageRequest.tabId)
         .then((content) => {
           sendResponse({ success: true, content: content });
         })
@@ -223,7 +225,7 @@ async function readFileContent(filePath: string, binary: boolean = false): Promi
   }
 }
 
-async function extractContent(tabId: number): Promise<any> {
+async function extractContentProxy(tabId: number): Promise<any> {
   try {
     if (!chrome.scripting) {
       throw new Error('Chrome scripting API not available');

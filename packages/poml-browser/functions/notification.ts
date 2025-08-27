@@ -1,4 +1,4 @@
-import { NotificationLevel, NotificationPosition, NotificationType } from './types';
+import { NotificationLevel, NotificationPosition, NotificationType, SettingsBundle } from './types';
 
 export interface NotificationOptions {
   title?: string; // Optional title for the notification
@@ -20,6 +20,16 @@ export interface NotificationMessage {
 // Global handler for direct UI notifications
 let directUIHandler: ((type: NotificationType, message: string, options?: NotificationOptions) => void) | null = null;
 
+// Global settings cache
+let cachedSettings: SettingsBundle | null = null;
+
+// Default settings
+const defaultSettings: SettingsBundle = {
+  theme: 'auto',
+  uiNotificationLevel: 'warning',
+  consoleNotificationLevel: 'warning',
+};
+
 // Register a direct UI handler (called by NotificationService when it initializes)
 export function registerDirectUIHandler(
   handler: (type: NotificationType, message: string, options?: NotificationOptions) => void,
@@ -30,6 +40,60 @@ export function registerDirectUIHandler(
 // Unregister the direct UI handler
 export function unregisterDirectUIHandler(): void {
   directUIHandler = null;
+}
+
+// Get current settings (cached or from storage)
+async function getSettings(): Promise<SettingsBundle> {
+  if (cachedSettings) {
+    return cachedSettings;
+  }
+
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      return new Promise((resolve) => {
+        chrome.storage.local.get(['settings'], (result) => {
+          const settings = result.settings || defaultSettings;
+          cachedSettings = settings;
+          resolve(settings);
+        });
+      });
+    }
+  } catch (error) {
+    console.debug('[Notification] Failed to retrieve settings:', error);
+  }
+
+  // Fallback to default settings
+  cachedSettings = defaultSettings;
+  return defaultSettings;
+}
+
+// Clear settings cache (to be called when settings are updated)
+export function clearSettingsCache(): void {
+  cachedSettings = null;
+}
+
+// Define notification level hierarchy (lower index = higher priority)
+const NOTIFICATION_LEVELS: NotificationLevel[] = ['important', 'warning', 'info', 'debug', 'debug+', 'debug++'];
+
+// Check if notification should be shown based on level
+function shouldShowNotification(notificationType: NotificationType, threshold: NotificationLevel): boolean {
+  // Map notification types to levels
+  const typeToLevel: Record<NotificationType, NotificationLevel> = {
+    'error': 'important',
+    'success': 'important',
+    'warning': 'warning',
+    'info': 'info',
+    'debug': 'debug',
+    'debug+': 'debug+',
+    'debug++': 'debug++',
+  };
+
+  const notificationLevel = typeToLevel[notificationType];
+  const notificationIndex = NOTIFICATION_LEVELS.indexOf(notificationLevel);
+  const thresholdIndex = NOTIFICATION_LEVELS.indexOf(threshold);
+
+  // Show if notification level index is less than or equal to threshold index
+  return notificationIndex <= thresholdIndex;
 }
 
 // Determine the current execution context
@@ -115,8 +179,20 @@ function serializeObject(obj: any, maxLength: number = 2000): string {
   }
 }
 
-// Log to console based on notification type
-function logToConsole(type: NotificationType, message: string, objects?: any, options?: NotificationOptions): void {
+// Log to console based on notification type (respects console notification level)
+async function logToConsole(
+  type: NotificationType,
+  message: string,
+  objects?: any,
+  options?: NotificationOptions,
+): Promise<void> {
+  const settings = await getSettings();
+
+  // Check if we should log based on console notification level
+  if (!shouldShowNotification(type, settings.consoleNotificationLevel)) {
+    return;
+  }
+
   const prefix = options?.title ? `[${type.toUpperCase()}] ${options.title}: ` : `[${type.toUpperCase()}] `;
   const fullMessage = prefix + message;
 
@@ -136,6 +212,8 @@ function logToConsole(type: NotificationType, message: string, objects?: any, op
       }
       break;
     case 'debug':
+    case 'debug+':
+    case 'debug++':
       if (objects !== undefined) {
         console.debug(fullMessage, objects);
       } else {
@@ -161,6 +239,7 @@ function logToConsole(type: NotificationType, message: string, objects?: any, op
 }
 
 // Send notification via Chrome runtime messaging
+// This should work for both background -> UI and content -> background -> UI
 async function sendNotificationMessage(message: NotificationMessage): Promise<void> {
   try {
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
@@ -180,26 +259,34 @@ export async function notify(
   objects?: any,
   options?: NotificationOptions,
 ): Promise<void> {
-  // 1. Always log to console first
-  logToConsole(type, message, objects, options);
+  // 1. Get settings to check notification levels
+  const settings = await getSettings();
 
-  // 2. Serialize objects if provided
+  // 2. Always log to console first (respects console notification level)
+  await logToConsole(type, message, objects, options);
+
+  // 3. Check if we should show UI notification based on UI notification level
+  if (!shouldShowNotification(type, settings.uiNotificationLevel)) {
+    return;
+  }
+
+  // 4. Serialize objects if provided
   let details: string | undefined;
   if (objects !== undefined) {
     details = serializeObject(objects);
   }
 
-  // 3. Combine message with details
+  // 5. Combine message with details
   const fullMessage = details ? `${message}\n\nDetails:\n${details}` : message;
 
-  // 4. Check if we have a direct UI handler available (when called from UI context)
+  // 6. Check if we have a direct UI handler available (when called from UI context)
   if (directUIHandler) {
     // Use the direct handler for immediate UI updates
     directUIHandler(type, fullMessage, options);
     return;
   }
 
-  // 5. Otherwise, send via messaging
+  // 7. Otherwise, send via messaging
   const context = getExecutionContext();
   const notificationMessage: NotificationMessage = {
     type: 'notification',
