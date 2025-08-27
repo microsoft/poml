@@ -16,12 +16,6 @@ export default defineConfig({
       use: {
         ...require('@playwright/test').devices['Desktop Chrome'],
         headless: false,
-        args: [
-          `--disable-extensions-except=${extensionPath}`,
-          `--load-extension=${extensionPath}`,
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-        ],
       },
     },
   ],

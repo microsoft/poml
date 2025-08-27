@@ -1,7 +1,7 @@
 /// <reference types="chrome-types" />
 
-import './registry';
-import { binaryToBase64 } from '../functions/utils';
+import { pingPong } from '@functions/rpc';
+import { binaryToBase64 } from '@functions/utils';
 
 interface FileData {
   name: string;
@@ -24,6 +24,8 @@ interface MessageResponse {
   base64Data?: string;
   error?: string;
 }
+
+(self as any).pingPong = pingPong; // Expose pingPong for testing
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === 'install') {

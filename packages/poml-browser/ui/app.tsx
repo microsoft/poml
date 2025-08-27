@@ -24,8 +24,11 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import TopNotifications from './components/TopNotifications';
 import BottomNotifications from './components/BottomNotifications';
 import pomlHelper from '@functions/pomlHelper';
+import { pingPong } from '@functions/rpc';
 
 import './themes/style.css';
+
+(window as any).pingPong = pingPong; // Expose pingPong for testing
 
 // Inner component that uses the notification system
 const AppContent: React.FC = () => {

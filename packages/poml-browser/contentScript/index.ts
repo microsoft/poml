@@ -1,4 +1,4 @@
-import './registry';
+import { pingPong } from './registry';
 
 import { extractPdfContentVisualized, PageVisualization, isPdfDocument } from '../functions/pdf';
 import { extractHtmlContent } from '../functions/html';
@@ -73,6 +73,8 @@ declare global {
 (window as any).extractPdfContentVisualized = async () => {
   return await extractPdfContentVisualized(document.location.href, true);
 };
+
+(window as any).pingPong = pingPong; // Expose pingPong for testing
 
 // Set global flag to indicate content script is ready
 (window as any).__pomlContentScriptReady = true;
