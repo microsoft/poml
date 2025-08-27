@@ -38,8 +38,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme);
     setColorScheme(newTheme);
-
-    setSettings({ theme: newTheme }).catch(console.error);
   };
 
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
