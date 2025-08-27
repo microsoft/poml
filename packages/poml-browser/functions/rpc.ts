@@ -13,6 +13,10 @@ interface Message {
   result?: any;
 }
 
+type Input<K extends keyof GlobalFunctions> = Parameters<GlobalFunctions[K]>;
+type AwaitedOutput<K extends keyof GlobalFunctions> = Awaited<ReturnType<GlobalFunctions[K]>>;
+type EverywhereFn<K extends keyof GlobalFunctions> = (...args: Input<K>) => Promise<AwaitedOutput<K>>;
+
 export function detectCurrentRole(): Role {
   // Are we inside an extension at all?
   const isExtension = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
@@ -27,8 +31,8 @@ export function detectCurrentRole(): Role {
     typeof (self as any).registration === 'object';
 
   if (isServiceWorker) {
-return 'background';
-}
+    return 'background';
+  }
 
   // Anything with a DOM isn't a service worker.
   const hasDOM = typeof document !== 'undefined';
@@ -45,8 +49,8 @@ return 'background';
 
   // Fallbacks
   if (isExtension) {
-return 'background';
-}
+    return 'background';
+  }
   return 'content';
 }
 
@@ -256,8 +260,8 @@ class EverywhereManager {
     });
   }
 
-  public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRoles?: Role[]): GlobalFunctions[K] {
-    return (async (...args: Parameters<GlobalFunctions[K]>) => {
+  public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRoles?: Role[]): EverywhereFn<K> {
+    return async (...args: Input<K>): Promise<AwaitedOutput<K>> => {
       // If target roles specified, try to run in first available role
       if (!targetRoles || targetRoles.length === 0 || targetRoles.includes(this.currentRole)) {
         // Execute locally if current role is in targetRoles or no specific target
@@ -270,7 +274,7 @@ class EverywhereManager {
       } else {
         return this.sendRequest(functionName as string, args, targetRoles[0]);
       }
-    }) as GlobalFunctions[K];
+    };
   }
 }
 
@@ -278,17 +282,17 @@ class EverywhereManager {
 const everywhereManager = new EverywhereManager();
 
 // Type-safe everywhere function with overloads
-export function everywhere<K extends keyof GlobalFunctions>(functionName: K): GlobalFunctions[K];
+export function everywhere<K extends keyof GlobalFunctions>(functionName: K): EverywhereFn<K>;
 export function everywhere<K extends keyof GlobalFunctions>(
   functionName: K,
   handler: GlobalFunctions[K],
   roles?: Role[],
-): GlobalFunctions[K];
+): EverywhereFn<K>;
 export function everywhere<K extends keyof GlobalFunctions>(
   functionName: K,
   handler?: GlobalFunctions[K],
   roles?: Role[],
-): GlobalFunctions[K] {
+): EverywhereFn<K> {
   if (handler) {
     // Register the handler
     everywhereManager.register(functionName, handler, roles);
@@ -316,8 +320,8 @@ export function registerHandlers<K extends keyof GlobalFunctions>(handlers: {
 export function callInRole<K extends keyof GlobalFunctions>(
   role: Role,
   functionName: K,
-  ...args: Parameters<GlobalFunctions[K]>
-): Promise<ReturnType<GlobalFunctions[K]>> {
+  ...args: Input<K>
+): Promise<AwaitedOutput<K>> {
   return (everywhereManager as any).sendRequest(functionName as string, args, role);
 }
 

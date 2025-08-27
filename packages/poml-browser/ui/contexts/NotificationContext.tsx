@@ -4,8 +4,8 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { notificationService } from '../services/NotificationService';
-import { NotificationOptions } from '@functions/notification';
+import { registerDirectUIHandler } from '@functions/notification';
+import { NotificationOptions } from '@functions/types';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 export type NotificationPosition = 'top' | 'bottom';
@@ -137,23 +137,31 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [addNotification],
   );
 
-  // Register the service handler when provider mounts
+  // Register the direct UI handler when provider mounts
   useEffect(() => {
-    const serviceHandler = (type: NotificationType, message: string, options?: NotificationOptions) => {
-      return addNotification({
-        type,
+    const serviceHandler = (
+      type: import('@functions/types').NotificationType,
+      message: string,
+      options?: NotificationOptions,
+    ) => {
+      // Map debug types to info for UI display since NotificationContext doesn't support debug
+      const mappedType: NotificationType =
+        type === 'debug' || type === 'debug+' || type === 'debug++' ? 'info' : (type as NotificationType);
+
+      addNotification({
+        type: mappedType,
         message,
         title: options?.title,
         duration: options?.duration,
         autoHide: options?.autoHide,
-        position: options?.position ?? 'top',
+        position: options?.position ?? (type.startsWith('debug') ? 'bottom' : 'top'),
       });
     };
 
-    notificationService.setHandler(serviceHandler);
+    registerDirectUIHandler(serviceHandler);
 
     return () => {
-      notificationService.removeHandler();
+      // No cleanup needed with the new RPC system
     };
   }, [addNotification]);
 
