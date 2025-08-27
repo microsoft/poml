@@ -42,7 +42,6 @@ function computeCompletionSyntacticContext({ cst, ast: docAst, offset, tokenVect
   return contextVisitor.result;
 }
 
-
 class SuggestionContextVisitorWithClose extends BaseXmlCstVisitor {
   constructor(docAst, offset, tokenVector) {
     super();
@@ -187,7 +186,6 @@ class SuggestionContextVisitorWithClose extends BaseXmlCstVisitor {
   /* istanbul ignore next - place holder*/
   misc(ctx, astNode) {}
 }
-
 
 function handleElementNameWithoutPrefixScenario(ctx, astNode, visitor) {
   /* istanbul ignore else - Very difficult to reproduce specific partial CSTs */
