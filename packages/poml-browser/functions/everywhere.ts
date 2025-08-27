@@ -1,3 +1,5 @@
+import { GlobalFunctions, FunctionRegistry } from './types';
+
 type Role = 'content' | 'background' | 'sidebar';
 
 interface Message {
@@ -9,18 +11,6 @@ interface Message {
   sourceRole: Role;
   error?: any;
   result?: any;
-}
-
-// Type-safe function registry
-type FunctionRegistry = {
-  [K: string]: (...args: any[]) => any;
-};
-
-// Global registry type that will be extended by users
-interface GlobalFunctions extends FunctionRegistry {
-  // Please put the signatures of global functions here
-  saveToStorage: (key: string, value: any) => Promise<boolean>;
-  getPageTitle: () => string;
 }
 
 export function detectCurrentRole(): Role {
@@ -80,8 +70,20 @@ class EverywhereManager {
           return false;
         },
       );
+    } else if (this.currentRole === 'content') {
+      // Content scripts listen to both runtime messages and tab messages
+      chrome.runtime.onMessage.addListener(
+        (message: Message, _sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => {
+          if (message.type === 'everywhere-request') {
+            this.handleIncomingRequest(message, sendResponse);
+            return true; // Keep channel open for async response
+          } else if (message.type === 'everywhere-response') {
+            this.handleResponse(message);
+          }
+          return false;
+        },
+      );
     }
-    // Note: Content scripts don't set up listeners as they work passively
   }
 
   /* Implement for message listener (incoming request end) */
@@ -90,16 +92,17 @@ class EverywhereManager {
 
     // Check if this role should handle the request
     if (targetRole && targetRole !== this.currentRole) {
-      // If we're background and target is content, execute via chrome.scripting
+      // If we're background and target is content, send message to content script
       if (this.currentRole === 'background' && targetRole === 'content') {
-        this.executeInContentScript(functionName, args, id, sendResponse);
+        await this.sendToContentScript(message, sendResponse);
+        // The response is already sent, we don't need to handle it again here
       }
       // Otherwise, we do NOT forward to other roles:
       // 1. Content -> Background/Sidebar: When content script calls sendMessage, both background and sidebar receive it.
       //    The handler that has the function registered will respond.
       // 2. Background <-> Sidebar: They can already communicate directly via sendMessage.
-      // 3. Background -> Content: This is special - we use chrome.scripting.executeScript, not forwarding.
-      // 4. Sidebar -> Content: Not supported directly. Background will intercept and use executeScript if needed.
+      // 3. Background -> Content: This uses chrome.tabs.sendMessage now.
+      // 4. Sidebar -> Content: Not supported directly. Background will intercept and use tabs.sendMessage if needed.
       return;
     }
 
@@ -150,12 +153,8 @@ class EverywhereManager {
     // Otherwise, the result is thrown away because we didn't initiate the request
   }
 
-  private async executeInContentScript(
-    functionName: string,
-    args: any[],
-    id: string,
-    sendResponse: (response: any) => void,
-  ): Promise<void> {
+  private async sendToContentScript(message: Message, sendResponse: (response: any) => void): Promise<void> {
+    const { id, functionName } = message;
     try {
       // Get active tab
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -171,27 +170,28 @@ class EverywhereManager {
         return;
       }
 
-      // Execute the function in content script
-      const results = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          // This runs in the content script context
-          // We need to access the globally registered function
-          const globalEverywhere = (window as any).__everywhereHandlers;
-          if (globalEverywhere && globalEverywhere[functionName]) {
-            return globalEverywhere[functionName](...args);
-          }
-          throw new Error(`Function ${functionName} not found in content script`);
-        },
-      });
-
-      sendResponse({
-        type: 'everywhere-response',
-        id,
-        result: results[0]?.result,
-        functionName,
-        sourceRole: 'content',
-      });
+      // This is simplified, without timeouts.
+      const response = await chrome.tabs.sendMessage(tab.id, message);
+      if ((chrome.runtime as any).lastError) {
+        sendResponse({
+          type: 'everywhere-response',
+          id,
+          error: (chrome.runtime as any).lastError.message,
+          functionName,
+          sourceRole: this.currentRole,
+        });
+      } else if (response) {
+        // Forward the response from content script
+        sendResponse(response);
+      } else {
+        sendResponse({
+          type: 'everywhere-response',
+          id,
+          error: 'No response from content script',
+          functionName,
+          sourceRole: this.currentRole,
+        });
+      }
     } catch (error) {
       sendResponse({
         type: 'everywhere-response',
@@ -211,29 +211,7 @@ class EverywhereManager {
     // Register handler if current role is in the specified roles (or if no roles specified)
     if (!roles || roles.includes(this.currentRole)) {
       this.handlers.set(functionName as string, handler);
-
-      // For content scripts, also store in global for chrome.scripting.executeScript access
-      if (this.currentRole === 'content') {
-        if (!(window as any).__everywhereHandlers) {
-          (window as any).__everywhereHandlers = {};
-        }
-        (window as any).__everywhereHandlers[functionName] = handler;
-      }
     }
-  }
-
-  public async call<K extends keyof GlobalFunctions>(
-    functionName: K,
-    ...args: Parameters<GlobalFunctions[K]>
-  ): Promise<ReturnType<GlobalFunctions[K]>> {
-    // First, check if we can execute locally
-    const localHandler = this.handlers.get(functionName as string);
-    if (localHandler) {
-      return localHandler(...args);
-    }
-
-    // Otherwise, send message to find handler in other roles
-    return this.sendRequest(functionName as string, args);
   }
 
   private sendRequest(functionName: string, args: any[], targetRole?: Role): Promise<any> {
@@ -250,6 +228,7 @@ class EverywhereManager {
 
       this.pendingRequests.set(id, { resolve, reject });
 
+      // Send the message
       chrome.runtime.sendMessage(message, undefined, (response: any) => {
         const lastError = (chrome.runtime as any).lastError;
         if (lastError) {
@@ -276,20 +255,17 @@ class EverywhereManager {
   public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRoles?: Role[]): GlobalFunctions[K] {
     return (async (...args: Parameters<GlobalFunctions[K]>) => {
       // If target roles specified, try to run in first available role
-      if (targetRoles && targetRoles.length > 0) {
-        if (targetRoles.includes(this.currentRole)) {
-          // Can run locally
-          const handler = this.handlers.get(functionName as string);
-          if (handler) {
-            return handler(...args);
-          }
+      if (!targetRoles || targetRoles.length === 0 || targetRoles.includes(this.currentRole)) {
+        // Execute locally if current role is in targetRoles or no specific target
+        const handler = this.handlers.get(functionName as string);
+        if (handler) {
+          return await handler(...args);
+        } else {
+          throw new Error(`No handler registered for ${functionName} in ${this.currentRole}`);
         }
-        // Send to first target role
+      } else {
         return this.sendRequest(functionName as string, args, targetRoles[0]);
       }
-
-      // No specific target, use default call behavior
-      return this.call(functionName, ...args);
     }) as GlobalFunctions[K];
   }
 }

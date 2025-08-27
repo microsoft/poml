@@ -20,3 +20,17 @@ export interface SettingsBundle {
   uiNotificationLevel: NotificationLevel;
   consoleNotificationLevel: NotificationLevel;
 }
+
+// Type-safe function registry
+export type FunctionRegistry = {
+  [K: string]: (...args: any[]) => any;
+};
+
+// Global registry type that will be extended by users
+export interface GlobalFunctions extends FunctionRegistry {
+  // Please put the signatures of global functions here
+  saveToStorage: (key: string, value: any) => Promise<boolean>;
+  getPageTitle: () => string;
+  getSettings: (refresh?: boolean) => Promise<SettingsBundle>;
+  setSettings: (settings: Partial<SettingsBundle>) => Promise<void>;
+}
