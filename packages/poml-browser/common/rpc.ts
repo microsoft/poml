@@ -302,9 +302,14 @@ class EverywhereManager {
     return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   }
 
-  public register<K extends keyof GlobalFunctions>(functionName: K, handler: GlobalFunctions[K], role: Role): void {
-    // Register handler only if current role matches the specified role
-    if (role === this.currentRole) {
+  public register<K extends keyof GlobalFunctions>(
+    functionName: K,
+    handler: GlobalFunctions[K],
+    role: Role | Role[],
+  ): void {
+    // Register handler only if current role matches any of the specified roles
+    const roles = Array.isArray(role) ? role : [role];
+    if (roles.includes(this.currentRole)) {
       this.handlers.set(functionName as string, handler);
     }
   }
@@ -383,14 +388,16 @@ class EverywhereManager {
     }
   }
 
-  public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRole: Role): EverywhereFn<K> {
+  public createFunction<K extends keyof GlobalFunctions>(functionName: K, targetRole: Role | Role[]): EverywhereFn<K> {
     return async (...args: Input<K>): Promise<AwaitedOutput<K>> => {
-      // If target role matches current role, execute locally
-      if (targetRole === this.currentRole) {
+      const targetRoles = Array.isArray(targetRole) ? targetRole : [targetRole];
+
+      // If current role is in the target roles list, execute locally
+      if (targetRoles.includes(this.currentRole)) {
         return this.executeLocally(functionName, args);
       } else {
-        // Otherwise, send request to the target role
-        return this.dispatch<K>(functionName, args, targetRole);
+        // Otherwise, dispatch to the first available target role
+        return this.dispatch<K>(functionName, args, targetRoles[0]);
       }
     };
   }
@@ -427,20 +434,20 @@ const everywhereManager = new EverywhereManager();
  * @returns A function that can be called to invoke the RPC
  */
 // Type-safe everywhere function with overloads
-export function everywhere<K extends keyof GlobalFunctions>(functionName: K, role: Role): EverywhereFn<K>;
+export function everywhere<K extends keyof GlobalFunctions>(functionName: K, role: Role | Role[]): EverywhereFn<K>;
 export function everywhere<K extends keyof GlobalFunctions>(
   functionName: K,
   handler: GlobalFunctions[K],
-  role: Role,
+  role: Role | Role[],
 ): EverywhereFn<K>;
 export function everywhere<K extends keyof GlobalFunctions>(
   functionName: K,
-  handlerOrRole: GlobalFunctions[K] | Role,
-  role?: Role,
+  handlerOrRole: GlobalFunctions[K] | Role | Role[],
+  role?: Role | Role[],
 ): EverywhereFn<K> {
-  if (typeof handlerOrRole === 'string') {
+  if (typeof handlerOrRole === 'string' || Array.isArray(handlerOrRole)) {
     // First overload: everywhere(functionName, role)
-    return everywhereManager.createFunction(functionName, handlerOrRole as Role);
+    return everywhereManager.createFunction(functionName, handlerOrRole as Role | Role[]);
   } else {
     // Second overload: everywhere(functionName, handler, role)
     if (!role) {
@@ -455,11 +462,11 @@ export function everywhere<K extends keyof GlobalFunctions>(
 export function registerHandlers<K extends keyof GlobalFunctions>(handlers: {
   [P in K]: {
     handler: GlobalFunctions[P];
-    role: Role;
+    role: Role | Role[];
   };
 }): void {
   for (const [functionName, config] of Object.entries(handlers) as Array<
-    [K, { handler: GlobalFunctions[K]; role: Role }]
+    [K, { handler: GlobalFunctions[K]; role: Role | Role[] }]
   >) {
     everywhereManager.register(functionName, config.handler, config.role);
   }
@@ -474,7 +481,7 @@ export function callInRole<K extends keyof GlobalFunctions>(
   return (everywhereManager as any).dispatch(functionName as string, args, role);
 }
 
-export const pingPong: Record<Role, (message: any, delay: number) => Promise<any>> = {
+export const pingPong: Record<string, (message: any, delay: number) => Promise<any>> = {
   content: everywhere(
     'pingPongContent',
     (message: any, delay: number) => {
@@ -519,6 +526,21 @@ export const pingPong: Record<Role, (message: any, delay: number) => Promise<any
       });
     },
     'sidebar',
+  ),
+  contentSidebar: everywhere(
+    'pingPongContentSidebar',
+    (message: any, delay: number) => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          if (typeof message === 'string') {
+            resolve(`${detectCurrentRole()} received: ${message}`);
+          } else {
+            resolve({ content: message });
+          }
+        }, delay);
+      });
+    },
+    ['content', 'sidebar'],
   ),
 };
 

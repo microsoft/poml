@@ -92,4 +92,4 @@ function _toPngBase64(base64: ArrayBuffer | string, mimeType: string): Promise<s
   });
 }
 
-export const toPngBase64 = everywhere('_toPngBase64', _toPngBase64, 'sidebar');
+export const toPngBase64 = everywhere('_toPngBase64', _toPngBase64, ['sidebar', 'content']);

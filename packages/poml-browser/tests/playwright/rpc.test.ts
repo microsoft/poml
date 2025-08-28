@@ -107,6 +107,41 @@ test.describe('RPC Unit Tests', () => {
     const buttonText = await button.textContent();
     expect(buttonText).toBe('Result: Content received: Hello from content');
   });
+
+  test('content -> content+sidebar pingPong', async ({ contentPage, sidebarPage }) => {
+    // Click the sidebar ping button
+    const button = contentPage.locator('#pingPongContentSidebar');
+    await button.click();
+
+    // Wait for the result to appear in the button text
+    await contentPage.waitForFunction(
+      () => {
+        const btn = document.querySelector('#pingPongContentSidebar') as HTMLButtonElement;
+        return btn && btn.textContent !== 'Pinging...' && btn.textContent !== 'Ping Content & Sidebar';
+      },
+      { timeout: 5000 },
+    );
+
+    // Get the result from button text
+    const buttonText = await button.textContent();
+    expect(buttonText).toBe('Result: content received: Hello from content');
+  });
+
+  test('background -> content+sidebar pingPong', async ({ serviceWorker, sidebarPage }) => {
+    const result = await serviceWorker.evaluate(async () => {
+      const { pingPong } = self as any;
+      return await pingPong.contentSidebar('Hello from background', 100);
+    });
+    expect(result).toBe('content received: Hello from background');
+  });
+
+  test('sidebar -> content+sidebar pingPong', async ({ sidebarPage }) => {
+    const result = await sidebarPage.evaluate(async () => {
+      const { pingPong } = window as any;
+      return await pingPong.contentSidebar('Hello from sidebar', 100);
+    });
+    expect(result).toBe('sidebar received: Hello from sidebar');
+  });
 });
 
 test.describe('RPC Complex Tests', () => {

@@ -10,6 +10,7 @@ if (__TEST_BUILD__) {
         <button id="pingPongContent" style="display: block; width: 100%; padding: 5px 10px; margin-bottom: 5px; cursor: pointer;">Ping Content</button>
         <button id="pingPongBackground" style="display: block; width: 100%; padding: 5px 10px; margin-bottom: 5px; cursor: pointer;">Ping Background</button>
         <button id="pingPongSidebar" style="display: block; width: 100%; padding: 5px 10px; cursor: pointer;">Ping Sidebar</button>
+        <button id="pingPongContentSidebar" style="display: block; width: 100%; padding: 5px 10px; margin-top: 5px; cursor: pointer;">Ping Content & Sidebar</button>
       </div>
     </div>
   `;
@@ -57,6 +58,19 @@ if (__TEST_BUILD__) {
       button.textContent = `Result: ${result}`;
     } catch (error) {
       console.error('PingPong Sidebar error:', error);
+      button.textContent = `Error: ${error}`;
+    }
+  });
+
+  buttonsContainer.querySelector('#pingPongContentSidebar')?.addEventListener('click', async function (e) {
+    const button = e.target as HTMLButtonElement;
+    try {
+      button.textContent = 'Pinging...';
+      const result = await pingPong.contentSidebar('Hello from content', 100);
+      console.log('PingPong Content & Sidebar result:', result);
+      button.textContent = `Result: ${result}`;
+    } catch (error) {
+      console.error('PingPong Content & Sidebar error:', error);
       button.textContent = `Error: ${error}`;
     }
   });
