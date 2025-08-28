@@ -29,12 +29,16 @@ The POML Browser Extension (`packages/poml-browser/`) provides POML support in w
 ```bash
 # Development builds
 npm run build:dev          # Build for development
-npm run build:test         # Build for testing
 npm run watch              # Watch mode for development
 
 # Production builds
 npm run build:prod         # Build for production
 npm run zip                # Alias for package
+
+# Testing
+npm run build:test         # Build for testing
+npm run test:vitest        # Run unit tests with Vitest
+npm run test:playwright    # Run browser extension tests with Playwright
 ```
 
 ### Build Configuration

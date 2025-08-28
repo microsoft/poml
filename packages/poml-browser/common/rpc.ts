@@ -1,3 +1,52 @@
+/**
+ * RPC (Remote Procedure Call) System for Chrome Extension
+ *
+ * This module provides cross-context communication between different parts of a Chrome extension:
+ * - Content scripts (injected into web pages)
+ * - Background service worker (extension's persistent background context)
+ * - Sidebar/popup/options pages (extension UI contexts)
+ *
+ * ## Data Serialization and Transmission
+ *
+ * Data passed through the RPC system undergoes serialization for transmission across
+ * Chrome extension message channels. This process affects certain JavaScript values:
+ *
+ * ### Values that are preserved:
+ * - Primitives: `string`, `number`, `boolean`, `null`
+ * - Arrays and plain objects
+ * - Typed arrays: `Uint8Array`, `Int16Array`, `Float32Array`, etc.
+ * - `ArrayBuffer` objects (via custom binary serialization)
+ * - Nested structures containing the above types
+ *
+ * ### Values that become `null` after transmission:
+ * - `undefined` (both as values and object properties are omitted)
+ * - `Infinity` and `-Infinity`
+ * - `NaN`
+ * - Sparse array holes (empty slots in arrays)
+ * - Functions (stripped during serialization)
+ * - Symbols
+ * - Complex objects like `Date`, `RegExp`, `Map`, `Set` (become plain objects)
+ *
+ * ### Special cases:
+ * - `-0` (negative zero) becomes `+0` (positive zero)
+ * - Empty `ArrayBuffer` objects may not reconstruct properly across Playwright boundaries
+ * - Circular references will cause serialization to fail
+ *
+ * ## Example transformations:
+ * ```typescript
+ * // Before transmission:
+ * const data = {
+ *   value: undefined,           // → property omitted
+ *   array: [1, , 3],           // → [1, null, 3] (sparse hole becomes null)
+ *   infinity: Infinity,        // → null
+ *   negZero: -0,               // → 0 (positive zero)
+ *   binary: new Uint8Array([1, 2, 3])  // → preserved as Uint8Array
+ * };
+ * ```
+ *
+ * @module rpc
+ */
+
 import { GlobalFunctions, FunctionRegistry } from './types';
 import { serializeBinaryData, deserializeBinaryData } from './utils/base64';
 import { waitForChromeRuntime } from './utils/chrome';
@@ -276,7 +325,6 @@ class EverywhereManager {
     const id = this.generateId();
     // Serialize args before sending through message channel
     const serializedArgs = serializeBinaryData(args);
-    console.log(serializedArgs);
     const message: Message = {
       type: 'everywhere-request',
       id,
@@ -351,6 +399,33 @@ class EverywhereManager {
 // Create singleton instance
 const everywhereManager = new EverywhereManager();
 
+/**
+ * Creates or calls a cross-context RPC function.
+ *
+ * This function has two modes:
+ * 1. **Registration mode**: Register a function handler in a specific role
+ * 2. **Call mode**: Create a function that can call handlers in other roles
+ *
+ * @example
+ * ```typescript
+ * // Register a function in the background role
+ * const myFunc = everywhere('myFunction', (arg: string) => {
+ *   return `Background processed: ${arg}`;
+ * }, 'background');
+ *
+ * // Call the function from another role (e.g., sidebar)
+ * const callBackground = everywhere('myFunction', 'background');
+ * const result = await callBackground('hello'); // "Background processed: hello"
+ * ```
+ *
+ * **Important**: Data passed through RPC calls undergoes serialization. See module
+ * documentation for details on how different JavaScript values are transformed.
+ *
+ * @param functionName - The name of the function (must be defined in GlobalFunctions interface)
+ * @param handlerOrRole - Either a function handler (registration mode) or target role (call mode)
+ * @param role - The role where the handler should be registered (registration mode only)
+ * @returns A function that can be called to invoke the RPC
+ */
 // Type-safe everywhere function with overloads
 export function everywhere<K extends keyof GlobalFunctions>(functionName: K, role: Role): EverywhereFn<K>;
 export function everywhere<K extends keyof GlobalFunctions>(

@@ -1,7 +1,7 @@
 /// <reference types="chrome-types" />
 
 import './registry';
-import { binaryToBase64 } from '@common/utils';
+import { binaryToBase64 } from '@common/utils/base64';
 
 interface FileData {
   name: string;
