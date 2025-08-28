@@ -113,7 +113,7 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
           justifyContent: 'center',
           transition: 'all 0.2s ease',
         }}>
-        <IconPlus size={px(theme.fontSizes.lg)} color={plusIconColor} />
+        <IconPlus size={px(theme.fontSizes.lg)} color={plusIconColor} stroke={3} />
       </Box>
 
       {/* Second line */}

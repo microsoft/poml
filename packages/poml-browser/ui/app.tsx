@@ -308,7 +308,7 @@ const AppContent: React.FC = () => {
       p='md'
       style={{
         width: '100%',
-        minWidth: px(theme.breakpoints.xs),
+        minWidth: 350,
         height: '100vh',
         overflow: 'auto',
         position: 'relative',

@@ -54,11 +54,15 @@ export async function readFile(
   filePath: string | File | Blob,
   options?: ReadFileOptions,
 ): Promise<string | ArrayBuffer> {
+  // Handle File or Blob objects directly
+  if (filePath instanceof File || filePath instanceof Blob) {
+    return decodeContent(await filePath.arrayBuffer(), options?.encoding);
+  }
   return await _readFileEverywhere(filePath, options);
 }
 
 // Implementation
-async function _readFile(filePath: string | File | Blob, options?: ReadFileOptions): Promise<string | ArrayBuffer> {
+async function _readFile(filePath: string, options?: ReadFileOptions): Promise<string | ArrayBuffer> {
   console.log(`Reading file: ${filePath} with options:`, options);
   // Step 1: Download/retrieve the content as ArrayBuffer
   const arrayBuffer = await downloadContent(filePath);
@@ -110,17 +114,7 @@ function normalizeToFileURL(filePath: string): string {
 /**
  * Download content from various sources and return as ArrayBuffer
  */
-async function downloadContent(source: string | File | Blob): Promise<ArrayBuffer> {
-  // Handle File or Blob objects directly
-  if (source instanceof File || source instanceof Blob) {
-    return await source.arrayBuffer();
-  }
-
-  // Handle string paths
-  if (typeof source !== 'string') {
-    throw new TypeError('Source must be a string path, File, or Blob object');
-  }
-
+async function downloadContent(source: string): Promise<ArrayBuffer> {
   // Handle HTTP/HTTPS URLs
   if (source.startsWith('http://') || source.startsWith('https://')) {
     const response = await fetch(source);
