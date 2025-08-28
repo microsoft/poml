@@ -11,7 +11,7 @@ test.describe('readFile function tests', () => {
       return content;
     }, `${TEST_SERVER_URL}/plain/hello.txt`);
 
-    expect(result).toContain('world'); // hello.txt contains "Hello, World!" or similar
+    expect(result).toContain('world');
   });
 
   test('from HTTP URL without encoding', async ({ serviceWorker }) => {
@@ -29,7 +29,7 @@ test.describe('readFile function tests', () => {
   test('should handle Python file content correctly', async ({ serviceWorker }) => {
     const result = await serviceWorker.evaluate(async () => {
       const { readFile } = self as any;
-      const content = await readFile(`${TEST_SERVER_URL}/test-fixtures/plain/simple-functions.py`, {
+      const content = await readFile(`${TEST_SERVER_URL}/plain/simple-functions.py`, {
         encoding: 'utf-8',
       });
       return content;
@@ -41,7 +41,7 @@ test.describe('readFile function tests', () => {
   test('should return base64 encoded string when base64 encoding specified', async ({ serviceWorker }) => {
     const result = await serviceWorker.evaluate(async () => {
       const { readFile } = self as any;
-      const base64 = await readFile(`${TEST_SERVER_URL}/test-fixtures/plain/hello.txt`, { encoding: 'base64' });
+      const base64 = await readFile(`${TEST_SERVER_URL}/plain/hello.txt`, { encoding: 'base64' });
       // Decode to verify
       const decoded = atob(base64);
       return { base64, decoded };
@@ -54,7 +54,7 @@ test.describe('readFile function tests', () => {
   test('should handle image data with binary encoding', async ({ serviceWorker }) => {
     const result = await serviceWorker.evaluate(async () => {
       const { readFile } = self as any;
-      const buffer = await readFile(`${TEST_SERVER_URL}/test-fixtures/image/gpt-5-random-image.png`, {
+      const buffer = await readFile(`${TEST_SERVER_URL}/image/gpt-5-random-image.png`, {
         encoding: 'binary',
       });
       const bytes = new Uint8Array(buffer);
