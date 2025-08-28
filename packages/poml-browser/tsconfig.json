@@ -15,7 +15,7 @@
     "types": ["chrome-types"],
     "baseUrl": "..",
     "paths": {
-      "@functions/*": ["poml-browser/functions/*"],
+      "@common/*": ["poml-browser/common/*"],
       "@ui/*": ["poml-browser/ui/*"],
       "@background/*": ["poml-browser/background/*"],
       "@contentScript/*": ["poml-browser/contentScript/*"]

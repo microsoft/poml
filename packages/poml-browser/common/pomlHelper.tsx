@@ -56,7 +56,7 @@ import {
   CaptionedParagraph,
 } from 'poml/components';
 import { ErrorCollection } from 'poml/base';
-import { binaryToBase64 } from './utils';
+import { binaryToBase64 } from './utils/base64';
 
 // Map component type strings to actual React components
 const ComponentMap: Record<string, React.FC<any>> = {

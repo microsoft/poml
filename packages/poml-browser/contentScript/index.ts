@@ -1,8 +1,11 @@
-import { extractPdfContentVisualized, PageVisualization, isPdfDocument } from '../functions/pdf';
-import { extractHtmlContent } from '../functions/html';
-import { extractWordContent, isWordDocument } from '../functions/msword';
-import { notifyInfo, notifyError } from '../functions/notification';
-import { CardModel } from '../functions/cardModel';
+import './registry';
+import './testHelper';
+
+import { extractPdfContentVisualized, PageVisualization, isPdfDocument } from '../common/pdf';
+import { extractHtmlContent } from '../common/html';
+import { extractWordContent, isWordDocument } from '../common/msword';
+import { notifyInfo, notifyError } from '../common/notification';
+import { CardModel } from '../common/cardModel';
 
 /**
  * Main content extraction function that determines the appropriate extraction method
@@ -61,6 +64,7 @@ declare global {
   interface Window {
     extractContent: () => Promise<CardModel[]>;
     extractPdfContentVisualized: () => Promise<{ cards: CardModel[]; visualizations: PageVisualization[] }>;
+    __pomlContentScriptReady: boolean;
   }
 }
 
@@ -70,3 +74,6 @@ declare global {
 (window as any).extractPdfContentVisualized = async () => {
   return await extractPdfContentVisualized(document.location.href, true);
 };
+
+// Set global flag to indicate content script is ready
+(window as any).__pomlContentScriptReady = true;

@@ -1,7 +1,7 @@
 /// <reference types="chrome-types" />
 
-import { binaryToBase64 } from '../functions/utils';
-import { NotificationMessage } from '../functions/notification';
+import './registry';
+import { binaryToBase64 } from '@common/utils/base64';
 
 interface FileData {
   name: string;
@@ -16,7 +16,6 @@ interface MessageRequest {
   prompt?: string;
   files?: FileData[];
   binary?: boolean;
-  theme?: string;
 }
 
 interface MessageResponse {
@@ -24,7 +23,6 @@ interface MessageResponse {
   content?: string;
   base64Data?: string;
   error?: string;
-  theme?: string;
 }
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
@@ -36,70 +34,34 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 // Handle messages from content script/sidepanel
 chrome.runtime.onMessage.addListener(
   (
-    request: MessageRequest | NotificationMessage,
-    _sender: chrome.runtime.MessageSender,
+    request: MessageRequest,
+    sender: chrome.runtime.MessageSender,
     sendResponse: (response: MessageResponse) => void,
   ): boolean => {
-    // Handle notification messages
-    if ('type' in request && request.type === 'notification') {
-      const notificationMsg = request as NotificationMessage;
-
-      // Forward notification to all UI contexts (popup, sidebar, etc.)
-      chrome.runtime.sendMessage(notificationMsg).catch(() => {
-        // If no UI is open, the message will fail, which is fine
-        console.debug('[Background] No UI available to receive notification');
-      });
-
-      // Also try to send to any open extension tabs
-      chrome.tabs.query({ url: chrome.runtime.getURL('*') }, (tabs) => {
-        tabs.forEach((tab) => {
-          if (tab.id) {
-            chrome.tabs.sendMessage(tab.id, notificationMsg).catch(() => {
-              // Tab might not have a listener, which is fine
-            });
-          }
-        });
-      });
-
-      sendResponse({ success: true });
-      return true;
+    // Handle sidebar open request for testing
+    if (request.action === 'devSidePanel') {
+      (async () => {
+        if (sender.tab) {
+          await (chrome as any).sidePanel.open({ windowId: sender.tab.windowId });
+          await chrome.sidePanel.setOptions({
+            path: 'ui/index.html',
+            enabled: true,
+          });
+        }
+      })();
+      return false; // No response needed
     }
 
-    // Cast to MessageRequest for action-based messages
-    const messageRequest = request as MessageRequest;
-
-    // Handle theme storage operations
-    if (messageRequest.action === 'getTheme') {
-      chrome.storage.local.get(['theme'], (result) => {
-        sendResponse({ success: true, theme: result.theme || 'auto' });
-      });
-      return true;
-    } else if (messageRequest.action === 'setTheme') {
-      if (!messageRequest.theme) {
-        sendResponse({ success: false, error: 'No theme provided' });
-        return true;
-      }
-
-      chrome.storage.local.set({ theme: messageRequest.theme }, () => {
-        // FIXME: Handle potential errors
-        // const error = chrome.runtime.lastError;
-        const error = { message: 'unknown error' }; // Mock error for demonstration
-        if (error) {
-          sendResponse({ success: false, error: error.message });
-        } else {
-          sendResponse({ success: true });
-        }
-      });
-      return true;
-    } else if (messageRequest.action === 'readFile') {
-      if (!messageRequest.filePath) {
+    // Handle file operations
+    if (request.action === 'readFile') {
+      if (!request.filePath) {
         sendResponse({ success: false, error: 'No file path provided' });
         return true;
       }
 
-      readFileContent(messageRequest.filePath, messageRequest.binary)
+      readFileContent(request.filePath, request.binary)
         .then((result) => {
-          if (messageRequest.binary) {
+          if (request.binary) {
             // Convert ArrayBuffer to base64 for message passing
             const arrayBuffer = result as ArrayBuffer;
             const base64 = binaryToBase64(arrayBuffer);
@@ -116,19 +78,19 @@ chrome.runtime.onMessage.addListener(
       // Return true to indicate we will send a response asynchronously
       return true;
     } else if (
-      messageRequest.action === 'extractContent' ||
-      messageRequest.action === 'extractPageContent' ||
-      messageRequest.action === 'extractWordContent' ||
-      messageRequest.action === 'extractMsWordContent' ||
-      messageRequest.action === 'extractPdfContent' ||
-      messageRequest.action === 'extractHtmlContent'
+      request.action === 'extractContent' ||
+      request.action === 'extractPageContent' ||
+      request.action === 'extractWordContent' ||
+      request.action === 'extractMsWordContent' ||
+      request.action === 'extractPdfContent' ||
+      request.action === 'extractHtmlContent'
     ) {
-      if (!messageRequest.tabId) {
+      if (!request.tabId) {
         sendResponse({ success: false, error: 'No tab ID provided' });
         return true;
       }
 
-      extractContent(messageRequest.tabId)
+      extractContentProxy(request.tabId)
         .then((content) => {
           sendResponse({ success: true, content: content });
         })
@@ -190,21 +152,13 @@ async function readFileContent(filePath: string, binary: boolean = false): Promi
   }
 }
 
-async function extractContent(tabId: number): Promise<any> {
+async function extractContentProxy(tabId: number): Promise<any> {
   try {
     if (!chrome.scripting) {
       throw new Error('Chrome scripting API not available');
     }
 
     console.log(`[DEBUG] Starting unified content extraction for tab ${tabId}`);
-
-    // Inject the content extractor script that includes all extraction capabilities
-    await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['contentScript.js'],
-    });
-
-    console.log(`[DEBUG] Content extractor script injected`);
 
     // Now execute the extraction function - the content script will auto-detect document type
     const extractionResults = await chrome.scripting.executeScript({
@@ -255,3 +209,5 @@ async function extractContent(tabId: number): Promise<any> {
     throw error;
   }
 }
+
+(self as any).__pomlBackgroundReady = true; // Indicate that the background script has loaded

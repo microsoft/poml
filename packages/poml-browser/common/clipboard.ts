@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { RichContent } from 'poml';
-import { arrayBufferToDataURL, base64ToUint8 } from './utils';
+import { arrayBufferToDataURL, base64ToUint8 } from './utils/base64';
 
 export const readFileContent = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {

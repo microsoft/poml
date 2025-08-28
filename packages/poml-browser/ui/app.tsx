@@ -1,29 +1,30 @@
 import '@mantine/core/styles.css';
-import React, { useState, useEffect } from 'react';
-import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme } from '@mantine/core';
+import React, { useState, useEffect, use } from 'react';
+import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme, px } from '@mantine/core';
 import { useListState } from '@mantine/hooks';
 import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
 import EditableCardList from './components/EditableCardList';
 import CardModal from './components/CardModal';
 import Settings from './components/Settings';
-import { ExtractedContent } from '@functions/types';
-import { CardModel, createCard, isTextContent } from '@functions/cardModel';
+import { CardModel, createCard } from '@common/cardModel';
 import { shadcnCssVariableResolver } from './themes/cssVariableResolver';
 import { shadcnTheme } from './themes/zinc';
-import { googleDocsManager } from '@functions/gdoc';
+import { googleDocsManager } from '@common/gdoc';
 import {
   readFileContent,
   useGlobalPasteListener,
   arrayBufferToDataUrl,
   writeRichContentToClipboard,
   handleDropEvent,
-} from '@functions/clipboard';
-import { contentManager } from '@functions/html';
+} from '@common/clipboard';
+import { contentManager } from '@common/html';
 import { NotificationProvider, useNotifications } from './contexts/NotificationContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import TopNotifications from './components/TopNotifications';
 import BottomNotifications from './components/BottomNotifications';
-import pomlHelper from '@functions/pomlHelper';
+import pomlHelper from '@common/pomlHelper';
+
+import { readFile } from '../common/imports/file';
 
 import './themes/style.css';
 
@@ -31,7 +32,7 @@ import './themes/style.css';
 const AppContent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [cards, cardsHandlers] = useListState<CardModel>([]);
-  const [selectedCard, setSelectedCard] = useState<ExtractedContent | null>(null);
+  const [selectedCard, setSelectedCard] = useState<CardModel | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isDraggingOverDivider, setIsDraggingOverDivider] = useState(false);
@@ -208,19 +209,7 @@ const AppContent: React.FC = () => {
   };
 
   const handleCardClick = (card: CardModel) => {
-    // Convert CardModel back to ExtractedContent for modal compatibility
-    const extractedContent: ExtractedContent = {
-      id: card.id,
-      title: card.title || '',
-      content: isTextContent(card.content) ? card.content.value : '',
-      excerpt: card.metadata?.excerpt || '',
-      url: card.metadata?.url,
-      timestamp: card.timestamp || new Date(),
-      isManual: card.metadata?.source === 'manual',
-      debug: card.metadata?.debug,
-    };
-
-    setSelectedCard(extractedContent);
+    setSelectedCard(card);
     setModalOpened(true);
   };
 
@@ -306,30 +295,48 @@ const AppContent: React.FC = () => {
       p='md'
       style={{
         width: '100%',
-        minWidth: '200px',
+        minWidth: 350,
         height: '100vh',
         overflow: 'auto',
         position: 'relative',
-        ...(isDraggingOver
-          ? {
-              backgroundColor: `${theme.colors.purple[5]}20`,
-              border: `2px dashed ${theme.colors.purple[8]}50`,
-              borderRadius: theme.radius.sm,
-            }
-          : {}),
       }}>
+      {/* Drag overlay */}
+      {isDraggingOver && (
+        <div
+          style={{
+            position: 'absolute',
+            top: theme.spacing.md,
+            left: theme.spacing.md,
+            right: theme.spacing.md,
+            bottom: theme.spacing.md,
+            backgroundColor: `${theme.colors.purple[5]}15`,
+            border: `3px dashed ${theme.colors.purple[6]}`,
+            borderRadius: theme.radius.md,
+            zIndex: 1000,
+            pointerEvents: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: theme.fontSizes.lg,
+            color: theme.colors.purple[8],
+            fontWeight: 600,
+          }}>
+          Drop files here to add them as cards
+        </div>
+      )}
+
       {/* Header with title and action buttons */}
       <Group justify='space-between' mb='md'>
-        <Title order={4}>POMPad</Title>
+        <Title order={4}>Prompt Orchestration Scratchpad</Title>
         <Group gap='xs'>
           <ActionIcon variant='subtle' onClick={() => console.log('Open history')} aria-label='History'>
-            <IconHistory fontSize={theme.fontSizes.lg} />
+            <IconHistory size={px(theme.fontSizes.lg)} />
           </ActionIcon>
           <ActionIcon variant='subtle' onClick={() => console.log('Open notifications')} aria-label='Notifications'>
-            <IconBell fontSize={theme.fontSizes.lg} />
+            <IconBell size={px(theme.fontSizes.lg)} />
           </ActionIcon>
           <ActionIcon variant='subtle' onClick={() => setShowSettings(true)} aria-label='Settings'>
-            <IconSettings fontSize={theme.fontSizes.lg} />
+            <IconSettings size={px(theme.fontSizes.lg)} />
           </ActionIcon>
         </Group>
       </Group>
@@ -339,8 +346,6 @@ const AppContent: React.FC = () => {
         onChange={handleCardsChange}
         onCardClick={handleCardClick}
         editable={true}
-        nestingLevel={0}
-        maxNestingLevel={3}
         onDragOverDivider={(isOver: boolean) => {
           setIsDraggingOverDivider(isOver);
           if (isOver) {
@@ -380,6 +385,10 @@ const AppContent: React.FC = () => {
 
 // Main App component with providers
 const App: React.FC = () => {
+  useEffect(() => {
+    (window as any).__pomlUIReady = true; // Indicate that the UI has loaded
+  }, []);
+
   return (
     <MantineProvider theme={shadcnTheme} cssVariablesResolver={shadcnCssVariableResolver} defaultColorScheme='auto'>
       <ThemeProvider>

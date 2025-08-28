@@ -22,6 +22,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
@@ -36,12 +38,30 @@ jobs:
         run: |
           cd packages/poml-browser
           npm ci
+      - name: Install Playwright browsers
+        run: |
+          cd packages/poml-browser
+          npx playwright install chromium
       - name: Build poml-browser (warnings as errors)
         run: |
           cd packages/poml-browser
-          npm run build
+          npm run build:test
         env:
           WARNINGS_AS_ERRORS: 'true'
+      - name: Run vitest tests
+        run: |
+          cd packages/poml-browser
+          npm run test:vitest -- --run
+      - name: Run playwright tests
+        run: |
+          cd packages/poml-browser
+          npm run test:playwright
+        if: matrix.os != 'ubuntu-latest'
+      - name: Run playwright tests (Linux)
+        run: |
+          cd packages/poml-browser
+          xvfb-run -a npm run test:playwright
+        if: matrix.os == 'ubuntu-latest'
 
   build:
     strategy:
