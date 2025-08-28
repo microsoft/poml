@@ -7,10 +7,10 @@ interface Message {
   type: 'everywhere-request' | 'everywhere-response';
   id: string;
   functionName: string;
-  args: any[];
+  args?: any[];
   targetRole?: Role;
-  sourceRole: Role;
-  error?: any;
+  sourceRole?: Role;
+  error?: string;
   result?: any;
 }
 
@@ -124,6 +124,9 @@ class EverywhereManager {
 
     // Execute if I am the target or no specific target
     try {
+      if (args === undefined) {
+        throw new Error('No arguments provided in the message');
+      }
       const result = await this.executeLocally(functionName, args);
       sendResponse({
         type: 'everywhere-response',
@@ -156,18 +159,14 @@ class EverywhereManager {
       return;
     }
 
-    const { id, functionName, args } = message;
+    const { id, functionName } = message;
     try {
       // Use the shared logic to send to content script
-      const result = await this.executeInContentScript(functionName, args);
-      sendResponse({
-        type: 'everywhere-response',
-        id,
-        result,
-        functionName,
-        sourceRole: this.currentRole,
-      });
+      const result = await this.launchContentScript(message);
+      sendResponse(result);
     } catch (error) {
+      // This error occurs in background service worker
+      // So we sign it as coming from background
       sendResponse({
         type: 'everywhere-response',
         id,
@@ -178,10 +177,7 @@ class EverywhereManager {
     }
   }
 
-  private async executeInContentScript<K extends keyof GlobalFunctions>(
-    functionName: K | string,
-    args: Input<K>,
-  ): Promise<AwaitedOutput<K>> {
+  private async launchContentScript(message: Message): Promise<Message> {
     // Get active tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -205,6 +201,7 @@ class EverywhereManager {
 
     // Inject content script if not ready
     if (!isContentScriptReady) {
+      console.warn('Content script not ready, injecting. This should not happen in normal operation.');
       try {
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
@@ -220,35 +217,32 @@ class EverywhereManager {
       }
     }
 
-    // Create a message for the content script
-    const id = this.generateId();
-    const message: Message = {
-      type: 'everywhere-request',
-      id,
-      functionName: functionName as string,
-      args,
-      targetRole: 'content',
-      sourceRole: this.currentRole,
-    };
-
     // Send the message and wait for response
-    const response = await chrome.tabs.sendMessage(tab.id, message);
+    const response = (await chrome.tabs.sendMessage(tab.id, message)) as Message | undefined;
 
     // Check for Chrome runtime errors
+    let error: string | null = null;
     if ((chrome.runtime as any).lastError) {
-      throw new Error((chrome.runtime as any).lastError.message);
+      error = (chrome.runtime as any).lastError.message;
+    } else if (!response) {
+      error = 'No response from content script';
+    } else if (response.id !== message.id) {
+      error = `Mismatched response ID from content script: expected ${message.id}, got ${response.id}`;
     }
 
-    if (!response) {
-      throw new Error('No response from content script');
+    if (error) {
+      // This error occurs in background service worker
+      // So we sign it as coming from background
+      return {
+        type: 'everywhere-response',
+        id: message.id,
+        error,
+        functionName: message.functionName,
+        sourceRole: this.currentRole,
+      };
     }
 
-    // Handle the response
-    if (response.error) {
-      throw new Error(response.error);
-    }
-
-    return response.result;
+    return response as Message;
   }
 
   private generateId(): string {
@@ -273,10 +267,7 @@ class EverywhereManager {
       throw new Error('EverywhereManager not initialized properly');
     }
 
-    // Special case: If we're background and target is content, send directly to content script
-    if (this.currentRole === 'background' && targetRole === 'content') {
-      return this.executeInContentScript(functionName, args);
-    }
+    let response: Message;
 
     const id = this.generateId();
     const message: Message = {
@@ -288,47 +279,26 @@ class EverywhereManager {
       sourceRole: this.currentRole,
     };
 
-    // Wrap sendMessage in a Promise
-    const response = await new Promise<Message>((resolve, reject) => {
-      this.pendingRequests.set(id, { resolve, reject });
+    if (this.currentRole === 'background' && targetRole === 'content') {
+      // Special case: If we're background and target is content, send directly to content script
+      response = await this.launchContentScript(message);
+    } else {
+      // General case: send message via chrome.runtime.sendMessage
 
-      chrome.runtime.sendMessage(message, undefined, (resp: any) => {
-        const lastError = (chrome.runtime as any).lastError;
-        if (lastError) {
-          this.pendingRequests.delete(id);
-          reject(new Error(lastError.message));
-        } else if (resp) {
-          resolve(resp);
-        } else {
-          this.pendingRequests.delete(id);
-          reject(new Error('Unknown error'));
-        }
-      });
+      let responseCandidate = (await chrome.runtime.sendMessage(message)) as Message | undefined;
 
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        if (this.pendingRequests.has(id)) {
-          this.pendingRequests.delete(id);
-          reject(new Error(`Request timeout for ${functionName}`));
-        }
-      }, 30000);
-    });
-
-    // Process response
-    if (response.id !== id) {
-      throw new Error(`Mismatched response ID: expected ${id}, got ${response.id}`);
-    }
-    const { result, error } = response;
-    const pending = this.pendingRequests.get(id);
-
-    if (pending) {
-      if (error) {
-        pending.reject(new Error(error));
-      } else {
-        pending.resolve(result);
+      if ((chrome.runtime as any).lastError) {
+        throw new (chrome.runtime as any).lastError();
+      } else if (!responseCandidate) {
+        throw new Error('No response received');
+      } else if (responseCandidate.id !== id) {
+        throw new Error(`Mismatched response ID: expected ${id}, got ${responseCandidate.id}`);
       }
-      this.pendingRequests.delete(id);
+      response = responseCandidate;
     }
+
+    // Process and unpack the response
+    const { result, error } = response;
 
     if (error) {
       if (typeof error === 'string') {

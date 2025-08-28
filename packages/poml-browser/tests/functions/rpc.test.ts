@@ -36,7 +36,6 @@ test.describe('RPC System Tests', () => {
   });
 
   test('content -> background pingPong', async ({ contentPage, sidebarPage }) => {
-    await contentPage.waitForFunction(() => (window as any).__pomlContentScriptReady === true);
     const result = await contentPage.evaluate(async () => {
       const { pingPong } = window as any;
       return await pingPong.background('Hello from content', 100);
@@ -45,7 +44,6 @@ test.describe('RPC System Tests', () => {
   });
 
   test('content -> sidebar pingPong', async ({ contentPage, sidebarPage }) => {
-    await contentPage.waitForFunction(() => (window as any).__pomlContentScriptReady === true);
     const result = await contentPage.evaluate(async () => {
       const { pingPong } = window as any;
       return await pingPong.sidebar('Hello from content', 100);
