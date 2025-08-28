@@ -1,6 +1,6 @@
 import '@mantine/core/styles.css';
 import React, { useState, useEffect } from 'react';
-import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme } from '@mantine/core';
+import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme, px } from '@mantine/core';
 import { useListState } from '@mantine/hooks';
 import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
 import EditableCardList from './components/EditableCardList';
@@ -309,7 +309,7 @@ const AppContent: React.FC = () => {
       p='md'
       style={{
         width: '100%',
-        minWidth: '200px',
+        minWidth: px(theme.breakpoints.xs),
         height: '100vh',
         overflow: 'auto',
         position: 'relative',
@@ -319,10 +319,10 @@ const AppContent: React.FC = () => {
         <div
           style={{
             position: 'absolute',
-            top: '16px',
-            left: '16px',
-            right: '16px',
-            bottom: '16px',
+            top: theme.spacing.md,
+            left: theme.spacing.md,
+            right: theme.spacing.md,
+            bottom: theme.spacing.md,
             backgroundColor: `${theme.colors.purple[5]}15`,
             border: `3px dashed ${theme.colors.purple[6]}`,
             borderRadius: theme.radius.md,
@@ -344,13 +344,13 @@ const AppContent: React.FC = () => {
         <Title order={4}>Prompt Orchestration Scratchpad</Title>
         <Group gap='xs'>
           <ActionIcon variant='subtle' onClick={() => console.log('Open history')} aria-label='History'>
-            <IconHistory fontSize={theme.fontSizes.lg} />
+            <IconHistory size={px(theme.fontSizes.lg)} />
           </ActionIcon>
           <ActionIcon variant='subtle' onClick={() => console.log('Open notifications')} aria-label='Notifications'>
-            <IconBell fontSize={theme.fontSizes.lg} />
+            <IconBell size={px(theme.fontSizes.lg)} />
           </ActionIcon>
           <ActionIcon variant='subtle' onClick={() => setShowSettings(true)} aria-label='Settings'>
-            <IconSettings fontSize={theme.fontSizes.lg} />
+            <IconSettings size={px(theme.fontSizes.lg)} />
           </ActionIcon>
         </Group>
       </Group>

@@ -41,6 +41,20 @@ const CONTAINER_SIZES: Record<string, string> = {
   xxl: rem('1600px'),
 };
 
+const pomlPrimaryColors: MantineColorsTuple = [
+  '#ffedfb',
+  '#f7d9ee',
+  '#e9b2d8',
+  '#db88c1',
+  '#d065ae',
+  '#c94ea2',
+  '#c43b99',
+  '#af3389',
+  '#9d2b7a',
+  '#8a206b',
+  '#C43B99',
+];
+
 const zincColors: MantineColorsTuple = [
   '#fafafa',
   '#f4f4f5',
@@ -356,6 +370,8 @@ export const shadcnTheme: MantineThemeOverride = createTheme({
     purple: purpleColors,
     fuchsia: fuchsiaColors,
     pink: pinkColors,
+
+    pomlPrimary: pomlPrimaryColors,
 
     primary: zincColors,
     secondary: zincColors,
