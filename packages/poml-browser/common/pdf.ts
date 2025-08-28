@@ -1,6 +1,6 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import type { PDFDocumentProxy, PDFPageProxy, TextItem as PDFTextItem } from 'pdfjs-dist/types/src/display/api';
-import { base64ToBinary } from './utils';
+import { base64ToBinary } from './utils/base64';
 import { notifyDebug, notifyError, notifyInfo } from './notification';
 import { CardModel, CardModelSlim, TextContent, BinaryContent, createCardFromSlim } from './cardModel';
 

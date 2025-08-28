@@ -3,7 +3,7 @@
  * Replaces ExtractedContent with a more flexible and structured system
  */
 
-import { binaryToBase64, arrayBufferToDataURL } from './utils';
+import { binaryToBase64, arrayBufferToDataURL } from './utils/base64';
 
 // POML Component Types based on docs/components.md
 export type POMLComponentType =

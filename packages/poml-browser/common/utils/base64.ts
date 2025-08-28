@@ -170,7 +170,7 @@ export function deserializeBinaryData(data: any): any {
   if (typeof data === 'object' && data[SYSTEM_BASE64_MARKER] === true) {
     const serialized = data as SerializedBinary;
     const uint8Array = base64ToUint8(serialized.data);
-    return reconstructTypedArray(uint8Array.buffer, serialized.type);
+    return reconstructTypedArray(uint8Array.buffer as ArrayBuffer, serialized.type);
   }
 
   // Handle arrays
