@@ -4,7 +4,9 @@
   "description": "POML Browser Extension",
   "main": "background.js",
   "scripts": {
-    "build": "rollup -c rollup.config.mjs",
+    "build:dev": "cross-env BUILD_TYPE=dev rollup -c rollup.config.mjs",
+    "build:prod": "cross-env BUILD_TYPE=prod rollup -c rollup.config.mjs",
+    "build:test": "cross-env BUILD_TYPE=test rollup -c rollup.config.mjs",
     "watch": "rollup -c rollup.config.mjs --watch",
     "zip": "cd dist && zip -r ../poml-browser.zip .",
     "test": "vitest",
@@ -27,6 +29,7 @@
     "@types/react-dom": "^19.1.7",
     "@vitest/ui": "^3.2.4",
     "chrome-types": "^0.1.367",
+    "cross-env": "^10.0.0",
     "dompurify": "3.2.4",
     "happy-dom": "^18.0.1",
     "marked": "14.1.2",

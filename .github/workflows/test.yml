@@ -22,6 +22,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
@@ -39,9 +41,14 @@ jobs:
       - name: Build poml-browser (warnings as errors)
         run: |
           cd packages/poml-browser
-          npm run build
+          npm run build:test
         env:
           WARNINGS_AS_ERRORS: 'true'
+      - name: Run playwright tests
+        run: |
+          cd packages/poml-browser
+          npx playwright install chromium
+          npx playwright test tests/functions/rpc.test.ts
 
   build:
     strategy:

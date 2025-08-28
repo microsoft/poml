@@ -13,6 +13,23 @@ import path from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const __BUILD_TYPE__ = process.env.BUILD_TYPE || 'dev'; // 'dev' | 'prod' | 'test'
+if (!['dev', 'prod', 'test'].includes(__BUILD_TYPE__)) {
+  throw new Error(`Invalid BUILD_TYPE: ${__BUILD_TYPE__}`);
+}
+const __TEST_BUILD__ = __BUILD_TYPE__ === 'test';
+const __DEV_BUILD__ = __BUILD_TYPE__ === 'dev';
+const __PROD_BUILD__ = __BUILD_TYPE__ === 'prod';
+
+const replaceValues = {
+  // https://stackoverflow.com/questions/70368760/react-uncaught-referenceerror-process-is-not-defined
+  'process.env.NODE_ENV': JSON.stringify('development'),
+  '__TEST_BUILD__': JSON.stringify(__TEST_BUILD__),
+  '__DEV_BUILD__': JSON.stringify(__DEV_BUILD__),
+  '__PROD_BUILD__': JSON.stringify(__PROD_BUILD__),
+  '__BUILD_TYPE__': JSON.stringify(__BUILD_TYPE__),
+};
+
 const aliasEntries = [
   { find: '@common', replacement: path.resolve(__dirname, 'common') },
   { find: '@ui', replacement: path.resolve(__dirname, 'ui') },
@@ -95,6 +112,10 @@ export default [
       alias({
         entries: [...aliasEntries, ...pomlAliasEntries],
       }),
+      replace({
+        values: replaceValues,
+        preventAssignment: true,
+      }),
       typescript({
         tsconfig: './tsconfig.json',
         include: ['poml-browser/ui/**/*', 'poml-browser/common/**/*', 'poml-browser/stubs/**/*', 'poml/**/*'],
@@ -106,11 +127,6 @@ export default [
         ],
       }),
       json(),
-      replace({
-        // https://stackoverflow.com/questions/70368760/react-uncaught-referenceerror-process-is-not-defined
-        'process.env.NODE_ENV': JSON.stringify('development'),
-        'preventAssignment': true,
-      }),
       postcss({
         extract: true,
         minimize: true,
@@ -155,6 +171,10 @@ export default [
       alias({
         entries: [...aliasEntries],
       }),
+      replace({
+        values: replaceValues,
+        preventAssignment: true,
+      }),
       typescript({
         tsconfig: './tsconfig.json',
         include: ['poml-browser/background/**/*', 'poml-browser/common/**/*', 'poml-browser/stubs/**/*', 'poml/**/*'],
@@ -189,6 +209,10 @@ export default [
     plugins: [
       alias({
         entries: [...aliasEntries],
+      }),
+      replace({
+        values: replaceValues,
+        preventAssignment: true,
       }),
       typescript({
         tsconfig: './tsconfig.json',
