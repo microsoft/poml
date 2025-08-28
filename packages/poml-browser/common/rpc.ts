@@ -1,5 +1,6 @@
 import { GlobalFunctions, FunctionRegistry } from './types';
-import { waitForChromeRuntime } from './utils';
+import { serializeBinaryData, deserializeBinaryData } from './utils/base64';
+import { waitForChromeRuntime } from './utils/chrome';
 
 type Role = 'content' | 'background' | 'sidebar';
 
@@ -102,7 +103,9 @@ class EverywhereManager {
 
   /* Implement for message listener (incoming request end) */
   private async handleIncomingRequest(message: Message, sendResponse: (response: any) => void): Promise<void> {
-    const { functionName, args, id, targetRole } = message;
+    const { functionName, id, targetRole } = message;
+    // Deserialize args that may contain binary data
+    const args = message.args ? deserializeBinaryData(message.args) : undefined;
 
     // The messages are broadcast to all roles.
     // Check if this role should handle the request.
@@ -127,10 +130,12 @@ class EverywhereManager {
         throw new Error('No arguments provided in the message');
       }
       const result = await this.executeLocally(functionName, args);
+      // Serialize result before sending through message channel
+      const serializedResult = serializeBinaryData(result);
       sendResponse({
         type: 'everywhere-response',
         id,
-        result,
+        result: serializedResult,
         functionName,
         sourceRole: this.currentRole,
       });
@@ -269,11 +274,13 @@ class EverywhereManager {
     let response: Message;
 
     const id = this.generateId();
+    // Serialize args before sending through message channel
+    const serializedArgs = serializeBinaryData(args);
     const message: Message = {
       type: 'everywhere-request',
       id,
       functionName: functionName as string,
-      args,
+      args: serializedArgs,
       targetRole,
       sourceRole: this.currentRole,
     };
@@ -297,7 +304,9 @@ class EverywhereManager {
     }
 
     // Process and unpack the response
-    const { result, error } = response;
+    const { error } = response;
+    // Deserialize result that may contain binary data
+    const result = response.result !== undefined ? deserializeBinaryData(response.result) : undefined;
 
     if (error) {
       if (typeof error === 'string') {

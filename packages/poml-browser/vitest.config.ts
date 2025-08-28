@@ -4,23 +4,15 @@ import path from 'path';
 
 export default defineConfig({
   test: {
-    globals: true,
     environment: 'happy-dom',
-    setupFiles: ['./tests/setup.ts'],
-    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/cypress/**',
-      '**/.{idea,git,cache,output,temp}/**',
-      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-    ],
+    include: ['**/tests/vitest/*.test.{js,ts,tsx}'],
   },
   resolve: {
     alias: {
       '@common': path.resolve(__dirname, './common'),
       '@ui': path.resolve(__dirname, './ui'),
-      '@stubs': path.resolve(__dirname, './stubs'),
+      '@background': path.resolve(__dirname, './background'),
+      '@content': path.resolve(__dirname, './content'),
     },
   },
 });

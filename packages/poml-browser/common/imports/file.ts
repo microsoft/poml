@@ -59,8 +59,10 @@ export async function readFile(
 
 // Implementation
 async function _readFile(filePath: string | File | Blob, options?: ReadFileOptions): Promise<string | ArrayBuffer> {
+  console.log(`Reading file: ${filePath} with options:`, options);
   // Step 1: Download/retrieve the content as ArrayBuffer
   const arrayBuffer = await downloadContent(filePath);
+  console.log(`Downloaded content for ${filePath}:`, arrayBuffer);
 
   // Step 2: Decode based on encoding option
   return decodeContent(arrayBuffer, options?.encoding);

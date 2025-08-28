@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 
-import { test } from '../extension.spec';
+import { test } from './extension.spec';
 
 test.describe('RPC System Tests', () => {
   test('sidebar -> background pingPong', async ({ sidebarPage }) => {

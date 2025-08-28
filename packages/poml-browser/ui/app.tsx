@@ -25,6 +25,8 @@ import TopNotifications from './components/TopNotifications';
 import BottomNotifications from './components/BottomNotifications';
 import pomlHelper from '@common/pomlHelper';
 
+import { readFile } from '../common/imports/file';
+
 import './themes/style.css';
 
 // Inner component that uses the notification system
