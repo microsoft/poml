@@ -1,6 +1,6 @@
 /// <reference types="chrome-types" />
 
-import { pingPong } from './registry';
+import './registry';
 import { binaryToBase64 } from '@common/utils';
 
 interface FileData {
@@ -24,8 +24,6 @@ interface MessageResponse {
   base64Data?: string;
   error?: string;
 }
-
-(self as any).pingPong = pingPong; // Expose pingPong for testing
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === 'install') {
@@ -211,3 +209,5 @@ async function extractContentProxy(tabId: number): Promise<any> {
     throw error;
   }
 }
+
+(self as any).__pomlBackgroundReady = true; // Indicate that the background script has loaded

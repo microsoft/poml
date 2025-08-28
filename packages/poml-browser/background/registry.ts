@@ -1,4 +1,13 @@
 /* To trigger the registered functions in the RPC */
 
-export { getSettings, setSettings } from '../common/settings';
-export { pingPong } from '../common/rpc';
+import { getSettings, setSettings } from '../common/settings';
+import { pingPong } from '../common/rpc';
+import { readFile } from '../common/imports/file';
+
+// @ts-ignore
+if (__TEST_BUILD__) {
+  (self as any).getSettings = getSettings;
+  (self as any).setSettings = setSettings;
+  (self as any).readFile = readFile;
+  (self as any).pingPong = pingPong; // Expose pingPong for testing
+}

@@ -1,5 +1,5 @@
 import '@mantine/core/styles.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme, px } from '@mantine/core';
 import { useListState } from '@mantine/hooks';
 import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
@@ -24,11 +24,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import TopNotifications from './components/TopNotifications';
 import BottomNotifications from './components/BottomNotifications';
 import pomlHelper from '@common/pomlHelper';
-import { pingPong } from '@common/rpc';
 
 import './themes/style.css';
-
-(window as any).pingPong = pingPong; // Expose pingPong for testing
 
 // Inner component that uses the notification system
 const AppContent: React.FC = () => {
@@ -399,6 +396,10 @@ const AppContent: React.FC = () => {
 
 // Main App component with providers
 const App: React.FC = () => {
+  useEffect(() => {
+    (window as any).__pomlUIReady = true; // Indicate that the UI has loaded
+  }, []);
+
   return (
     <MantineProvider theme={shadcnTheme} cssVariablesResolver={shadcnCssVariableResolver} defaultColorScheme='auto'>
       <ThemeProvider>

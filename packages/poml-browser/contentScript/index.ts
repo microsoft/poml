@@ -6,7 +6,6 @@ import { extractHtmlContent } from '../common/html';
 import { extractWordContent, isWordDocument } from '../common/msword';
 import { notifyInfo, notifyError } from '../common/notification';
 import { CardModel } from '../common/cardModel';
-import { pingPong } from './registry';
 
 /**
  * Main content extraction function that determines the appropriate extraction method
@@ -75,8 +74,6 @@ declare global {
 (window as any).extractPdfContentVisualized = async () => {
   return await extractPdfContentVisualized(document.location.href, true);
 };
-
-(window as any).pingPong = pingPong; // Expose pingPong for testing
 
 // Set global flag to indicate content script is ready
 (window as any).__pomlContentScriptReady = true;

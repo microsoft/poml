@@ -6,6 +6,8 @@
  * Support encoding options like NodeJS API: fs.readFile(..., { encoding: 'utf-8' })
  */
 
+import { everywhere } from '@common/rpc';
+
 type TextEncoding = 'utf-8' | 'utf8';
 type Base64Encoding = 'base64';
 type BinaryEncoding = 'binary';
@@ -43,14 +45,20 @@ type FileContent<T extends ReadFileOptions | undefined> = T extends TextEncoding
           : never;
 
 // Function overloads for precise type inference
-async function readFile(filePath: string | File | Blob, options: TextEncodingOptions): Promise<string>;
-async function readFile(filePath: string | File | Blob, options: Base64EncodingOptions): Promise<string>;
-async function readFile(filePath: string | File | Blob, options: BinaryEncodingOptions): Promise<ArrayBuffer>;
-async function readFile(filePath: string | File | Blob, options?: NoEncodingOptions): Promise<ArrayBuffer>;
-async function readFile(filePath: string | File | Blob): Promise<ArrayBuffer>;
+export async function readFile(filePath: string | File | Blob, options: TextEncodingOptions): Promise<string>;
+export async function readFile(filePath: string | File | Blob, options: Base64EncodingOptions): Promise<string>;
+export async function readFile(filePath: string | File | Blob, options: BinaryEncodingOptions): Promise<ArrayBuffer>;
+export async function readFile(filePath: string | File | Blob, options?: NoEncodingOptions): Promise<ArrayBuffer>;
+export async function readFile(filePath: string | File | Blob): Promise<ArrayBuffer>;
+export async function readFile(
+  filePath: string | File | Blob,
+  options?: ReadFileOptions,
+): Promise<string | ArrayBuffer> {
+  return await _readFileEverywhere(filePath, options);
+}
 
 // Implementation
-async function readFile(filePath: string | File | Blob, options?: ReadFileOptions): Promise<string | ArrayBuffer> {
+async function _readFile(filePath: string | File | Blob, options?: ReadFileOptions): Promise<string | ArrayBuffer> {
   // Step 1: Download/retrieve the content as ArrayBuffer
   const arrayBuffer = await downloadContent(filePath);
 
@@ -58,28 +66,7 @@ async function readFile(filePath: string | File | Blob, options?: ReadFileOption
   return decodeContent(arrayBuffer, options?.encoding);
 }
 
-// Alternative implementation using File System Access API (requires user interaction)
-async function readFileWithPermission(options?: ReadFileOptions): Promise<string | ArrayBuffer> {
-  if (!('showOpenFilePicker' in window)) {
-    throw new Error('File System Access API not supported in this browser');
-  }
-
-  // This requires user interaction (e.g., button click)
-  const [fileHandle] = await (window as any).showOpenFilePicker({
-    types: [
-      {
-        description: 'All Files',
-        accept: { '*/*': ['*'] },
-      },
-    ],
-    multiple: false,
-  });
-
-  const file = await fileHandle.getFile();
-  const arrayBuffer = await file.arrayBuffer();
-
-  return decodeContent(arrayBuffer, options?.encoding);
-}
+const _readFileEverywhere = everywhere('_readFile', _readFile, 'background');
 
 /**
  * Normalize a file path to a file:// URL
