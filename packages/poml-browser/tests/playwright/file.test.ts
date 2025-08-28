@@ -133,7 +133,7 @@ test.describe('readFile function tests', () => {
       const bytes = new Uint8Array(buffer);
       // Check PNG header bytes
       return [bytes[0], bytes[1], bytes[2], bytes[3]];
-    }, `${FIXTURE_ENDPOINT}/image/gpt-5-random-image.png`);
+    }, `${testFixturesPath}/image/gpt-5-random-image.png`);
     expect(result).toEqual([0x89, 0x50, 0x4e, 0x47]); // PNG header
   });
 
