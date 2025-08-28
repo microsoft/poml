@@ -13,7 +13,7 @@ The POML Browser Extension (`packages/poml-browser/`) provides POML support in w
 - **Background Script** (`background/`): Extension lifecycle management and privileged operations
 - **Content Script** (`contentScript/`): Webpage interaction and content extraction
 - **UI Components** (`ui/`): React-based extension popup with Mantine components
-- **Common** (`common/`): Common utilities for clipboard, document handling, and POML processing
+- **Common** (`common/`): Common utilities for clipboard, document handling, and POML processing (see below)
 
 ### Key Files
 
@@ -21,6 +21,14 @@ The POML Browser Extension (`packages/poml-browser/`) provides POML support in w
 - `rollup.config.mjs`: Build configuration with browser-specific aliases and stubs
 - `tsconfig.json`: TypeScript configuration for browser environment
 - `package.json`: Dependencies and build scripts
+
+### Key Implementations
+
+- **Centralized Types** (`common/types.ts`): Shared TypeScript interfaces and types. This is the source of truth for data structures. You may see some duplication in other packages temporarily. We are migrating to this centralized system.
+- **RPC System** (`common/rpc.ts`): Cross-context communication between background, content script, and UI using a unified RPC mechanism.
+- **Notification System** (`common/notification.ts`): User notifications with different verbosity levels.
+- **Data Handling** (`common/imports/`): Utilities for parsing and converting various data formats (text, HTML, images, tables) to POML.
+- **Event Handling** (`common/events/`): Utilities for processing events from various sources (local, remote, clipboard, drag-and-drop).
 
 ## Build System
 

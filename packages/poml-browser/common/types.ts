@@ -1,3 +1,76 @@
+// The main content to be displayed in the browser extension UI and stored in storage
+// We are moving away from the old CardModel to this new CardModel system.
+export interface CardModel {
+  id: string;
+  content: CardContent;
+  source?: 'manual' | 'clipboard' | 'drop' | 'file' | 'webpage' | 'generated';
+  url?: string; // could be a webpage URL or a file path
+  mimeType?: string; // MIME type of the source, e.g. text/markdown, image/png. Not critical for now.
+  excerpt?: string;
+  tags?: string[];
+  debug?: string;
+  timestamp?: Date;
+}
+
+export type PomlContainerType =
+  // Formatting
+  | 'CaptionedParagraph' // Default container for text cards with a caption
+  | 'Paragraph' // Default container for text cards without a caption
+  // Intentions, mainly useful for categorization. Rendering may be similar, except perhaps with a different title
+  | 'Example'
+  | 'ExampleInput'
+  | 'ExampleOutput'
+  | 'ExampleSet'
+  | 'Hint'
+  | 'Introducer'
+  | 'OutputFormat'
+  | 'Question'
+  | 'Role'
+  | 'StepwiseInstructions'
+  | 'Task';
+
+// Categorization is mainly for UI rendering purposes.
+// For example, text cards should render differently from table cards.
+// When converting to POML: a Text card becomes a <text> component, an Image card becomes an <image> component, etc.
+// They may also specify an extra container, e.g., <role>.
+export interface TextCardContent {
+  type: 'text';
+  text: string;
+  caption?: string;
+  container?: PomlContainerType;
+}
+
+export interface ImageCardContent {
+  type: 'image';
+  base64: string; // must be base64-encoded PNG
+  alt?: string;
+  caption?: string; // Caption is for UI display only; no effect in POML conversion
+  container?: PomlContainerType; // Container has no effect for Image cards
+}
+
+export interface TableCardContent {
+  type: 'table';
+  records: { [key: string]: any }[]; // array of records
+  columns?: ColumnDefinition[]; // optional column definitions
+  caption?: string;
+  container?: PomlContainerType; // e.g., ExampleInput
+}
+
+export interface NestedCardContent {
+  type: 'nested';
+  cards: CardContent[];
+  caption?: string;
+  container?: PomlContainerType; // e.g., ExampleSet
+}
+
+export type CardContent = TextCardContent | ImageCardContent | TableCardContent | NestedCardContent;
+
+interface ColumnDefinition {
+  field: string;
+  header: string;
+  description?: string;
+}
+
 export type NotificationPosition = 'top' | 'bottom';
 export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'debug' | 'debug+' | 'debug++';
 export type NotificationLevel = 'important' | 'warning' | 'info' | 'debug' | 'debug+' | 'debug++';
