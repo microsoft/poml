@@ -49,6 +49,13 @@ jobs:
           cd packages/poml-browser
           npx playwright install chromium
           npx playwright test tests/functions/rpc.test.ts
+        if: matrix.os != 'ubuntu-latest'
+      - name: Run playwright tests (Linux)
+        run: |
+          cd packages/poml-browser
+          npx playwright install chromium
+          xvfb-run -a npx playwright test tests/functions/rpc.test.ts
+        if: matrix.os == 'ubuntu-latest'
 
   build:
     strategy:
