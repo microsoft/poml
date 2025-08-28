@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Textarea, Button, Group, Text, Badge, Stack } from '@mantine/core';
-import { ExtractedContent } from '@common/types';
+import { CardModel, isTextContent } from '@common/cardModel';
 
 interface CardModalProps {
-  content: ExtractedContent | null;
+  content: CardModel | null;
   opened: boolean;
   onClose: () => void;
   onSave: (id: string, newContent: string) => void;
@@ -15,14 +15,16 @@ export const CardModal: React.FC<CardModalProps> = ({ content, opened, onClose, 
 
   useEffect(() => {
     if (content) {
-      setEditedContent(content.content);
+      const textValue = isTextContent(content.content) ? content.content.value : '';
+      setEditedContent(textValue);
       setHasChanges(false);
     }
   }, [content]);
 
   const handleContentChange = (value: string) => {
     setEditedContent(value);
-    setHasChanges(value !== content?.content);
+    const originalContent = content && isTextContent(content.content) ? content.content.value : '';
+    setHasChanges(value !== originalContent);
   };
 
   const handleSave = () => {
@@ -54,16 +56,16 @@ export const CardModal: React.FC<CardModalProps> = ({ content, opened, onClose, 
       title={
         <Stack gap='xs'>
           <Text fw={500} size='lg' truncate>
-            {content.title}
+            {content.title || 'Untitled'}
           </Text>
-          {!content.isManual && (
+          {content.metadata?.source !== 'manual' && (
             <Group gap='xs'>
               <Badge color='blue' variant='light' size='sm'>
-                {content.timestamp.toLocaleString()}
+                {content.timestamp?.toLocaleString() || 'Unknown time'}
               </Badge>
-              {content.url && (
+              {content.metadata?.url && (
                 <Text size='xs' c='dimmed' truncate style={{ maxWidth: '400px' }}>
-                  {content.url}
+                  {content.metadata.url}
                 </Text>
               )}
             </Group>

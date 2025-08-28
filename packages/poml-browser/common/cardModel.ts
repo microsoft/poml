@@ -1,6 +1,6 @@
 /**
  * Card Model Types for POML Browser Extension
- * Replaces ExtractedContent with a more flexible and structured system
+ * Provides a flexible and structured card system for content management
  */
 
 import { binaryToBase64, arrayBufferToDataURL } from './utils/base64';
@@ -321,25 +321,6 @@ export function createCardCollection(cards: CardModel[] = []): CardCollection {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
-}
-
-// Helper to convert from old ExtractedContent to new CardModel
-export function fromExtractedContent(content: any): CardModel {
-  return createCard({
-    id: content.id,
-    title: content.title,
-    content: {
-      type: 'text',
-      value: content.content || content.excerpt || '',
-    },
-    metadata: {
-      source: content.isManual ? 'manual' : 'web',
-      url: content.url,
-      excerpt: content.excerpt,
-      debug: content.debug,
-    },
-    timestamp: content.timestamp,
-  });
 }
 
 // ID generation utility

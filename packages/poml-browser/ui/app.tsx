@@ -6,8 +6,7 @@ import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icon
 import EditableCardList from './components/EditableCardList';
 import CardModal from './components/CardModal';
 import Settings from './components/Settings';
-import { ExtractedContent } from '@common/types';
-import { CardModel, createCard, isTextContent } from '@common/cardModel';
+import { CardModel, createCard } from '@common/cardModel';
 import { shadcnCssVariableResolver } from './themes/cssVariableResolver';
 import { shadcnTheme } from './themes/zinc';
 import { googleDocsManager } from '@common/gdoc';
@@ -33,7 +32,7 @@ import './themes/style.css';
 const AppContent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [cards, cardsHandlers] = useListState<CardModel>([]);
-  const [selectedCard, setSelectedCard] = useState<ExtractedContent | null>(null);
+  const [selectedCard, setSelectedCard] = useState<CardModel | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isDraggingOverDivider, setIsDraggingOverDivider] = useState(false);
@@ -210,19 +209,7 @@ const AppContent: React.FC = () => {
   };
 
   const handleCardClick = (card: CardModel) => {
-    // Convert CardModel back to ExtractedContent for modal compatibility
-    const extractedContent: ExtractedContent = {
-      id: card.id,
-      title: card.title || '',
-      content: isTextContent(card.content) ? card.content.value : '',
-      excerpt: card.metadata?.excerpt || '',
-      url: card.metadata?.url,
-      timestamp: card.timestamp || new Date(),
-      isManual: card.metadata?.source === 'manual',
-      debug: card.metadata?.debug,
-    };
-
-    setSelectedCard(extractedContent);
+    setSelectedCard(card);
     setModalOpened(true);
   };
 
