@@ -59,7 +59,6 @@ class EverywhereManager {
   private initialized: Promise<boolean>;
   private currentRole: Role;
   private handlers: Map<string, (...args: any[]) => any> = new Map();
-  private pendingRequests: Map<string, { resolve: (value: any) => void; reject: (reason?: any) => void }> = new Map();
 
   constructor() {
     this.currentRole = detectCurrentRole();

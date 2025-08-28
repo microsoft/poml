@@ -28,14 +28,13 @@ The POML Browser Extension (`packages/poml-browser/`) provides POML support in w
 
 ```bash
 # Development builds
-npm run build              # Build for development
+npm run build:dev          # Build for development
+npm run build:test         # Build for testing
 npm run watch              # Watch mode for development
 
 # Production builds
+npm run build:prod         # Build for production
 npm run zip                # Alias for package
-
-# Testing and linting
-npm test                   # Run tests (if any)
 ```
 
 ### Build Configuration
@@ -44,7 +43,7 @@ The extension uses Rollup with special configuration for browser environment:
 
 #### Aliases and Stubs
 
-Browser-incompatible Node.js modules are stubbed:
+Browser-incompatible Node.js modules are stubbed. Including but not limited to:
 
 - `fs` → `stubs/fs.ts`: File system operations (throws errors)
 - `sharp` → `stubs/sharp.ts`: Image processing (minimal stub)
@@ -52,6 +51,180 @@ Browser-incompatible Node.js modules are stubbed:
 
 #### Bundle Targets
 
-- **UI Bundle** (`dist/ui/`): Extension popup interface
+- **UI Bundle** (`dist/ui/`): Extension side panel interface
 - **Background Script** (`dist/background.js`): Service worker
 - **Content Script** (`dist/contentScript.js`): Page injection script
+
+## Development Guidelines
+
+### Module Import Aliases
+
+Use TypeScript path aliases for clean imports:
+
+```typescript
+// Module aliases defined in tsconfig.json
+import { something } from '@common/*'; // Common utilities
+import { component } from '@ui/*'; // UI components
+import { service } from '@background/*'; // Background services
+import { helper } from '@contentScript/*'; // Content script helpers
+```
+
+### Styling with Mantine
+
+Use Mantine's theme system and built-in spacing instead of implementing ad-hoc styles.
+
+#### Theme Object Usage
+
+Reference the app.tsx implementation for proper theme usage:
+
+```tsx
+const theme = useMantineTheme();
+
+// ✅ Good: Using theme values
+<div style={{
+  backgroundColor: `${theme.colors.purple[5]}15`,
+  border: `3px dashed ${theme.colors.purple[6]}`,
+  borderRadius: theme.radius.md,
+  fontSize: theme.fontSizes.lg,
+  color: theme.colors.purple[8]
+}}>
+
+// ❌ Bad: Hard-coded values
+<div style={{
+  backgroundColor: 'rgba(128, 0, 255, 0.15)',
+  borderRadius: '8px',
+  fontSize: '18px'
+}}>
+```
+
+#### Spacing System
+
+Use Mantine spacing values from [theme documentation](https://mantine.dev/theming/theme-object/):
+
+- `xs`: 10px
+- `sm`: 12px
+- `md`: 16px
+- `lg`: 20px
+- `xl`: 32px
+
+```tsx
+// ✅ Good: Mantine spacing props
+<Stack p="md" gap="xs">
+<Group justify="space-between" mb="md">
+<Button fullWidth fz="md">
+
+// ❌ Bad: Ad-hoc styles
+<div style={{ padding: '16px', marginBottom: '12px' }}>
+```
+
+#### Important Style Notes
+
+- Avoid over-implementing custom styles when Mantine components provide the functionality
+- Use Mantine's color system with proper opacity (e.g., `${theme.colors.purple[5]}15` for 15 opacity, in hex)
+- Prefer component props over inline styles
+- Use `useMantineTheme()` hook to access theme values in components
+
+### Chrome API Usage and Cross-Context Communication
+
+Different Chrome APIs are available in different contexts. Always verify API availability before use.
+
+#### API Availability by Context
+
+##### Background Service Worker Only
+
+```typescript
+// ✅ Available in background
+chrome.tabs.query({ active: true });
+chrome.windows.create({ url });
+chrome.contextMenus.create({ title });
+chrome.notifications.create({ message });
+chrome.downloads.download({ url });
+chrome.scripting.executeScript({ target });
+chrome.storage.local.get(['key']);
+chrome.storage.sync.set({ key: value });
+```
+
+##### Content Script Only
+
+```typescript
+// ✅ Available in content script
+document.querySelector('#element');
+window.location.href;
+document.body.appendChild(element);
+
+// Limited Chrome APIs
+chrome.runtime.sendMessage({ data });
+chrome.runtime.id;
+```
+
+##### Side Panel (Extension Pages)
+
+```typescript
+// ✅ Available in side panel
+chrome.runtime.sendMessage({ data })
+chrome.runtime.getURL(path)
+
+// ❌ Not directly available - use RPC
+chrome.tabs.* // Must call via background
+chrome.storage.* // Must call via background
+```
+
+#### Cross-Context Communication with RPC
+
+Use the `everywhere` function from `common/rpc.ts` for cross-context calls:
+
+```typescript
+import { everywhere } from '@common/rpc';
+import { pingPong } from '@common/rpc';
+
+// Define a function available in specific role
+const myFunction = everywhere(
+  'functionName',
+  (arg1: string, arg2: number) => {
+    // Implementation
+    return result;
+  },
+  'background', // Role where this executes
+);
+
+// Register it in GlobalFunctions in common/types.ts
+export interface GlobalFunctions extends FunctionRegistry {
+  // Please put the signatures of global functions here
+  functionName: (arg1: string, arg2: number) => ReturnType;
+}
+
+// Call function from any context
+const result = await everywhere('functionName')(arg1, arg2);
+```
+
+### Notification System
+
+Use the notify API instead of console.log for controllable and visible logging.
+
+#### Notification Levels (from most to least verbose)
+
+```typescript
+import {
+  notifyDebugMoreVerbose, // debug++ - Very detailed debugging (used very frequently especially for complex flows)
+  notifyDebugVerbose, // debug+  - Verbose debugging (log the input and output of complex functions)
+  notifyDebug, // debug   - Standard debugging (log error-prone key steps in processes)
+  notifyInfo, // info    - Informational messages (important state changes)
+  notifyWarning, // warning - Warning messages (should be looked at)
+  notifyError, // error   - Error messages (don't auto-hide)
+  notifySuccess, // success - Success messages (briefly show successful big operations)
+} from '@common/notification';
+
+// ❌ Bad: Direct console logging
+console.log('Operation completed');
+console.error('Failed:', error);
+
+// ✅ Good: Using notify API
+notifySuccess('Operation completed');
+notifyError('Failed to fetch data', error, {
+  title: 'Fetch Error',
+  duration: 0, // Don't auto-hide errors
+});
+
+// Debug with objects
+notifyDebug('Processing item', { id: itemId, status: 'pending' });
+```

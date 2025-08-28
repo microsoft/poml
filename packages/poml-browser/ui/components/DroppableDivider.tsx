@@ -19,6 +19,29 @@ interface DroppableDividerProps {
   onDragOverDivider?: (isOver: boolean) => void;
 }
 
+const DraggableOverlay: React.FC = () => {
+  return (
+    <Paper
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(34, 139, 230, 0.1)',
+        border: '2px dashed #228be6',
+        borderRadius: '4px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      <Text size='xs' c='blue' fw={500}>
+        Drop to add card here
+      </Text>
+    </Paper>
+  );
+};
+
 const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
   return !isHovered ? (
     // Single line with very low opacity when inactive
@@ -190,29 +213,10 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
         }
       }}>
       {/* Single line when not active, double line with plus when active, hidden when drop area is visible */}
-      {!isDragActive && <>{!isVisible && <StyledDivider isHovered={isHovered} />}</>}
+      {!isDragActive && !isVisible && <StyledDivider isHovered={isHovered} />}
 
       {/* Droppable area overlay when dragging */}
-      {isDragActive && (
-        <Paper
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(34, 139, 230, 0.1)',
-            border: '2px dashed #228be6',
-            borderRadius: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Text size='xs' c='blue' fw={500}>
-            Drop to add card here
-          </Text>
-        </Paper>
-      )}
+      {isDragActive && <DraggableOverlay />}
     </Box>
   );
 };
