@@ -55,6 +55,20 @@ const pomlPrimaryColors: MantineColorsTuple = [
   '#C43B99',
 ];
 
+const pomlSecondaryColors: MantineColorsTuple = [
+  '#fff9e1',
+  '#fff1cb',
+  '#ffe39a',
+  '#ffd15d',
+  '#ffc638',
+  '#ffbd1c',
+  '#ffb909',
+  '#e3a200',
+  '#ca9000',
+  '#af7c00',
+  '#FFD15D',
+];
+
 const zincColors: MantineColorsTuple = [
   '#fafafa',
   '#f4f4f5',
