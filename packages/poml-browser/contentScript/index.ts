@@ -1,10 +1,12 @@
-import { pingPong } from './registry';
+import './registry';
+import './testHelper';
 
 import { extractPdfContentVisualized, PageVisualization, isPdfDocument } from '../common/pdf';
 import { extractHtmlContent } from '../common/html';
 import { extractWordContent, isWordDocument } from '../common/msword';
 import { notifyInfo, notifyError } from '../common/notification';
 import { CardModel } from '../common/cardModel';
+import { pingPong } from './registry';
 
 /**
  * Main content extraction function that determines the appropriate extraction method
@@ -78,15 +80,3 @@ declare global {
 
 // Set global flag to indicate content script is ready
 (window as any).__pomlContentScriptReady = true;
-
-// Add test button for opening sidebar in test mode
-const button = new DOMParser().parseFromString(
-  '<button id="openSidePanel" style="position: fixed; top: 10px; right: 10px; z-index: 99999;">Open POML Sidebar</button>',
-  'text/html',
-).body.firstElementChild as HTMLElement;
-
-button.addEventListener('click', function () {
-  chrome.runtime.sendMessage({ type: 'open_side_panel' });
-});
-
-document.body.append(button);

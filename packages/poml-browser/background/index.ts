@@ -41,7 +41,7 @@ chrome.runtime.onMessage.addListener(
     sendResponse: (response: MessageResponse) => void,
   ): boolean => {
     // Handle sidebar open request for testing
-    if ((request as any).type === 'open_side_panel') {
+    if (request.action === 'devSidePanel') {
       (async () => {
         if (sender.tab) {
           await (chrome as any).sidePanel.open({ windowId: sender.tab.windowId });
