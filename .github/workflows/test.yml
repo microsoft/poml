@@ -55,12 +55,12 @@ jobs:
       - name: Run playwright tests
         run: |
           cd packages/poml-browser
-          npx run test:playwright
+          npm run test:playwright
         if: matrix.os != 'ubuntu-latest'
       - name: Run playwright tests (Linux)
         run: |
           cd packages/poml-browser
-          xvfb-run -a npx run test:playwright
+          xvfb-run -a npm run test:playwright
         if: matrix.os == 'ubuntu-latest'
 
   build:
