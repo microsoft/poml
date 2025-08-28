@@ -75,7 +75,7 @@ Use Mantine's theme system and built-in spacing instead of implementing ad-hoc s
 
 #### Theme Object Usage
 
-Reference the app.tsx implementation for proper theme usage:
+Remember that the system is redesigned to work with both light and dark modes. Pay special attention to color contrasts and visibility in both modes. Use `primary` and `secondary` colors from the theme if applicable.
 
 ```tsx
 const theme = useMantineTheme();
