@@ -1,7 +1,7 @@
 /**
  * Read local and fetch remote files.
  * Support text and binary files;
- * Support string file paths like file://, /absolute/path, ~/relative/path, https://... and use fetch API.
+ * Support string file paths like file://, /absolute/path, https://... and use fetch API.
  * Support File or Blob objects from file input or drag-and-drop.
  * Support encoding options like NodeJS API: fs.readFile(..., { encoding: 'utf-8' })
  */
@@ -83,32 +83,21 @@ function normalizeToFileURL(filePath: string): string {
     return filePath;
   }
 
-  // Handle home directory expansion
-  if (filePath.startsWith('~/')) {
-    // In browser context, we can't reliably get home directory
-    // This would need to be handled by the file system API
-    throw new Error('Home directory paths (~/) require platform-specific implementation');
-  }
-
   // Convert absolute path to file URL
   if (filePath.startsWith('/')) {
     // On Windows, this might need adjustment for drive letters
     return `file://${filePath}`;
   }
 
-  // Relative paths need to be resolved relative to current location
-  // In browser, this would be relative to current page URL
-  if (!filePath.includes('://')) {
-    // For browser environment, could resolve relative to window.location
-    // For now, treat as relative file path
-    const currentPath =
-      typeof window !== 'undefined'
-        ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))
-        : '/';
-    return `file://${currentPath}/${filePath}`;
+  // Handle home directory expansion and relative paths
+  if (filePath.startsWith('~/')) {
+    throw new Error(`Home directory paths (~/) is not supported. Please provide an absolute path or URL: ${filePath}`);
+  } else if (filePath.includes('/')) {
+    // Relative paths are not supported in this context
+    throw new Error(`Relative paths are not supported. Please provide absolute paths or URLs: ${filePath}`);
+  } else {
+    throw new Error(`Invalid file path format. Please provide absolute paths or URLs: ${filePath}`);
   }
-
-  return filePath;
 }
 
 /**
@@ -125,34 +114,17 @@ async function downloadContent(source: string): Promise<ArrayBuffer> {
   }
 
   // Handle file:// URLs and local paths
-  try {
-    // Normalize path to file:// URL
-    const fileURL = normalizeToFileURL(source);
+  // Normalize path to file:// URL
+  const fileURL = normalizeToFileURL(source);
 
-    // Try to fetch the file URL
-    // Note: This will likely fail in most browsers due to CORS restrictions
-    // unless the page itself was loaded from a file:// URL
-    const response = await fetch(fileURL);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch local file: ${response.status}`);
-    }
-    return await response.arrayBuffer();
-  } catch (error) {
-    // If it's not a recognizable path pattern, try as relative URL
-    if (!source.includes('://') && !source.startsWith('/')) {
-      try {
-        const response = await fetch(source);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
-        }
-        return await response.arrayBuffer();
-      } catch (fetchError) {
-        throw new Error(`Unable to read file from path: ${source}. ${fetchError}`);
-      }
-    } else {
-      throw error;
-    }
+  // Try to fetch the file URL
+  // Note: This will likely fail in most browsers due to CORS restrictions
+  // unless the page itself was loaded from a file:// URL
+  const response = await fetch(fileURL);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch local file: ${response.status}`);
   }
+  return await response.arrayBuffer();
 }
 
 /**
