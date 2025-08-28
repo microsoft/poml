@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 const TEST_SERVER_URL = 'http://localhost:8023';
 
 test.describe('readFile function tests', () => {
-  test('from HTTP URL with UTF-8 encoding', async ({ serviceWorker }) => {
+  test('reads text file with UTF-8', async ({ serviceWorker }) => {
     const result = await serviceWorker.evaluate(async (url) => {
       const { readFile } = self as any;
       const content = await readFile(url, { encoding: 'utf-8' });
@@ -14,11 +14,10 @@ test.describe('readFile function tests', () => {
     expect(result).toContain('world');
   });
 
-  test('from HTTP URL without encoding', async ({ serviceWorker }) => {
+  test('reads file without encoding returns ArrayBuffer', async ({ serviceWorker }) => {
     const result = await serviceWorker.evaluate(async (url) => {
       const { readFile } = self as any;
       const buffer = await readFile(url);
-      // Convert ArrayBuffer to string for testing
       const decoder = new TextDecoder();
       return decoder.decode(buffer);
     }, `${TEST_SERVER_URL}/plain/hello.txt`);
@@ -26,236 +25,202 @@ test.describe('readFile function tests', () => {
     expect(result).toContain('world');
   });
 
-  test('should handle Python file content correctly', async ({ serviceWorker }) => {
-    const result = await serviceWorker.evaluate(async () => {
+  test('reads Python file', async ({ serviceWorker }) => {
+    const result = await serviceWorker.evaluate(async (url) => {
       const { readFile } = self as any;
-      const content = await readFile(`${TEST_SERVER_URL}/plain/simple-functions.py`, {
-        encoding: 'utf-8',
-      });
+      const content = await readFile(url, { encoding: 'utf-8' });
+      return content;
+    }, `${TEST_SERVER_URL}/plain/simple-functions.py`);
+
+    expect(result).toContain('def');
+  });
+
+  test('encodes to base64', async ({ serviceWorker }) => {
+    const result = await serviceWorker.evaluate(async (url) => {
+      const { readFile } = self as any;
+      const base64 = await readFile(url, { encoding: 'base64' });
+      const decoded = atob(base64);
+      return { base64, decoded };
+    }, `${TEST_SERVER_URL}/plain/hello.txt`);
+
+    expect(result.decoded).toContain('world');
+    expect(result.base64).toBeTruthy();
+  });
+
+  test('reads binary image data', async ({ serviceWorker }) => {
+    const result = await serviceWorker.evaluate(async (url) => {
+      const { readFile } = self as any;
+      const buffer = await readFile(url, { encoding: 'binary' });
+      const bytes = new Uint8Array(buffer);
+      // Check PNG header bytes
+      return [bytes[0], bytes[1], bytes[2], bytes[3]];
+    }, `${TEST_SERVER_URL}/image/gpt-5-random-image.png`);
+
+    expect(result).toEqual([0x89, 0x50, 0x4e, 0x47]); // PNG header
+  });
+
+  test('handles utf8 encoding variant', async ({ serviceWorker }) => {
+    const result = await serviceWorker.evaluate(async (url) => {
+      const { readFile } = self as any;
+      const content = await readFile(url, { encoding: 'utf8' });
+      return content;
+    }, `${TEST_SERVER_URL}/plain/hello.txt`);
+
+    expect(result).toContain('world');
+  });
+
+  test('returns ArrayBuffer with undefined encoding', async ({ serviceWorker }) => {
+    const result = await serviceWorker.evaluate(async (url) => {
+      const { readFile } = self as any;
+      const buffer = await readFile(url, { encoding: undefined });
+      return buffer instanceof ArrayBuffer;
+    }, `${TEST_SERVER_URL}/plain/hello.txt`);
+
+    expect(result).toBe(true);
+  });
+
+  test('reads PDF as base64', async ({ serviceWorker }) => {
+    const result = await serviceWorker.evaluate(async (url) => {
+      const { readFile } = self as any;
+      const base64 = await readFile(url, { encoding: 'base64' });
+      const decoded = atob(base64.slice(0, 100));
+      return decoded.startsWith('%PDF');
+    }, `${TEST_SERVER_URL}/pdf/trivial-libre-office-writer.pdf`);
+
+    expect(result).toBe(true);
+  });
+
+  test('reads File object', async ({ contentPage }) => {
+    const result = await contentPage.evaluate(async () => {
+      const text = 'File object test content';
+      const file = new File([text], 'test.txt', { type: 'text/plain' });
+      const { readFile } = window as any;
+      const content = await readFile(file, { encoding: 'utf-8' });
       return content;
     });
 
-    expect(result).toContain('def'); // Python file should contain function definitions
+    expect(result).toBe('File object test content');
   });
 
-  test('should return base64 encoded string when base64 encoding specified', async ({ serviceWorker }) => {
-    const result = await serviceWorker.evaluate(async () => {
-      const { readFile } = self as any;
-      const base64 = await readFile(`${TEST_SERVER_URL}/plain/hello.txt`, { encoding: 'base64' });
-      // Decode to verify
+  test('reads Blob object', async ({ contentPage }) => {
+    const result = await contentPage.evaluate(async () => {
+      const text = 'Blob object test content';
+      const blob = new Blob([text], { type: 'text/plain' });
+      const { readFile } = window as any;
+      const content = await readFile(blob, { encoding: 'utf-8' });
+      return content;
+    });
+
+    expect(result).toBe('Blob object test content');
+  });
+
+  test('reads binary Blob as ArrayBuffer', async ({ contentPage }) => {
+    const result = await contentPage.evaluate(async () => {
+      const bytes = new Uint8Array([72, 101, 108, 108, 111]); // "Hello"
+      const blob = new Blob([bytes]);
+      const { readFile } = window as any;
+      const buffer = await readFile(blob);
+      const decoder = new TextDecoder();
+      return decoder.decode(buffer);
+    });
+
+    expect(result).toBe('Hello');
+  });
+
+  test('encodes File to base64', async ({ contentPage }) => {
+    const result = await contentPage.evaluate(async () => {
+      const text = 'Base64 file test';
+      const file = new File([text], 'test.txt', { type: 'text/plain' });
+      const { readFile } = window as any;
+      const base64 = await readFile(file, { encoding: 'base64' });
       const decoded = atob(base64);
       return { base64, decoded };
     });
 
-    expect(result.decoded).toContain('Hello');
-    expect(result.base64).toBeTruthy();
+    expect(result.decoded).toBe('Base64 file test');
   });
 
-  test('should handle image data with binary encoding', async ({ serviceWorker }) => {
-    const result = await serviceWorker.evaluate(async () => {
-      const { readFile } = self as any;
-      const buffer = await readFile(`${TEST_SERVER_URL}/image/gpt-5-random-image.png`, {
-        encoding: 'binary',
-      });
-      const bytes = new Uint8Array(buffer);
-      // Check PNG header bytes
-      return [bytes[0], bytes[1], bytes[2], bytes[3]];
-    });
+  test('throws on non-existent URL', async ({ serviceWorker }) => {
+    const error = await serviceWorker.evaluate(async (url) => {
+      try {
+        const { readFile } = self as any;
+        await readFile(url, { encoding: 'utf-8' });
+        return null;
+      } catch (e: any) {
+        return e.message;
+      }
+    }, `${TEST_SERVER_URL}/non-existent-file.txt`);
 
-    expect(result).toEqual([0x89, 0x50, 0x4e, 0x47]); // PNG header signature
+    expect(error).toContain('Failed to fetch file');
   });
 
-  test('should throw error for non-existent HTTP URL', async ({ serviceWorker }) => {
+  test('throws on unsupported encoding', async ({ serviceWorker }) => {
+    const error = await serviceWorker.evaluate(async (url) => {
+      try {
+        const { readFile } = self as any;
+        await readFile(url, { encoding: 'unsupported' as any });
+        return null;
+      } catch (e: any) {
+        return e.message;
+      }
+    }, `${TEST_SERVER_URL}/plain/hello.txt`);
+
+    expect(error).toContain('Unsupported encoding');
+  });
+
+  test('throws on invalid source type', async ({ serviceWorker }) => {
     const error = await serviceWorker.evaluate(async () => {
       try {
         const { readFile } = self as any;
-        await readFile(`${TEST_SERVER_URL}/non-existent-file.txt`, { encoding: 'utf-8' });
+        await readFile(123 as any, { encoding: 'utf-8' });
         return null;
       } catch (e: any) {
         return e.message;
       }
     });
 
-    expect(error).toContain('Failed to fetch file');
+    expect(error).toContain('Source must be a string path, File, or Blob object');
   });
 
-  test.describe('File and Blob object handling', () => {
-    test('should read content from File object', async ({ contentPage }) => {
-      // Create a file input and simulate file selection
-      const result = await contentPage.evaluate(async () => {
-        const text = 'File object test content';
-        const file = new File([text], 'test.txt', { type: 'text/plain' });
-
-        // @ts-ignore
-        const content = await window.readFile(file, { encoding: 'utf-8' });
-        return content;
-      });
-
-      expect(result).toBe('File object test content');
+  test('throws on home directory path', async ({ serviceWorker }) => {
+    const error = await serviceWorker.evaluate(async () => {
+      try {
+        const { readFile } = self as any;
+        await readFile('~/test.txt', { encoding: 'utf-8' });
+        return null;
+      } catch (e: any) {
+        return e.message;
+      }
     });
 
-    test('should read content from Blob object', async ({ contentPage }) => {
-      const result = await contentPage.evaluate(async () => {
-        const text = 'Blob object test content';
-        const blob = new Blob([text], { type: 'text/plain' });
-
-        // @ts-ignore
-        const content = await window.readFile(blob, { encoding: 'utf-8' });
-        return content;
-      });
-
-      expect(result).toBe('Blob object test content');
-    });
-
-    test('should handle binary Blob with ArrayBuffer return', async ({ contentPage }) => {
-      const result = await contentPage.evaluate(async () => {
-        const bytes = new Uint8Array([72, 101, 108, 108, 111]); // "Hello"
-        const blob = new Blob([bytes]);
-
-        // @ts-ignore
-        const buffer = await window.readFile(blob);
-        const decoder = new TextDecoder();
-        return decoder.decode(buffer);
-      });
-
-      expect(result).toBe('Hello');
-    });
-
-    test('should handle File with base64 encoding', async ({ contentPage }) => {
-      const result = await contentPage.evaluate(async () => {
-        const text = 'Base64 file test';
-        const file = new File([text], 'test.txt', { type: 'text/plain' });
-
-        // @ts-ignore
-        const base64 = await window.readFile(file, { encoding: 'base64' });
-        const decoded = atob(base64);
-        return { base64, decoded };
-      });
-
-      expect(result.decoded).toBe('Base64 file test');
-    });
+    expect(error).toContain('Home directory paths (~/) require platform-specific implementation');
   });
 
-  test.describe('Encoding options', () => {
-    test('should handle utf-8 encoding variant', async ({ serviceWorker }) => {
-      const result = await serviceWorker.evaluate(async () => {
+  test('handles relative paths', async ({ serviceWorker }) => {
+    const result = await serviceWorker.evaluate(async () => {
+      try {
         const { readFile } = self as any;
-        const content = await readFile(`${TEST_SERVER_URL}/test-fixtures/plain/hello.txt`, { encoding: 'utf8' });
-        return content;
-      });
-
-      expect(result).toContain('Hello');
+        await readFile('plain/hello.txt', { encoding: 'utf-8' });
+        return 'success';
+      } catch (e: any) {
+        return e.message;
+      }
     });
 
-    test('should return ArrayBuffer when no encoding specified', async ({ serviceWorker }) => {
-      const result = await serviceWorker.evaluate(async () => {
-        const { readFile } = self as any;
-        const buffer = await readFile(`${TEST_SERVER_URL}/test-fixtures/plain/hello.txt`);
-        return buffer instanceof ArrayBuffer;
-      });
-
-      expect(result).toBe(true);
-    });
-
-    test('should return ArrayBuffer with undefined encoding in options', async ({ serviceWorker }) => {
-      const result = await serviceWorker.evaluate(async () => {
-        const { readFile } = self as any;
-        const buffer = await readFile(`${TEST_SERVER_URL}/test-fixtures/plain/hello.txt`, { encoding: undefined });
-        return buffer instanceof ArrayBuffer;
-      });
-
-      expect(result).toBe(true);
-    });
-
-    test('should handle PDF files with base64 encoding', async ({ serviceWorker }) => {
-      const result = await serviceWorker.evaluate(async () => {
-        const { readFile } = self as any;
-        const base64 = await readFile(`${TEST_SERVER_URL}/test-fixtures/pdf/trivial-libre-office-writer.pdf`, {
-          encoding: 'base64',
-        });
-        // Check if it's valid base64 and decode a portion to verify PDF header
-        const decoded = atob(base64.slice(0, 100));
-        return decoded.startsWith('%PDF');
-      });
-
-      expect(result).toBe(true);
-    });
+    expect(result).toBeTruthy();
   });
 
-  test.describe('Error handling', () => {
-    test('should throw error for unsupported encoding', async ({ serviceWorker }) => {
-      const error = await serviceWorker.evaluate(async () => {
-        try {
-          const { readFile } = self as any;
-          await readFile(`${TEST_SERVER_URL}/test-fixtures/plain/hello.txt`, { encoding: 'unsupported' as any });
-          return null;
-        } catch (e: any) {
-          return e.message;
-        }
-      });
-
-      expect(error).toContain('Unsupported encoding');
+  test('handles CORS errors', async ({ serviceWorker }) => {
+    const error = await serviceWorker.evaluate(async () => {
+      try {
+        const { readFile } = self as any;
+        await readFile('https://example.com/file.txt', { encoding: 'utf-8' });
+        return null;
+      } catch (e: any) {
+        return 'error occurred';
+      }
     });
 
-    test('should throw TypeError for invalid source type', async ({ serviceWorker }) => {
-      const error = await serviceWorker.evaluate(async () => {
-        try {
-          const { readFile } = self as any;
-          await readFile(123 as any, { encoding: 'utf-8' });
-          return null;
-        } catch (e: any) {
-          return e.message;
-        }
-      });
-
-      expect(error).toContain('Source must be a string path, File, or Blob object');
-    });
-
-    test('should throw error for home directory paths', async ({ serviceWorker }) => {
-      const error = await serviceWorker.evaluate(async () => {
-        try {
-          const { readFile } = self as any;
-          await readFile('~/test.txt', { encoding: 'utf-8' });
-          return null;
-        } catch (e: any) {
-          return e.message;
-        }
-      });
-
-      expect(error).toContain('Home directory paths (~/) require platform-specific implementation');
-    });
-
-    test('should handle relative paths', async ({ serviceWorker }) => {
-      const result = await serviceWorker.evaluate(async () => {
-        try {
-          // This should attempt to fetch as a relative URL
-          const { readFile } = self as any;
-          await readFile('test-fixtures/plain/hello.txt', { encoding: 'utf-8' });
-          return 'success';
-        } catch (e: any) {
-          // Expected to fail in service worker context without proper relative path
-          return e.message;
-        }
-      });
-
-      expect(result).toBeTruthy(); // Will either succeed or throw expected error
-    });
-  });
-
-  test.describe('Cross-origin and CORS', () => {
-    test('should handle CORS errors gracefully', async ({ serviceWorker }) => {
-      const error = await serviceWorker.evaluate(async () => {
-        try {
-          // Attempt to fetch from a different origin that doesn't allow CORS
-          const { readFile } = self as any;
-          await readFile('https://example.com/file.txt', { encoding: 'utf-8' });
-          return null;
-        } catch (e: any) {
-          return 'error occurred';
-        }
-      });
-
-      expect(error).toBe('error occurred');
-    });
+    expect(error).toBe('error occurred');
   });
 });
