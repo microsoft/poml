@@ -143,4 +143,21 @@ describe('binary/base64 utilities with happy-dom', () => {
     const deserialized = deserializeBinaryData(d);
     expect(deserialized).toBe(d);
   });
+
+  it('handles empty ArrayBuffer correctly in serialization and deserialization', () => {
+    const empty = new ArrayBuffer(0);
+    const serialized = serializeBinaryData(empty);
+    expect((serialized as any).__RPC_B64__).toBe(true);
+    expect((serialized as any).data).toBe(''); // base64 of empty string is empty
+    const restored = deserializeBinaryData(serialized);
+    expect(restored).toBeInstanceOf(ArrayBuffer);
+    expect((restored as ArrayBuffer).byteLength).toBe(0);
+  });
+
+  it('roundtrips ArrayBuffer with non-ASCII bytes', () => {
+    const buf = new Uint8Array([0, 128, 255]).buffer;
+    const serialized = serializeBinaryData(buf);
+    const restored = deserializeBinaryData(serialized) as ArrayBuffer;
+    expect(Array.from(new Uint8Array(restored))).toEqual([0, 128, 255]);
+  });
 });

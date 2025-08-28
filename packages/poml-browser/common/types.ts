@@ -44,7 +44,7 @@ export interface GlobalFunctions extends FunctionRegistry {
   displayNotification: (type: NotificationType, message: string, options?: NotificationOptions) => void;
 
   // Functions for testing purposes
-  pingPongContent: (message: string, delay: number) => Promise<string>;
-  pingPongBackground: (message: string, delay: number) => Promise<string>;
-  pingPongSidebar: (message: string, delay: number) => Promise<string>;
+  pingPongContent: (message: any, delay: number) => Promise<any>;
+  pingPongBackground: (message: any, delay: number) => Promise<any>;
+  pingPongSidebar: (message: any, delay: number) => Promise<any>;
 }

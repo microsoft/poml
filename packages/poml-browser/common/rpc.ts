@@ -276,6 +276,7 @@ class EverywhereManager {
     const id = this.generateId();
     // Serialize args before sending through message channel
     const serializedArgs = serializeBinaryData(args);
+    console.log(serializedArgs);
     const message: Message = {
       type: 'everywhere-request',
       id,
@@ -398,13 +399,17 @@ export function callInRole<K extends keyof GlobalFunctions>(
   return (everywhereManager as any).dispatch(functionName as string, args, role);
 }
 
-export const pingPong: Record<Role, (message: string, delay: number) => Promise<string>> = {
+export const pingPong: Record<Role, (message: any, delay: number) => Promise<any>> = {
   content: everywhere(
     'pingPongContent',
-    (message: string, delay: number) => {
+    (message: any, delay: number) => {
       return new Promise((resolve) => {
         setTimeout(() => {
-          resolve(`Content received: ${message}`);
+          if (typeof message === 'string') {
+            resolve(`Content received: ${message}`);
+          } else {
+            resolve({ content: message });
+          }
         }, delay);
       });
     },
@@ -412,10 +417,14 @@ export const pingPong: Record<Role, (message: string, delay: number) => Promise<
   ),
   background: everywhere(
     'pingPongBackground',
-    (message: string, delay: number) => {
+    (message: any, delay: number) => {
       return new Promise((resolve) => {
         setTimeout(() => {
-          resolve(`Background received: ${message}`);
+          if (typeof message === 'string') {
+            resolve(`Background received: ${message}`);
+          } else {
+            resolve({ content: message });
+          }
         }, delay);
       });
     },
@@ -423,10 +432,14 @@ export const pingPong: Record<Role, (message: string, delay: number) => Promise<
   ),
   sidebar: everywhere(
     'pingPongSidebar',
-    (message: string, delay: number) => {
+    (message: any, delay: number) => {
       return new Promise((resolve) => {
         setTimeout(() => {
-          resolve(`Sidebar received: ${message}`);
+          if (typeof message === 'string') {
+            resolve(`Sidebar received: ${message}`);
+          } else {
+            resolve({ content: message });
+          }
         }, delay);
       });
     },

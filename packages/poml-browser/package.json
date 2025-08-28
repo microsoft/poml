@@ -10,11 +10,8 @@
     "watch": "cross-env BUILD_TYPE=dev rollup -c rollup.config.mjs --watch",
     "watch:test": "cross-env BUILD_TYPE=test rollup -c rollup.config.mjs --watch",
     "zip": "cd dist && zip -r ../poml-browser.zip .",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui",
-    "test:serve": "serve -s ../../test-fixtures -p 8023",
-    "test:prepare": "playwright test tests/scripts/seed-browser.spec.ts"
+    "test:vitest": "vitest",
+    "test:playwright": "playwright test"
   },
   "keywords": [],
   "license": "MIT",
