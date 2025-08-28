@@ -83,16 +83,22 @@ function normalizeToFileURL(filePath: string): string {
     return filePath;
   }
 
-  // Convert absolute path to file URL
+  // Handle Windows absolute paths (e.g., C:\, D:\, etc.)
+  if (/^[A-Za-z]:[\\\/]/.test(filePath)) {
+    // Windows absolute path - normalize backslashes to forward slashes
+    const normalizedPath = filePath.replace(/\\/g, '/');
+    return `file:///${normalizedPath}`;
+  }
+
+  // Convert Unix/Linux/Mac absolute path to file URL
   if (filePath.startsWith('/')) {
-    // On Windows, this might need adjustment for drive letters
     return `file://${filePath}`;
   }
 
   // Handle home directory expansion and relative paths
   if (filePath.startsWith('~/')) {
     throw new Error(`Home directory paths (~/) is not supported. Please provide an absolute path or URL: ${filePath}`);
-  } else if (filePath.includes('/')) {
+  } else if (filePath.includes('/') || filePath.includes('\\')) {
     // Relative paths are not supported in this context
     throw new Error(`Relative paths are not supported. Please provide absolute paths or URLs: ${filePath}`);
   } else {
