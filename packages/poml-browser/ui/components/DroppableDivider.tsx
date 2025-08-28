@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { Box, Paper, Text } from '@mantine/core';
+import { Box, Paper, Text, useMantineTheme, useMantineColorScheme } from '@mantine/core';
+import { px } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { handleDropEvent } from '@common/clipboard';
 import { CardModel, createCard } from '@common/cardModel';
@@ -12,14 +13,20 @@ import { useNotifications } from '../contexts/NotificationContext';
 
 interface DroppableDividerProps {
   index: number;
-  isVisible: boolean;
-  nestingLevel: number;
-  onAddCard: (index: number) => void;
-  onDropContent: (cards: CardModel[], index: number) => void;
-  onDragOverDivider?: (isOver: boolean) => void;
+  alwaysHovered: boolean;
+  onClick: (index: number) => void;
+  onDrop: (cards: CardModel[], index: number) => void;
+  onDragOver?: (isOver: boolean) => void;
 }
 
 const DraggableOverlay: React.FC = () => {
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  const borderWidth = 2; // in pixels for the dashed border
+  const borderColor = isDark ? theme.colors.blue[4] : theme.colors.blue[6];
+
   return (
     <Paper
       style={{
@@ -28,14 +35,16 @@ const DraggableOverlay: React.FC = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(34, 139, 230, 0.1)',
-        border: '2px dashed #228be6',
-        borderRadius: '4px',
+        backgroundColor: isDark
+          ? `${theme.colors.blue[8]}20` // Darker blue with more opacity for dark mode
+          : `${theme.colors.blue[5]}15`, // Lighter blue with less opacity for light mode
+        border: `${borderWidth}px dashed ${borderColor}`,
+        borderRadius: theme.radius.sm,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-      <Text size='xs' c='blue' fw={500}>
+      <Text size='md' lh='lg' c='blue' fw={500}>
         Drop to add card here
       </Text>
     </Paper>
@@ -43,6 +52,18 @@ const DraggableOverlay: React.FC = () => {
 };
 
 const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  // Adaptive colors for light and dark mode
+  const inactiveColor = isDark ? theme.colors.gray[7] : theme.colors.gray[3];
+  const hoveredColor = isDark ? theme.colors.gray[3] : theme.colors.gray[6];
+  const plusIconColor = isDark ? theme.colors.dark[9] : theme.white;
+
+  // Border width for consistency
+  const borderWidth = 1; // in pixels
+
   return !isHovered ? (
     // Single line with very low opacity when inactive
     <Box
@@ -52,9 +73,9 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
         left: 0,
         right: 0,
         transform: 'translateY(-50%)',
-        height: '1px',
-        backgroundColor: '#e0e0e0',
-        opacity: 0.3,
+        height: `${borderWidth}px`,
+        backgroundColor: inactiveColor,
+        opacity: isDark ? 0.6 : 0.3,
       }}
     />
   ) : (
@@ -73,8 +94,8 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
       <Box
         style={{
           flex: 1,
-          height: '1px',
-          backgroundColor: isHovered ? '#666' : '#ddd',
+          height: `${borderWidth}px`,
+          backgroundColor: hoveredColor,
           transition: 'background-color 0.2s ease',
         }}
       />
@@ -82,25 +103,25 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
       {/* Plus sign */}
       <Box
         style={{
-          margin: '0 12px',
-          width: '20px',
-          height: '20px',
+          margin: `0 ${theme.spacing.sm}`,
+          width: theme.lineHeights.lg,
+          height: theme.lineHeights.lg,
           borderRadius: '50%',
-          backgroundColor: isHovered ? '#666' : '#ddd',
+          backgroundColor: hoveredColor,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           transition: 'all 0.2s ease',
         }}>
-        <IconPlus size={12} color='white' />
+        <IconPlus size={px(theme.fontSizes.lg)} color={plusIconColor} />
       </Box>
 
       {/* Second line */}
       <Box
         style={{
           flex: 1,
-          height: '1px',
-          backgroundColor: isHovered ? '#666' : '#ddd',
+          height: `${borderWidth}px`,
+          backgroundColor: hoveredColor,
           transition: 'background-color 0.2s ease',
         }}
       />
@@ -110,40 +131,39 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
 
 export const DroppableDivider: React.FC<DroppableDividerProps> = ({
   index,
-  isVisible,
-  nestingLevel,
-  onAddCard,
-  onDropContent,
-  onDragOverDivider,
+  alwaysHovered,
+  onClick,
+  onDrop,
+  onDragOver,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const { showError, showSuccess } = useNotifications();
+  const theme = useMantineTheme();
 
   return (
     <Box
       data-droppable-divider='true'
       style={{
         position: 'relative',
-        height: isVisible || isHovered || isDragActive ? '40px' : '12px',
+        height: alwaysHovered || isHovered || isDragActive ? theme.lineHeights.md : theme.spacing.sm,
         transition: 'all 0.2s ease',
-        marginLeft: nestingLevel * 20,
-        marginTop: '8px',
-        marginBottom: '8px',
+        marginTop: theme.spacing.sm,
+        marginBottom: theme.spacing.sm,
         cursor: 'pointer',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onAddCard(index)}
+      onClick={() => onClick(index)}
       onDragEnter={(e) => {
         e.preventDefault();
         setIsDragActive(true);
-        onDragOverDivider?.(true);
+        onDragOver?.(true);
       }}
       onDragLeave={(e) => {
         e.preventDefault();
         setIsDragActive(false);
-        onDragOverDivider?.(false);
+        onDragOver?.(false);
       }}
       onDragOver={(e) => {
         e.preventDefault();
@@ -153,7 +173,7 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
         e.preventDefault();
         e.stopPropagation();
         setIsDragActive(false);
-        onDragOverDivider?.(false);
+        onDragOver?.(false);
 
         try {
           const dropData = await handleDropEvent(e.nativeEvent as DragEvent);
@@ -197,7 +217,7 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
           }
 
           if (newCards.length > 0) {
-            onDropContent(newCards, index);
+            onDrop(newCards, index);
             showSuccess(
               `Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`,
               'Content Added',
@@ -209,11 +229,11 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
           console.error('Failed to handle drop:', error);
           showError('Failed to process dropped content', 'Drop Error');
           // Fall back to regular add card
-          onAddCard(index);
+          onClick(index);
         }
       }}>
       {/* Single line when not active, double line with plus when active, hidden when drop area is visible */}
-      {!isDragActive && !isVisible && <StyledDivider isHovered={isHovered} />}
+      {!isDragActive && <StyledDivider isHovered={isHovered || alwaysHovered} />}
 
       {/* Droppable area overlay when dragging */}
       {isDragActive && <DraggableOverlay />}

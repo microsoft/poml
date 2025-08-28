@@ -16,8 +16,6 @@ interface EditableCardListProps {
   onChange: (cards: CardModel[]) => void;
   onCardClick?: (card: CardModel) => void;
   editable?: boolean;
-  nestingLevel?: number;
-  maxNestingLevel?: number;
   onDragOverDivider?: (isOver: boolean) => void;
 }
 
@@ -26,8 +24,6 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
   onChange,
   onCardClick,
   editable = true,
-  nestingLevel = 0,
-  maxNestingLevel = 3,
   onDragOverDivider,
 }) => {
   const handleDragEnd = useCallback(
@@ -115,17 +111,16 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
   return (
     <Stack gap='sm'>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId={`cards-${nestingLevel}`}>
+        <Droppable droppableId='cards'>
           {(provided) => (
             <div {...provided.droppableProps} ref={provided.innerRef}>
               {editable && (
                 <DroppableDivider
                   index={0}
-                  isVisible={cards.length === 0}
-                  nestingLevel={nestingLevel}
-                  onAddCard={handleAddCardAtIndex}
-                  onDropContent={handleDropContent}
-                  onDragOverDivider={onDragOverDivider}
+                  alwaysHovered={cards.length === 0}
+                  onClick={handleAddCardAtIndex}
+                  onDrop={handleDropContent}
+                  onDragOver={onDragOverDivider}
                 />
               )}
 
@@ -139,8 +134,6 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                       onDelete={handleDeleteCard}
                       onCardClick={onCardClick}
                       editable={editable}
-                      nestingLevel={nestingLevel}
-                      maxNestingLevel={maxNestingLevel}
                       EditableCardListComponent={EditableCardList}
                     />
                   </Box>
@@ -148,11 +141,10 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                   {editable && (
                     <DroppableDivider
                       index={index + 1}
-                      isVisible={false}
-                      nestingLevel={nestingLevel}
-                      onAddCard={handleAddCardAtIndex}
-                      onDropContent={handleDropContent}
-                      onDragOverDivider={onDragOverDivider}
+                      alwaysHovered={false}
+                      onClick={handleAddCardAtIndex}
+                      onDrop={handleDropContent}
+                      onDragOver={onDragOverDivider}
                     />
                   )}
                 </React.Fragment>

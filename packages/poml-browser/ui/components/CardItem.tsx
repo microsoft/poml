@@ -39,8 +39,6 @@ export interface CardItemProps {
   onDelete: (id: string) => void;
   onCardClick?: (card: CardModel) => void;
   editable: boolean;
-  nestingLevel: number;
-  maxNestingLevel: number;
   // Forward declaration for EditableCardList component
   EditableCardListComponent?: React.ComponentType<any>;
 }
@@ -62,8 +60,6 @@ export const CardItem: React.FC<CardItemProps> = ({
   onDelete,
   onCardClick,
   editable,
-  nestingLevel,
-  maxNestingLevel,
   EditableCardListComponent,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -108,7 +104,6 @@ export const CardItem: React.FC<CardItemProps> = ({
           {...(editable ? provided.dragHandleProps : {})}
           style={{
             ...provided.draggableProps.style,
-            marginLeft: nestingLevel * 20,
             cursor: editable ? (snapshot.isDragging ? 'grabbing' : 'grab') : 'default',
           }}>
           <Card
@@ -264,8 +259,6 @@ export const CardItem: React.FC<CardItemProps> = ({
                       })
                     }
                     editable={editable}
-                    nestingLevel={nestingLevel + 1}
-                    maxNestingLevel={maxNestingLevel}
                   />
                 </Box>
               )}

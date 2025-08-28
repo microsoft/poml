@@ -360,8 +360,6 @@ const AppContent: React.FC = () => {
         onChange={handleCardsChange}
         onCardClick={handleCardClick}
         editable={true}
-        nestingLevel={0}
-        maxNestingLevel={3}
         onDragOverDivider={(isOver: boolean) => {
           setIsDraggingOverDivider(isOver);
           if (isOver) {
