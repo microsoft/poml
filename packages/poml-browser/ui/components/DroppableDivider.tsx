@@ -6,8 +6,8 @@
 import React, { useState } from 'react';
 import { Box, Paper, Text } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
-import { handleDropEvent } from '@functions/clipboard';
-import { CardModel, createCard } from '@functions/cardModel';
+import { handleDropEvent } from '@common/clipboard';
+import { CardModel, createCard } from '@common/cardModel';
 import { useNotifications } from '../contexts/NotificationContext';
 
 interface DroppableDividerProps {

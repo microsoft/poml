@@ -1,7 +1,7 @@
 /// <reference types="chrome-types" />
 
 import { pingPong } from './registry';
-import { binaryToBase64 } from '@functions/utils';
+import { binaryToBase64 } from '@common/utils';
 
 interface FileData {
   name: string;

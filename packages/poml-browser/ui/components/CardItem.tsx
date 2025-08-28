@@ -30,7 +30,7 @@ import {
   getDefaultComponentType,
   isImageBinaryContent,
   getBinaryContentDataUrl,
-} from '@functions/cardModel';
+} from '@common/cardModel';
 
 export interface CardItemProps {
   card: CardModel;

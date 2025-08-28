@@ -1,4 +1,4 @@
 /* To trigger the registered functions in the RPC */
 
-export { getSettings, setSettings } from '../functions/settings';
-export { pingPong } from '../functions/rpc';
+export { getSettings, setSettings } from '../common/settings';
+export { pingPong } from '../common/rpc';

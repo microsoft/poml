@@ -6,25 +6,25 @@ import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icon
 import EditableCardList from './components/EditableCardList';
 import CardModal from './components/CardModal';
 import Settings from './components/Settings';
-import { ExtractedContent } from '@functions/types';
-import { CardModel, createCard, isTextContent } from '@functions/cardModel';
+import { ExtractedContent } from '@common/types';
+import { CardModel, createCard, isTextContent } from '@common/cardModel';
 import { shadcnCssVariableResolver } from './themes/cssVariableResolver';
 import { shadcnTheme } from './themes/zinc';
-import { googleDocsManager } from '@functions/gdoc';
+import { googleDocsManager } from '@common/gdoc';
 import {
   readFileContent,
   useGlobalPasteListener,
   arrayBufferToDataUrl,
   writeRichContentToClipboard,
   handleDropEvent,
-} from '@functions/clipboard';
-import { contentManager } from '@functions/html';
+} from '@common/clipboard';
+import { contentManager } from '@common/html';
 import { NotificationProvider, useNotifications } from './contexts/NotificationContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import TopNotifications from './components/TopNotifications';
 import BottomNotifications from './components/BottomNotifications';
-import pomlHelper from '@functions/pomlHelper';
-import { pingPong } from '@functions/rpc';
+import pomlHelper from '@common/pomlHelper';
+import { pingPong } from '@common/rpc';
 
 import './themes/style.css';
 

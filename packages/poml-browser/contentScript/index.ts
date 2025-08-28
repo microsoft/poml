@@ -1,10 +1,10 @@
 import { pingPong } from './registry';
 
-import { extractPdfContentVisualized, PageVisualization, isPdfDocument } from '../functions/pdf';
-import { extractHtmlContent } from '../functions/html';
-import { extractWordContent, isWordDocument } from '../functions/msword';
-import { notifyInfo, notifyError } from '../functions/notification';
-import { CardModel } from '../functions/cardModel';
+import { extractPdfContentVisualized, PageVisualization, isPdfDocument } from '../common/pdf';
+import { extractHtmlContent } from '../common/html';
+import { extractWordContent, isWordDocument } from '../common/msword';
+import { notifyInfo, notifyError } from '../common/notification';
+import { CardModel } from '../common/cardModel';
 
 /**
  * Main content extraction function that determines the appropriate extraction method

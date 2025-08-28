@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Stack, Box, Button, Group } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
-import { CardModel, createCard } from '@functions/cardModel';
+import { CardModel, createCard } from '@common/cardModel';
 import { CardItem } from './CardItem';
 import { DroppableDivider } from './DroppableDivider';
 

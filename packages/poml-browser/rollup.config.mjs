@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const aliasEntries = [
-  { find: '@functions', replacement: path.resolve(__dirname, 'functions') },
+  { find: '@common', replacement: path.resolve(__dirname, 'common') },
   { find: '@ui', replacement: path.resolve(__dirname, 'ui') },
   { find: '@background', replacement: path.resolve(__dirname, 'background') },
   { find: '@contentScript', replacement: path.resolve(__dirname, 'contentScript') },
@@ -56,7 +56,7 @@ export default [
       sourcemap: true,
     },
     watch: {
-      include: ['ui/**', 'functions/**', 'poml/**'],
+      include: ['ui/**', 'common/**', 'poml/**'],
       exclude: 'node_modules/**',
     },
     onwarn(warning, warn) {
@@ -97,7 +97,7 @@ export default [
       }),
       typescript({
         tsconfig: './tsconfig.json',
-        include: ['poml-browser/ui/**/*', 'poml-browser/functions/**/*', 'poml-browser/stubs/**/*', 'poml/**/*'],
+        include: ['poml-browser/ui/**/*', 'poml-browser/common/**/*', 'poml-browser/stubs/**/*', 'poml/**/*'],
         exclude: [
           'poml/node_modules/**/*',
           'poml/tests/**/*',
@@ -148,7 +148,7 @@ export default [
       sourcemap: true,
     },
     watch: {
-      include: ['background/**', 'functions/**'],
+      include: ['background/**', 'common/**'],
       exclude: 'node_modules/**',
     },
     plugins: [
@@ -157,12 +157,7 @@ export default [
       }),
       typescript({
         tsconfig: './tsconfig.json',
-        include: [
-          'poml-browser/background/**/*',
-          'poml-browser/functions/**/*',
-          'poml-browser/stubs/**/*',
-          'poml/**/*',
-        ],
+        include: ['poml-browser/background/**/*', 'poml-browser/common/**/*', 'poml-browser/stubs/**/*', 'poml/**/*'],
       }),
       nodeResolve({
         jsnext: true,
@@ -188,7 +183,7 @@ export default [
       sourcemap: true,
     },
     watch: {
-      include: ['contentScript/**', 'functions/**'],
+      include: ['contentScript/**', 'common/**'],
       exclude: 'node_modules/**',
     },
     plugins: [
@@ -197,7 +192,7 @@ export default [
       }),
       typescript({
         tsconfig: './tsconfig.json',
-        include: ['poml-browser/contentScript/**/*', 'poml-browser/functions/**/*'],
+        include: ['poml-browser/contentScript/**/*', 'poml-browser/common/**/*'],
       }),
       nodeResolve({
         jsnext: true,

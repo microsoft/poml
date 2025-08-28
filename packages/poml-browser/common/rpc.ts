@@ -92,7 +92,7 @@ class EverywhereManager {
           // Not for us, don't handle
           return false;
         } else if (message.type === 'everywhere-response') {
-          // This should generally not happen because we handle responses in sendRequest
+          // This should generally not happen because we handle responses in dispatch
           console.warn('Received unexpected everywhere-response message:', message);
         }
         return false;
@@ -180,8 +180,8 @@ class EverywhereManager {
 
   private async executeInContentScript<K extends keyof GlobalFunctions>(
     functionName: K | string,
-    args: any[],
-  ): Promise<any> {
+    args: Input<K>,
+  ): Promise<AwaitedOutput<K>> {
     // Get active tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -262,7 +262,7 @@ class EverywhereManager {
     }
   }
 
-  private async sendRequest<K extends keyof GlobalFunctions>(
+  public async dispatch<K extends keyof GlobalFunctions>(
     functionName: K,
     args: Input<K>,
     targetRole: Role,
@@ -363,7 +363,7 @@ class EverywhereManager {
         return this.executeLocally(functionName, args);
       } else {
         // Otherwise, send request to the target role
-        return this.sendRequest<K>(functionName, args, targetRole);
+        return this.dispatch<K>(functionName, args, targetRole);
       }
     };
   }
@@ -417,7 +417,7 @@ export function callInRole<K extends keyof GlobalFunctions>(
   functionName: K,
   ...args: Input<K>
 ): Promise<AwaitedOutput<K>> {
-  return (everywhereManager as any).sendRequest(functionName as string, args, role);
+  return (everywhereManager as any).dispatch(functionName as string, args, role);
 }
 
 export const pingPong: Record<Role, (message: string, delay: number) => Promise<string>> = {

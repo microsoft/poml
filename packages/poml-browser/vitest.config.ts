@@ -18,7 +18,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@functions': path.resolve(__dirname, './functions'),
+      '@common': path.resolve(__dirname, './common'),
       '@ui': path.resolve(__dirname, './ui'),
       '@stubs': path.resolve(__dirname, './stubs'),
     },

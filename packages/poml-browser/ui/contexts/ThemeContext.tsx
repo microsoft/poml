@@ -1,7 +1,7 @@
 /// <reference types="chrome-types" />
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useMantineColorScheme } from '@mantine/core';
-import { getSettings, setSettings } from '@functions/settings';
+import { getSettings, setSettings } from '@common/settings';
 
 export type ThemeMode = 'light' | 'dark' | 'auto';
 

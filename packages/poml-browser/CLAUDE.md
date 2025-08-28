@@ -13,7 +13,7 @@ The POML Browser Extension (`packages/poml-browser/`) provides POML support in w
 - **Background Script** (`background/`): Extension lifecycle management and privileged operations
 - **Content Script** (`contentScript/`): Webpage interaction and content extraction
 - **UI Components** (`ui/`): React-based extension popup with Mantine components
-- **Functions** (`functions/`): Common utilities for clipboard, document handling, and POML processing
+- **Common** (`common/`): Common utilities for clipboard, document handling, and POML processing
 
 ### Key Files
 

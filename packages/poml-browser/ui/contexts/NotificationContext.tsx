@@ -4,8 +4,8 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { registerDirectUIHandler } from '@functions/notification';
-import { NotificationOptions } from '@functions/types';
+import { registerDirectUIHandler } from '@common/notification';
+import { NotificationOptions } from '@common/types';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 export type NotificationPosition = 'top' | 'bottom';
@@ -140,7 +140,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Register the direct UI handler when provider mounts
   useEffect(() => {
     const serviceHandler = (
-      type: import('@functions/types').NotificationType,
+      type: import('@common/types').NotificationType,
       message: string,
       options?: NotificationOptions,
     ) => {
