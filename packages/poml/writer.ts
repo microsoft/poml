@@ -1598,7 +1598,7 @@ export class XmlWriter extends SerializeWriter<XmlOptions> {
     }
 
     // First replace all that is not a letter, digit, hyphen, underscore, period with a hyphen
-    name = name.replace(/[^a-zA-Z0-9\-_\.]/g, '-'); // eslint-disable-line no-useless-escape
+    name = name.replace(/[^a-zA-Z0-9\-_\.]/g, '-');
     // If the first character is not a letter or underscore, add an underscore
     if (!/^[a-zA-Z_]/.test(name)) {
       name = '_' + name;

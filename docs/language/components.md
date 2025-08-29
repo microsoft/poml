@@ -987,7 +987,7 @@ Note that syntax must be specified as `multimedia` to show the image.
 
 #### Parameters
 
-- **src**: The path to the image file.
+- **src**: The path or URL to the image file.
 - **alt**: The alternative text to show when the image cannot be displayed.
 - **base64**: The base64 encoded image data. It can not be specified together with `src`.
 - **type**: The MIME type of the image **to be shown**. If not specified, it will be inferred from the file extension.

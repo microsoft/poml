@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-export type LanguageModelProvider = 'openai' | 'microsoft' | 'anthropic' | 'google';
+export type LanguageModelProvider = 'openai' | 'openaiResponse' | 'microsoft' | 'anthropic' | 'google';
 
 export type ApiConfigValue = string | { [provider: string]: string };
 
@@ -74,7 +74,6 @@ export class Settings {
 
   public isEqualTo(otherSettings: Settings) {
     for (let key in this) {
-      // eslint-disable-next-line no-prototype-builtins
       if (this.hasOwnProperty(key) && key !== 'styles' && key !== 'languageModel') {
         if (this[key] !== otherSettings[key]) {
           return false;

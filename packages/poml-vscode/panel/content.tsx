@@ -297,7 +297,7 @@ function Content(props: WebviewUserOptions & PreviewResponse) {
 
   let toCopy: string = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
   let result: React.ReactElement;
-  // eslint-disable-next-line no-prototype-builtins
+
   if (content.length > 0 && content[0].hasOwnProperty('speaker')) {
     content = content as Message[];
     if (displayFormat === 'ir') {

@@ -195,6 +195,33 @@ Optional additional context that can (...truncated)`;
     expect(element).toStrictEqual([{ speaker: 'human', content: [] }]);
   });
 
+  test('inlineSerializeEndToEnd', async () => {
+    const text =
+      '<Markup.Environment><Serialize.Environment inline="true"><Serialize.Any name="hello">world</Serialize.Any></Serialize.Environment></Markup.Environment>';
+    const result = await poml(text);
+    expect(result).toBe('`{\n  "hello": "world"\n}`');
+  });
+
+  test('blockSerializeEndToEnd', async () => {
+    const text =
+      '<Markup.Environment><Serialize.Environment><Serialize.Any name="hello">world</Serialize.Any></Serialize.Environment></Markup.Environment>';
+    const result = await poml(text);
+    expect(result).toBe('```json\n{\n  "hello": "world"\n}\n```');
+  });
+
+  test('inlineFreeEndToEnd', async () => {
+    const text =
+      '<Markup.Environment><Free.Environment inline="true">hello world</Free.Environment></Markup.Environment>';
+    const result = await poml(text);
+    expect(result).toBe('`hello world`');
+  });
+
+  test('blockFreeEndToEnd', async () => {
+    const text = '<Markup.Environment><Free.Environment>hello world</Free.Environment></Markup.Environment>';
+    const result = await poml(text);
+    expect(result).toBe('```\nhello world\n```');
+  });
+
   test('toolRequest', async () => {
     const text = '<tool-request id="test-123" name="search" parameters="{{ { query: \'hello\', limit: 10 } }}" />';
     const result = await poml(text);
@@ -700,7 +727,7 @@ function parseExpects(expectFile: string): ExpectMessage[] {
           contents.push(prefix);
         } catch (e) {
           // Fallback: extract base64 with regex
-          const base64Match = match[0].match(/"base64":"([^"\.]+)/); // eslint-disable-line
+          const base64Match = match[0].match(/"base64":"([^"\.]+)/);
           if (base64Match) {
             const prefix = base64Match[1].slice(0, 50);
             contents.push(prefix);
