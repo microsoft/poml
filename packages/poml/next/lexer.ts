@@ -16,15 +16,18 @@ export const SingleQuote = createToken({ name: 'SingleQuote', pattern: /'/ });
 export const Backslash = createToken({ name: 'Backslash', pattern: /\\/ });
 
 /* Identifier is one of the following:
-   - XML tag names
-   - XML attribute names
-   - TextContent incorrectly parsed as identifiers
-
-   Case 3 is handled later by CST parser.
-*/
+ * - XML tag names
+ * - XML attribute names
+ * - TextContent incorrectly parsed as identifiers
+ *
+ * Notes:
+ * 1. In case 1, tags can contain : (namespaces) and . (extensions).
+ *    These are handled later by CST parser.
+ * 2. In case 3, CST parser will reclassify as TextContent if needed.
+ */
 export const Identifier = createToken({
   name: 'Identifier',
-  pattern: /[a-zA-Z_][a-zA-Z0-9_-]*/,
+  pattern: /[a-zA-Z_][a-zA-Z0-9_\-]*/,
 });
 
 export const Whitespace = createToken({
@@ -33,7 +36,7 @@ export const Whitespace = createToken({
   line_breaks: true,
 });
 
-/* eslint-disable no-irregular-whitespace */
+
 /* Catch-all for arbitrary text content
    - Match any char except:
        <          — starts a tag
@@ -46,7 +49,7 @@ export const TextContent = createToken({
   pattern: /(?:[^<"'{}]|{(?!{)|}(?!}))+/,
   line_breaks: true,
 });
-/* eslint-enable no-irregular-whitespace */
+
 
 // Define token order - more specific patterns first
 export const allTokens = [

@@ -1,42 +1,6 @@
 import { Range } from './types';
 
 /**
- * Base interface for all AST nodes in the POML syntax tree.
- *
- * Every node in the AST must have a kind discriminator and a range indicating
- * its position in the source text. The kind field enables TypeScript discriminated
- * unions for type-safe node handling.
- *
- * Cases that apply:
- * - All syntactic constructs in POML markup (elements, attributes, text, templates)
- * - Meta-level constructs (root nodes, expression nodes)
- *
- * Cases that do not apply:
- * - Lexical tokens (these are handled by the tokenizer)
- * - Semantic information (component types, validation results)
- * - Runtime values (evaluated expressions, resolved variables)
- */
-export interface Node {
-  kind:
-    | 'META'
-    | 'EXPRESSION'
-    | 'VALUE'
-    | 'STRING'
-    | 'VALUE'
-    | 'FORLOOP'
-    | 'OPEN'
-    | 'CLOSE'
-    | 'SELFCLOSE'
-    | 'ELEMENT'
-    | 'TEXT'
-    | 'POML'
-    | 'ATTRIBUTE'
-    | 'TEMPLATE'
-    | 'ROOT';
-  range: Range;
-}
-
-/**
  * Represents a JavaScript expression as a string.
  *
  * This node stores raw expression text that will be evaluated at runtime.
@@ -54,13 +18,15 @@ export interface Node {
  * - String literals with quotes: `"hello"` (use StringNode or ValueNode)
  * - POML markup: `<tag>` (use element nodes)
  */
-export interface ExpressionNode extends Node {
+export interface ExpressionNode {
   kind: 'EXPRESSION';
+  range: Range;
   value: string;
 }
 
 /**
- * Represents a template interpolation with double curly braces.
+ * Represents a template interpolation with double curly braces,
+ * or sometimes without braces in specific attributes.
  *
  * Template nodes handle variable interpolation in POML, containing an
  * expression that will be evaluated and substituted at runtime. The node
@@ -71,15 +37,18 @@ export interface ExpressionNode extends Node {
  * - Template expressions in text: part of "Hello {{ name }}!"
  * - Complex expressions: `{{ users.map(u => u.name).join(", ") }}`
  * - Conditional rendering: `{{ isVisible ? "Show" : "Hide" }}`
+ * - Template usage in if attributes: `condition` in `if="condition"`
  *
  * Cases that do not apply:
- * - Attribute expressions without braces: `if="x > 0"` (use ExpressionNode)
+ * - Full attribute expressions: `if="x > 0"` (use ExpressionNode)
  * - Plain text: `Hello World` (use StringNode)
- * - POML elements: `<div>` (use element nodes)
  * - Single braces: `{ not a template }` (treated as plain text)
+ * - Template elements: <template>{{ this is a jinja template }}</template> (use TextNode)
+ * - With quotes: `"{{ var }}"` (use ValueNode)
  */
-export interface TemplateNode extends Node {
+export interface TemplateNode {
   kind: 'TEMPLATE';
+  range: Range;
   value: ExpressionNode;
 }
 
@@ -104,8 +73,9 @@ export interface TemplateNode extends Node {
  * - Expressions: `x > 0` (use ExpressionNode)
  * - Template variables: `{{ var }}` (use TemplateNode)
  */
-export interface StringNode extends Node {
+export interface StringNode {
   kind: 'STRING';
+  range: Range;
   value: string;
 }
 
@@ -121,7 +91,7 @@ export interface StringNode extends Node {
  * - Mixed content with templates: `"Hello, {{ userName }}!"`
  * - Text content between tags: `>  some text  <` (including whitespace)
  * - Unquoted template values in certain contexts
- * - Multi-part content: `"Price: ${{ amount }} USD"`
+ * - Multi-part content: `"Price: ${{amount}} USD"`
  *
  * Cases that do not apply:
  * - Attribute keys: `class=...` (the `class` part uses StringNode)
@@ -131,8 +101,9 @@ export interface StringNode extends Node {
  *
  * Note: The range includes quotes if present, but children exclude them.
  */
-export interface ValueNode extends Node {
+export interface ValueNode {
   kind: 'VALUE';
+  range: Range;
   children: (StringNode | TemplateNode)[];
 }
 
@@ -156,8 +127,9 @@ export interface ValueNode extends Node {
  * - Conditional loops: `if` attributes (use separate condition handling)
  * - Template interpolation: `{{ items }}` (use TemplateNode)
  */
-export interface ForLoopNode extends Node {
-  kind: 'FORLOOP';
+export interface ForIteratorNode {
+  kind: 'FORITERATOR';
+  range: Range;
   iterator: StringNode;
   collection: ExpressionNode;
 }
@@ -171,17 +143,18 @@ export interface ForLoopNode extends Node {
  *
  * Cases that apply:
  * - Simple attributes: `class="container"`, `id='main'`
- * - Boolean/presence attributes: `disabled`, `checked`
  * - Template values: `title="{{ pageTitle }}"` or `title={{ pageTitle }}`
  * - Mixed values: `placeholder="Enter {{ fieldName }}..."`
  *
  * Cases that do not apply:
+ * - Boolean/presence attributes: `disabled`, `checked` (not yet supported)
  * - For-loop attributes: `for="item in items"` (use ForLoopAttributeNode)
  * - Spread attributes (not yet supported): `{...props}`
  * - Dynamic attribute names (not supported): `[attrName]="value"`
  */
-export interface AttributeNode extends Node {
+export interface AttributeNode {
   kind: 'ATTRIBUTE';
+  range: Range;
   key: StringNode;
   value: ValueNode;
 }
@@ -203,8 +176,9 @@ export interface AttributeNode extends Node {
  * - Standard attributes: `class="..."` (use AttributeNode)
  * - Conditional attributes: `if="..."` (use AttributeNode)
  */
-export interface ForLoopAttributeNode extends Node {
-  kind: 'ATTRIBUTE';
+export interface ForLoopAttributeNode {
+  kind: 'FORATTRIBUTE';
+  range: Range;
   key: StringNode;
   value: ForLoopNode;
 }
@@ -228,8 +202,9 @@ export interface ForLoopAttributeNode extends Node {
  * - Complete elements: opening + content + closing (use ElementNode)
  * - Invalid or malformed tags (treated as text)
  */
-export interface OpenTagNode extends Node {
+export interface OpenTagNode {
   kind: 'OPEN';
+  range: Range;
   value: StringNode;
   attributes: (AttributeNode | ForLoopAttributeNode)[];
 }
@@ -249,34 +224,34 @@ export interface OpenTagNode extends Node {
  * - Opening tags: `<document>` (use OpenTagNode)
  * - Self-closing tags: `<br/>` (use SelfCloseTagNode)
  * - Tags with attributes (closing tags never have attributes)
- * - Mismatched closing tags (parser error)
  */
-export interface CloseTagNode extends Node {
+export interface CloseTagNode {
   kind: 'CLOSE';
+  range: Range;
   value: StringNode;
 }
 
 /**
  * Represents a self-closing tag in POML markup.
  *
- * Self-closing tags represent complete elements that have no children or
+ * Self-closing elements represent complete elements that have no children or
  * content. They combine opening and closing in a single tag and may have
  * attributes.
  *
  * Cases that apply:
  * - Image elements: `<image src="photo.jpg" />`
- * - Meta elements: `<meta name="author" content="John" />`
- * - Data elements without content: `<data path="file.csv" />`
- * - Any element explicitly self-closed: `<element attr="value" />`
+ * - Runtime configurations: `<runtime model="gpt-5" temperature="0.7" />`
  *
  * Cases that do not apply:
+ * - Meta elements: `<meta name="author" content="John" />`
  * - Elements with content: `<div>content</div>` (use ElementNode)
  * - Separate open/close tags: `<div></div>` (use ElementNode)
  * - Tags without the self-closing slash: `<img>` (use OpenTagNode)
- * - Text content elements (these require open/close pairs)
+ * - Meta elements: `<meta>` tags (use MetaNode)
  */
-export interface SelfCloseTagNode extends Node {
+export interface SelfCloseElementNode {
   kind: 'SELFCLOSE';
+  range: Range;
   value: StringNode;
   attributes: (AttributeNode | ForLoopAttributeNode)[];
 }
@@ -290,25 +265,26 @@ export interface SelfCloseTagNode extends Node {
  * or values.
  *
  * Cases that apply:
- * - Document structures: `<document>...content...</document>`
- * - Messages: `<message role="user">Hello</message>`
+ * - Any elements: `<document parser="txt">...content...</document>`
+ * - Output schemas with templates: `<output-schema>{{ schemaDefinition }}</output-schema>`
  * - Nested elements: `<section><paragraph>Text</paragraph></section>`
- * - Data components: `<table>...rows...</table>`
  *
  * Cases that do not apply:
  * - Self-closing elements: `<image />` (use SelfCloseTagNode)
- * - Raw text content: plain text outside elements (use TextNode)
+ * - Literal text content: plain text (use TextNode)
  * - Template variables: `{{ var }}` (use TemplateNode)
  * - Meta elements: `<meta>` tags (use MetaNode)
  */
-export interface ElementNode extends Node {
+export interface ElementNode {
   kind: 'ELEMENT';
-  tagName: StringNode;
+  range: Range;
+  open: OpenTagNode;
+  close: CloseTagNode;
   children: (ElementNode | TextNode | MetaNode | ValueNode)[];
 }
 
 /**
- * Represents a text element that preserves literal content.
+ * Represents an element that preserves literal content.
  *
  * Text nodes are special POML elements that treat their content as literal
  * text, preventing template variable interpolation. They ensure content is
@@ -316,6 +292,7 @@ export interface ElementNode extends Node {
  *
  * Cases that apply:
  * - Explicit text elements: `<text>Literal {{ not_interpolated }}</text>`
+ * - External templates: `<template>{{ this is a jinja template }}</template>`
  *
  * Cases that do not apply:
  * - Regular text content with interpolation (use ValueNode)
@@ -323,22 +300,26 @@ export interface ElementNode extends Node {
  * - Elements allowing template processing (use ElementNode)
  * - Text with attributes enabling processing (future feature)
  *
- * Note: The tagName is always "text" for these nodes, and attributes must be empty.
+ * Note: The tagName (value) can only be "text" or "template" in this version.
  */
-export interface TextNode extends Node {
+export interface TextNode {
   kind: 'TEXT';
-  tagName: StringNode;
+  range: Range;
+  open: OpenTagNode;
+  close: CloseTagNode;
   attributes: AttributeNode[];
-  value: StringNode;
+  children: StringNode;
 }
 
 /**
- * Represents metadata elements in POML.
+ * Represents metadata elements in POML. Meta elements must be self-closed.
  *
  * Meta nodes provide document-level metadata and configuration that doesn't
  * render as visible content. They typically appear at the document start and
  * configure processing behavior, document properties, or provide auxiliary
  * information.
+ *
+ * Value must be "meta" (case-insensitive).
  *
  * Cases that apply:
  * - Document metadata: `<meta minVersion="1.0">`
@@ -347,9 +328,10 @@ export interface TextNode extends Node {
  * Cases that do not apply:
  * - Any element that is not `<meta>` (use ElementNode)
  */
-export interface MetaNode extends Node {
+export interface MetaNode {
   kind: 'META';
-  tagName: StringNode;
+  range: Range;
+  value: StringNode;
   attributes: AttributeNode[];
 }
 
@@ -368,7 +350,46 @@ export interface MetaNode extends Node {
  * Cases that do not apply:
  * - All nested elements
  */
-export interface RootNode extends Node {
+export interface RootNode {
   kind: 'ROOT';
+  range: Range;
   children: (ElementNode | TextNode | MetaNode | ValueNode)[];
 }
+
+// Keep these keys required; everything else becomes recursively optional
+type DeepPartialExcept<T, K extends keyof T> =
+  // arrays
+  T extends (infer U)[]
+    ? DeepPartialExcept<U, never>[]
+    : // functions (leave as-is)
+      T extends (...args: any) => any
+      ? T
+      : // objects
+        T extends object
+        ? { [P in keyof T as P extends K ? P : never]-?: T[P] } & {
+            [P in keyof T as P extends K ? never : P]?: DeepPartialExcept<T[P], never> | undefined;
+          }
+        : T;
+
+// Keep only "kind" required; everything else is optional, recursively.
+type Draft<T extends { kind: string }> = DeepPartialExcept<T, 'kind'>;
+
+// Union of your strict nodes
+export type StrictNode =
+  | ExpressionNode
+  | TemplateNode
+  | StringNode
+  | ValueNode
+  | ForLoopNode
+  | AttributeNode
+  | ForLoopAttributeNode
+  | OpenTagNode
+  | CloseTagNode
+  | SelfCloseElementNode
+  | ElementNode
+  | TextNode
+  | MetaNode
+  | RootNode;
+
+// The "loose" counterpart you can safely produce during parsing.
+export type DraftNode = Draft<StrictNode>;
