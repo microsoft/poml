@@ -43,7 +43,7 @@ export interface ExpressionNode {
  * - Full attribute expressions: `if="x > 0"` (use ExpressionNode)
  * - Plain text: `Hello World` (use StringNode)
  * - Single braces: `{ not a template }` (treated as plain text)
- * - Template elements: <template>{{ this is a jinja template }}</template> (use TextNode)
+ * - Template elements: <template>{{ this is a jinja template }}</template> (use LiteralNode)
  * - With quotes: `"{{ var }}"` (use ValueNode)
  */
 export interface TemplateNode {
@@ -271,7 +271,7 @@ export interface SelfCloseElementNode {
  *
  * Cases that do not apply:
  * - Self-closing elements: `<image />` (use SelfCloseTagNode)
- * - Literal text content: plain text (use TextNode)
+ * - Literal text content: plain text (use LiteralNode)
  * - Template variables: `{{ var }}` (use TemplateNode)
  * - Meta elements: `<meta>` tags (use MetaNode)
  */
@@ -280,13 +280,13 @@ export interface ElementNode {
   range: Range;
   open: OpenTagNode;
   close: CloseTagNode;
-  children: (ElementNode | TextNode | MetaNode | ValueNode)[];
+  children: (ElementNode | LiteralNode | CommentNode | PragmaNode | ValueNode)[];
 }
 
 /**
  * Represents an element that preserves literal content.
  *
- * Text nodes are special POML elements that treat their content as literal
+ * Literal nodes are special POML elements that treat their content as literal
  * text, preventing template variable interpolation. They ensure content is
  * preserved exactly as written, useful for code samples or pre-formatted text.
  * When `<text>` is used, the parser eats everything including tags and comments,
@@ -294,7 +294,6 @@ export interface ElementNode {
  *
  * Cases that apply:
  * - Explicit text elements: `<text>Literal {{ not_interpolated }}</text>`
- * - External templates: `<template>{{ this is a jinja template }}</template>`
  *
  * Cases that do not apply:
  * - Regular text content with interpolation (use ValueNode)
@@ -302,9 +301,11 @@ export interface ElementNode {
  * - Elements allowing template processing (use ElementNode)
  * - Text with attributes enabling processing (future feature)
  *
- * Note: The tagName (value) can only be "text" or "template" in this version.
+ * Note: The tagName (value) can only be "text" in this version.
+ * Literal node is different from elements which do not support children.
+ * Literal node is handled on the CST parsing stage.
  */
-export interface TextNode {
+export interface LiteralNode {
   kind: 'TEXT';
   range: Range;
   open: OpenTagNode;
@@ -321,14 +322,9 @@ export interface TextNode {
  * configure processing behavior, document properties, or provide auxiliary
  * information.
  *
- * Value must be "meta" (case-insensitive).
- *
  * Cases that apply:
- * - Document metadata: `<meta minVersion="1.0">`
- * - Configuration: `<meta enableComponents="+reference">`
- *
- * Cases that do not apply:
- * - Any element that is not `<meta>` (use ElementNode)
+ * - Document metadata: `<!-- @pragma minVersion 1.0 -->`
+ * - Configuration: `<!-- @pragma components +reference -table -->`
  */
 export interface MetaNode {
   kind: 'META';
@@ -355,7 +351,7 @@ export interface MetaNode {
 export interface RootNode {
   kind: 'ROOT';
   range: Range;
-  children: (ElementNode | TextNode | MetaNode | ValueNode)[];
+  children: (ElementNode | LiteralNode | MetaNode | ValueNode)[];
 }
 
 // Keep these keys required; everything else becomes recursively optional
@@ -382,14 +378,14 @@ export type StrictNode =
   | TemplateNode
   | StringNode
   | ValueNode
-  | ForLoopNode
+  | ForIteratorNode
   | AttributeNode
   | ForLoopAttributeNode
   | OpenTagNode
   | CloseTagNode
   | SelfCloseElementNode
   | ElementNode
-  | TextNode
+  | LiteralNode
   | MetaNode
   | RootNode;
 
