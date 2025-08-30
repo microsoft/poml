@@ -1,4 +1,5 @@
 import { Range } from './types';
+import { IToken } from 'chevrotain';
 
 /**
  * Represents a JavaScript expression as a string.
@@ -23,6 +24,8 @@ export interface ExpressionNode {
   range: Range;
   value: string;
 }
+
+export interface ExpressionCstNode {}
 
 /**
  * Represents a template interpolation with double curly braces,
@@ -180,7 +183,7 @@ export interface ForLoopAttributeNode {
   kind: 'FORATTRIBUTE';
   range: Range;
   key: StringNode;
-  value: ForLoopNode;
+  value: ForIteratorNode;
 }
 
 /**
@@ -247,7 +250,6 @@ export interface CloseTagNode {
  * - Elements with content: `<div>content</div>` (use ElementNode)
  * - Separate open/close tags: `<div></div>` (use ElementNode)
  * - Tags without the self-closing slash: `<img>` (use OpenTagNode)
- * - Meta elements: `<meta>` tags (use MetaNode)
  */
 export interface SelfCloseElementNode {
   kind: 'SELFCLOSE';
@@ -284,6 +286,41 @@ export interface ElementNode {
 }
 
 /**
+ * Represents an HTML-like line/block comment in POML.
+ *
+ * Comment nodes preserve authoring notes or disabled content that should not
+ * affect rendering. The `value` holds the comment text without the `<!--`/`-->`
+ * delimiters.
+ *
+ * Examples:
+ * - `<!-- this is a comment -->`
+ */
+export interface CommentNode {
+  kind: 'COMMENT';
+  range: Range;
+  value: StringNode;
+}
+
+/**
+ * Represents a pragma directive carried inside a comment.
+ *
+ * Pragmas are special instructions for parser/compiler. They usually appear
+ * inside comments and start with `@pragma`. For now we keep this node simple
+ * with a single `value` that contains the full directive text after
+ * `@pragma` (e.g. `components +reference -table`).
+ *
+ * Examples:
+ * - Specify version: `<!-- @pragma version >=1.0.0 <2.3.0 -->`
+ * - Turn tags on/off: `<!-- @pragma components +reference -table -->`
+ * - Turn speaker roles on/off: `<!-- @pragma speaker multi -->` or `single`
+ */
+export interface PragmaNode {
+  kind: 'PRAGMA';
+  range: Range;
+  value: StringNode;
+}
+
+/**
  * Represents an element that preserves literal content.
  *
  * Literal nodes are special POML elements that treat their content as literal
@@ -315,25 +352,6 @@ export interface LiteralNode {
 }
 
 /**
- * Represents metadata elements in POML. Meta elements must be self-closed.
- *
- * Meta nodes provide document-level metadata and configuration that doesn't
- * render as visible content. They typically appear at the document start and
- * configure processing behavior, document properties, or provide auxiliary
- * information.
- *
- * Cases that apply:
- * - Document metadata: `<!-- @pragma minVersion 1.0 -->`
- * - Configuration: `<!-- @pragma components +reference -table -->`
- */
-export interface MetaNode {
-  kind: 'META';
-  range: Range;
-  value: StringNode;
-  attributes: AttributeNode[];
-}
-
-/**
  * Represents the root node of a POML document tree.
  *
  * Root nodes serve as the top-level container for all document content when
@@ -351,7 +369,7 @@ export interface MetaNode {
 export interface RootNode {
   kind: 'ROOT';
   range: Range;
-  children: (ElementNode | LiteralNode | MetaNode | ValueNode)[];
+  children: (ElementNode | LiteralNode | CommentNode | PragmaNode | ValueNode)[];
 }
 
 // Keep these keys required; everything else becomes recursively optional
@@ -386,7 +404,8 @@ export type StrictNode =
   | SelfCloseElementNode
   | ElementNode
   | LiteralNode
-  | MetaNode
+  | CommentNode
+  | PragmaNode
   | RootNode;
 
 // The "loose" counterpart you can safely produce during parsing.

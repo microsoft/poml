@@ -1,718 +1,286 @@
-import { IToken } from 'chevrotain';
-import {
-  extendedPomlLexer,
-  TemplateOpen,
-  TemplateClose,
-  TagClosingOpen,
-  TagSelfClose,
-  TagOpen,
-  TagClose,
-  Equals,
-  DoubleQuote,
-  SingleQuote,
-  Identifier,
-  Whitespace,
-  TextContent,
-} from './lexer';
+export class PomlCstParser extends CstParser {
+  // Define rules as public methods
+  public document!: () => DocumentCstNode;
+  public content!: () => ContentCstNode;
+  public element!: () => ElementCstNode;
+  public literalElement!: () => LiteralElementCstNode;
+  public selfCloseElement!: () => SelfCloseElementCstNode;
+  public openTag!: () => OpenTagCstNode;
+  public closeTag!: () => CloseTagCstNode;
+  public attributes!: () => AttributesCstNode;
+  public attribute!: () => AttributeCstNode;
+  public attributeValue!: () => AttributeValueCstNode;
+  public quotedValue!: () => QuotedValueCstNode;
+  public unquotedValue!: () => UnquotedValueCstNode;
+  public valueContent!: () => ValueContentCstNode;
+  public escapedChar!: () => EscapedCharCstNode;
+  public forIterator!: () => ForIteratorCstNode;
+  public template!: () => TemplateCstNode;
+  public value!: () => ValueCstNode;
+  public valueElement!: () => ValueElementCstNode;
+  public comment!: () => CommentCstNode;
+  public pragma!: () => PragmaCstNode;
 
-import { listComponentAliases } from '../base';
-import * as Nodes from './nodes';
+  constructor() {
+    super(allTokens, {
+      recoveryEnabled: true,
+      nodeLocationTracking: 'full',
+    });
 
-// Context for parsing configuration
-export interface PomlContext {
-  variables: { [key: string]: any };
-  stylesheet: { [key: string]: string };
-  minPomlVersion?: string;
-  maxPomlVersion?: string;
-  sourcePath: string;
-  enabledComponents: Set<string>;
-  unknownComponentBehavior: 'error' | 'warning' | 'ignore';
-}
-
-// CST Parser class
-export class CSTParser {
-  private tokens: IToken[];
-  private position: number;
-  private text: string;
-  private context: PomlContext;
-  private nodeIdCounter: number;
-
-  // These are the tags that are always valid in POML.
-  // You can not disable them.
-  private alwaysValidTags = new Set<string>(['text', 'meta']);
-
-  // These semantics are handled right here.
-  private nonComponentTags = new Set<string>([
-    'let',
-    'include',
-    'template',
-    'context',
-    'stylesheet',
-    'output-schema',
-    'outputschema',
-    'tool',
-    'tool-def',
-    'tool-definition',
-    'tooldef',
-    'tooldefinition',
-  ]);
-
-  constructor(context: PomlContext) {
-    this.tokens = [];
-    this.position = 0;
-    this.text = '';
-    this.context = context;
-    this.nodeIdCounter = 0;
-
-    // Initialize default enabled components (can be extended/disabled via meta tags)
-    this.context.enabledComponents = new Set(listComponentAliases());
-    this.context.unknownComponentBehavior = 'warning';
+    this.performSelfAnalysis();
   }
 
-  private generateId(): string {
-    return `node_${++this.nodeIdCounter}`;
-  }
+  // Document is the root rule
+  private documentRule = this.RULE('document', () => {
+    this.MANY(() => {
+      this.OR([{ ALT: () => this.CONSUME(Whitespace) }, { ALT: () => this.SUBRULE(this.content) }]);
+    });
+  });
 
-  private currentToken(): IToken | undefined {
-    return this.tokens[this.position];
-  }
+  // Content can be elements, comments, pragmas, or values
+  private contentRule = this.RULE('content', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.pragma) },
+      { ALT: () => this.SUBRULE(this.comment) },
+      { ALT: () => this.SUBRULE(this.element) },
+      { ALT: () => this.SUBRULE(this.literalElement) },
+      { ALT: () => this.SUBRULE(this.selfCloseElement) },
+      { ALT: () => this.SUBRULE(this.value) },
+    ]);
+  });
 
-  private peekToken(offset: number = 1): IToken | undefined {
-    return this.tokens[this.position + offset];
-  }
+  // Regular element with open/close tags
+  private elementRule = this.RULE('element', () => {
+    const openTag = this.SUBRULE(this.openTag);
+    this.MANY(() => {
+      this.OR([{ ALT: () => this.CONSUME(Whitespace) }, { ALT: () => this.SUBRULE(this.content) }]);
+    });
+    this.SUBRULE(this.closeTag);
+  });
 
-  private consumeToken(): IToken | undefined {
-    if (this.position < this.tokens.length) {
-      return this.tokens[this.position++];
-    }
-    return undefined;
-  }
+  // Literal element (like <text>) that preserves content
+  private literalElementRule = this.RULE('literalElement', () => {
+    this.SUBRULE(this.openTag);
+    // Consume everything until matching close tag
+    this.MANY(() => {
+      this.OR([
+        // Look ahead for closing tag
+        {
+          GATE: () => !this.isClosingTag(),
+          ALT: () => this.consumeAny(),
+        },
+      ]);
+    });
+    this.SUBRULE(this.closeTag);
+  });
 
-  private skipWhitespace(): void {
-    while (this.currentToken()?.tokenType === Whitespace) {
-      this.position++;
-    }
-  }
+  // Self-closing element
+  private selfCloseElementRule = this.RULE('selfCloseElement', () => {
+    this.CONSUME(TagOpen);
+    this.CONSUME(Identifier, { LABEL: 'tagName' });
+    this.OPTION(() => {
+      this.CONSUME(Whitespace);
+      this.OPTION2(() => this.SUBRULE(this.attributes));
+    });
+    this.CONSUME(TagSelfClose);
+  });
 
-  public parse(text: string): ASTNode {
-    this.text = text;
-    const lexResult = extendedPomlLexer.tokenize(text);
-    this.tokens = lexResult.tokens;
-    this.position = 0;
+  // Opening tag
+  private openTagRule = this.RULE('openTag', () => {
+    this.CONSUME(TagOpen);
+    this.CONSUME(Identifier, { LABEL: 'tagName' });
+    this.OPTION(() => {
+      this.CONSUME(Whitespace);
+      this.OPTION2(() => this.SUBRULE(this.attributes));
+    });
+    this.CONSUME(TagClose);
+  });
 
-    const rootNode: ASTNode = {
-      id: this.generateId(),
-      kind: 'TEXT',
-      start: 0,
-      end: text.length,
-      content: text,
-      children: [],
-      textSegments: [],
-    };
+  // Closing tag
+  private closeTagRule = this.RULE('closeTag', () => {
+    this.CONSUME(TagClosingOpen);
+    this.CONSUME(Identifier, { LABEL: 'tagName' });
+    this.OPTION(() => this.CONSUME(Whitespace));
+    this.CONSUME(TagClose);
+  });
 
-    this.parseDocument(rootNode);
-    return rootNode;
-  }
+  // Attributes
+  private attributesRule = this.RULE('attributes', () => {
+    this.MANY_SEP({
+      SEP: Whitespace,
+      DEF: () => this.SUBRULE(this.attribute),
+    });
+  });
 
-  private parseDocument(rootNode: ASTNode): void {
-    while (this.position < this.tokens.length) {
-      const token = this.currentToken();
-      if (!token) {
-        break;
-      }
+  // Single attribute
+  private attributeRule = this.RULE('attribute', () => {
+    this.CONSUME(Identifier, { LABEL: 'key' });
+    this.CONSUME(Equals);
+    this.SUBRULE(this.attributeValue);
+  });
 
-      if (token.tokenType === TagOpen) {
-        const nextToken = this.peekToken();
-        if (nextToken?.tokenType === Identifier) {
-          const tagName = nextToken.image;
-
-          if (tagName === 'meta') {
-            const metaNode = this.parseMetaTag();
-            if (metaNode) {
-              rootNode.children.push(metaNode);
-              metaNode.parent = rootNode;
-              this.processMeta(metaNode);
-            }
-          } else if (this.context.enabledComponents.has(tagName)) {
-            const pomlNode = this.parsePomlElement();
-            if (pomlNode) {
-              rootNode.children.push(pomlNode);
-              pomlNode.parent = rootNode;
-            }
-          } else {
-            // Unknown tag - treat as text
-            this.handleUnknownTag(tagName);
-            const textNode = this.parseTextContent();
-            if (textNode) {
-              rootNode.children.push(textNode);
-              textNode.parent = rootNode;
-            }
-          }
-        } else {
-          // Malformed tag - treat as text
-          const textNode = this.parseTextContent();
-          if (textNode) {
-            rootNode.children.push(textNode);
-            textNode.parent = rootNode;
-          }
-        }
-      } else {
-        const textNode = this.parseTextContent();
-        if (textNode) {
-          rootNode.children.push(textNode);
-          textNode.parent = rootNode;
-        }
-      }
-    }
-  }
-
-  private parseMetaTag(): ASTNode | null {
-    const startPos = this.position;
-    const openTagStart = this.currentToken()?.startOffset || 0;
-
-    this.consumeToken(); // consume '<'
-    this.skipWhitespace();
-
-    const nameToken = this.consumeToken(); // consume 'meta'
-    if (!nameToken || nameToken.image !== 'meta') {
-      return null;
-    }
-
-    const nameRange: SourceRange = {
-      start: nameToken.startOffset || 0,
-      end: (nameToken.endOffset || 0) + 1,
-    };
-
-    this.skipWhitespace();
-
-    const attributes = this.parseAttributes();
-
-    this.skipWhitespace();
-
-    // Check for self-closing or regular closing
-    const closeToken = this.currentToken();
-    let openTagEnd = 0;
-    let hasContent = false;
-
-    if (closeToken?.tokenType === TagSelfClose) {
-      this.consumeToken(); // consume '/>'
-      openTagEnd = (closeToken.endOffset || 0) + 1;
-    } else if (closeToken?.tokenType === TagClose) {
-      this.consumeToken(); // consume '>'
-      openTagEnd = (closeToken.endOffset || 0) + 1;
-      hasContent = true;
-    }
-
-    const metaNode: ASTNode = {
-      id: this.generateId(),
-      kind: 'META',
-      start: openTagStart,
-      end: openTagEnd, // Will be updated if there's content
-      content: '',
-      children: [],
-      tagName: 'meta',
-      attributes,
-      openingTag: {
-        start: openTagStart,
-        end: openTagEnd,
-        nameRange,
+  // Attribute value (quoted, unquoted, or for iterator)
+  private attributeValueRule = this.RULE('attributeValue', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.quotedValue) },
+      { ALT: () => this.SUBRULE(this.unquotedValue) },
+      // Special case for for="item in items"
+      {
+        GATE: () => this.isForAttribute(),
+        ALT: () => this.SUBRULE(this.forIterator),
       },
-    };
+    ]);
+  });
 
-    if (hasContent) {
-      // Parse content until closing tag
-      while (this.position < this.tokens.length) {
-        const token = this.currentToken();
-        if (token?.tokenType === TagClosingOpen) {
-          const nextToken = this.peekToken();
-          if (nextToken?.tokenType === Identifier && nextToken.image === 'meta') {
-            break;
-          }
-        }
-        this.position++;
-      }
-
-      // Parse closing tag
-      if (this.currentToken()?.tokenType === TagClosingOpen) {
-        const closingTagStart = this.currentToken()?.startOffset || 0;
-        this.consumeToken(); // consume '</'
-        const closingNameToken = this.consumeToken(); // consume 'meta'
-        this.skipWhitespace();
-        const finalClose = this.consumeToken(); // consume '>'
-
-        if (closingNameToken && finalClose) {
-          metaNode.closingTag = {
-            start: closingTagStart,
-            end: (finalClose.endOffset || 0) + 1,
-            nameRange: {
-              start: closingNameToken.startOffset || 0,
-              end: (closingNameToken.endOffset || 0) + 1,
-            },
-          };
-          metaNode.end = (finalClose.endOffset || 0) + 1;
-        }
-      }
-    }
-
-    metaNode.content = this.text.slice(metaNode.start, metaNode.end);
-    return metaNode;
-  }
-
-  private parsePomlElement(): ASTNode | null {
-    const openTagStart = this.currentToken()?.startOffset || 0;
-
-    this.consumeToken(); // consume '<'
-    this.skipWhitespace();
-
-    const nameToken = this.consumeToken();
-    if (!nameToken) {
-      return null;
-    }
-
-    const tagName = nameToken.image;
-    const nameRange: SourceRange = {
-      start: nameToken.startOffset || 0,
-      end: (nameToken.endOffset || 0) + 1,
-    };
-
-    this.skipWhitespace();
-
-    const attributes = this.parseAttributes();
-
-    this.skipWhitespace();
-
-    // Check for self-closing or regular closing
-    const closeToken = this.currentToken();
-    let openTagEnd = 0;
-    let hasContent = false;
-
-    if (closeToken?.tokenType === TagSelfClose) {
-      this.consumeToken(); // consume '/>'
-      openTagEnd = (closeToken.endOffset || 0) + 1;
-    } else if (closeToken?.tokenType === TagClose) {
-      this.consumeToken(); // consume '>'
-      openTagEnd = (closeToken.endOffset || 0) + 1;
-      hasContent = true;
-    }
-
-    const pomlNode: ASTNode = {
-      id: this.generateId(),
-      kind: 'POML',
-      start: openTagStart,
-      end: openTagEnd, // Will be updated if there's content
-      content: '',
-      children: [],
-      tagName,
-      attributes,
-      openingTag: {
-        start: openTagStart,
-        end: openTagEnd,
-        nameRange,
-      },
-    };
-
-    if (hasContent) {
-      if (tagName === 'text') {
-        // Special handling for <text> tags - parse content as pure text
-        this.parseTextContentForTextTag(pomlNode);
-      } else {
-        // Parse mixed content (POML and text)
-        this.parseMixedContent(pomlNode);
-      }
-
-      // Parse closing tag
-      if (this.currentToken()?.tokenType === TagClosingOpen) {
-        const closingTagStart = this.currentToken()?.startOffset || 0;
-        this.consumeToken(); // consume '</'
-        const closingNameToken = this.consumeToken();
-        this.skipWhitespace();
-        const finalClose = this.consumeToken(); // consume '>'
-
-        if (closingNameToken && finalClose) {
-          pomlNode.closingTag = {
-            start: closingTagStart,
-            end: (finalClose.endOffset || 0) + 1,
-            nameRange: {
-              start: closingNameToken.startOffset || 0,
-              end: (closingNameToken.endOffset || 0) + 1,
-            },
-          };
-          pomlNode.end = (finalClose.endOffset || 0) + 1;
-        }
-      }
-    }
-
-    pomlNode.content = this.text.slice(pomlNode.start, pomlNode.end);
-    return pomlNode;
-  }
-
-  private parseTextContentForTextTag(parentNode: ASTNode): void {
-    // In <text> tags, we parse content as pure text but still need to handle nested POML
-    while (this.position < this.tokens.length) {
-      const token = this.currentToken();
-      if (!token) {
-        break;
-      }
-
-      if (token.tokenType === TagClosingOpen) {
-        const nextToken = this.peekToken();
-        if (nextToken?.tokenType === Identifier && nextToken.image === parentNode.tagName) {
-          break; // Found closing tag
-        }
-      }
-
-      if (token.tokenType === TagOpen) {
-        const nextToken = this.peekToken();
-        if (nextToken?.tokenType === Identifier && this.context.enabledComponents.has(nextToken.image)) {
-          // Found nested POML element
-          const nestedNode = this.parsePomlElement();
-          if (nestedNode) {
-            parentNode.children.push(nestedNode);
-            nestedNode.parent = parentNode;
-          }
-        } else {
-          // Treat as text
-          const textNode = this.parseTextContent();
-          if (textNode) {
-            parentNode.children.push(textNode);
-            textNode.parent = parentNode;
-          }
-        }
-      } else {
-        const textNode = this.parseTextContent();
-        if (textNode) {
-          parentNode.children.push(textNode);
-          textNode.parent = parentNode;
-        }
-      }
-    }
-  }
-
-  private parseMixedContent(parentNode: ASTNode): void {
-    while (this.position < this.tokens.length) {
-      const token = this.currentToken();
-      if (!token) {
-        break;
-      }
-
-      if (token.tokenType === TagClosingOpen) {
-        const nextToken = this.peekToken();
-        if (nextToken?.tokenType === Identifier && nextToken.image === parentNode.tagName) {
-          break; // Found closing tag
-        }
-      }
-
-      if (token.tokenType === TagOpen) {
-        const nextToken = this.peekToken();
-        if (nextToken?.tokenType === Identifier && this.context.enabledComponents.has(nextToken.image)) {
-          // Found nested POML element
-          const nestedNode = this.parsePomlElement();
-          if (nestedNode) {
-            parentNode.children.push(nestedNode);
-            nestedNode.parent = parentNode;
-          }
-        } else {
-          // Unknown tag or malformed - treat as text
-          const textNode = this.parseTextContent();
-          if (textNode) {
-            parentNode.children.push(textNode);
-            textNode.parent = parentNode;
-          }
-        }
-      } else if (token.tokenType === TemplateOpen) {
-        // Parse template expression
-        const templateNode = this.parseTemplate();
-        if (templateNode) {
-          parentNode.children.push(templateNode);
-          templateNode.parent = parentNode;
-        }
-      } else {
-        const textNode = this.parseTextContent();
-        if (textNode) {
-          parentNode.children.push(textNode);
-          textNode.parent = parentNode;
-        }
-      }
-    }
-  }
-
-  private parseTextContent(): ASTNode | null {
-    const startOffset = this.currentToken()?.startOffset || 0;
-    let endOffset = startOffset;
-
-    // Collect consecutive text tokens
-    while (this.position < this.tokens.length) {
-      const token = this.currentToken();
-      if (!token) {
-        break;
-      }
-
-      if (token.tokenType === TextContent || token.tokenType === Whitespace) {
-        endOffset = (token.endOffset || 0) + 1;
-        this.position++;
-      } else if (
-        token.tokenType === TagOpen ||
-        token.tokenType === TemplateOpen ||
-        token.tokenType === TagClosingOpen
-      ) {
-        break;
-      } else {
-        // Other tokens treated as text in this context
-        endOffset = (token.endOffset || 0) + 1;
-        this.position++;
-      }
-    }
-
-    if (endOffset === startOffset) {
-      return null;
-    }
-
-    const textNode: ASTNode = {
-      id: this.generateId(),
-      kind: 'TEXT',
-      start: startOffset,
-      end: endOffset,
-      content: this.text.slice(startOffset, endOffset),
-      children: [],
-      textSegments: [{ start: startOffset, end: endOffset }],
-    };
-
-    return textNode;
-  }
-
-  private parseTemplate(): ASTNode | null {
-    const startToken = this.currentToken();
-    if (!startToken || startToken.tokenType !== TemplateOpen) {
-      return null;
-    }
-
-    const startOffset = startToken.startOffset || 0;
-    this.consumeToken(); // consume '{{'
-
-    let expression = '';
-    let endOffset = startOffset + 2;
-
-    // Collect content until TemplateClose
-    while (this.position < this.tokens.length) {
-      const token = this.currentToken();
-      if (!token) {
-        break;
-      }
-
-      if (token.tokenType === TemplateClose) {
-        endOffset = (token.endOffset || 0) + 1;
-        this.consumeToken();
-        break;
-      } else {
-        expression += token.image;
-        endOffset = (token.endOffset || 0) + 1;
-        this.consumeToken();
-      }
-    }
-
-    const templateNode: ASTNode = {
-      id: this.generateId(),
-      kind: 'TEMPLATE',
-      start: startOffset,
-      end: endOffset,
-      content: this.text.slice(startOffset, endOffset),
-      children: [],
-      expression: expression.trim(),
-    };
-
-    return templateNode;
-  }
-
-  private parseAttributes(): AttributeInfo[] {
-    const attributes: AttributeInfo[] = [];
-
-    while (this.position < this.tokens.length) {
-      this.skipWhitespace();
-
-      const token = this.currentToken();
-      if (!token || token.tokenType !== Identifier) {
-        break;
-      }
-
-      const keyToken = this.consumeToken()!;
-      const keyRange: SourceRange = {
-        start: keyToken.startOffset || 0,
-        end: (keyToken.endOffset || 0) + 1,
-      };
-
-      this.skipWhitespace();
-
-      if (this.currentToken()?.tokenType !== Equals) {
-        // Boolean attribute
-        attributes.push({
-          key: keyToken.image,
-          value: [
-            {
-              id: this.generateId(),
-              kind: 'TEXT',
-              start: keyRange.start,
-              end: keyRange.end,
-              content: 'true',
-              children: [],
-            },
-          ],
-          keyRange,
-          valueRange: keyRange,
-          fullRange: keyRange,
-        });
-        continue;
-      }
-
-      this.consumeToken(); // consume '='
-      this.skipWhitespace();
-
-      const quoteToken = this.currentToken();
-      if (!quoteToken || (quoteToken.tokenType !== DoubleQuote && quoteToken.tokenType !== SingleQuote)) {
-        break; // Invalid attribute
-      }
-
-      const isDoubleQuote = quoteToken.tokenType === DoubleQuote;
-      const valueStart = (quoteToken.endOffset || 0) + 1;
-      this.consumeToken(); // consume opening quote
-
-      const valueNodes: (ASTNode & { kind: 'TEXT' | 'TEMPLATE' })[] = [];
-      let valueEnd = valueStart;
-
-      // Parse attribute value content
-      while (this.position < this.tokens.length) {
-        const token = this.currentToken();
-        if (!token) {
-          break;
-        }
-
-        if ((isDoubleQuote && token.tokenType === DoubleQuote) || (!isDoubleQuote && token.tokenType === SingleQuote)) {
-          valueEnd = token.startOffset || valueEnd;
-          this.consumeToken(); // consume closing quote
-          break;
-        } else if (token.tokenType === TemplateOpen) {
-          const templateNode = this.parseTemplate();
-          if (templateNode && (templateNode.kind === 'TEXT' || templateNode.kind === 'TEMPLATE')) {
-            valueNodes.push(templateNode as ASTNode & { kind: 'TEXT' | 'TEMPLATE' });
-          }
-        } else {
-          // Collect text content
-          const textStart = token.startOffset || 0;
-          let textEnd = (token.endOffset || 0) + 1;
-          let textContent = token.image;
-
-          this.consumeToken();
-
-          // Collect more text tokens
-          while (this.position < this.tokens.length) {
-            const nextToken = this.currentToken();
-            if (!nextToken) {
-              break;
-            }
-
-            if (
-              (isDoubleQuote && nextToken.tokenType === DoubleQuote) ||
-              (!isDoubleQuote && nextToken.tokenType === SingleQuote) ||
-              nextToken.tokenType === TemplateOpen
-            ) {
-              break;
-            }
-
-            textContent += nextToken.image;
-            textEnd = (nextToken.endOffset || 0) + 1;
-            this.consumeToken();
-          }
-
-          valueNodes.push({
-            id: this.generateId(),
-            kind: 'TEXT',
-            start: textStart,
-            end: textEnd,
-            content: textContent,
-            children: [],
+  // Quoted value
+  private quotedValueRule = this.RULE('quotedValue', () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(DoubleQuote, { LABEL: 'openQuote' });
+          this.MANY(() => {
+            this.SUBRULE(this.valueContent);
           });
-        }
-      }
+          this.CONSUME2(DoubleQuote, { LABEL: 'closeQuote' });
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(SingleQuote, { LABEL: 'openQuote' });
+          this.MANY2(() => {
+            this.SUBRULE2(this.valueContent);
+          });
+          this.CONSUME2(SingleQuote, { LABEL: 'closeQuote' });
+        },
+      },
+    ]);
+  });
 
-      const valueRange: SourceRange = { start: valueStart, end: valueEnd };
-      const fullRange: SourceRange = {
-        start: keyRange.start,
-        end: (this.tokens[this.position - 1]?.endOffset || 0) + 1,
-      };
+  // Unquoted value (template or expression)
+  private unquotedValueRule = this.RULE('unquotedValue', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.template) },
+      { ALT: () => this.CONSUME(Identifier, { LABEL: 'expression' }) },
+      { ALT: () => this.CONSUME(TextContent, { LABEL: 'expression' }) },
+    ]);
+  });
 
-      attributes.push({
-        key: keyToken.image,
-        value: valueNodes,
-        keyRange,
-        valueRange,
-        fullRange,
-      });
-    }
+  // Value content inside quotes
+  private valueContentRule = this.RULE('valueContent', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.template) },
+      { ALT: () => this.SUBRULE(this.escapedChar) },
+      { ALT: () => this.CONSUME(TextContent, { LABEL: 'text' }) },
+      { ALT: () => this.CONSUME(Identifier, { LABEL: 'text' }) },
+      { ALT: () => this.CONSUME(Whitespace, { LABEL: 'text' }) },
+    ]);
+  });
 
-    return attributes;
+  // Escaped character
+  private escapedCharRule = this.RULE('escapedChar', () => {
+    this.CONSUME(Backslash);
+    this.OR([
+      { ALT: () => this.CONSUME(DoubleQuote, { LABEL: 'char' }) },
+      { ALT: () => this.CONSUME(SingleQuote, { LABEL: 'char' }) },
+      { ALT: () => this.CONSUME(Backslash, { LABEL: 'char' }) },
+      { ALT: () => this.CONSUME(Identifier, { LABEL: 'char' }) },
+    ]);
+  });
+
+  // For iterator (item in items)
+  private forIteratorRule = this.RULE('forIterator', () => {
+    this.CONSUME(Identifier, { LABEL: 'iterator' });
+    this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'Whitespace1' }));
+    this.CONSUME2(Identifier, { LABEL: 'in' }); // "in" keyword
+    this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'Whitespace2' }));
+    // Collection can be complex expression
+    this.AT_LEAST_ONE(() => {
+      this.OR([
+        { ALT: () => this.CONSUME3(Identifier, { LABEL: 'collection' }) },
+        { ALT: () => this.CONSUME(TextContent, { LABEL: 'collection' }) },
+      ]);
+    });
+  });
+
+  // Template {{ expression }}
+  private templateRule = this.RULE('template', () => {
+    this.CONSUME(TemplateOpen);
+    this.MANY(() => {
+      this.OR([
+        { ALT: () => this.CONSUME(Whitespace, { LABEL: 'expression' }) },
+        { ALT: () => this.CONSUME(Identifier, { LABEL: 'expression' }) },
+        { ALT: () => this.CONSUME(TextContent, { LABEL: 'expression' }) },
+      ]);
+    });
+    this.CONSUME(TemplateClose);
+  });
+
+  // Value (text and/or templates)
+  private valueRule = this.RULE('value', () => {
+    this.AT_LEAST_ONE(() => {
+      this.SUBRULE(this.valueElement);
+    });
+  });
+
+  // Value element (text or template)
+  private valueElementRule = this.RULE('valueElement', () => {
+    this.OR([
+      { ALT: () => this.SUBRULE(this.template) },
+      { ALT: () => this.CONSUME(TextContent, { LABEL: 'text' }) },
+      { ALT: () => this.CONSUME(Identifier, { LABEL: 'text' }) },
+      { ALT: () => this.CONSUME(Whitespace, { LABEL: 'text' }) },
+    ]);
+  });
+
+  // Comment
+  private commentRule = this.RULE('comment', () => {
+    this.CONSUME(CommentOpen);
+    this.MANY(() => {
+      this.OR([
+        {
+          GATE: () => !this.isCommentClose(),
+          ALT: () => this.consumeAny({ LABEL: 'commentContent' }),
+        },
+      ]);
+    });
+    this.CONSUME(CommentClose);
+  });
+
+  // Pragma
+  private pragmaRule = this.RULE('pragma', () => {
+    this.CONSUME(CommentOpen);
+    this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'Whitespace1' }));
+    this.CONSUME(Pragma);
+    this.MANY(() => {
+      this.OR([
+        {
+          GATE: () => !this.isCommentClose(),
+          ALT: () => this.consumeAny({ LABEL: 'pragmaContent' }),
+        },
+      ]);
+    });
+    this.CONSUME(CommentClose);
+  });
+
+  // Helper methods
+  private isClosingTag(): boolean {
+    return this.LA(1).tokenType === TagClosingOpen;
   }
 
-  private processMeta(metaNode: ASTNode): void {
-    if (!metaNode.attributes) {
-      return;
-    }
-
-    for (const attr of metaNode.attributes) {
-      switch (attr.key) {
-        case 'components':
-          this.processComponentsAttribute(attr.value);
-          break;
-        case 'unknownComponents':
-          const behavior = attr.value[0]?.content; // eslint-disable-line
-          if (behavior === 'error' || behavior === 'warning' || behavior === 'ignore') {
-            this.context.unknownComponentBehavior = behavior;
-          }
-          break;
-        case 'minimalPomlVersion':
-          this.context.minimalPomlVersion = attr.value[0]?.content;
-          break;
-        // Add other meta attributes as needed
-      }
-    }
+  private isCommentClose(): boolean {
+    return this.LA(1).tokenType === CommentClose;
   }
 
-  private processComponentsAttribute(value: (ASTNode & { kind: 'TEXT' | 'TEMPLATE' })[]): void {
-    const components = value[0]?.content || '';
-    const parts = components.split(',').map((s) => s.trim());
-
-    for (const part of parts) {
-      if (part.startsWith('+')) {
-        this.context.enabledComponents.add(part.slice(1));
-      } else if (part.startsWith('-')) {
-        this.context.enabledComponents.delete(part.slice(1));
-      }
-    }
+  private isForAttribute(): boolean {
+    // Check if previous token was "for" as attribute key
+    const prevTokens = this.input.slice(Math.max(0, this.currIdx - 3), this.currIdx);
+    return prevTokens.some((t) => t.image.toLowerCase() === 'for');
   }
 
-  private handleUnknownTag(tagName: string): void {
-    switch (this.context.unknownComponentBehavior) {
-      case 'error':
-        throw new Error(`Unknown POML component: ${tagName}`);
-      case 'warning':
-        console.warn(`Unknown POML component: ${tagName}`);
-        break;
-      case 'ignore':
-        // Do nothing
-        break;
-    }
+  private consumeAny(options?: { LABEL?: string }): IToken {
+    // Consume any token
+    const token = this.LA(1);
+    this.input[this.currIdx++];
+    return token;
   }
-}
-
-// Export function to create and use the parser
-export function parseExtendedPoml(text: string, context: Partial<PomlContext> = {}): ASTNode {
-  const fullContext: PomlContext = {
-    variables: {},
-    stylesheet: {},
-    sourcePath: '',
-    enabledComponents: new Set(),
-    unknownComponentBehavior: 'warning',
-    ...context,
-  };
-
-  const parser = new CSTParser(fullContext);
-  return parser.parse(text);
 }
