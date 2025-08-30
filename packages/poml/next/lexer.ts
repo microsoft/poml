@@ -33,9 +33,10 @@ export const Identifier = createToken({
   pattern: /[a-zA-Z_]([a-zA-Z0-9_]|(-(?!\-+>)))*/,
 });
 
+// Include all Unicode whitespace characters and control characters
 export const Whitespace = createToken({
   name: 'Whitespace',
-  pattern: /[ \t\r\n]+/,
+  pattern: /[\s\u0000-\u001F\u007F-\u009F\u2000-\u200B\uFEFF]+/,
   line_breaks: true,
 });
 
@@ -45,22 +46,23 @@ export const Whitespace = createToken({
  * - starts or ends a comment: <!--, -->
  * - starts or ends a template: {{, }}
  * - starts or ends a string literal: " or '
- * - whitespace (handled separately)
+ * - whitespace (handled separately - includes Unicode whitespace and control chars)
  * - equal sign (=)
- * - backslash \ (allowed for escaping in strings)
+ * - backslash \ (handled separately for escaping)
  *
  * Allowed:
  * - Single { or } are OK if they are not followed by another brace
  * - Incomplete tag delimiters such as / (/< is an exception, because < is a start of tag)
  * - Incomplete comment delimiters such as !-- or -- are OK
  * - Incorrect @pragma directive such as @pragm or @pragmaX will be matched
+ * - All other Unicode characters including emojis, CJK, etc.
  */
 export const Arbitrary = createToken({
   name: 'Arbitrary',
-  // Anything except: <, >, quotes, braces (double-brace protected), whitespace, =, backslash.
-  // Also allow a lone '/' but *not* when it starts '/>' (so TagSelfClose can win).
-  pattern: /(?:[^<>"'{}\s=\\\/-]|{(?!{)|}(?!})|\/(?!>)|\-(?!\-+>))+/,
-  line_breaks: true,
+  // Match anything except: <, >, quotes, =, backslash, whitespace (including Unicode), control chars
+  // Allow single braces and slashes with lookahead constraints
+  pattern: /(?:[^<>"'{}=\\\s\u0000-\u001F\u007F-\u009F\u2000-\u200B\uFEFF\/-]|{(?!{)|}(?!})|\/(?!>)|\-(?!\-+>))+/,
+  line_breaks: false,
 });
 
 // Define token order - more specific patterns first
