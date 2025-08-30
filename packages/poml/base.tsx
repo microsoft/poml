@@ -996,3 +996,9 @@ export function findComponentByAliasOrUndefined(alias: string, disabled?: Set<st
 export function listComponents() {
   return ComponentRegistry.instance.listComponents();
 }
+
+export function listComponentAliases() {
+  return listComponents()
+    .map((c) => c.getAliases())
+    .flat();
+}
