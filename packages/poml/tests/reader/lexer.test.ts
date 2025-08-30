@@ -1,7 +1,8 @@
 import { describe, expect, test } from '@jest/globals';
 import {
   extendedPomlLexer,
-  Comment,
+  CommentOpen,
+  CommentClose,
   TemplateOpen,
   TemplateClose,
   TagOpen,
@@ -14,7 +15,7 @@ import {
   Backslash,
   Identifier,
   Whitespace,
-  TextContent,
+  Arbitrary,
 } from 'poml/next/lexer';
 
 // Helper function to extract token images
@@ -262,11 +263,36 @@ describe('Token Types', () => {
   });
 
   test('should identify comments', () => {
-    expect(tokenTypes('<!-- comment -->')).toEqual([Comment]);
+    expect(tokenTypes('<!-- comment -->')).toEqual([CommentOpen, Whitespace, Identifier, Whitespace, CommentClose]);
   });
 
   test('should identify whitespace', () => {
     expect(tokenTypes('  \t\n  ')).toEqual([Whitespace]);
+  });
+
+  test('should identify attributes', () => {
+    expect(tokenTypes('<markup.paragraph id="intro" data-value="123\\n"456\'>')).toEqual([
+      TagOpen,
+      Identifier,
+      Arbitrary,
+      Whitespace,
+      Identifier,
+      Equals,
+      DoubleQuote,
+      Identifier,
+      DoubleQuote,
+      Whitespace,
+      Identifier,
+      Equals,
+      DoubleQuote,
+      Arbitrary,
+      Backslash,
+      Identifier,
+      DoubleQuote,
+      Arbitrary,
+      SingleQuote,
+      TagClose,
+    ]);
   });
 });
 
@@ -436,7 +462,7 @@ describe('Boundary Conditions', () => {
     const longComment = `<!--${'x'.repeat(100000)}-->`;
     const commentResult = tokenize(longComment);
     expect(commentResult.errors).toHaveLength(0);
-    expect(commentResult.tokens).toHaveLength(1);
+    expect(commentResult.tokens).toHaveLength(3);
 
     const longIdentifier = 'a' + 'b'.repeat(10000);
     const identifierResult = tokenize(longIdentifier);
@@ -548,14 +574,14 @@ describe('Malformed Patterns', () => {
   test('should handle broken template syntax', () => {
     expect(tokenImages('}')).toEqual(['}']);
     expect(tokenImages('}}')).toEqual(['}}']);
-    expect(tokenImages('{ single brace }')).toEqual(['{ single brace }']);
-    expect(tokenImages('{not a template}')).toEqual(['{not a template}']);
+    expect(tokenImages('{ single brace }')).toEqual(['{', ' ', 'single', ' ', 'brace', ' ', '}']);
+    expect(tokenImages('{not a template}')).toEqual(['{not', ' ', 'a', ' ', 'template', '}']);
   });
 
   test('should handle nested malformed patterns', () => {
-    expect(tokenImages('<!-- <tag> -->')).toEqual(['<!-- <tag> -->']);
-    expect(tokenImages('<!-- {{template}} -->')).toEqual(['<!-- {{template}} -->']);
-    expect(tokenImages('<tag><!-- comment</tag>')).toEqual(['<', 'tag', '>', '<', '!-- comment', '</', 'tag', '>']);
+    expect(tokenImages('<!--   <tag>\n-->')).toEqual(['<!--', '   ', '<', 'tag', '>', '\n', '-->']);
+    expect(tokenImages('<!-- {{template}} -->')).toEqual(['<!--', ' ', '{{', 'template', '}}', ' ', '-->']);
+    expect(tokenImages('<tag><!-- comment</tag>')).toEqual(['<', 'tag', '>', '<!--', ' ', 'comment', '</', 'tag', '>']);
     expect(tokenImages('{{<tag>}}')).toEqual(['{{', '<', 'tag', '>', '}}']);
   });
 
@@ -588,7 +614,7 @@ describe('Malformed Patterns', () => {
   test('should handle whitespace in unexpected places', () => {
     expect(tokenImages('< tag >')).toEqual(['<', ' ', 'tag', ' ', '>']);
     expect(tokenImages('</ tag >')).toEqual(['</', ' ', 'tag', ' ', '>']);
-    expect(tokenImages('{ { template } }')).toEqual(['{ { template } }']);
+    expect(tokenImages('{ { template } }')).toEqual(['{', ' ', '{', ' ', 'template', ' ', '}', ' ', '}']);
     expect(tokenImages('attr = "value"')).toEqual(['attr', ' ', '=', ' ', '"', 'value', '"']);
   });
 
@@ -613,8 +639,12 @@ describe('Malformed Patterns', () => {
       ' ',
       'broken',
     ]);
-    expect(tokenImages('<!--comment--><tag>more{{ content')).toEqual([
-      '<!--comment-->',
+    expect(tokenImages('<!-- comment --><tag>more{{ content')).toEqual([
+      '<!--',
+      ' ',
+      'comment',
+      ' ',
+      '-->',
       '<',
       'tag',
       '>',
@@ -647,13 +677,13 @@ describe('Malformed Patterns', () => {
     expect(tokenImages('text{more}text')).toEqual(['text', '{more}text']);
     expect(tokenImages('before}after')).toEqual(['before', '}after']);
     expect(tokenImages('before{after')).toEqual(['before', '{after']);
-    expect(tokenImages('text } { more')).toEqual(['text', ' ', '} { more']);
+    expect(tokenImages('text } { more')).toEqual(['text', ' ', '}', ' ', '{', ' ', 'more']);
   });
 
   test('should handle greedy vs non-greedy matching', () => {
-    expect(tokenImages('<!--first--><!--second-->')).toEqual(['<!--first-->', '<!--second-->']);
+    expect(tokenImages('<!--first--><!--second-->')).toEqual(['<!--', 'first', '-->', '<!--', 'second', '-->']);
     expect(tokenImages('{{first}}{{second}}')).toEqual(['{{', 'first', '}}', '{{', 'second', '}}']);
-    expect(tokenImages('text<!--comment-->more')).toEqual(['text', '<!--comment-->', 'more']);
+    expect(tokenImages('text<!-----comment----->more')).toEqual(['text', '<!-----', 'comment', '----->', 'more']);
   });
 });
 
@@ -740,11 +770,11 @@ comment -->
 more text`;
 
     const result = tokenize(input);
-    const commentToken = result.tokens.find((t) => t.tokenType.name === 'Comment');
+    const commentToken = result.tokens.find((t) => t.tokenType.name === 'CommentOpen');
 
     expect(commentToken).toBeDefined();
     expect(commentToken!.startLine).toBe(2);
-    expect(commentToken!.endLine).toBe(4);
+    expect(commentToken!.endLine).toBe(2);
   });
 
   test('should handle position tracking with carriage returns', () => {
@@ -783,7 +813,7 @@ describe('Performance and Stress Tests', () => {
     const end = performance.now();
 
     expect(result.errors).toHaveLength(0);
-    expect(result.tokens).toHaveLength(1);
+    expect(result.tokens).toHaveLength(3);
     expect(end - start).toBeLessThan(500); // Should be fast
   });
 

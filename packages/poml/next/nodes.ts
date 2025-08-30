@@ -1,5 +1,5 @@
 import { Range } from './types';
-import { IToken } from 'chevrotain';
+import { CstNode, IToken } from 'chevrotain';
 
 /**
  * Represents a JavaScript expression as a string.
@@ -10,9 +10,7 @@ import { IToken } from 'chevrotain';
  *
  * Cases that apply:
  * - Conditional expressions: `i > 0`, `user.name === "admin"`
- * - Collection accessors: `items.everything`, `data[0].value`
  * - Function calls: `formatDate(now)`, `items.filter(x => x.active)`
- * - Property paths: `user.profile.settings.theme`
  *
  * Cases that do not apply:
  * - Template syntax including braces: `{{ expression }}` (use TemplateNode)
@@ -301,6 +299,8 @@ export interface CommentNode {
   value: StringNode;
 }
 
+// export interface Comment
+
 /**
  * Represents a pragma directive carried inside a comment.
  *
@@ -318,6 +318,14 @@ export interface PragmaNode {
   kind: 'PRAGMA';
   range: Range;
   value: StringNode;
+}
+
+export interface PragmaCstNode extends CstNode {
+  children: {
+    CommentOpenTag?: IToken[];
+    CommentCloseTag?: IToken[];
+    PragmaSymbol?: IToken[];
+  };
 }
 
 /**
@@ -352,6 +360,19 @@ export interface LiteralNode {
 }
 
 /**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface LiteralElementCstNode extends CstNode {
+  children: {
+    OpenTag?: OpenTagCstNode[];
+    CloseTag?: CloseTagCstNode[];
+    // All content between open and close tags is treated as literal text
+    // including other tags, comments, pragmas, etc.
+    TextContent?: IToken[];
+  };
+}
+
+/**
  * Represents the root node of a POML document tree.
  *
  * Root nodes serve as the top-level container for all document content when
@@ -370,6 +391,26 @@ export interface RootNode {
   kind: 'ROOT';
   range: Range;
   children: (ElementNode | LiteralNode | CommentNode | PragmaNode | ValueNode)[];
+}
+
+/**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface RootCstNode extends CstNode {
+  children: {
+    Content?: ElementContentCstNode[];
+  };
+}
+
+export interface ElementContentCstNode extends CstNode {
+  children: {
+    Element?: ElementCstNode;
+    LiteralElement?: LiteralElementCstNode;
+    SelfCloseElement?: SelfCloseElementCstNode;
+    Comment?: CommentCstNode;
+    Pragma?: PragmaCstNode;
+    Value?: ElementValueCstNode;
+  };
 }
 
 // Keep these keys required; everything else becomes recursively optional
