@@ -756,6 +756,13 @@ describe('Malformed Patterns', () => {
     expect(tokenImages('@Pragma')).toEqual(['@Pragma']);
     expect(tokenImages('@pragma key=value')).toEqual(['@pragma', ' ', 'key', '=', 'value']);
   });
+
+  test('should handle </>', () => {
+    expect(tokenImages('</>')).toEqual(['</', '>']);
+    expect(tokenImages('< />')).toEqual(['<', ' ', '/>']);
+    expect(tokenImages('< / >')).toEqual(['<', ' ', '/', ' ', '>']);
+    expect(tokenImages('<//>')).toEqual(['</', '/>']);
+  });
 });
 
 describe('Position Tracking Accuracy', () => {

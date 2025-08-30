@@ -185,6 +185,23 @@ export interface ForLoopAttributeNode {
 }
 
 /**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface ForLoopAttributeCstNode extends CstNode {
+  children: {
+    AttributeKey?: IToken[];
+    WsAfterKey?: IToken[];
+    Equals?: IToken[];
+    WsAfterEquals?: IToken[];
+    OpenQuote?: IToken[];
+    WsAfterOpenQuote?: IToken[];
+    ForIterator?: ForIteratorCstNode[];
+    WsBeforeCloseQuote?: IToken[];
+    CloseQuote?: IToken[];
+  };
+}
+
+/**
  * Represents an opening tag in POML markup.
  *
  * Open tags mark the beginning of an element that expects a corresponding
@@ -206,8 +223,23 @@ export interface ForLoopAttributeNode {
 export interface OpenTagNode {
   kind: 'OPEN';
   range: Range;
-  value: StringNode;
+  value: StringNode; // tag name
   attributes: (AttributeNode | ForLoopAttributeNode)[];
+}
+
+/**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface OpenTagCstNode extends CstNode {
+  children: {
+    OpenBracket?: IToken[];
+    WsAfterBracket?: IToken[];
+    TagName?: IToken[];
+    WsAfterName?: IToken[];
+    Attribute?: AttributeCstNode[];
+    WsAfterAttribute?: IToken[];
+    CloseBracket?: IToken[];
+  };
 }
 
 /**
@@ -229,7 +261,19 @@ export interface OpenTagNode {
 export interface CloseTagNode {
   kind: 'CLOSE';
   range: Range;
-  value: StringNode;
+  value: StringNode; // tag name
+}
+
+/**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface CloseTagCstNode extends CstNode {
+  children: {
+    ClosingOpenBracket?: IToken[];
+    WsAfterBracket?: IToken[];
+    TagName?: IToken[];
+    CloseBracket?: IToken[];
+  };
 }
 
 /**
@@ -252,8 +296,23 @@ export interface CloseTagNode {
 export interface SelfCloseElementNode {
   kind: 'SELFCLOSE';
   range: Range;
-  value: StringNode;
+  value: StringNode; // tag name
   attributes: (AttributeNode | ForLoopAttributeNode)[];
+}
+
+/**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface SelfCloseElementCstNode extends CstNode {
+  children: {
+    OpenBracket?: IToken[];
+    WsAfterBracket?: IToken[];
+    TagName?: IToken[];
+    WsAfterName?: IToken[];
+    Attribute?: AttributeCstNode[];
+    WsAfterAttribute?: IToken[];
+    SelfCloseBracket?: IToken[];
+  };
 }
 
 /**
@@ -284,6 +343,28 @@ export interface ElementNode {
 }
 
 /**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface ElementCstNode extends CstNode {
+  children: {
+    OpenTag?: OpenTagCstNode[];
+    CloseTag?: CloseTagCstNode[];
+    Content?: IToken[];
+  };
+}
+
+export interface ElementContentCstNode extends CstNode {
+  children: {
+    Element?: ElementCstNode;
+    LiteralElement?: LiteralElementCstNode;
+    SelfCloseElement?: SelfCloseElementCstNode;
+    Comment?: CommentCstNode;
+    Pragma?: PragmaCstNode;
+    Value?: ElementValueCstNode;
+  };
+}
+
+/**
  * Represents an HTML-like line/block comment in POML.
  *
  * Comment nodes preserve authoring notes or disabled content that should not
@@ -299,7 +380,16 @@ export interface CommentNode {
   value: StringNode;
 }
 
-// export interface Comment
+/**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface CommentCstNode extends CstNode {
+  children: {
+    CommentOpenTag?: IToken[];
+    CommentContent?: IToken[];
+    CommentCloseTag?: IToken[];
+  };
+}
 
 /**
  * Represents a pragma directive carried inside a comment.
@@ -320,11 +410,18 @@ export interface PragmaNode {
   value: StringNode;
 }
 
+/**
+ * Related CST node interfaces for parsing stage.
+ */
 export interface PragmaCstNode extends CstNode {
   children: {
     CommentOpenTag?: IToken[];
+    WsAfterOpen?: IToken[];
+    PragmaKeyword?: IToken[];
+    WsAfterPragma?: IToken[];
+    CommentContent?: IToken[];
+    WsAfterContent?: IToken[];
     CommentCloseTag?: IToken[];
-    PragmaSymbol?: IToken[];
   };
 }
 
@@ -355,7 +452,6 @@ export interface LiteralNode {
   range: Range;
   open: OpenTagNode;
   close: CloseTagNode;
-  attributes: AttributeNode[];
   children: StringNode;
 }
 
@@ -399,17 +495,6 @@ export interface RootNode {
 export interface RootCstNode extends CstNode {
   children: {
     Content?: ElementContentCstNode[];
-  };
-}
-
-export interface ElementContentCstNode extends CstNode {
-  children: {
-    Element?: ElementCstNode;
-    LiteralElement?: LiteralElementCstNode;
-    SelfCloseElement?: SelfCloseElementCstNode;
-    Comment?: CommentCstNode;
-    Pragma?: PragmaCstNode;
-    Value?: ElementValueCstNode;
   };
 }
 
