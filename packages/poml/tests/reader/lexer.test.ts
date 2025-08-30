@@ -694,6 +694,68 @@ describe('Malformed Patterns', () => {
     expect(tokenImages('{{first}}{{second}}')).toEqual(['{{', 'first', '}}', '{{', 'second', '}}']);
     expect(tokenImages('text<!-----comment----->more')).toEqual(['text', '<!-----', 'comment', '----->', 'more']);
   });
+
+  test('should handle single braces correctly', () => {
+    // Single { or } are OK if not followed by another brace
+    expect(tokenImages('text { more text')).toEqual(['text', ' ', '{', ' ', 'more', ' ', 'text']);
+    expect(tokenImages('text } more text')).toEqual(['text', ' ', '}', ' ', 'more', ' ', 'text']);
+    expect(tokenImages('a{b}c')).toEqual(['a', '{b}c']);
+    expect(tokenImages('path{index}')).toEqual(['path', '{index}']);
+    expect(tokenImages('array[{key}]')).toEqual(['array', '[{key}]']);
+    expect(tokenImages('{ not {{ double')).toEqual(['{', ' ', 'not', ' ', '{{', ' ', 'double']);
+    expect(tokenImages('} not }} double')).toEqual(['}', ' ', 'not', ' ', '}}', ' ', 'double']);
+    expect(tokenImages('{}empty{}')).toEqual(['{}empty{}']);
+    expect(tokenImages('}{reversed}{')).toEqual(['}{reversed}{']);
+  });
+
+  test('should handle incomplete tag delimiters', () => {
+    // Incomplete tag delimiters such as / (except /< and />)
+    expect(tokenImages('path/to/file')).toEqual(['path', '/to/file']);
+    expect(tokenImages('a/b/c')).toEqual(['a', '/b/c']);
+    expect(tokenImages('text / more')).toEqual(['text', ' ', '/', ' ', 'more']);
+    expect(tokenImages('http://example.com')).toEqual(['http', '://example.com']);
+    expect(tokenImages('5/3=1.67')).toEqual(['5/3', '=', '1.67']);
+    // These should NOT match as incomplete delimiters
+    expect(tokenImages('/<tag>')).toEqual(['/', '<', 'tag', '>']);
+    expect(tokenImages('/>')).toEqual(['/>']);
+    expect(tokenImages('</tag>')).toEqual(['</', 'tag', '>']);
+  });
+
+  test('should handle incomplete comment delimiters', () => {
+    // Incomplete comment delimiters such as !-- or -- are OK
+    expect(tokenImages('text !-- not comment')).toEqual(['text', ' ', '!--', ' ', 'not', ' ', 'comment']);
+    expect(tokenImages('text -- also not')).toEqual(['text', ' ', '--', ' ', 'also', ' ', 'not']);
+    expect(tokenImages('a--b')).toEqual(['a--b']);
+    expect(tokenImages('!--incomplete')).toEqual(['!--incomplete']);
+    expect(tokenImages('--dashes--')).toEqual(['--dashes--']);
+    expect(tokenImages('<!-- this is comment -->')).toEqual([
+      '<!--',
+      ' ',
+      'this',
+      ' ',
+      'is',
+      ' ',
+      'comment',
+      ' ',
+      '-->',
+    ]);
+    expect(tokenImages('not<!-- comment -->')).toEqual(['not', '<!--', ' ', 'comment', ' ', '-->']);
+    expect(tokenImages('---triple-dash')).toEqual(['---triple-dash']);
+    expect(tokenImages('text --- more')).toEqual(['text', ' ', '---', ' ', 'more']);
+  });
+
+  test('should handle incorrect @pragma directives', () => {
+    // Incorrect @pragma directive such as @pragm or @pragmaX will be matched as Arbitrary
+    expect(tokenImages('@pragma')).toEqual(['@pragma']);
+    expect(tokenImages('@pragm')).toEqual(['@pragm']);
+    expect(tokenImages('@pragmaX')).toEqual(['@pragmaX']);
+    expect(tokenImages('@pragma-extended')).toEqual(['@pragma-extended']);
+    expect(tokenImages('@@pragma')).toEqual(['@@pragma']);
+    expect(tokenImages('not@pragma')).toEqual(['not', '@pragma']);
+    expect(tokenImages('@PRAGMA')).toEqual(['@PRAGMA']);
+    expect(tokenImages('@Pragma')).toEqual(['@Pragma']);
+    expect(tokenImages('@pragma key=value')).toEqual(['@pragma', ' ', 'key', '=', 'value']);
+  });
 });
 
 describe('Position Tracking Accuracy', () => {
