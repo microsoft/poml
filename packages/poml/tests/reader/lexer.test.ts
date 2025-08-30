@@ -37,7 +37,7 @@ function tokenize(input: string) {
 
 describe('Basic Token Images', () => {
   test('should tokenize HTML comments', () => {
-    expect(tokenImages('<!-- comment -->')).toEqual(['<!-- comment -->']);
+    expect(tokenImages('<!-- comment -->')).toEqual(['<!--', ' ', 'comment', ' ', '-->']);
   });
 
   test('should tokenize template variables', () => {
@@ -114,15 +114,18 @@ describe('Edge Cases', () => {
 
   test('chinese characters', () => {
     expect(tokenImages('中文 {{ 文本 }}内容< 标签>')).toEqual([
-      '中文 ',
+      '中文',
+      ' ',
       '{{',
       ' ',
-      '文本 ',
+      '文本',
+      ' ',
       '}}',
       '内容',
       '<',
       ' ',
-      '标签>',
+      '标签',
+      '>',
     ]);
   });
 
@@ -376,7 +379,9 @@ Analyze data
 {{variable}}`;
 
     const images = tokenImages(input);
-    expect(images).toContain('# My Analysis\n\n');
+    expect(images).toContain('#');
+    expect(images).toContain('My');
+    expect(images).toContain('Analysis');
     expect(images).toContain('<');
     expect(images).toContain('task');
     expect(images).toContain('>');
@@ -387,7 +392,11 @@ Analyze data
 
   test('should handle comments with mixed content', () => {
     expect(tokenImages('<!-- comment --><task>content</task>')).toEqual([
-      '<!-- comment -->',
+      '<!--',
+      ' ',
+      'comment',
+      ' ',
+      '-->',
       '<',
       'task',
       '>',
@@ -446,7 +455,7 @@ describe('Boundary Conditions', () => {
   });
 
   test('should handle minimum valid patterns', () => {
-    expect(tokenImages('<!---->')).toEqual(['<!---->']);
+    expect(tokenImages('<!---->')).toEqual(['<!--', '-->']);
     expect(tokenImages('<a>')).toEqual(['<', 'a', '>']);
     expect(tokenImages('</a>')).toEqual(['</', 'a', '>']);
     expect(tokenImages('<a/>')).toEqual(['<', 'a', '/>']);
@@ -509,13 +518,13 @@ describe('Unicode and Special Characters', () => {
   });
 
   test('should handle emoji and symbols', () => {
-    expect(tokenImages('Hello 👋 World 🌍')).toEqual(['Hello', ' ', '👋 World 🌍']);
-    expect(tokenImages('Math: ∑∞π≠∅')).toEqual(['Math', ': ∑∞π≠∅']);
-    expect(tokenImages('Arrows: ←→↑↓')).toEqual(['Arrows', ': ←→↑↓']);
+    expect(tokenImages('Hello 👋 World 🌍')).toEqual(['Hello', ' ', '👋', ' ', 'World', ' ', '🌍']);
+    expect(tokenImages('Math: ∑∞π≠∅')).toEqual(['Math', ':', ' ', '∑∞π≠∅']);
+    expect(tokenImages('Arrows: ←→↑↓')).toEqual(['Arrows', ':', ' ', '←→↑↓']);
   });
 
   test('should handle unicode', () => {
-    expect(tokenImages('<こんにちは>')).toEqual(['<', 'こんにちは>']);
+    expect(tokenImages('<こんにちは>')).toEqual(['<', 'こんにちは', '>']);
     expect(tokenImages('{{你好}}')).toEqual(['{{', '你好', '}}']);
     expect(tokenImages('<tag attr="café">')).toEqual(['<', 'tag', ' ', 'attr', '=', '"', 'caf', 'é', '"', '>']);
   });
@@ -550,7 +559,7 @@ describe('Malformed Patterns', () => {
   test('should handle incomplete template variables', () => {
     expect(tokenImages('text {{')).toEqual(['text', ' ', '{{']);
     expect(tokenImages('text {{variable')).toEqual(['text', ' ', '{{', 'variable']);
-    expect(tokenImages('{{ var }{ not closed')).toEqual(['{{', ' ', 'var', ' ', '}{ not closed']);
+    expect(tokenImages('{{ var }{ not closed')).toEqual(['{{', ' ', 'var', ' ', '}{', ' ', 'not', ' ', 'closed']);
     expect(tokenImages('{{nested {{inside')).toEqual(['{{', 'nested', ' ', '{{', 'inside']);
   });
 
