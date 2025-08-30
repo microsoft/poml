@@ -289,6 +289,8 @@ export interface ElementNode {
  * Text nodes are special POML elements that treat their content as literal
  * text, preventing template variable interpolation. They ensure content is
  * preserved exactly as written, useful for code samples or pre-formatted text.
+ * When `<text>` is used, the parser eats everything including tags and comments,
+ * including new `<text>` tags, until a matching `</text>` is found.
  *
  * Cases that apply:
  * - Explicit text elements: `<text>Literal {{ not_interpolated }}</text>`

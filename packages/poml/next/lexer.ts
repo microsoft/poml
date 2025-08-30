@@ -1,7 +1,9 @@
 import { createToken, Lexer } from 'chevrotain';
 
 // Define token types for extended POML
-export const Comment = createToken({ name: 'Comment', pattern: /<!--[\s\S]*?-->/ });
+export const CommentOpen = createToken({ name: 'CommentOpen', pattern: /<!--/ });
+export const CommentClose = createToken({ name: 'CommentClose', pattern: /-->/ });
+export const Pragma = createToken({ name: 'Pragma', pattern: /\b@pragma\b/i });
 export const TemplateOpen = createToken({ name: 'TemplateOpen', pattern: /{{/ });
 export const TemplateClose = createToken({ name: 'TemplateClose', pattern: /}}/ });
 export const TagClosingOpen = createToken({ name: 'TagClosingOpen', pattern: /<\// });
