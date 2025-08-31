@@ -16,6 +16,11 @@ export const Equals = createToken({ name: 'Equals', pattern: /=/ });
 export const DoubleQuote = createToken({ name: 'DoubleQuote', pattern: /"/ });
 export const SingleQuote = createToken({ name: 'SingleQuote', pattern: /'/ });
 export const Backslash = createToken({ name: 'Backslash', pattern: /\\/ });
+export const BackslashEscape = createToken({
+  name: 'BackslashEscape',
+  pattern: /\\(n|r|t|'|"|{{|}}|\\|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+});
+export const CharacterEntity = createToken({ name: 'CharacterEntity', pattern: /&#[0-9]+;|&[a-zA-Z][a-zA-Z0-9]+;/ });
 
 /* Identifier is one of the following:
  * - XML tag names

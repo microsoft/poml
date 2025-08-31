@@ -14,7 +14,7 @@ import { CstNode, IToken } from 'chevrotain';
  *
  * Cases that do not apply:
  * - Template syntax including braces: `{{ expression }}` (use TemplateNode)
- * - String literals with quotes: `"hello"` (use StringNode or ValueNode)
+ * - String literals with quotes: `"hello"` (use LiteralNode or ValueNode)
  * - POML markup: `<tag>` (use element nodes)
  */
 export interface ExpressionNode {
@@ -22,8 +22,6 @@ export interface ExpressionNode {
   range: Range;
   value: string;
 }
-
-export interface ExpressionCstNode {}
 
 /**
  * Represents a template interpolation with double curly braces,
@@ -42,9 +40,9 @@ export interface ExpressionCstNode {}
  *
  * Cases that do not apply:
  * - Full attribute expressions: `if="x > 0"` (use ExpressionNode)
- * - Plain text: `Hello World` (use StringNode)
+ * - Plain text: `Hello World` (use LiteralNode)
  * - Single braces: `{ not a template }` (treated as plain text)
- * - Template elements: <template>{{ this is a jinja template }}</template> (use LiteralNode)
+ * - Template elements: <template>{{ this is a jinja template }}</template> (use ElementNode)
  * - With quotes: `"{{ var }}"` (use ValueNode)
  */
 export interface TemplateNode {
@@ -54,9 +52,27 @@ export interface TemplateNode {
 }
 
 /**
+ * Related CST node interfaces for parsing stage.
+ */
+
+export interface CstTemplateNode extends CstNode {
+  children: {
+    OpenTemplate?: IToken[];
+    WsAfterOpen?: IToken[];
+    // Content inside {{ and }} is treated as a single expression token.
+    // Eats everything until the next }} (or the whitespace before it).
+    // Handles \{{ and \}} escapes. We won't escape other chars here.
+    Content?: IToken[];
+    // If it's close to the ending }}, try to eat whitespace before it.
+    WsAfterContent?: IToken[];
+    CloseTemplate?: IToken[];
+  };
+}
+
+/**
  * Represents plain text content without any special syntax.
  *
- * String nodes are the most basic content nodes, containing literal text
+ * Literal nodes are the most basic content nodes, containing literal text
  * that requires no processing. They are used both for content and as
  * components of other nodes (like attribute keys and tag names).
  *
@@ -74,7 +90,7 @@ export interface TemplateNode {
  * - Expressions: `x > 0` (use ExpressionNode)
  * - Template variables: `{{ var }}` (use TemplateNode)
  */
-export interface StringNode {
+export interface LiteralNode {
   kind: 'STRING';
   range: Range;
   value: string;
@@ -95,9 +111,9 @@ export interface StringNode {
  * - Multi-part content: `"Price: ${{amount}} USD"`
  *
  * Cases that do not apply:
- * - Attribute keys: `class=...` (the `class` part uses StringNode)
+ * - Attribute keys: `class=...` (the `class` part uses LiteralNode)
  * - Pure expressions without quotes: `if=condition` (use ExpressionNode)
- * - Tag names: `div` (use StringNode)
+ * - Tag names: `div` (use LiteralNode)
  * - Standalone template variables not in a value context
  *
  * Note: The range includes quotes if present, but children exclude them.
@@ -105,7 +121,29 @@ export interface StringNode {
 export interface ValueNode {
   kind: 'VALUE';
   range: Range;
-  children: (StringNode | TemplateNode)[];
+  children: (LiteralNode | TemplateNode)[];
+}
+
+/**
+ * Related CST node interfaces for parsing stage.
+ * The following two interfaces are for quoted strings and will be transformed into ValueNode.
+ */
+export interface CstQuotedNode extends CstNode {
+  children: {
+    OpenQuote?: IToken[];
+    // This is a normal quoted string without templates inside.
+    Content?: IToken[];
+    CloseQuote?: IToken[];
+  };
+}
+
+export interface CstQuotedTemplateNode extends CstNode {
+  children: {
+    OpenQuote?: IToken[];
+    // Allows "Hello {{ friend["abc"] }}!" - mix of text and templates (with quotes).
+    Content?: (IToken | CstTemplateNode)[];
+    CloseQuote?: IToken[];
+  };
 }
 
 /**
@@ -116,13 +154,14 @@ export interface ValueNode {
  * and the collection expression for runtime evaluation.
  *
  * Cases that apply:
- * - Simple iteration: `item in items`
- * - Property access: `user in data.users`
- * - Array literals: `num in [1, 2, 3]`
- * - Method calls: `result in getResults()`
- * - Nested property iteration: `task in project.tasks.active`
+ * - Simple iteration: `"item in items"`
+ * - Property access: `"user in data.users"`
+ * - Array literals: `"num in [1, 2, 3]"`
+ * - Method calls in single quotes: `'result in getResults()'`
+ * - Nested property iteration: `'task in project.tasks.active'`
  *
  * Cases that do not apply (not yet supported):
+ * - Without quotes: `item in items` (must be in quotes for now)
  * - Advanced loop syntax (not yet supported): `(item, index) in items`
  * - Destructuring patterns (not yet supported): `{name, age} in users`
  * - Conditional loops: `if` attributes (use separate condition handling)
@@ -131,8 +170,29 @@ export interface ValueNode {
 export interface ForIteratorNode {
   kind: 'FORITERATOR';
   range: Range;
-  iterator: StringNode;
+  iterator: LiteralNode;
   collection: ExpressionNode;
+}
+
+/**
+ * Related CST node interfaces for parsing stage.
+ */
+export interface CstForIteratorNode extends CstNode {
+  children: {
+    OpenQuote?: IToken[];
+    WsAfterOpen?: IToken[];
+    Iterator?: IToken[];
+    WsAfterIterator?: IToken[];
+    InKeyword?: IToken[];
+    WsAfterIn?: IToken[];
+    // Follows the same parsing rules as template expression.
+    // But as we are in a quoted string, we need to handle
+    // backslash escapes like \" and \'.
+    // Greedily match until the next unescaped quote or ws before it.
+    Collection?: IToken[];
+    WsAfterCollection?: IToken[];
+    CloseQuote?: IToken[];
+  };
 }
 
 /**
@@ -142,62 +202,42 @@ export interface ForIteratorNode {
  * of a key-value pair where the key is always a simple string and the value
  * can be a complex composition of text and templates.
  *
+ * It also supports for-loop attributes via ForIterator, which contains
+ * loop iteration syntax rather than a simple value. It enables
+ * elements to be rendered multiple times based on a collection.
+ *
  * Cases that apply:
  * - Simple attributes: `class="container"`, `id='main'`
  * - Template values: `title="{{ pageTitle }}"` or `title={{ pageTitle }}`
  * - Mixed values: `placeholder="Enter {{ fieldName }}..."`
+ * - For attributes: `for="item in items"` (key is "for", value is ForIteratorNode)
+ * - Computed collections: `for='i in [...Array(5).keys()]'`
  *
  * Cases that do not apply:
  * - Boolean/presence attributes: `disabled`, `checked` (not yet supported)
- * - For-loop attributes: `for="item in items"` (use ForLoopAttributeNode)
  * - Spread attributes (not yet supported): `{...props}`
  * - Dynamic attribute names (not supported): `[attrName]="value"`
  */
 export interface AttributeNode {
   kind: 'ATTRIBUTE';
   range: Range;
-  key: StringNode;
-  value: ValueNode;
-}
-
-/**
- * Represents a special for-loop attribute on POML elements.
- *
- * This specialized attribute node handles the `for` attribute specifically,
- * which contains loop iteration syntax rather than a simple value. It enables
- * elements to be rendered multiple times based on a collection.
- *
- * Cases that apply:
- * - For attributes only: `for="item in items"`
- * - Nested iterations: `for="subitem in item.children"`
- * - Computed collections: `for="i in [...Array(5).keys()]"`
- *
- * Cases that do not apply:
- * - Any attribute with a key other than "for"
- * - Standard attributes: `class="..."` (use AttributeNode)
- * - Conditional attributes: `if="..."` (use AttributeNode)
- */
-export interface ForLoopAttributeNode {
-  kind: 'FORATTRIBUTE';
-  range: Range;
-  key: StringNode;
-  value: ForIteratorNode;
+  key: LiteralNode;
+  value: ValueNode | ForIteratorNode;
 }
 
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface ForLoopAttributeCstNode extends CstNode {
+export interface CstAttributeNode extends CstNode {
   children: {
     AttributeKey?: IToken[];
     WsAfterKey?: IToken[];
     Equals?: IToken[];
     WsAfterEquals?: IToken[];
-    OpenQuote?: IToken[];
-    WsAfterOpenQuote?: IToken[];
-    ForIterator?: ForIteratorCstNode[];
-    WsBeforeCloseQuote?: IToken[];
-    CloseQuote?: IToken[];
+    // Choose between one: john="doe", john='doe', john={{ template }}, for="i in items"
+    quotedValue?: CstQuotedTemplateNode[];
+    templatedValue?: CstTemplateNode[];
+    forIteratorValue?: CstForIteratorNode[];
   };
 }
 
@@ -223,8 +263,8 @@ export interface ForLoopAttributeCstNode extends CstNode {
 export interface OpenTagNode {
   kind: 'OPEN';
   range: Range;
-  value: StringNode; // tag name
-  attributes: (AttributeNode | ForLoopAttributeNode)[];
+  value: LiteralNode; // tag name
+  attributes: AttributeNode[];
 }
 
 /**
@@ -236,7 +276,7 @@ export interface OpenTagCstNode extends CstNode {
     WsAfterBracket?: IToken[];
     TagName?: IToken[];
     WsAfterName?: IToken[];
-    Attribute?: AttributeCstNode[];
+    Attribute?: CstAttributeNode[];
     WsAfterAttribute?: IToken[];
     CloseBracket?: IToken[];
   };
@@ -261,7 +301,7 @@ export interface OpenTagCstNode extends CstNode {
 export interface CloseTagNode {
   kind: 'CLOSE';
   range: Range;
-  value: StringNode; // tag name
+  value: LiteralNode; // tag name
 }
 
 /**
@@ -296,20 +336,20 @@ export interface CloseTagCstNode extends CstNode {
 export interface SelfCloseElementNode {
   kind: 'SELFCLOSE';
   range: Range;
-  value: StringNode; // tag name
-  attributes: (AttributeNode | ForLoopAttributeNode)[];
+  value: LiteralNode; // tag name
+  attributes: AttributeNode[];
 }
 
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface SelfCloseElementCstNode extends CstNode {
+export interface CstSelfCloseElementNode extends CstNode {
   children: {
     OpenBracket?: IToken[];
     WsAfterBracket?: IToken[];
     TagName?: IToken[];
     WsAfterName?: IToken[];
-    Attribute?: AttributeCstNode[];
+    Attribute?: CstAttributeNode[];
     WsAfterAttribute?: IToken[];
     SelfCloseBracket?: IToken[];
   };
@@ -339,13 +379,13 @@ export interface ElementNode {
   range: Range;
   open: OpenTagNode;
   close: CloseTagNode;
-  children: (ElementNode | LiteralNode | CommentNode | PragmaNode | ValueNode)[];
+  children: (ElementNode | LiteralElementNode | CommentNode | PragmaNode | ValueNode)[];
 }
 
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface ElementCstNode extends CstNode {
+export interface CstElementNode extends CstNode {
   children: {
     OpenTag?: OpenTagCstNode[];
     CloseTag?: CloseTagCstNode[];
@@ -353,14 +393,15 @@ export interface ElementCstNode extends CstNode {
   };
 }
 
-export interface ElementContentCstNode extends CstNode {
+export interface CstElementContentNode extends CstNode {
   children: {
-    Element?: ElementCstNode;
-    LiteralElement?: LiteralElementCstNode;
-    SelfCloseElement?: SelfCloseElementCstNode;
-    Comment?: CommentCstNode;
-    Pragma?: PragmaCstNode;
-    Value?: ElementValueCstNode;
+    Element?: CstElementNode[];
+    LiteralElement?: CstLiteralElementNode[];
+    SelfCloseElement?: CstSelfCloseElementNode[];
+    Comment?: CstCommentNode[];
+    Pragma?: CstPragmaNode[];
+    Template?: CstTemplateNode[];
+    TextContent?: IToken[];
   };
 }
 
@@ -377,13 +418,13 @@ export interface ElementContentCstNode extends CstNode {
 export interface CommentNode {
   kind: 'COMMENT';
   range: Range;
-  value: StringNode;
+  value: LiteralNode;
 }
 
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface CommentCstNode extends CstNode {
+export interface CstCommentNode extends CstNode {
   children: {
     CommentOpenTag?: IToken[];
     CommentContent?: IToken[];
@@ -407,19 +448,22 @@ export interface CommentCstNode extends CstNode {
 export interface PragmaNode {
   kind: 'PRAGMA';
   range: Range;
-  value: StringNode;
+  identifier: LiteralNode;
+  options: LiteralNode[];
 }
 
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface PragmaCstNode extends CstNode {
+export interface CstPragmaNode extends CstNode {
   children: {
     CommentOpenTag?: IToken[];
     WsAfterOpen?: IToken[];
     PragmaKeyword?: IToken[];
     WsAfterPragma?: IToken[];
-    CommentContent?: IToken[];
+    PragmaIdentifier?: IToken[];
+    WsAfterIdentifier?: IToken[];
+    PragmaOption?: (IToken | CstQuotedNode)[];
     WsAfterContent?: IToken[];
     CommentCloseTag?: IToken[];
   };
@@ -428,7 +472,7 @@ export interface PragmaCstNode extends CstNode {
 /**
  * Represents an element that preserves literal content.
  *
- * Literal nodes are special POML elements that treat their content as literal
+ * Literal element nodes are special POML elements that treat their content as literal
  * text, preventing template variable interpolation. They ensure content is
  * preserved exactly as written, useful for code samples or pre-formatted text.
  * When `<text>` is used, the parser eats everything including tags and comments,
@@ -444,27 +488,28 @@ export interface PragmaCstNode extends CstNode {
  * - Text with attributes enabling processing (future feature)
  *
  * Note: The tagName (value) can only be "text" in this version.
- * Literal node is different from elements which do not support children.
- * Literal node is handled on the CST parsing stage.
+ * Literal element node is different from elements which do not support nested tags,
+ * e.g., <let> or <template>.
+ * Literal element node is handled on the CST parsing stage.
  */
-export interface LiteralNode {
+export interface LiteralElementNode {
   kind: 'TEXT';
   range: Range;
   open: OpenTagNode;
   close: CloseTagNode;
-  children: StringNode;
+  children: LiteralNode;
 }
 
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface LiteralElementCstNode extends CstNode {
+export interface CstLiteralElementNode extends CstNode {
   children: {
     OpenTag?: OpenTagCstNode[];
-    CloseTag?: CloseTagCstNode[];
     // All content between open and close tags is treated as literal text
     // including other tags, comments, pragmas, etc.
     TextContent?: IToken[];
+    CloseTag?: CloseTagCstNode[];
   };
 }
 
@@ -486,15 +531,15 @@ export interface LiteralElementCstNode extends CstNode {
 export interface RootNode {
   kind: 'ROOT';
   range: Range;
-  children: (ElementNode | LiteralNode | CommentNode | PragmaNode | ValueNode)[];
+  children: (ElementNode | LiteralElementNode | CommentNode | PragmaNode | ValueNode)[];
 }
 
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface RootCstNode extends CstNode {
+export interface CstRootNode extends CstNode {
   children: {
-    Content?: ElementContentCstNode[];
+    Content?: CstElementContentNode[];
   };
 }
 
@@ -520,16 +565,15 @@ type Draft<T extends { kind: string }> = DeepPartialExcept<T, 'kind'>;
 export type StrictNode =
   | ExpressionNode
   | TemplateNode
-  | StringNode
+  | LiteralNode
   | ValueNode
   | ForIteratorNode
   | AttributeNode
-  | ForLoopAttributeNode
   | OpenTagNode
   | CloseTagNode
   | SelfCloseElementNode
   | ElementNode
-  | LiteralNode
+  | LiteralElementNode
   | CommentNode
   | PragmaNode
   | RootNode;
