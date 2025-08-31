@@ -19,7 +19,10 @@ export const BackslashEscape = createToken({
   name: 'BackslashEscape',
   pattern: /\\(n|r|t|'|"|{{|}}|\\|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
 });
-export const CharacterEntity = createToken({ name: 'CharacterEntity', pattern: /&#[0-9]+;|&[a-zA-Z][a-zA-Z0-9]+;/ });
+export const CharacterEntity = createToken({
+  name: 'CharacterEntity',
+  pattern: /&#x[0-9A-Fa-f]+;|&#[0-9]+;|&[a-zA-Z][a-zA-Z0-9]+;/,
+});
 // Backslash not followed by a valid escape sequence
 export const Backslash = createToken({ name: 'Backslash', pattern: /\\/ });
 
@@ -69,7 +72,7 @@ export const Arbitrary = createToken({
   // Match anything except: <, >, quotes, =, backslash, whitespace (including Unicode), control chars
   // Allow single braces and slashes with lookahead constraints
   pattern:
-    /(?:[^<>"'{}=\\&\s\u0000-\u001F\u007F-\u009F\u2000-\u200B\uFEFF\/-]|{(?!{)|}(?!})|\/(?!>)|\-(?!\-+>)|&(?!#\d+;|[a-zA-Z][a-zA-Z0-9]+;))+/,
+    /(?:[^<>"'{}=\\&\s\u0000-\u001F\u007F-\u009F\u2000-\u200B\uFEFF\/-]|{(?!{)|}(?!})|\/(?!>)|\-(?!\-+>)|&(?!#\d+;|x[0-9A-Fa-f]+;|[a-zA-Z][a-zA-Z0-9]+;))+/,
   line_breaks: false,
 });
 
@@ -104,7 +107,7 @@ export const XmlBracketTokens = [
   CloseBracket,
 ];
 
-export const TextTokens = [Identifier, Whitespace, Arbitrary];
+export const TokensComment = AllTokens.filter((tokenType) => tokenType !== CommentClose);
 
 // Tokens used in expressions (inside {{ and }}), excluding the closing braces.
 // Opening braces should work, but they should be also properly escaped inside to avoid confusion.
@@ -113,6 +116,7 @@ export const TokensExpression = AllTokens.filter(
 );
 
 // Tokens used in quotes. The quoted strings do not allow template expressions inside.
+// The only application currently is in @pragma directive options.
 // Quoted strings can contain backslash escapes. Character entities will be however shown as is.
 export const TokensDoubleQuoted = AllTokens.filter((tokenType) => tokenType !== DoubleQuote);
 export const TokensSingleQuoted = AllTokens.filter((tokenType) => tokenType !== SingleQuote);
