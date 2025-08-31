@@ -57,7 +57,7 @@ export interface TemplateNode {
 
 export interface CstTemplateNode extends CstNode {
   children: {
-    OpenTemplate?: IToken[];
+    TemplateOpen?: IToken[];
     WsAfterOpen?: IToken[];
     // Content inside {{ and }} is treated as a single expression token.
     // Eats everything until the next }} (or the whitespace before it).
@@ -65,7 +65,7 @@ export interface CstTemplateNode extends CstNode {
     Content?: IToken[];
     // If it's close to the ending }}, try to eat whitespace before it.
     WsAfterContent?: IToken[];
-    CloseTemplate?: IToken[];
+    TemplateClose?: IToken[];
   };
 }
 
@@ -389,7 +389,7 @@ export interface CstElementNode extends CstNode {
   children: {
     OpenTag?: OpenTagCstNode[];
     CloseTag?: CloseTagCstNode[];
-    Content?: IToken[];
+    Content?: CstElementContentNode[];
   };
 }
 
@@ -426,9 +426,9 @@ export interface CommentNode {
  */
 export interface CstCommentNode extends CstNode {
   children: {
-    CommentOpenTag?: IToken[];
-    CommentContent?: IToken[];
-    CommentCloseTag?: IToken[];
+    CommentOpen?: IToken[];
+    Content?: IToken[];
+    CommentClose?: IToken[];
   };
 }
 
@@ -457,7 +457,7 @@ export interface PragmaNode {
  */
 export interface CstPragmaNode extends CstNode {
   children: {
-    CommentOpenTag?: IToken[];
+    CommentOpen?: IToken[];
     WsAfterOpen?: IToken[];
     PragmaKeyword?: IToken[];
     WsAfterPragma?: IToken[];
@@ -465,7 +465,7 @@ export interface CstPragmaNode extends CstNode {
     WsAfterIdentifier?: IToken[];
     PragmaOption?: (IToken | CstQuotedNode)[];
     WsAfterContent?: IToken[];
-    CommentCloseTag?: IToken[];
+    CommentClose?: IToken[];
   };
 }
 
@@ -476,7 +476,8 @@ export interface CstPragmaNode extends CstNode {
  * text, preventing template variable interpolation. They ensure content is
  * preserved exactly as written, useful for code samples or pre-formatted text.
  * When `<text>` is used, the parser eats everything including tags and comments,
- * including new `<text>` tags, until a matching `</text>` is found.
+ * except `<text>` itself and `</text>`, treating it all as literal text,
+ * until a matching `</text>` is found.
  *
  * Cases that apply:
  * - Explicit text elements: `<text>Literal {{ not_interpolated }}</text>`
@@ -487,10 +488,12 @@ export interface CstPragmaNode extends CstNode {
  * - Elements allowing template processing (use ElementNode)
  * - Text with attributes enabling processing (future feature)
  *
- * Note: The tagName (value) can only be "text" in this version.
- * Literal element node is different from elements which do not support nested tags,
- * e.g., <let> or <template>.
- * Literal element node is handled on the CST parsing stage.
+ * Note:
+ * 1. The tagName (value) can only be "text" in this version.
+ * 2. Literal element node is different from elements which do not support nested tags,
+ *    e.g., <let> or <template>. Literal element node is handled on the CST parsing stage.
+ * 3. If you really need `<text>` in your POML. Recommended to use `&lt;text&gt;`
+ *    outside of literal element.
  */
 export interface LiteralElementNode {
   kind: 'TEXT';
@@ -507,7 +510,7 @@ export interface CstLiteralElementNode extends CstNode {
   children: {
     OpenTag?: OpenTagCstNode[];
     // All content between open and close tags is treated as literal text
-    // including other tags, comments, pragmas, etc.
+    // including other tags, comments, pragmas, etc. except for `</text>`.
     TextContent?: IToken[];
     CloseTag?: CloseTagCstNode[];
   };
