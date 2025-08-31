@@ -65,6 +65,7 @@ export const Whitespace = createToken({
  * - Incomplete tag delimiters such as / (/< is an exception, because < is a start of tag)
  * - Incomplete comment delimiters such as !-- or -- are OK
  * - Incorrect @pragma directive such as @pragm or @pragmaX will be matched
+ * - Invalid character entities such as &abc (without semicolon) or & (by itself) or &;, &z; (invalid)
  * - All other Unicode characters including emojis, CJK, etc.
  */
 export const Arbitrary = createToken({
@@ -110,10 +111,8 @@ export const XmlBracketTokens = [
 export const TokensComment = AllTokens.filter((tokenType) => tokenType !== CommentClose);
 
 // Tokens used in expressions (inside {{ and }}), excluding the closing braces.
-// Opening braces should work, but they should be also properly escaped inside to avoid confusion.
-export const TokensExpression = AllTokens.filter(
-  (tokenType) => tokenType !== TemplateOpen && tokenType !== TemplateClose,
-);
+// Opening braces {{ should work, but they should be generally properly escaped inside to avoid confusion.
+export const TokensExpression = AllTokens.filter((tokenType) => tokenType !== TemplateClose);
 
 // Tokens used in quotes. The quoted strings do not allow template expressions inside.
 // The only application currently is in @pragma directive options.
@@ -121,15 +120,19 @@ export const TokensExpression = AllTokens.filter(
 export const TokensDoubleQuoted = AllTokens.filter((tokenType) => tokenType !== DoubleQuote);
 export const TokensSingleQuoted = AllTokens.filter((tokenType) => tokenType !== SingleQuote);
 
-// Tokens used in quotes, but within quotes, it can contain other expressions ({{ and }}).
-export const TokensDoubleQuotedExpression = TokensExpression.filter((tokenType) => tokenType !== DoubleQuote);
-export const TokensSingleQuotedExpression = TokensExpression.filter((tokenType) => tokenType !== SingleQuote);
+// Tokens used in quotes, but within quotes distinguish from expressions (surrounded by {{ and }}).
+export const TokensDoubleQuotedExpression = AllTokens.filter(
+  (tokenType) => tokenType !== DoubleQuote && tokenType !== TemplateOpen,
+);
+export const TokensSingleQuotedExpression = AllTokens.filter(
+  (tokenType) => tokenType !== SingleQuote && tokenType !== TemplateOpen,
+);
 
 // Text contents inside XML elements.
 // Like XML/HTML, the contents here can have `&` XML entities to escape special characters.
 // Escaped characters via backslash will be shown as is without escape handling.
 export const TokensTextContent = AllTokens.filter(
-  (tokenType) => !XmlBracketTokens.includes(tokenType) && tokenType !== TemplateOpen && tokenType !== TemplateClose,
+  (tokenType) => !XmlBracketTokens.includes(tokenType) && tokenType !== TemplateOpen,
 );
 
 // Extended POML Lexer class

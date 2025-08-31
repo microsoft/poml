@@ -42,7 +42,7 @@ export interface ExpressionNode {
  * - Full attribute expressions: `if="x > 0"` (use ExpressionNode)
  * - Plain text: `Hello World` (use LiteralNode)
  * - Single braces: `{ not a template }` (treated as plain text)
- * - Template elements: <template>{{ this is a jinja template }}</template> (use ElementNode)
+ * - Template elements: <template>{{ this is a jinja template }}</template> (use LiteralNode)
  * - With quotes: `"{{ var }}"` (use ValueNode)
  */
 export interface TemplateNode {
@@ -444,6 +444,7 @@ export interface CstCommentNode extends CstNode {
  * - Specify version: `<!-- @pragma version >=1.0.0 <2.3.0 -->`
  * - Turn tags on/off: `<!-- @pragma components +reference -table -->`
  * - Turn speaker roles on/off: `<!-- @pragma speaker multi -->` or `single`
+ * - White space policy: `<!-- @pragma whitespace pre -->` or `trim` or `collapse`
  */
 export interface PragmaNode {
   kind: 'PRAGMA';
@@ -475,9 +476,8 @@ export interface CstPragmaNode extends CstNode {
  * Literal element nodes are special POML elements that treat their content as literal
  * text, preventing template variable interpolation. They ensure content is
  * preserved exactly as written, useful for code samples or pre-formatted text.
- * When `<text>` is used, the parser eats everything including tags and comments,
- * except `<text>` itself and `</text>`, treating it all as literal text,
- * until a matching `</text>` is found.
+ * For example, when `<text>` is used, the parser eats everything including tags and comments,
+ * including `<text>` itself, until a matching `</text>` is found.
  *
  * Cases that apply:
  * - Explicit text elements: `<text>Literal {{ not_interpolated }}</text>`
@@ -489,9 +489,10 @@ export interface CstPragmaNode extends CstNode {
  * - Text with attributes enabling processing (future feature)
  *
  * Note:
- * 1. The tagName (value) can only be "text" in this version.
+ * 1. The tagName (value) can only be "text" and "template" as I can think of.
+ *    There should be a dynamic list of components that should be parsed as literal elements.
  * 2. Literal element node is different from elements which do not support nested tags,
- *    e.g., <let> or <template>. Literal element node is handled on the CST parsing stage.
+ *    e.g., <let>. Literal element node is handled on the CST parsing stage.
  * 3. If you really need `<text>` in your POML. Recommended to use `&lt;text&gt;`
  *    outside of literal element.
  */
