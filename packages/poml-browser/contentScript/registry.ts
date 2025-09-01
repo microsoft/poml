@@ -2,3 +2,4 @@
 
 export { getSettings, setSettings } from '../common/settings';
 export { pingPong } from '../common/rpc';
+export { toPngBase64 } from '@common/imports/image';
