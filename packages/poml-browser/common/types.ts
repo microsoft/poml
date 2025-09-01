@@ -122,6 +122,14 @@ export interface GlobalFunctions extends FunctionRegistry {
   setSettings: (settings: Partial<SettingsBundle>) => Promise<void>;
   displayNotification: (type: NotificationType, message: string, options?: NotificationOptions) => void;
   toPngBase64: (base64: ArrayBuffer | string, mimeType: string) => Promise<string>;
+  srcToPngBase64: (src: string) => Promise<string>;
+  htmlToCards: (html: string | Document, options?: { parser?: 'simple' | 'complex' }) => Promise<CardModel | undefined>;
+
+  // Internal functions used by everywhere()
+  _readFile: (
+    filePath: string,
+    options?: { encoding?: 'utf-8' | 'utf8' | 'base64' | 'binary' },
+  ) => Promise<string | ArrayBuffer>;
 
   // Functions for testing purposes
   pingPongContent: (message: any, delay: number) => Promise<any>;

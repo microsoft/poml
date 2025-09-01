@@ -1,3 +1,7 @@
+---
+allowed-tools: ide - getDiagnostics
+---
+
 # Browser RPC Registry Management
 
 The POML browser extension uses an RPC system with `everywhere()` functions that need to be properly registered in:
@@ -31,7 +35,3 @@ Consider the following registry files:
 3. `background/registry.ts`
 
 You should add missing functions to `__TEST_BUILD__` blocks in each registry, and ensure all RPC functions are available for testing in their appropriate contexts.
-
-### 4. Validation
-
-Run diagnostics to check for type errors related to your changes.
