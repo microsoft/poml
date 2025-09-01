@@ -1,8 +1,6 @@
 // cstParser.ts
-import { CstParser, IToken, TokenType, CstNode } from 'chevrotain';
-
+import { CstParser, CstNode, IToken, TokenType } from 'chevrotain';
 import {
-  // tokens & sets
   AllTokens,
   TokensComment,
   TokensExpression,
@@ -11,7 +9,6 @@ import {
   TokensDoubleQuotedExpression,
   TokensSingleQuotedExpression,
   TokensTextContent,
-  // individual tokens
   CommentOpen,
   CommentClose,
   PragmaKeyword,
@@ -26,158 +23,171 @@ import {
   SingleQuote,
   Whitespace,
   Identifier,
-  // lexer instance
   extendedPomlLexer,
 } from './lexer';
 
 /**
  * Extended POML CST Parser
  *
- * This implements the CST shapes specified in nodes.ts for:
- * - Root, Elements, LiteralElements, SelfCloseElements
- * - Open/Close tags, Attributes (quoted, templated, for-iterator)
- * - Templates ({{ ... }}), Comments, Pragmas
- * - Text content (tokens that are not start of tags/templates)
- *
- * NOTE:
- *  - Semantic checks (e.g., ensuring "in" in for-iterator, tag name match for literal elements)
- *    are intentionally loose at CST stage. Enforce these during AST transform if needed.
+ * Matches the CST shapes declared in nodes.ts.
+ * Rules are declared as class properties so TypeScript "sees" them.
+ * Labels are used **only** where the CST interfaces require custom names
+ * different from token/rule names (e.g., TagName, WsAfter*, TextContent, etc.).
  */
 export class ExtendedPomlParser extends CstParser {
+  // ---- Rule property declarations (so TS knows they exist) ----
+  public root!: (idxInOriginalText?: number) => CstNode;
+  public elementContentNode!: (idxInOriginalText?: number) => CstNode;
+  public templateNode!: (idxInOriginalText?: number) => CstNode;
+  public comment!: (idxInOriginalText?: number) => CstNode;
+  public pragma!: (idxInOriginalText?: number) => CstNode;
+  public quotedNoTemplate!: (idxInOriginalText?: number) => CstNode;
+  public quotedTemplate!: (idxInOriginalText?: number) => CstNode;
+  public forIteratorValue!: (idxInOriginalText?: number) => CstNode;
+  public attribute!: (idxInOriginalText?: number) => CstNode;
+  public openTag!: (idxInOriginalText?: number) => CstNode;
+  public closeTag!: (idxInOriginalText?: number) => CstNode;
+  public selfCloseElement!: (idxInOriginalText?: number) => CstNode;
+  public element!: (idxInOriginalText?: number) => CstNode;
+  public literalElement!: (idxInOriginalText?: number) => CstNode;
+
+  // ---- Small helpers ----
+  private anyOf = (tokenTypes: TokenType[], label?: string) =>
+    tokenTypes.map((tt) => ({
+      ALT: () => (label ? this.CONSUME(tt, { LABEL: label }) : this.CONSUME(tt)),
+    }));
+
+  private isNextPragma = () => {
+    if (this.LA(1).tokenType !== CommentOpen) {
+return false;
+}
+    let k = 2;
+    while (this.LA(k).tokenType === Whitespace) {
+k++;
+}
+    return this.LA(k).tokenType === PragmaKeyword;
+  };
+
+  private isNextLiteralOpenTag = () => {
+    if (this.LA(1).tokenType !== OpenBracket) {
+return false;
+}
+    let k = 2;
+    while (this.LA(k).tokenType === Whitespace) {
+k++;
+}
+    const tName = this.LA(k);
+    if (tName.tokenType !== Identifier) {
+return false;
+}
+    const name = (tName.image || '').toLowerCase();
+    return name === 'text' || name === 'template';
+  };
+
+  private isAtLiteralClose = () => {
+    if (this.LA(1).tokenType !== ClosingOpenBracket) {
+return false;
+}
+    let k = 2;
+    while (this.LA(k).tokenType === Whitespace) {
+k++;
+}
+    const t = this.LA(k);
+    if (t.tokenType !== Identifier) {
+return false;
+}
+    const name = (t.image || '').toLowerCase();
+    return name === 'text' || name === 'template';
+  };
+
   constructor() {
     super(AllTokens, {
-      recoveryEnabled: true, // be generous during CST stage
       outputCst: true,
+      recoveryEnabled: true,
     });
 
     // ---------------------------
-    // Helper producers (must be used inside RULE bodies so that `this` is bound)
+    // RULE DEFINITIONS (as properties)
     // ---------------------------
 
-    // Produce an OR() alternatives array that consumes any one of the given tokenTypes,
-    // labeling each consumed token under `label` (so all collected under the same key).
-    const anyOf = (tokenTypes: TokenType[], label?: string) =>
-      tokenTypes.map((tt) => ({
-        ALT: () => (label ? this.CONSUME(tt, { LABEL: label }) : this.CONSUME(tt)),
-      }));
-
-    // Lookahead helpers
-    const isNextPragma = () => {
-      // Peek after <!-- and optional whitespace: expect @pragma
-      if (this.LA(1).tokenType !== CommentOpen) {
-        return false;
-      }
-      let k = 2;
-      while (this.LA(k).tokenType === Whitespace) {
-        k++;
-      }
-      return this.LA(k).tokenType === PragmaKeyword;
-    };
-
-    const isNextLiteralOpenTag = () => {
-      // Detect: < [ws]* Identifier("text" | "template")
-      if (this.LA(1).tokenType !== OpenBracket) {
-        return false;
-      }
-      let k = 2;
-      // optional whitespace after "<"
-      while (this.LA(k).tokenType === Whitespace) {
-        k++;
-      }
-      const tName = this.LA(k);
-      if (tName.tokenType !== Identifier) {
-        return false;
-      }
-      const name = (tName.image || '').toLowerCase();
-      return name === 'text' || name === 'template';
-    };
-
-    // ---------------------------
-    // Grammar Rules
-    // ---------------------------
-
-    this.RULE('root', () => {
+    this.root = this.RULE('root', () => {
       // CstRootNode: { Content?: CstElementContentNode[] }
       this.MANY(() => {
         this.SUBRULE(this.elementContentNode, { LABEL: 'Content' });
       });
     });
 
-    // Content inside elements/root (everything except a matching CloseTag)
-    this.RULE('elementContentNode', () => {
+    this.elementContentNode = this.RULE('elementContentNode', () => {
       this.OR([
-        // pragma must be before comment
+        // pragma (must come before raw comment)
         {
-          GATE: isNextPragma,
+          GATE: this.isNextPragma,
           ALT: () => this.SUBRULE(this.pragma, { LABEL: 'Pragma' }),
         },
+        // regular comment
         { ALT: () => this.SUBRULE(this.comment, { LABEL: 'Comment' }) },
 
-        // templates
+        // template
         {
           GATE: () => this.LA(1).tokenType === TemplateOpen,
           ALT: () => this.SUBRULE(this.templateNode, { LABEL: 'Template' }),
         },
 
-        // self-close elements (<tag .../>)
+        // self-close element
         {
-          // use backtracking to disambiguate quickly
           GATE: this.BACKTRACK(this.selfCloseElement),
           ALT: () => this.SUBRULE(this.selfCloseElement, { LABEL: 'SelfCloseElement' }),
         },
 
-        // literal elements <text>...</text> or <template>...</template>
+        // literal element: <text> or <template> acting as literal
         {
-          GATE: isNextLiteralOpenTag,
+          GATE: this.isNextLiteralOpenTag,
           ALT: () => this.SUBRULE(this.literalElement, { LABEL: 'LiteralElement' }),
         },
 
-        // normal <tag> ... </tag>
+        // normal element
         {
           GATE: () => this.LA(1).tokenType === OpenBracket,
           ALT: () => this.SUBRULE(this.element, { LABEL: 'Element' }),
         },
 
-        // fallback: raw text content
+        // raw text content
         {
           ALT: () => {
             this.AT_LEAST_ONE(() => {
-              this.OR(anyOf(TokensTextContent, 'TextContent'));
+              this.OR(this.anyOf(TokensTextContent, 'TextContent'));
             });
           },
         },
       ]);
     });
 
-    // {{ ... }}
-    this.RULE('templateNode', () => {
-      this.CONSUME(TemplateOpen, { LABEL: 'TemplateOpen' });
+    this.templateNode = this.RULE('templateNode', () => {
+      this.CONSUME(TemplateOpen);
       this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
 
       this.AT_LEAST_ONE(() => {
-        // Everything except TemplateClose (already enforced in TokensExpression)
-        this.OR(anyOf(TokensExpression, 'Content'));
+        // anything except TemplateClose
+        this.OR(this.anyOf(TokensExpression, 'Content'));
       });
 
       this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterContent' }));
-      this.CONSUME(TemplateClose, { LABEL: 'TemplateClose' });
+      this.CONSUME(TemplateClose);
     });
 
-    // <!-- ... -->
-    this.RULE('comment', () => {
-      this.CONSUME(CommentOpen, { LABEL: 'CommentOpen' });
+    this.comment = this.RULE('comment', () => {
+      this.CONSUME(CommentOpen);
       this.MANY(() => {
-        // Anything until CommentClose
-        this.OR(anyOf(TokensComment, 'Content'));
+        // anything until -->
+        this.OR(this.anyOf(TokensComment, 'Content'));
       });
-      this.CONSUME(CommentClose, { LABEL: 'CommentClose' });
+      this.CONSUME(CommentClose);
     });
 
-    // <!-- @pragma ... -->
-    this.RULE('pragma', () => {
-      this.CONSUME(CommentOpen, { LABEL: 'CommentOpen' });
+    this.pragma = this.RULE('pragma', () => {
+      this.CONSUME(CommentOpen);
       this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
-      this.CONSUME(PragmaKeyword, { LABEL: 'PragmaKeyword' });
+      this.CONSUME(PragmaKeyword);
       this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterPragma' }));
 
       // identifier after @pragma
@@ -187,14 +197,11 @@ export class ExtendedPomlParser extends CstParser {
       // Options: unquoted tokens or quoted strings (no templates inside these)
       this.MANY(() => {
         this.OR([
-          {
-            ALT: () => this.SUBRULE(this.quotedNoTemplate, { LABEL: 'PragmaOption' }),
-          },
+          { ALT: () => this.SUBRULE(this.quotedNoTemplate, { LABEL: 'PragmaOption' }) },
           {
             ALT: () => {
-              // unquoted: anything non-whitespace & not closing
               this.OR(
-                anyOf(
+                this.anyOf(
                   AllTokens.filter(
                     (t) => t !== CommentClose && t !== Whitespace && t !== DoubleQuote && t !== SingleQuote,
                   ),
@@ -207,17 +214,16 @@ export class ExtendedPomlParser extends CstParser {
         this.OPTION4(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterContent' }));
       });
 
-      this.CONSUME(CommentClose, { LABEL: 'CommentClose' });
+      this.CONSUME(CommentClose);
     });
 
-    // "..." or '...' — used only in pragma options (no templates allowed)
-    this.RULE('quotedNoTemplate', () => {
+    this.quotedNoTemplate = this.RULE('quotedNoTemplate', () => {
       this.OR([
         {
           ALT: () => {
             this.CONSUME(DoubleQuote, { LABEL: 'OpenQuote' });
             this.MANY(() => {
-              this.OR(anyOf(TokensDoubleQuoted, 'Content'));
+              this.OR(this.anyOf(TokensDoubleQuoted, 'Content'));
             });
             this.CONSUME2(DoubleQuote, { LABEL: 'CloseQuote' });
           },
@@ -226,7 +232,7 @@ export class ExtendedPomlParser extends CstParser {
           ALT: () => {
             this.CONSUME(SingleQuote, { LABEL: 'OpenQuote' });
             this.MANY(() => {
-              this.OR(anyOf(TokensSingleQuoted, 'Content'));
+              this.OR(this.anyOf(TokensSingleQuoted, 'Content'));
             });
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
           },
@@ -234,8 +240,7 @@ export class ExtendedPomlParser extends CstParser {
       ]);
     });
 
-    // Attribute value: quoted text that MAY contain templates
-    this.RULE('quotedTemplate', () => {
+    this.quotedTemplate = this.RULE('quotedTemplate', () => {
       this.OR([
         {
           ALT: () => {
@@ -243,7 +248,7 @@ export class ExtendedPomlParser extends CstParser {
             this.MANY(() => {
               this.OR([
                 { ALT: () => this.SUBRULE(this.templateNode, { LABEL: 'Content' }) },
-                { ALT: () => this.OR(anyOf(TokensDoubleQuotedExpression, 'Content')) },
+                { ALT: () => this.OR(this.anyOf(TokensDoubleQuotedExpression, 'Content')) },
               ]);
             });
             this.CONSUME2(DoubleQuote, { LABEL: 'CloseQuote' });
@@ -255,7 +260,7 @@ export class ExtendedPomlParser extends CstParser {
             this.MANY(() => {
               this.OR([
                 { ALT: () => this.SUBRULE(this.templateNode, { LABEL: 'Content' }) },
-                { ALT: () => this.OR(anyOf(TokensSingleQuotedExpression, 'Content')) },
+                { ALT: () => this.OR(this.anyOf(TokensSingleQuotedExpression, 'Content')) },
               ]);
             });
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
@@ -264,27 +269,19 @@ export class ExtendedPomlParser extends CstParser {
       ]);
     });
 
-    // for="iterator in collection" (quoted; inside quotes, treat like expression until closing quote)
-    this.RULE('forIteratorValue', () => {
+    this.forIteratorValue = this.RULE('forIteratorValue', () => {
       this.OR([
         {
           ALT: () => {
             this.CONSUME(DoubleQuote, { LABEL: 'OpenQuote' });
             this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
-
-            // iterator
             this.CONSUME(Identifier, { LABEL: 'Iterator' });
             this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' }));
-
-            // "in" keyword (lexed as Identifier). Semantic check deferred to AST.
             this.CONSUME2(Identifier, { LABEL: 'InKeyword' });
             this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' }));
-
-            // collection expression (like inside template), stop before optional ws + closing quote
             this.AT_LEAST_ONE(() => {
-              this.OR(anyOf(TokensDoubleQuotedExpression, 'Collection'));
+              this.OR(this.anyOf(TokensDoubleQuotedExpression, 'Collection'));
             });
-
             this.OPTION4(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterCollection' }));
             this.CONSUME2(DoubleQuote, { LABEL: 'CloseQuote' });
           },
@@ -293,17 +290,13 @@ export class ExtendedPomlParser extends CstParser {
           ALT: () => {
             this.CONSUME(SingleQuote, { LABEL: 'OpenQuote' });
             this.OPTION5(() => this.CONSUME5(Whitespace, { LABEL: 'WsAfterOpen' }));
-
             this.CONSUME3(Identifier, { LABEL: 'Iterator' });
             this.OPTION6(() => this.CONSUME6(Whitespace, { LABEL: 'WsAfterIterator' }));
-
             this.CONSUME4(Identifier, { LABEL: 'InKeyword' });
             this.OPTION7(() => this.CONSUME7(Whitespace, { LABEL: 'WsAfterIn' }));
-
             this.AT_LEAST_ONE2(() => {
-              this.OR(anyOf(TokensSingleQuotedExpression, 'Collection'));
+              this.OR(this.anyOf(TokensSingleQuotedExpression, 'Collection'));
             });
-
             this.OPTION8(() => this.CONSUME8(Whitespace, { LABEL: 'WsAfterCollection' }));
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
           },
@@ -311,11 +304,10 @@ export class ExtendedPomlParser extends CstParser {
       ]);
     });
 
-    // Attribute: key = (quoted value | templated value | for-iterator)
-    this.RULE('attribute', () => {
+    this.attribute = this.RULE('attribute', () => {
       const keyTok = this.CONSUME(Identifier, { LABEL: 'AttributeKey' });
       this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterKey' }));
-      this.CONSUME(Equals, { LABEL: 'Equals' });
+      this.CONSUME(Equals); // label not needed; token name matches
       this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterEquals' }));
 
       this.OR([
@@ -326,102 +318,64 @@ export class ExtendedPomlParser extends CstParser {
             (this.LA(1).tokenType === DoubleQuote || this.LA(1).tokenType === SingleQuote),
           ALT: () => this.SUBRULE(this.forIteratorValue, { LABEL: 'forIteratorValue' }),
         },
-
-        // value={{ ... }} (unquoted template)
+        // templatedValue: {{ ... }}
         {
           GATE: () => this.LA(1).tokenType === TemplateOpen,
           ALT: () => this.SUBRULE(this.templateNode, { LABEL: 'templatedValue' }),
         },
-
-        // "..." / '...' (may contain templates)
+        // quotedValue: "..."/'...' (may contain templates)
         { ALT: () => this.SUBRULE(this.quotedTemplate, { LABEL: 'quotedValue' }) },
       ]);
     });
 
-    // <tag ...>
-    this.RULE('openTag', () => {
-      this.CONSUME(OpenBracket, { LABEL: 'OpenBracket' });
+    this.openTag = this.RULE('openTag', () => {
+      this.CONSUME(OpenBracket);
       this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterBracket' }));
-
       this.CONSUME(Identifier, { LABEL: 'TagName' });
       this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterName' }));
-
       this.MANY(() => {
         this.SUBRULE(this.attribute, { LABEL: 'Attribute' });
         this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterAttribute' }));
       });
-
-      this.CONSUME(CloseBracket, { LABEL: 'CloseBracket' });
+      this.CONSUME(CloseBracket);
     });
 
-    // </tag>
-    this.RULE('closeTag', () => {
-      this.CONSUME(ClosingOpenBracket, { LABEL: 'ClosingOpenBracket' });
+    this.closeTag = this.RULE('closeTag', () => {
+      this.CONSUME(ClosingOpenBracket);
       this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterBracket' }));
       this.CONSUME(Identifier, { LABEL: 'TagName' });
-      this.CONSUME(CloseBracket, { LABEL: 'CloseBracket' });
+      this.CONSUME(CloseBracket);
     });
 
-    // <tag .../> (complete element, no content)
-    this.RULE('selfCloseElement', () => {
-      this.CONSUME(OpenBracket, { LABEL: 'OpenBracket' });
+    this.selfCloseElement = this.RULE('selfCloseElement', () => {
+      this.CONSUME(OpenBracket);
       this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterBracket' }));
       this.CONSUME(Identifier, { LABEL: 'TagName' });
       this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterName' }));
-
       this.MANY(() => {
         this.SUBRULE(this.attribute, { LABEL: 'Attribute' });
         this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterAttribute' }));
       });
-
-      this.CONSUME(SelfCloseBracket, { LABEL: 'SelfCloseBracket' });
+      this.CONSUME(SelfCloseBracket);
     });
 
-    // <tag> ... </tag>
-    this.RULE('element', () => {
+    this.element = this.RULE('element', () => {
       this.SUBRULE(this.openTag, { LABEL: 'OpenTag' });
       this.MANY(() => {
-        // stop on a close tag
         this.SUBRULE(this.elementContentNode, { LABEL: 'Content' });
       });
       this.SUBRULE(this.closeTag, { LABEL: 'CloseTag' });
     });
 
-    // <text> ...literal (no templates/tags parsed)... </text>
-    // or <template> ...literal... </template> (per your notes)
-    this.RULE('literalElement', () => {
+    this.literalElement = this.RULE('literalElement', () => {
       this.SUBRULE(this.openTag, { LABEL: 'OpenTag' });
 
-      // Eat *everything* until a ClosingOpenBracket + (optional ws) + Identifier('text'|'template') + '>'
-      this.AT_LEAST_ONE(() => {
+      // Everything until the matching </text> or </template> is treated as raw text
+      this.MANY(() => {
         this.OR([
-          // Continue consuming anything that is not the start of the matching close.
           {
-            GATE: () => {
-              if (this.LA(1).tokenType !== ClosingOpenBracket) {
-                return true;
-              }
-              // look ahead to see if it's </text> or </template>
-              let k = 2;
-              while (this.LA(k).tokenType === Whitespace) {
-                k++;
-              }
-              const t = this.LA(k);
-              if (t.tokenType !== Identifier) {
-                return true;
-              }
-              const name = (t.image || '').toLowerCase();
-              return !(name === 'text' || name === 'template');
-            },
-            ALT: () => {
-              // Treat all as raw text content
-              this.OR(
-                anyOf(
-                  AllTokens.filter((t) => t !== ClosingOpenBracket), // minimal guard
-                  'TextContent',
-                ),
-              );
-            },
+            GATE: () => !this.isAtLiteralClose(),
+            ALT: () => this.OR(this.anyOf(AllTokens, 'TextContent')),
           },
         ]);
       });
@@ -432,19 +386,15 @@ export class ExtendedPomlParser extends CstParser {
     this.performSelfAnalysis();
   }
 
-  // Expose entry for external callers (TypeScript-friendly)
   public parseRoot(): CstNode {
-    // @ts-expect-error Chevrotain types: RULE name maps to a function
+    // Invoke the entry rule (property is a function)
     return this.root();
   }
 }
 
-// Singleton parser instance
+// Singleton parser
 export const extendedPomlParser = new ExtendedPomlParser();
 
-/**
- * Convenience: tokenize + parse in one call.
- */
 export function parsePomlToCst(input: string): {
   cst: CstNode | undefined;
   lexErrors: ReturnType<typeof extendedPomlLexer.tokenize>['errors'];
