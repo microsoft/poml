@@ -41,10 +41,10 @@ export const Identifier = createToken({
   pattern: /[a-zA-Z_]([a-zA-Z0-9_\.:]|(-(?!\-+>)))*/,
 });
 
-// Include all Unicode whitespace characters and control characters
+// Include all control whitespace characters, not unicode whitespace
 export const Whitespace = createToken({
   name: 'Whitespace',
-  pattern: /[\s\u0000-\u001F\u007F-\u009F\u2000-\u200B\uFEFF]+/,
+  pattern: /[ \t\r\n\v\f]+/,
   line_breaks: true,
 });
 
@@ -54,7 +54,7 @@ export const Whitespace = createToken({
  * - starts or ends a comment: <!--, -->
  * - starts or ends a template: {{, }}
  * - starts or ends a string literal: " or '
- * - whitespace (handled separately - includes Unicode whitespace and control chars)
+ * - whitespace (handled separately - includes control chars)
  * - equal sign (=)
  * - backslash \ (handled separately for escaping)
  * - valid backslash escape sequences such as \n, \t, \", \', \\, \xHH, \uHHHH, \UHHHHHHHH, \{{, \}}
@@ -70,10 +70,10 @@ export const Whitespace = createToken({
  */
 export const Arbitrary = createToken({
   name: 'Arbitrary',
-  // Match anything except: <, >, quotes, =, backslash, whitespace (including Unicode), control chars
+  // Match anything except: <, >, quotes, =, backslash, whitespace, control chars
   // Allow single braces and slashes with lookahead constraints
   pattern:
-    /(?:[^<>"'{}=\\&\s\u0000-\u001F\u007F-\u009F\u2000-\u200B\uFEFF\/-]|{(?!{)|}(?!})|\/(?!>)|\-(?!\-+>)|&(?!#\d+;|x[0-9A-Fa-f]+;|[a-zA-Z][a-zA-Z0-9]+;))+/,
+    /(?:[^<>"'{}=\\& \t\r\n\v\f/-]|{(?!{)|}(?!})|\/(?!>)|\-(?!\-+>)|&(?!#\d+;|x[0-9A-Fa-f]+;|[a-zA-Z][a-zA-Z0-9]+;))+/,
   line_breaks: false,
 });
 
