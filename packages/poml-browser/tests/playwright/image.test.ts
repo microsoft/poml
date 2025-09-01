@@ -38,12 +38,14 @@ test.describe('toPngBase64 image conversion tests', () => {
           const image = await toPngBase64({ base64: base64 }, { mimeType: mime });
           const pngBase64 = image.base64;
           const { width, height, mimeType } = image;
-          console.log(width, height, mimeType);
           const endTime = performance.now();
 
           return {
             success: true,
             pngBase64,
+            width,
+            height,
+            mimeType,
             duration: Math.round(endTime - startTime),
             inputLength: base64.length,
             outputLength: pngBase64.length,
@@ -58,6 +60,9 @@ test.describe('toPngBase64 image conversion tests', () => {
       expect(result.pngBase64).toBeTruthy();
       expect(typeof result.pngBase64).toBe('string');
       expect(result.pngBase64.length).toBeGreaterThan(0);
+      expect(result.width).toBeGreaterThan(0);
+      expect(result.height).toBeGreaterThan(0);
+      expect(result.mimeType).toBe('image/png');
 
       if (mimeType === 'image/png') {
         // PNG input should return the same base64 without modification
@@ -121,8 +126,7 @@ test.describe('toPngBase64 image conversion tests', () => {
       }
     });
 
-    console.log(invalidBase64Result.error);
-    expect(invalidBase64Result.error).toBeTruthy();
+    expect(invalidBase64Result.error).toContain('Failed to load image with MIME type');
   });
 });
 
