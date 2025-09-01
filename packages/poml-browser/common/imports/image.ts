@@ -93,3 +93,58 @@ function _toPngBase64(base64: ArrayBuffer | string, mimeType: string): Promise<s
 }
 
 export const toPngBase64 = everywhere('_toPngBase64', _toPngBase64, ['sidebar', 'content']);
+
+/**
+ * Convert src used in `<img>` tags to PNG base64.
+ *
+ * Prefer using the provided toPngBase64(base64, mimeType).
+ * Strategy:
+ * 1) If src is a data URL, parse and route to toPngBase64 directly.
+ * 2) Else fetch -> ArrayBuffer + response.type -> toPngBase64.
+ * 3) Fallback: draw to canvas and toDataURL('image/png') if fetch/CORS fails.
+ */
+export async function _srcToPngBase64(src: string): Promise<string> {
+  // data URL path
+  if (/^data:/i.test(src)) {
+    // data:[<mime>][;base64],<data>
+    const m = /^data:([^;,]+)?(?:;base64)?,(.*)$/i.exec(src);
+    if (!m) {
+throw new Error('Malformed data URL');
+}
+    const mime = m[1] || 'application/octet-stream';
+    return toPngBase64(src, mime);
+  }
+
+  // network fetch path
+  try {
+    const res = await fetch(src, { mode: 'cors' as RequestMode });
+    if (!res.ok) {
+throw new Error(`HTTP ${res.status}`);
+}
+    const blob = await res.blob();
+    const buf = await blob.arrayBuffer();
+    const mime = blob.type || 'application/octet-stream';
+    return toPngBase64(buf, mime);
+  } catch (e) {
+    // canvas fallback (may fail on CORS-tainted images)
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = src;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+throw new Error('Canvas 2D context unavailable');
+}
+    ctx.drawImage(img, 0, 0);
+    const dataUrl = canvas.toDataURL('image/png');
+    return dataUrl.replace(/^data:image\/png;base64,/, '');
+  }
+}
+
+export const srcToPngBase64 = everywhere('srcToPngBase64', _srcToPngBase64, ['sidebar', 'content']);
