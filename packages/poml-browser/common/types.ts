@@ -130,7 +130,7 @@ export interface GlobalFunctions extends FunctionRegistry {
   displayNotification: (type: NotificationType, message: string, options?: NotificationOptions) => void;
   toPngBase64: (
     base64: string | { base64: ArrayBuffer | string } | { src: string },
-    options: { mimeType?: string },
+    options?: { mimeType?: string },
   ) => Promise<Image>;
   htmlToCards: (html: string | Document, options?: { parser?: 'simple' | 'complex' }) => Promise<CardModel | undefined>;
 

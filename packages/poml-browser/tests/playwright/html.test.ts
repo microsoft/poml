@@ -102,7 +102,7 @@ test.describe('htmlToCards', () => {
         expect(result.success).toBe(true);
         expect(result.cardModel).toBeTruthy();
         expect(result.cardModel.content).toBeTruthy();
-        expect(result.cardModel.source).toBe('clipboard');
+        expect(result.cardModel.source).toBe('webpage');
         expect(result.cardModel.timestamp).toBeTruthy();
 
         const content: CardContent = result.cardModel.content;
@@ -239,8 +239,6 @@ test.describe('htmlToCards', () => {
         },
         { options: { parser: 'complex' } },
       );
-
-      await contentPage.pause();
 
       expect(complexResult.cardModel).toBeTruthy();
       expect(complexResult.cardModel.content).toBeTruthy();

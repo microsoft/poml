@@ -30,14 +30,14 @@ export interface HtmlToCardsOptions {
    * - 'complex': Use custom parser with headers, images, lists, etc.
    * @default 'complex'
    */
-  parser?: 'simple' | 'complex';
+  parser: 'simple' | 'complex';
 
   /**
    * Minimum image size in pixels (width or height) to include.
    * Images smaller than this will be ignored.
    * @default 64
    */
-  minimumImageSize?: number;
+  minimumImageSize: number;
 }
 
 /**
@@ -45,9 +45,10 @@ export interface HtmlToCardsOptions {
  */
 async function _htmlToCards(
   html: string | Document | null,
-  options?: HtmlToCardsOptions,
+  options?: Partial<HtmlToCardsOptions>,
 ): Promise<CardModel | undefined> {
-  const { parser = 'complex' } = options || {};
+  const { parser = 'complex', minimumImageSize = 64 } = options || {};
+  const optWithDefault = { parser, minimumImageSize };
 
   let doc: Document;
   let url: string | undefined;
@@ -100,14 +101,14 @@ async function _htmlToCards(
       }
       const cleanDoc = htmlStringToDocument(article.content);
       notifyDebugVerbose('Cleaned document for custom HTML processing:', cleanDoc);
-      const processor = new DOMToCardsProcessor();
+      const processor = new DOMToCardsProcessor(optWithDefault);
       contents = await processor.process(cleanDoc.body.childNodes);
     }
   } else {
     notifyDebug('Document not suitable for Readability.js. Falling back to custom parser.');
     const cleanDoc = htmlStringToDocument(doc.documentElement.outerHTML);
     notifyDebugVerbose('Cleaned document for custom HTML processing:', cleanDoc);
-    const processor = new DOMToCardsProcessor();
+    const processor = new DOMToCardsProcessor(optWithDefault);
     contents = await processor.process(cleanDoc.body.childNodes);
   }
 
@@ -235,14 +236,18 @@ class DOMToCardsProcessor {
   ];
   private cards: CardContentWithHeader[] = [];
   private pendingText: string[] = [];
+  private options: HtmlToCardsOptions;
 
-  constructor() {}
+  constructor(options: HtmlToCardsOptions) {
+    this.options = options;
+  }
 
   async process(nodes: ArrayLikeNodes): Promise<CardContent[]> {
     this.cards = [];
     this.pendingText = [];
     await this.processRange(nodes);
     this.flushPending();
+    notifyDebugMoreVerbose('Extracted cards before header elimination:', this.cards);
     return eliminateHeaderCards(this.cards);
   }
 
@@ -323,10 +328,17 @@ class DOMToCardsProcessor {
 
   private async imageElementToCard(img: HTMLImageElement): Promise<ImageCardContent | null> {
     try {
-      const base64 = await toPngBase64(img);
+      const image = await toPngBase64(img);
+      if (image.width < this.options.minimumImageSize && image.height < this.options.minimumImageSize) {
+        notifyDebug(
+          `Ignoring small image (${image.width}x${image.height}) below minimum size ${this.options.minimumImageSize}px:`,
+          img.src,
+        );
+        return null;
+      }
       const card: ImageCardContent = {
         type: 'image',
-        base64,
+        base64: image.base64,
         alt: img.alt || undefined,
         caption: img.title || undefined,
       };

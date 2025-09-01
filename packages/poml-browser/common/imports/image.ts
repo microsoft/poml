@@ -1,6 +1,7 @@
 import { everywhere } from '@common/rpc';
 import { binaryToBase64 } from '@common/utils/base64';
 import { Image } from '@common/types';
+import { notifyDebug } from '@common/notification';
 
 /**
  * Options for the toPngBase64 function
@@ -107,6 +108,7 @@ async function downloadImage(input: DownloadImageInput, options?: ToPngBase64Opt
 
   // Validate that mimeType was determined
   if (!mimeType) {
+    notifyDebug('Could not determine MIME type for image input:', input);
     throw new Error('Could not determine MIME type. Please provide mimeType in options.');
   }
 
@@ -217,4 +219,4 @@ async function _toPngBase64(input: DownloadImageInput, options?: ToPngBase64Opti
   return convertToPng(partialImage);
 }
 
-export const toPngBase64 = everywhere('_toPngBase64', _toPngBase64, ['sidebar', 'content']);
+export const toPngBase64 = everywhere('toPngBase64', _toPngBase64, ['sidebar', 'content']);
