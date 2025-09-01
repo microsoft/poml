@@ -71,6 +71,13 @@ export interface NestedCardContent {
   container?: PomlContainerType; // e.g., ExampleSet
 }
 
+// This is not a valid CardContent; used internally when extracting headers for the first time
+export interface HeaderCardContent {
+  type: 'header';
+  text: string;
+  level: number; // 1-6 for <h1>-<h6>
+}
+
 export type CardContent = TextCardContent | ListCardContent | ImageCardContent | TableCardContent | NestedCardContent;
 
 interface ColumnDefinition {

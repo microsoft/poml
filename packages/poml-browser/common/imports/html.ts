@@ -6,6 +6,7 @@ import {
   ImageCardContent,
   NestedCardContent,
   ListCardContent,
+  HeaderCardContent,
 } from '@common/types';
 import { Readability } from '@mozilla/readability';
 import { srcToPngBase64 } from './image';
@@ -216,13 +217,14 @@ class DOMToCardsProcessor {
     // Line breaks
     'br',
   ];
-  private cards: CardContent[] = [];
+  private cards: (CardContent | HeaderCardContent)[] = [];
   private pendingText: string[] = [];
 
   constructor() {}
 
   async process(nodes: ArrayLikeNodes): Promise<CardContent[]> {
-    // First flatten the nodes for better header content collection
+    this.cards = [];
+    this.pendingText = [];
     await this.processRange(nodes);
     this.flushPending();
     return this.cards;
@@ -336,7 +338,7 @@ class DOMToCardsProcessor {
 
           const headerText = extractTextContent(el, true);
           // Since the tree is flattened, just add header as text
-          const textCard: TextCardContent = { type: 'text', text: headerText };
+          const textCard: HeaderCardContent = { type: 'header', text: headerText, level: headerLevel };
           this.cards.push(textCard);
         } else if (tag === 'ul' || tag === 'ol') {
           // LISTS
@@ -368,9 +370,12 @@ class DOMToCardsProcessor {
         } else if (tag === 'br') {
           // LINE BREAK - treat as newline in pending text
           this.pushText('');
+        } else {
+          notifyDebug('Discarding unsupported element:', tag);
         }
-        notifyDebug('Discarding unsupported element:', tag);
       }
     }
+    // Finally flush any remaining pending text
+    this.flushPending();
   }
 }
