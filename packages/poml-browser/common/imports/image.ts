@@ -26,7 +26,7 @@ type DownloadImageInput =
  */
 async function downloadImage(input: DownloadImageInput, options?: ToPngBase64Options): Promise<Partial<Image>> {
   let base64Data: string;
-  let mimeType: string = options?.mimeType || 'image/png';
+  let mimeType: string | undefined = options?.mimeType;
   let width: number | undefined;
   let height: number | undefined;
 
@@ -35,7 +35,7 @@ async function downloadImage(input: DownloadImageInput, options?: ToPngBase64Opt
     const dataUrlMatch = input.match(/^data:(.*?);base64,(.*)$/);
     if (dataUrlMatch) {
       // It's a data URL - extract MIME type and base64
-      mimeType = options?.mimeType || dataUrlMatch[1] || 'image/png';
+      mimeType = mimeType || dataUrlMatch[1];
       base64Data = dataUrlMatch[2];
     } else if (input.startsWith('http://') || input.startsWith('https://')) {
       // It's a URL - try fetch first, then fall back to canvas method for CORS issues
@@ -46,7 +46,7 @@ async function downloadImage(input: DownloadImageInput, options?: ToPngBase64Opt
         }
         const blob = await response.blob();
         const arrayBuffer = await blob.arrayBuffer();
-        mimeType = options?.mimeType || blob.type || 'image/png';
+        mimeType = mimeType || blob.type;
 
         base64Data = binaryToBase64(arrayBuffer);
       } catch (fetchError) {
@@ -80,27 +80,34 @@ async function downloadImage(input: DownloadImageInput, options?: ToPngBase64Opt
     } else {
       // Assume it's already a raw base64 string
       base64Data = input;
+      // mimeType must be provided for raw base64 strings
     }
-  } else if ('base64' in input) {
+  } else if (typeof input === 'object' && 'base64' in input) {
     // Handle { base64: ArrayBuffer | string } input
     if (input.base64 instanceof ArrayBuffer) {
       base64Data = binaryToBase64(input.base64);
     } else if (typeof input.base64 === 'string') {
       const dataUrlMatch = input.base64.match(/^data:(.*?);base64,(.*)$/);
       if (dataUrlMatch) {
-        mimeType = options?.mimeType || dataUrlMatch[1] || 'image/png';
+        mimeType = mimeType || dataUrlMatch[1];
         base64Data = dataUrlMatch[2];
       } else {
         base64Data = input.base64;
+        // mimeType must be provided for raw base64 strings
       }
     } else {
       throw new Error('base64 must be ArrayBuffer or string');
     }
-  } else if ('src' in input) {
+  } else if (typeof input === 'object' && 'src' in input) {
     // Recursively handle src
     return downloadImage(input.src, options);
   } else {
-    throw new Error('Invalid input format');
+    throw new Error(`Invalid input format: ${input}`);
+  }
+
+  // Validate that mimeType was determined
+  if (!mimeType) {
+    throw new Error('Could not determine MIME type. Please provide mimeType in options.');
   }
 
   return {

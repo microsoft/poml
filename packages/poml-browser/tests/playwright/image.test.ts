@@ -81,11 +81,11 @@ test.describe('toPngBase64 image conversion tests', () => {
     const result = await serviceWorker.evaluate(
       async ({ url, mime }) => {
         const { toPngBase64 } = self as any;
-        const pngBase64 = await toPngBase64(url, mime).base64;
+        const imageResult = await toPngBase64(url, { mimeType: mime });
         return {
           success: true,
-          pngBase64,
-          outputLength: pngBase64.length,
+          pngBase64: imageResult.base64,
+          outputLength: imageResult.base64.length,
         };
       },
       { url: dataUrl, mime: 'image/jpeg' },
@@ -101,26 +101,27 @@ test.describe('toPngBase64 image conversion tests', () => {
     const errorResult = await serviceWorker.evaluate(async () => {
       const { toPngBase64 } = self as any;
       try {
-        await toPngBase64(123, 'image/png').base64; // Invalid input
+        await toPngBase64(123, { mimeType: 'image/png' }); // Invalid input
         return { error: null };
       } catch (error) {
         return { error: (error as Error).message };
       }
     });
 
-    expect(errorResult.error).toContain('Input must be ArrayBuffer or base64 string');
+    expect(errorResult.error).toContain('Invalid input format');
 
     // Test with invalid base64
     const invalidBase64Result = await serviceWorker.evaluate(async () => {
       const { toPngBase64 } = self as any;
       try {
-        await toPngBase64('not-valid-base64!@#$', 'image/jpeg').base64;
+        await toPngBase64('not-valid-base64!@#$', { mimeType: 'image/jpeg' });
         return { error: null };
       } catch (error) {
         return { error: (error as Error).message };
       }
     });
 
+    console.log(invalidBase64Result.error);
     expect(invalidBase64Result.error).toBeTruthy();
   });
 });
@@ -140,7 +141,8 @@ test.describe('srcToPngBase64 image conversion tests', () => {
       const url = `${FIXTURE_ENDPOINT}/image/${file}`;
       const result = await serviceWorker.evaluate(async (src) => {
         const { toPngBase64 } = self as any;
-        const pngBase64 = await toPngBase64(src).base64;
+        const imageResult = await toPngBase64(src);
+        const pngBase64 = imageResult.base64;
         const header = Array.from(atob(pngBase64).slice(0, 8)).map((c) => c.charCodeAt(0));
         return { pngBase64Length: pngBase64.length, header };
       }, url);
@@ -159,7 +161,8 @@ test.describe('srcToPngBase64 image conversion tests', () => {
 
     const result = await serviceWorker.evaluate(async (url) => {
       const { toPngBase64 } = self as any;
-      const pngBase64 = await toPngBase64(url).base64;
+      const imageResult = await toPngBase64(url);
+      const pngBase64 = imageResult.base64;
       return { pngBase64 };
     }, dataUrl);
 
@@ -172,7 +175,7 @@ test.describe('srcToPngBase64 image conversion tests', () => {
     const result = await serviceWorker.evaluate(async (src) => {
       const { toPngBase64 } = self as any;
       try {
-        await toPngBase64(src).base64;
+        await toPngBase64(src);
         return { error: null };
       } catch (e) {
         return { error: (e as Error).message };
