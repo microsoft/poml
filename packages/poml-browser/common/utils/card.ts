@@ -14,7 +14,8 @@ import { CardContent, HeaderCardContent, NestedCardContent, TextCardContent } fr
  *
  * 2. **Content Structuring**:
  *    - **No children**: Header becomes a text card with caption
- *    - **Single child**: Header text becomes the caption of that child card
+ *    - **Single child without caption**: Header text becomes the caption of that child card
+ *    - **Single child with existing caption**: Creates a NestedCardContent to preserve both captions
  *    - **Multiple children**: Creates a NestedCardContent with header as caption
  *
  * 3. **Nested Headers**: Headers with higher level numbers (e.g., h3 after h2) are collected
@@ -73,8 +74,8 @@ export function eliminateHeaderCards(cards: (CardContent | HeaderCardContent)[])
           caption: headerText,
         };
         result.push(textCard);
-      } else if (processedChildren.length === 1 || !processedChildren[0].caption) {
-        // Single child - add header as caption to the child
+      } else if (processedChildren.length === 1 && !processedChildren[0].caption) {
+        // Single child without caption - add header as caption to the child
         result.push({
           ...processedChildren[0],
           caption: headerText,
