@@ -15,6 +15,7 @@ test.describe('toPngBase64 image conversion tests', () => {
     { file: 'google-webp-gallery.webp', mimeType: 'image/webp' },
     { file: 'video-to-gif-sample.gif', mimeType: 'image/gif' },
     { file: 'sample1.bmp', mimeType: 'image/bmp' },
+    { file: 'wikipedia-example.svg', mimeType: 'image/svg+xml' },
   ];
 
   testImages.forEach(({ file, mimeType }) => {
@@ -118,5 +119,64 @@ test.describe('toPngBase64 image conversion tests', () => {
     });
 
     expect(invalidBase64Result.error).toBeTruthy();
+  });
+});
+
+test.describe('srcToPngBase64 image conversion tests', () => {
+  const testImages = [
+    { file: 'gpt-5-random-image.png', mimeType: 'image/png' },
+    { file: 'sample_1280×853.jpeg', mimeType: 'image/jpeg' },
+    { file: 'google-webp-gallery.webp', mimeType: 'image/webp' },
+    { file: 'video-to-gif-sample.gif', mimeType: 'image/gif' },
+    { file: 'sample1.bmp', mimeType: 'image/bmp' },
+    { file: 'wikipedia-example.svg', mimeType: 'image/svg+xml' },
+  ];
+
+  test('converts image URL to PNG base64', async ({ serviceWorker, sidebarPage }) => {
+    for (const { file } of testImages) {
+      const url = `${FIXTURE_ENDPOINT}/image/${file}`;
+      const result = await serviceWorker.evaluate(async (src) => {
+        const { srcToPngBase64 } = self as any;
+        const pngBase64 = await srcToPngBase64(src);
+        const header = Array.from(atob(pngBase64).slice(0, 8)).map((c) => c.charCodeAt(0));
+        return { pngBase64Length: pngBase64.length, header };
+      }, url);
+
+      expect(result.pngBase64Length).toBeGreaterThan(0);
+      // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+      expect(result.header).toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    }
+  });
+
+  test('handles data URL input (PNG passthrough equality)', async ({ serviceWorker, sidebarPage }) => {
+    const imagePath = join(testFixturesPath, 'image', 'gpt-5-random-image.png');
+    const imageBuffer = readFileSync(imagePath);
+    const base64Input = imageBuffer.toString('base64');
+    const dataUrl = `data:image/png;base64,${base64Input}`;
+
+    const result = await serviceWorker.evaluate(async (url) => {
+      const { srcToPngBase64 } = self as any;
+      const pngBase64 = await srcToPngBase64(url);
+      return { pngBase64 };
+    }, dataUrl);
+
+    // PNG input should return the same base64 without modification
+    expect(result.pngBase64).toBe(base64Input);
+  });
+
+  test('throws for non-image URLs', async ({ serviceWorker, sidebarPage }) => {
+    const url = `${FIXTURE_ENDPOINT}/plain/hello.txt`;
+    const result = await serviceWorker.evaluate(async (src) => {
+      const { srcToPngBase64 } = self as any;
+      try {
+        await srcToPngBase64(src);
+        return { error: null };
+      } catch (e) {
+        return { error: (e as Error).message };
+      }
+    }, url);
+
+    expect(result.error).toBeTruthy();
+    expect(result.error).toMatch(/Failed to load image/i);
   });
 });

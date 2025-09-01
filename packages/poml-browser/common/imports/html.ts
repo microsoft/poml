@@ -82,12 +82,14 @@ export async function htmlToCards(
         return undefined;
       }
       const cleanDoc = htmlStringToDocument(article.content);
-      contents = await processNodesComplex(cleanDoc.body.childNodes);
+      const processor = new DOMToCardsProcessor();
+      contents = await processor.process(cleanDoc.body.childNodes);
     }
   } else {
     notifyDebug('Document not suitable for Readability.js. Falling back to custom parser.');
     const cleanDoc = htmlStringToDocument(doc.documentElement.outerHTML);
-    contents = await processNodesComplex(cleanDoc.body.childNodes);
+    const processor = new DOMToCardsProcessor();
+    contents = await processor.process(cleanDoc.body.childNodes);
   }
 
   if (contents.length === 0) {
@@ -198,17 +200,46 @@ function* iterateTextAndImages(el: Element): Generator<Text | HTMLImageElement> 
 export class DOMToCardsProcessor {
   private cards: CardContent[] = [];
   private pendingText: string[] = [];
+  private flattenedNodes: ChildNode[] = [];
+
+  constructor() {}
 
   /** Public entry */
-  static async process(nodes: ArrayLikeNodes): Promise<CardContent[]> {
-    const p = new DOMToCardsProcessor();
-    await p.processRange(nodes);
-    p.flushPending();
-    return p.cards;
+  async process(nodes: ArrayLikeNodes): Promise<CardContent[]> {
+    // First flatten the nodes for better header content collection
+    this.flattenedNodes = this.flattenNodes(nodes);
+    await this.processRange(this.flattenedNodes);
+    this.flushPending();
+    return this.cards;
   }
 
-  /** Keep state local to an instance */
-  private constructor() {}
+  /** Flatten the node tree to minimize nested levels */
+  private flattenNodes(nodes: ArrayLikeNodes): ChildNode[] {
+    const result: ChildNode[] = [];
+    const processNode = (node: ChildNode) => {
+      if (isElementNode(node)) {
+        const tag = (node as Element).tagName.toLowerCase();
+        // Keep structural elements intact
+        if (getHeaderLevel(tag) > 0 || tag === 'ul' || tag === 'ol' || tag === 'li' || tag === 'img') {
+          result.push(node);
+          return;
+        }
+        // For containers like divs, flatten their children
+        if (tag === 'div' || tag === 'section' || tag === 'article' || tag === 'main') {
+          for (const child of node.childNodes) {
+            processNode(child);
+          }
+          return;
+        }
+      }
+      result.push(node);
+    };
+
+    for (let i = 0; i < nodes.length; i++) {
+      processNode(nodes[i] as ChildNode);
+    }
+    return result;
+  }
 
   private flushPending() {
     if (this.pendingText.length === 0) {
@@ -237,17 +268,23 @@ export class DOMToCardsProcessor {
   ): { section: ChildNode[]; nextIndex: number } {
     const section: ChildNode[] = [];
     let j = start + 1;
+
+    // Collect all siblings and their children until we hit a same or higher-level header
     while (j < nodes.length) {
       const next = nodes[j] as ChildNode;
       if (isElementNode(next)) {
         const lvl = getHeaderLevel(next.tagName.toLowerCase());
         if (lvl > 0 && lvl <= headerLevel) {
+          // Found a header at the same or higher level, stop collecting
           break;
         }
       }
+
+      // Add this node to the section
       section.push(next);
       j++;
     }
+
     return { section, nextIndex: j };
   }
 
@@ -307,7 +344,7 @@ export class DOMToCardsProcessor {
     }
   }
 
-  private async processRange(nodes: ArrayLikeNodes): Promise<void> {
+  private async processRange(nodes: ChildNode[] | ArrayLikeNodes): Promise<void> {
     let i = 0;
     while (i < nodes.length) {
       const node = nodes[i] as ChildNode;
@@ -333,21 +370,28 @@ export class DOMToCardsProcessor {
           const { section, nextIndex } = this.collectSectionNodes(nodes, i, headerLevel);
 
           if (section.length > 0) {
-            const sectionCards = await DOMToCardsProcessor.process(section);
+            // Process section content recursively
+            const sectionProcessor = new DOMToCardsProcessor();
+            const sectionCards = await sectionProcessor.process(section);
+
             if (sectionCards.length > 1) {
+              // Multiple cards: create nested structure with header as caption
               const nested: NestedCardContent = { type: 'nested', cards: sectionCards, caption: headerText };
               this.cards.push(nested);
             } else if (sectionCards.length === 1) {
+              // Single card: add header as caption if not already present
               const only = sectionCards[0] as any;
               if (only.caption == null) {
                 only.caption = headerText;
               }
               this.cards.push(only);
             } else {
+              // No cards from section: just add header as text
               const textCard: TextCardContent = { type: 'text', text: headerText };
               this.cards.push(textCard);
             }
           } else {
+            // No section content: just add header as text
             const textCard: TextCardContent = { type: 'text', text: headerText };
             this.cards.push(textCard);
           }

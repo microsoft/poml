@@ -15,6 +15,7 @@ export type PomlContainerType =
   // Formatting
   | 'CaptionedParagraph' // Default container for text cards with a caption
   | 'Paragraph' // Default container for text cards without a caption
+  | 'Code' // Opt-in to show text cards in a code block
   // Intentions, mainly useful for categorization. Rendering may be similar, except perhaps with a different title
   | 'Example'
   | 'ExampleInput'
