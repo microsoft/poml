@@ -167,8 +167,8 @@ function processListElement(el: Element): string[] {
   el.querySelectorAll(':scope > li').forEach((li) => {
     const t = extractTextContent(li);
     if (t) {
-items.push(t);
-}
+      items.push(t);
+    }
   });
   return items;
 }
@@ -177,8 +177,8 @@ function* iterateTextAndImages(el: Element): Generator<Text | HTMLImageElement> 
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
     acceptNode(node) {
       if (node.nodeType === Node.TEXT_NODE) {
-return NodeFilter.FILTER_ACCEPT;
-}
+        return NodeFilter.FILTER_ACCEPT;
+      }
       if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toUpperCase() === 'IMG') {
         return NodeFilter.FILTER_ACCEPT;
       }
@@ -188,10 +188,10 @@ return NodeFilter.FILTER_ACCEPT;
   while (walker.nextNode()) {
     const n = walker.currentNode;
     if (n.nodeType === Node.TEXT_NODE) {
-yield n as Text;
-} else if ((n as Element).tagName.toUpperCase() === 'IMG') {
-yield n as HTMLImageElement;
-}
+      yield n as Text;
+    } else if ((n as Element).tagName.toUpperCase() === 'IMG') {
+      yield n as HTMLImageElement;
+    }
   }
 }
 
@@ -212,13 +212,13 @@ export class DOMToCardsProcessor {
 
   private flushPending() {
     if (this.pendingText.length === 0) {
-return;
-}
+      return;
+    }
     const text = this.pendingText.join('\n').trim();
     this.pendingText.length = 0;
     if (!text) {
-return;
-}
+      return;
+    }
     const card: TextCardContent = { type: 'text', text };
     this.cards.push(card);
   }
@@ -226,8 +226,8 @@ return;
   private pushText(t: string | null | undefined) {
     const text = normalizeText(t);
     if (text) {
-this.pendingText.push(text);
-}
+      this.pendingText.push(text);
+    }
   }
 
   private collectSectionNodes(
@@ -242,8 +242,8 @@ this.pendingText.push(text);
       if (isElementNode(next)) {
         const lvl = getHeaderLevel(next.tagName.toLowerCase());
         if (lvl > 0 && lvl <= headerLevel) {
-break;
-}
+          break;
+        }
       }
       section.push(next);
       j++;
@@ -255,8 +255,8 @@ break;
     const tag = el.tagName.toLowerCase();
     const items = processListElement(el);
     if (items.length === 0) {
-return null;
-}
+      return null;
+    }
     return { type: 'list', items, ordered: tag === 'ol' };
   }
 
@@ -288,8 +288,8 @@ return null;
       if (isTextNode(n)) {
         const t = normalizeText(n.textContent);
         if (t) {
-buffer.push(t);
-}
+          buffer.push(t);
+        }
       } else {
         if (buffer.length > 0) {
           this.pushText(buffer.join(' ').trim());
@@ -298,13 +298,13 @@ buffer.push(t);
         }
         const imgCard = await this.imageElementToCard(n as HTMLImageElement);
         if (imgCard) {
-this.cards.push(imgCard);
-}
+          this.cards.push(imgCard);
+        }
       }
     }
     if (buffer.length > 0) {
-this.pushText(buffer.join(' ').trim());
-}
+      this.pushText(buffer.join(' ').trim());
+    }
   }
 
   private async processRange(nodes: ArrayLikeNodes): Promise<void> {
@@ -340,8 +340,8 @@ this.pushText(buffer.join(' ').trim());
             } else if (sectionCards.length === 1) {
               const only = sectionCards[0] as any;
               if (only.caption == null) {
-only.caption = headerText;
-}
+                only.caption = headerText;
+              }
               this.cards.push(only);
             } else {
               const textCard: TextCardContent = { type: 'text', text: headerText };
@@ -361,8 +361,8 @@ only.caption = headerText;
           this.flushPending();
           const listCard = this.listToCard(el);
           if (listCard) {
-this.cards.push(listCard);
-}
+            this.cards.push(listCard);
+          }
           i++;
           continue;
         }
@@ -372,8 +372,8 @@ this.cards.push(listCard);
           this.flushPending();
           const imgCard = await this.imageElementToCard(el as HTMLImageElement);
           if (imgCard) {
-this.cards.push(imgCard);
-}
+            this.cards.push(imgCard);
+          }
           i++;
           continue;
         }

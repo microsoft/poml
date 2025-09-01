@@ -109,8 +109,8 @@ export async function _srcToPngBase64(src: string): Promise<string> {
     // data:[<mime>][;base64],<data>
     const m = /^data:([^;,]+)?(?:;base64)?,(.*)$/i.exec(src);
     if (!m) {
-throw new Error('Malformed data URL');
-}
+      throw new Error('Malformed data URL');
+    }
     const mime = m[1] || 'application/octet-stream';
     return toPngBase64(src, mime);
   }
@@ -119,8 +119,8 @@ throw new Error('Malformed data URL');
   try {
     const res = await fetch(src, { mode: 'cors' as RequestMode });
     if (!res.ok) {
-throw new Error(`HTTP ${res.status}`);
-}
+      throw new Error(`HTTP ${res.status}`);
+    }
     const blob = await res.blob();
     const buf = await blob.arrayBuffer();
     const mime = blob.type || 'application/octet-stream';
@@ -139,8 +139,8 @@ throw new Error(`HTTP ${res.status}`);
     canvas.height = img.naturalHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-throw new Error('Canvas 2D context unavailable');
-}
+      throw new Error('Canvas 2D context unavailable');
+    }
     ctx.drawImage(img, 0, 0);
     const dataUrl = canvas.toDataURL('image/png');
     return dataUrl.replace(/^data:image\/png;base64,/, '');
