@@ -16,7 +16,7 @@ import {
   CardContentWithHeader,
 } from '@common/types';
 import { Readability } from '@mozilla/readability';
-import { srcToPngBase64 } from './image';
+import { toPngBase64 } from './image';
 import { eliminateHeaderCards } from '@common/utils/card';
 import { everywhere } from '@common/rpc';
 
@@ -31,6 +31,13 @@ export interface HtmlToCardsOptions {
    * @default 'complex'
    */
   parser?: 'simple' | 'complex';
+
+  /**
+   * Minimum image size in pixels (width or height) to include.
+   * Images smaller than this will be ignored.
+   * @default 64
+   */
+  minimumImageSize?: number;
 }
 
 /**
@@ -63,11 +70,6 @@ async function _htmlToCards(
 
   // Use Readability to get rid of chore elements
   const reader = new Readability(clonedDoc);
-  // const reader = new Readability(clonedDoc, {
-  //   keepClasses: false,
-  //   disableJSONLD: false,
-  //   charThreshold: 16,
-  // });
 
   const article = reader.parse();
   notifyDebugVerbose('Readability.js output:', article);
@@ -321,7 +323,7 @@ class DOMToCardsProcessor {
 
   private async imageElementToCard(img: HTMLImageElement): Promise<ImageCardContent | null> {
     try {
-      const base64 = await srcToPngBase64(img.src);
+      const base64 = await toPngBase64(img);
       const card: ImageCardContent = {
         type: 'image',
         base64,

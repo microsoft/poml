@@ -1,150 +1,213 @@
 import { everywhere } from '@common/rpc';
-import { arrayBufferToDataURL } from '@common/utils/base64';
+import { binaryToBase64 } from '@common/utils/base64';
+import { Image } from '@common/types';
 
-function _toPngBase64(base64: ArrayBuffer | string, mimeType: string): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    try {
-      let dataUrl: string;
-      if (base64 instanceof ArrayBuffer) {
-        // Convert ArrayBuffer to base64 string if needed
-        dataUrl = arrayBufferToDataURL(base64, mimeType);
-      } else if (typeof base64 === 'string') {
-        if (base64.match(/^data:.*?;base64,/)) {
-          // It's already a data URL
-          dataUrl = base64;
-        } else {
-          // Assume it's a raw base64 string
-          dataUrl = `data:${mimeType};base64,${base64}`;
+/**
+ * Options for the toPngBase64 function
+ */
+export interface ToPngBase64Options {
+  /**
+   * MIME type of the input image (e.g., 'image/jpeg', 'image/png', 'image/gif')
+   * Optional because it may already be embedded in a base64 data URL or can be inferred from the source
+   */
+  mimeType?: string;
+}
+
+type DownloadImageInput =
+  | string // URL
+  | { base64: ArrayBuffer | string } // Object with base64 data
+  | { src: string }; // Object with src URL
+
+/**
+ * Downloads/processes an image from various sources and returns partial image data
+ * @param input Can be a base64 string, ArrayBuffer, data URL, HTTP URL, or object with base64/src
+ * @param options Optional MIME type hint
+ * @returns Partial image data (may not include width/height until loaded into DOM)
+ */
+async function downloadImage(input: DownloadImageInput, options?: ToPngBase64Options): Promise<Partial<Image>> {
+  let base64Data: string;
+  let mimeType: string = options?.mimeType || 'image/png';
+  let width: number | undefined;
+  let height: number | undefined;
+
+  if (typeof input === 'string') {
+    // String input is treated as src
+    const dataUrlMatch = input.match(/^data:(.*?);base64,(.*)$/);
+    if (dataUrlMatch) {
+      // It's a data URL - extract MIME type and base64
+      mimeType = options?.mimeType || dataUrlMatch[1] || 'image/png';
+      base64Data = dataUrlMatch[2];
+    } else if (input.startsWith('http://') || input.startsWith('https://')) {
+      // It's a URL - try fetch first, then fall back to canvas method for CORS issues
+      try {
+        const response = await fetch(input, { mode: 'cors' as RequestMode });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
         }
-      } else {
-        throw new Error('Input must be ArrayBuffer or base64 string');
-      }
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        mimeType = options?.mimeType || blob.type || 'image/png';
 
-      if (mimeType === 'image/png') {
-        // Already PNG, just strip data URL prefix if present
-        const base64Data = dataUrl.replace(/^data:.*?;base64,/, '');
-        resolve(base64Data);
-        return;
-      }
-
-      // Create image element
-      const img = new Image();
-
-      img.onload = () => {
+        base64Data = binaryToBase64(arrayBuffer);
+      } catch (fetchError) {
+        // Canvas fallback for CORS-restricted images
         try {
-          // Create canvas with image dimensions
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
+          const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const image = new window.Image();
+            image.crossOrigin = 'anonymous';
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+            image.src = input;
+          });
 
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            reject(new Error('Failed to get canvas context'));
-            return;
+            throw new Error('Canvas 2D context unavailable');
           }
-
-          // For PNG output, we might want to preserve transparency
-          // Clear canvas with transparent background
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          // Draw image onto canvas
           ctx.drawImage(img, 0, 0);
-
-          // Convert canvas to PNG base64
-          canvas.toBlob(
-            (blob: Blob | null) => {
-              if (!blob) {
-                reject(new Error('Failed to create blob'));
-                return;
-              }
-
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                // Return just the base64 string without data URL prefix
-                const result = reader.result;
-                if (typeof result === 'string') {
-                  const base64Result = result.replace(/^data:.*?;base64,/, '');
-                  resolve(base64Result);
-                } else {
-                  reject(new Error('Failed to read blob as base64'));
-                }
-              };
-              reader.onerror = () => reject(new Error('Failed to read blob'));
-              reader.readAsDataURL(blob);
-            },
-            'image/png',
-            1.0,
-          ); // Maximum quality for PNG
-        } catch (error) {
-          reject(error);
+          const dataUrl = canvas.toDataURL('image/png');
+          base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+          mimeType = 'image/png'; // Canvas always outputs PNG
+          width = canvas.width;
+          height = canvas.height;
+        } catch (canvasError) {
+          throw new Error(`Failed to load image from URL: ${fetchError}. Canvas fallback also failed: ${canvasError}`);
         }
-      };
-
-      img.onerror = () => {
-        reject(new Error(`Failed to load image with MIME type: ${mimeType}`));
-      };
-
-      // Start loading the image
-      img.src = dataUrl;
-    } catch (error) {
-      reject(error);
+      }
+    } else {
+      // Assume it's already a raw base64 string
+      base64Data = input;
     }
+  } else if ('base64' in input) {
+    // Handle { base64: ArrayBuffer | string } input
+    if (input.base64 instanceof ArrayBuffer) {
+      base64Data = binaryToBase64(input.base64);
+    } else if (typeof input.base64 === 'string') {
+      const dataUrlMatch = input.base64.match(/^data:(.*?);base64,(.*)$/);
+      if (dataUrlMatch) {
+        mimeType = options?.mimeType || dataUrlMatch[1] || 'image/png';
+        base64Data = dataUrlMatch[2];
+      } else {
+        base64Data = input.base64;
+      }
+    } else {
+      throw new Error('base64 must be ArrayBuffer or string');
+    }
+  } else if ('src' in input) {
+    // Recursively handle src
+    return downloadImage(input.src, options);
+  } else {
+    throw new Error('Invalid input format');
+  }
+
+  return {
+    base64: base64Data,
+    mimeType: mimeType,
+    width,
+    height,
+  };
+}
+
+/**
+ * Converts an image to PNG format using canvas, getting dimensions in the process
+ * @param partialImage Partial image data with base64 and mimeType
+ * @returns Complete Image object with PNG data and dimensions
+ */
+async function convertToPng(partialImage: Partial<Image>): Promise<Image> {
+  if (!partialImage.base64 || !partialImage.mimeType) {
+    throw new Error('base64 and mimeType are required');
+  }
+
+  // If already PNG and has dimensions, return as-is
+  if (partialImage.base64 && partialImage.mimeType === 'image/png' && partialImage.width && partialImage.height) {
+    return partialImage as Image;
+  }
+
+  return new Promise<Image>((resolve, reject) => {
+    const img = new window.Image();
+    const dataUrl = `data:${partialImage.mimeType};base64,${partialImage.base64}`;
+
+    img.onload = () => {
+      try {
+        // If already PNG, just return with dimensions without re-encoding
+        if (partialImage.mimeType === 'image/png' && partialImage.base64) {
+          resolve({
+            base64: partialImage.base64 as string,
+            mimeType: 'image/png',
+            width: img.width,
+            height: img.height,
+          });
+          return;
+        }
+
+        // Need to convert to PNG
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+
+        // Clear canvas with transparent background for PNG
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw image onto canvas
+        ctx.drawImage(img, 0, 0);
+
+        // Convert canvas to PNG base64
+        canvas.toBlob(
+          (blob: Blob | null) => {
+            if (!blob) {
+              reject(new Error('Failed to create blob'));
+              return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const result = reader.result;
+              if (typeof result === 'string') {
+                const base64Result = result.replace(/^data:.*?;base64,/, '');
+                resolve({
+                  base64: base64Result,
+                  mimeType: 'image/png',
+                  width: img.width,
+                  height: img.height,
+                });
+              } else {
+                reject(new Error('Failed to read blob as base64'));
+              }
+            };
+            reader.onerror = () => reject(new Error('Failed to read blob'));
+            reader.readAsDataURL(blob);
+          },
+          'image/png',
+          1.0,
+        );
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    img.onerror = () => {
+      reject(new Error(`Failed to load image with MIME type: ${partialImage.mimeType}`));
+    };
+
+    img.src = dataUrl;
   });
 }
 
-export const toPngBase64 = everywhere('_toPngBase64', _toPngBase64, ['sidebar', 'content']);
+async function _toPngBase64(input: DownloadImageInput, options?: ToPngBase64Options): Promise<Image> {
+  // Step 1: Download/process the image to get base64 and mimeType
+  const partialImage = await downloadImage(input, options);
 
-/**
- * Convert src used in `<img>` tags to PNG base64.
- *
- * Prefer using the provided toPngBase64(base64, mimeType).
- * Strategy:
- * 1) If src is a data URL, parse and route to toPngBase64 directly.
- * 2) Else fetch -> ArrayBuffer + response.type -> toPngBase64.
- * 3) Fallback: draw to canvas and toDataURL('image/png') if fetch/CORS fails.
- */
-export async function _srcToPngBase64(src: string): Promise<string> {
-  // data URL path
-  if (/^data:/i.test(src)) {
-    // data:[<mime>][;base64],<data>
-    const m = /^data:([^;,]+)?(?:;base64)?,(.*)$/i.exec(src);
-    if (!m) {
-      throw new Error('Malformed data URL');
-    }
-    const mime = m[1] || 'application/octet-stream';
-    return toPngBase64(src, mime);
-  }
-
-  // network fetch path
-  try {
-    const res = await fetch(src, { mode: 'cors' as RequestMode });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-    const blob = await res.blob();
-    const buf = await blob.arrayBuffer();
-    const mime = blob.type || 'application/octet-stream';
-    return toPngBase64(buf, mime);
-  } catch (e) {
-    // canvas fallback (may fail on CORS-tainted images)
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const image = new Image();
-      image.crossOrigin = 'anonymous';
-      image.onload = () => resolve(image);
-      image.onerror = reject;
-      image.src = src;
-    });
-    const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      throw new Error('Canvas 2D context unavailable');
-    }
-    ctx.drawImage(img, 0, 0);
-    const dataUrl = canvas.toDataURL('image/png');
-    return dataUrl.replace(/^data:image\/png;base64,/, '');
-  }
+  // Step 2: Convert to PNG and get dimensions
+  return convertToPng(partialImage);
 }
 
-export const srcToPngBase64 = everywhere('srcToPngBase64', _srcToPngBase64, ['sidebar', 'content']);
+export const toPngBase64 = everywhere('_toPngBase64', _toPngBase64, ['sidebar', 'content']);

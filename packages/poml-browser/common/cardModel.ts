@@ -3,7 +3,7 @@
  * Provides a flexible and structured card system for content management
  */
 
-import { binaryToBase64, arrayBufferToDataURL } from './utils/base64';
+import { binaryToBase64, binaryToDataURL } from './utils/base64';
 
 // POML Component Types based on docs/components.md
 export type POMLComponentType =
@@ -413,7 +413,7 @@ export function getBinaryContentDataUrl(content: BinaryContent): string | null {
   }
 
   if (content.value instanceof ArrayBuffer) {
-    return arrayBufferToDataURL(content.value, content.mimeType || 'application/octet-stream');
+    return binaryToDataURL(content.value, content.mimeType || 'application/octet-stream');
   } else {
     return `data:${content.mimeType || 'application/octet-stream'};base64,${content.value}`;
   }

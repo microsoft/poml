@@ -3,7 +3,7 @@ import {
   base64ToBinary,
   base64ToUint8,
   binaryToBase64,
-  arrayBufferToDataURL,
+  binaryToDataURL,
   serializeBinaryData,
   deserializeBinaryData,
 } from '@common/utils/base64';
@@ -36,9 +36,9 @@ describe('binary/base64 utilities with happy-dom', () => {
     expect(b64).toBe('QUJDRA==');
   });
 
-  it('arrayBufferToDataURL creates correct data URL with mime type', () => {
+  it('binaryToDataURL creates correct data URL with mime type', () => {
     const u8 = toUint8('png?');
-    const url = arrayBufferToDataURL(u8.buffer, 'image/png');
+    const url = binaryToDataURL(u8.buffer, 'image/png');
     expect(url.startsWith('data:image/png;base64,')).toBe(true);
     expect(url).toBe('data:image/png;base64,cG5nPw==');
   });

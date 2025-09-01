@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { RichContent } from 'poml';
-import { arrayBufferToDataURL, base64ToUint8 } from './utils/base64';
+import { binaryToDataURL, base64ToUint8 } from './utils/base64';
 
 export const readFileContent = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -476,7 +476,7 @@ export const createDropZoneListeners = (
 
 // Utility to convert ArrayBuffer to data URL for images
 export const arrayBufferToDataUrl = (buffer: ArrayBuffer, mimeType: string): string => {
-  return arrayBufferToDataURL(buffer, mimeType);
+  return binaryToDataURL(buffer, mimeType);
 };
 
 // Utility to create File from PastedFile

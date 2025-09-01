@@ -33,7 +33,7 @@ export function binaryToBase64(binary: Uint8Array | ArrayBuffer): string {
   return btoa(binaryString);
 }
 
-export function arrayBufferToDataURL(buffer: ArrayBuffer | Uint8Array, mimeType: string): string {
+export function binaryToDataURL(buffer: ArrayBuffer | Uint8Array, mimeType: string): string {
   const base64 = binaryToBase64(buffer);
   return `data:${mimeType};base64,${base64}`;
 }

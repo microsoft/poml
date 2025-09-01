@@ -115,14 +115,23 @@ export interface NotificationOptions {
   autoHide?: boolean;
 }
 
+export interface Image {
+  base64: string; // Base64-encoded image data (without data URL prefix)
+  mimeType: string; // MIME type of the image (e.g., 'image/png', 'image/jpeg')
+  width: number; // Width of the image in pixels
+  height: number; // Height of the image in pixels
+}
+
 // Global registry type that will be extended by users
 export interface GlobalFunctions extends FunctionRegistry {
   // Please put the signatures of global functions here
   getSettings: (refresh?: boolean) => Promise<SettingsBundle>;
   setSettings: (settings: Partial<SettingsBundle>) => Promise<void>;
   displayNotification: (type: NotificationType, message: string, options?: NotificationOptions) => void;
-  toPngBase64: (base64: ArrayBuffer | string, mimeType: string) => Promise<string>;
-  srcToPngBase64: (src: string) => Promise<string>;
+  toPngBase64: (
+    base64: string | { base64: ArrayBuffer | string } | { src: string },
+    options: { mimeType?: string },
+  ) => Promise<Image>;
   htmlToCards: (html: string | Document, options?: { parser?: 'simple' | 'complex' }) => Promise<CardModel | undefined>;
 
   // Internal functions used by everywhere()
