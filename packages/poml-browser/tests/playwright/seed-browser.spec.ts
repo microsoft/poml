@@ -2,22 +2,10 @@ import { test, expect } from '@playwright/test';
 import * as path from 'path';
 import * as fs from 'fs';
 import config from '../../playwright.config';
+import { createArtifactDir } from './extension.spec';
 
 const FIXTURE_ENDPOINT = config.use!.baseURL;
 const testFixturesPath = config.metadata!.testFixturesPath;
-
-// Create unique artifact folder for this test run
-const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-
-function createArtifactDir() {
-  const artifactDir = path.resolve(process.cwd(), 'test-artifacts', timestamp);
-
-  // Ensure artifact directory exists
-  if (!fs.existsSync(artifactDir)) {
-    fs.mkdirSync(artifactDir, { recursive: true });
-  }
-  return artifactDir;
-}
 
 test.describe('generate cards with pdfs', () => {
   // Discover PDF files from test-fixtures directory

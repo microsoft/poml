@@ -1,6 +1,7 @@
 import { test as base, chromium, BrowserContext, Page, Worker, expect } from '@playwright/test';
 
 import * as path from 'path';
+import * as fs from 'fs';
 
 process.env.PW_CHROMIUM_ATTACH_TO_OTHER = '1';
 
@@ -21,6 +22,19 @@ type Fixtures = {
   contentPage: Page;
   rootPage: Page;
 };
+
+// Create unique artifact folder for this test run
+const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+export function createArtifactDir() {
+  const artifactDir = path.resolve(process.cwd(), 'test-artifacts', timestamp);
+
+  // Ensure artifact directory exists
+  if (!fs.existsSync(artifactDir)) {
+    fs.mkdirSync(artifactDir, { recursive: true });
+  }
+  return artifactDir;
+}
 
 export const test = base.extend<Fixtures>({
   // Launch persistent context once for the worker
