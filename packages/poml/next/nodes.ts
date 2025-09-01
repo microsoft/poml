@@ -444,7 +444,18 @@ export interface CstCommentNode extends CstNode {
  * - Specify version: `<!-- @pragma version >=1.0.0 <2.3.0 -->`
  * - Turn tags on/off: `<!-- @pragma components +reference -table -->`
  * - Turn speaker roles on/off: `<!-- @pragma speaker multi -->` or `single`
- * - White space policy: `<!-- @pragma whitespace pre -->` or `trim` or `collapse`
+ * - White space policy: `<!-- @pragma whitespace pre -->` or `trim`, `collapse` or `remove`
+ *
+ * Notes on white space policy:
+ * - `pre`: preserve all whitespace as-is
+ * - `trim`: trim leading/trailing whitespace in each element
+ * - `collapse`: trim + collapse consecutive whitespace into a single space
+ * - `remove`: collapse remove all whitespaces between two nested elements
+ *
+ * Each element type will have its own default whitespace policy.
+ * For example, `<text>` defaults to `pre`, while `<paragraph>` defaults to `collapse`.
+ * However, when a pragma is set, it overrides the default for subsequent elements.
+ * It will affect the AST constructing stages, and also affecting the props sent to components.
  */
 export interface PragmaNode {
   kind: 'PRAGMA';

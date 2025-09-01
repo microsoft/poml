@@ -5,10 +5,10 @@ import {
   CommentClose,
   TemplateOpen,
   TemplateClose,
-  TagOpen,
-  TagClose,
-  TagClosingOpen,
-  TagSelfClose,
+  OpenBracket,
+  ClosingOpenBracket,
+  SelfCloseBracket,
+  CloseBracket,
   Equals,
   DoubleQuote,
   SingleQuote,
@@ -16,6 +16,7 @@ import {
   Identifier,
   Whitespace,
   Arbitrary,
+  BackslashEscape,
 } from 'poml/next/lexer';
 
 // Helper function to extract token images
@@ -158,11 +159,9 @@ describe('Edge Cases', () => {
       '"',
       'with',
       ' ',
-      '\\',
-      '"',
+      '\\"',
       'escaped',
-      '\\',
-      '"',
+      '\\"',
       ' ',
       'quotes',
       '"',
@@ -250,9 +249,9 @@ describe('Edge Cases', () => {
 
 describe('Token Types', () => {
   test('should identify correct token types for basic elements', () => {
-    expect(tokenTypes('<task>')).toEqual([TagOpen, Identifier, TagClose]);
-    expect(tokenTypes('</task>')).toEqual([TagClosingOpen, Identifier, TagClose]);
-    expect(tokenTypes('<meta />')).toEqual([TagOpen, Identifier, Whitespace, TagSelfClose]);
+    expect(tokenTypes('<task>')).toEqual([OpenBracket, Identifier, CloseBracket]);
+    expect(tokenTypes('</task>')).toEqual([ClosingOpenBracket, Identifier, CloseBracket]);
+    expect(tokenTypes('<meta />')).toEqual([OpenBracket, Identifier, Whitespace, SelfCloseBracket]);
   });
 
   test('should identify quotes and backslashes', () => {
@@ -275,9 +274,8 @@ describe('Token Types', () => {
 
   test('should identify attributes', () => {
     expect(tokenTypes('<markup.paragraph id="intro" data-value="123\\n"456\'>')).toEqual([
-      TagOpen,
+      OpenBracket,
       Identifier,
-      Arbitrary,
       Whitespace,
       Identifier,
       Equals,
@@ -289,12 +287,11 @@ describe('Token Types', () => {
       Equals,
       DoubleQuote,
       Arbitrary,
-      Backslash,
-      Identifier,
+      BackslashEscape,
       DoubleQuote,
       Arbitrary,
       SingleQuote,
-      TagClose,
+      CloseBracket,
     ]);
   });
 });
@@ -324,7 +321,7 @@ line2 <tag>
 line3`;
     const result = tokenize(input);
 
-    const tagToken = result.tokens.find((t) => t.tokenType === TagOpen);
+    const tagToken = result.tokens.find((t) => t.tokenType === OpenBracket);
     expect(tagToken).toBeDefined();
     expect(tagToken!.startLine).toBe(2);
     expect(tagToken!.startColumn).toBe(7); // After "line2 "
@@ -519,8 +516,8 @@ describe('Unicode and Special Characters', () => {
 
   test('should handle emoji and symbols', () => {
     expect(tokenImages('Hello 👋 World 🌍')).toEqual(['Hello', ' ', '👋', ' ', 'World', ' ', '🌍']);
-    expect(tokenImages('Math: ∑∞π≠∅')).toEqual(['Math', ':', ' ', '∑∞π≠∅']);
-    expect(tokenImages('Arrows: ←→↑↓')).toEqual(['Arrows', ':', ' ', '←→↑↓']);
+    expect(tokenImages('Math: ∑∞π≠∅')).toEqual(['Math:', ' ', '∑∞π≠∅']);
+    expect(tokenImages('Arrows: ←→↑↓')).toEqual(['Arrows:', ' ', '←→↑↓']);
   });
 
   test('should handle unicode', () => {
@@ -601,11 +598,9 @@ describe('Malformed Patterns', () => {
     expect(tokenImages('escaped \\"quote\\" in text')).toEqual([
       'escaped',
       ' ',
-      '\\',
-      '"',
+      '\\"',
       'quote',
-      '\\',
-      '"',
+      '\\"',
       ' ',
       'in',
       ' ',
@@ -631,7 +626,7 @@ describe('Malformed Patterns', () => {
     expect(tokenImages('<<>>')).toEqual(['<', '<', '>', '>']);
     expect(tokenImages('"""')).toEqual(['"', '"', '"']);
     expect(tokenImages("'''")).toEqual(["'", "'", "'"]);
-    expect(tokenImages('\\\\\\')).toEqual(['\\', '\\', '\\']);
+    expect(tokenImages('\\\\\\')).toEqual(['\\\\', '\\']);
     expect(tokenImages('===')).toEqual(['=', '=', '=']);
   });
 
@@ -713,7 +708,7 @@ describe('Malformed Patterns', () => {
     expect(tokenImages('path/to/file')).toEqual(['path', '/to/file']);
     expect(tokenImages('a/b/c')).toEqual(['a', '/b/c']);
     expect(tokenImages('text / more')).toEqual(['text', ' ', '/', ' ', 'more']);
-    expect(tokenImages('http://example.com')).toEqual(['http', '://example.com']);
+    expect(tokenImages('http://example.com')).toEqual(['http:', '//example.com']);
     expect(tokenImages('5/3=1.67')).toEqual(['5/3', '=', '1.67']);
     // These should NOT match as incomplete delimiters
     expect(tokenImages('/<tag>')).toEqual(['/', '<', 'tag', '>']);
