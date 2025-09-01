@@ -1,4 +1,4 @@
-import { notifyError, notifyDebug, notifyWarning } from '@common/notification';
+import { notifyError, notifyDebug, notifyWarning, notifyDebugVerbose } from '@common/notification';
 import {
   CardModel,
   CardContent,
@@ -30,21 +30,24 @@ export interface HtmlToCardsOptions {
 /**
  * Main function to convert HTML to CardModel
  */
-async function _htmlToCards(html: string | Document, options: HtmlToCardsOptions = {}): Promise<CardModel | undefined> {
-  const { parser = 'complex' } = options;
+async function _htmlToCards(
+  html: string | Document | null,
+  options?: HtmlToCardsOptions,
+): Promise<CardModel | undefined> {
+  const { parser = 'complex' } = options || {};
 
   let doc: Document;
   let url: string | undefined;
-  let source: 'clipboard' | 'webpage';
 
   // Convert string to Document if needed
   if (typeof html === 'string') {
     doc = htmlStringToDocument(html);
-    source = 'clipboard';
+  } else if (html === null) {
+    doc = document;
+    url = document.location?.href;
   } else {
     doc = html;
     url = doc.location?.href;
-    source = 'webpage';
   }
 
   // Clone document for Readability processing
@@ -54,9 +57,11 @@ async function _htmlToCards(html: string | Document, options: HtmlToCardsOptions
   const reader = new Readability(clonedDoc, {
     keepClasses: false,
     disableJSONLD: false,
+    charThreshold: 16,
   });
 
   const article = reader.parse();
+  notifyDebugVerbose('Readability.js output:', article);
 
   let contents: CardContent[];
   let title: string | undefined;
@@ -123,7 +128,7 @@ async function _htmlToCards(html: string | Document, options: HtmlToCardsOptions
   // Create the CardModel
   return {
     content: finalContent,
-    source: source as 'manual' | 'clipboard' | 'webpage',
+    source: 'webpage',
     url,
     excerpt,
     timestamp: new Date(),

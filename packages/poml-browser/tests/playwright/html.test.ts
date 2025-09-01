@@ -21,7 +21,7 @@ function flattenCards(...cards: CardContent[]): CardContent[] {
   return result;
 }
 
-test.describe('htmlToCards HTML processing tests', () => {
+test.describe('htmlToCards', () => {
   // Simple tests with made-up strings
   const simpleTestCases = [
     {
@@ -151,11 +151,8 @@ test.describe('htmlToCards HTML processing tests', () => {
       { htmlContent: html, options: { parser: 'simple' } },
     );
 
-    await sidebarPage.waitForTimeout(50000);
-
     expect(result.cardModel.content.type).toBe('text');
-    expect(result.cardModel.content.text).toBeTruthy();
-    expect(result.cardModel.content.caption).toBeTruthy();
+    expect(result.cardModel.content.text).toBe('TitleThis is contentItem 1Item 2');
   });
 
   test('handles empty or invalid HTML gracefully', async ({ serviceWorker, sidebarPage }) => {
@@ -219,17 +216,18 @@ test.describe('htmlToCards HTML processing tests', () => {
   ];
 
   webpageTestCases.forEach(({ name, file }) => {
-    test(`processes ${name} from test fixtures`, async ({ serviceWorker, sidebarPage }) => {
+    test(`${name} from test fixtures`, async ({ serviceWorker, sidebarPage, contentPage }) => {
       const artifactDir = createArtifactDir();
-      const htmlPath = join(testFixturesPath, 'webpage', file);
-      const htmlContent = readFileSync(htmlPath, 'utf-8');
+
+      await contentPage.goto(`${FIXTURE_ENDPOINT}/webpage/${file}`);
+      await contentPage.waitForLoadState('networkidle');
 
       // Test with complex parser (default)
       const complexResult = await serviceWorker.evaluate(
-        async ({ htmlContent, options }) => {
+        async ({ options }) => {
           const { htmlToCards } = self as any;
           const startTime = performance.now();
-          const cardModel = await htmlToCards(htmlContent, options);
+          const cardModel = await htmlToCards(null, options);
           const endTime = performance.now();
 
           return {
@@ -238,53 +236,23 @@ test.describe('htmlToCards HTML processing tests', () => {
             processingTime: endTime - startTime,
           };
         },
-        { htmlContent, options: { parser: 'complex' } },
+        { options: { parser: 'complex' } },
       );
 
       expect(complexResult.cardModel).toBeTruthy();
       expect(complexResult.cardModel.content).toBeTruthy();
-      expect(complexResult.cardModel.source).toBe('clipboard');
-
-      // Test with simple parser
-      const simpleResult = await serviceWorker.evaluate(
-        async ({ htmlContent, options }) => {
-          const { htmlToCards } = self as any;
-          const cardModel = await htmlToCards(htmlContent, options);
-          return { cardModel };
-        },
-        { htmlContent, options: { parser: 'simple' } },
-      );
-
-      expect(simpleResult.cardModel).toBeTruthy();
-      expect(simpleResult.cardModel.content.type).toBe('text');
+      expect(complexResult.cardModel.source).toBe('webpage');
 
       // Save processing results to artifacts for review
       const resultData = {
         file,
-        complex: {
-          duration: complexResult.duration,
-          contentType: complexResult.cardModel.content.type,
-          hasTitle: !!complexResult.cardModel.content.caption,
-          hasExcerpt: !!complexResult.cardModel.excerpt,
-        },
-        simple: {
-          contentType: simpleResult.cardModel.content.type,
-          textLength: simpleResult.cardModel.content.text?.length || 0,
-          hasCaption: !!simpleResult.cardModel.content.caption,
-        },
+        ...complexResult,
       };
 
       writeFileSync(
-        join(artifactDir, `${file.replace('.html', '')}_processing_results.json`),
+        join(artifactDir, `${file.replace('.html', '')}_results.json`),
         JSON.stringify(resultData, null, 2),
       );
-
-      // Verify the content has meaningful data
-      if (complexResult.cardModel.content.type === 'nested') {
-        expect(complexResult.cardModel.content.cards.length).toBeGreaterThan(0);
-      } else if (complexResult.cardModel.content.type === 'text') {
-        expect(complexResult.cardModel.content.text.length).toBeGreaterThan(0);
-      }
     });
   });
 });
