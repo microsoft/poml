@@ -36,6 +36,30 @@ export function createArtifactDir() {
   return artifactDir;
 }
 
+export async function waitForStableDom(
+  page: Page,
+  timeout: number = 10000,
+  checkInterval: number = 1000,
+): Promise<void> {
+  // https://stackoverflow.com/questions/71937343/playwright-how-to-wait-until-there-is-no-animation-on-the-page
+  let markupPrevious = '';
+  const timerStart = new Date();
+  while (true) {
+    const markupCurrent = await page.evaluate(() => document.body.innerHTML);
+    if (markupCurrent === markupPrevious) {
+      break;
+    } else {
+      const elapsed = new Date().getTime() - timerStart.getTime();
+      if (elapsed >= timeout) {
+        throw new Error(`Timeout waiting for stable DOM: ${timeout}ms`);
+      }
+      markupPrevious = markupCurrent;
+    }
+    // Sleep before next check
+    await new Promise((resolve) => setTimeout(resolve, checkInterval));
+  }
+}
+
 export const test = base.extend<Fixtures>({
   // Launch persistent context once for the worker
   extContext: async ({}, use) => {

@@ -13,8 +13,10 @@ let cachedSettings: SettingsBundle | null = null;
 async function _getSettingsImpl(): Promise<SettingsBundle> {
   const defaultSettings: SettingsBundle = {
     theme: 'auto',
-    uiNotificationLevel: 'warning',
-    consoleNotificationLevel: 'warning',
+    // @ts-ignore
+    uiNotificationLevel: __PROD_BUILD__ ? 'warning' : 'info',
+    // @ts-ignore
+    consoleNotificationLevel: __PROD_BUILD__ ? 'warning' : 'debug++',
   };
 
   try {

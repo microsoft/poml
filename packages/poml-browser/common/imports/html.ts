@@ -1,4 +1,10 @@
-import { notifyError, notifyDebug, notifyWarning, notifyDebugVerbose } from '@common/notification';
+import {
+  notifyError,
+  notifyDebug,
+  notifyWarning,
+  notifyDebugVerbose,
+  notifyDebugMoreVerbose,
+} from '@common/notification';
 import {
   CardModel,
   CardContent,
@@ -53,12 +59,15 @@ async function _htmlToCards(
   // Clone document for Readability processing
   const clonedDoc = doc.cloneNode(true) as Document;
 
+  notifyDebugVerbose('Original document for HTML processing:', clonedDoc);
+
   // Use Readability to get rid of chore elements
-  const reader = new Readability(clonedDoc, {
-    keepClasses: false,
-    disableJSONLD: false,
-    charThreshold: 16,
-  });
+  const reader = new Readability(clonedDoc);
+  // const reader = new Readability(clonedDoc, {
+  //   keepClasses: false,
+  //   disableJSONLD: false,
+  //   charThreshold: 16,
+  // });
 
   const article = reader.parse();
   notifyDebugVerbose('Readability.js output:', article);
@@ -68,7 +77,7 @@ async function _htmlToCards(
   let excerpt: string | undefined;
 
   if (article) {
-    notifyDebug('Document suitable for Readability.js. Extraction is successful.', article);
+    notifyDebug('Document suitable for Readability.js. Extraction is successful.');
     title = article.title || undefined;
     excerpt = article.excerpt || undefined;
 
@@ -88,12 +97,14 @@ async function _htmlToCards(
         return undefined;
       }
       const cleanDoc = htmlStringToDocument(article.content);
+      notifyDebugVerbose('Cleaned document for custom HTML processing:', cleanDoc);
       const processor = new DOMToCardsProcessor();
       contents = await processor.process(cleanDoc.body.childNodes);
     }
   } else {
     notifyDebug('Document not suitable for Readability.js. Falling back to custom parser.');
     const cleanDoc = htmlStringToDocument(doc.documentElement.outerHTML);
+    notifyDebugVerbose('Cleaned document for custom HTML processing:', cleanDoc);
     const processor = new DOMToCardsProcessor();
     contents = await processor.process(cleanDoc.body.childNodes);
   }
@@ -244,22 +255,21 @@ class DOMToCardsProcessor {
         const el = node as Element;
         const tag = el.tagName.toLowerCase();
 
-        // Keep these meaningful structural elements intact
-        if (this.meaningfulElements.includes(tag) || getHeaderLevel(tag) > 0) {
+        if (this.meaningfulElements.includes(tag)) {
+          // Keep these meaningful structural elements intact
           result.push(node);
-          return;
+        } else if (tag === 'script' || tag === 'style') {
+          // Skip script and style elements entirely
+          // Do nothing
+        } else {
+          for (const child of el.childNodes) {
+            // For all other container elements (div, span, section, article, main, aside,
+            // nav, header, footer, etc.), flatten their children
+            processNode(child, tag === 'pre' || tag === 'code' ? false : normalize);
+          }
         }
-
-        // Skip script and style elements entirely
-        if (tag === 'script' || tag === 'style') {
-          return;
-        }
-
-        // For all other container elements (div, span, section, article, main, aside,
-        // nav, header, footer, etc.), flatten their children
-        for (const child of el.childNodes) {
-          processNode(child, tag === 'pre' || tag === 'code' ? false : normalize);
-        }
+      } else {
+        notifyDebugVerbose('Discarding non-element, non-text node:', node);
       }
       // Discard other node types (comments, etc.)
     };
@@ -305,6 +315,7 @@ class DOMToCardsProcessor {
     if (items.length === 0) {
       return null;
     }
+    notifyDebugVerbose('Processed list element to list card:', { tag, items });
     return { type: 'list', items, ordered: tag === 'ol' };
   }
 
@@ -317,6 +328,7 @@ class DOMToCardsProcessor {
         alt: img.alt || undefined,
         caption: img.title || undefined,
       };
+      notifyDebugVerbose('Processed image element to image card:', card);
       return card;
     } catch (err) {
       notifyWarning('Failed to process image:', err);
@@ -326,6 +338,7 @@ class DOMToCardsProcessor {
 
   private async processRange(nodes: ArrayLikeNodes): Promise<void> {
     const flattened = this.flattenNodes(nodes);
+    notifyDebugMoreVerbose('Flattened nodes for processing:', flattened);
     for (const node of flattened) {
       if (isTextNode(node)) {
         // TEXT
@@ -345,6 +358,7 @@ class DOMToCardsProcessor {
         } else if (tag === 'ul' || tag === 'ol') {
           // LISTS
           this.flushPending();
+          // Extract list items, text only
           const listCard = this.listToCard(el);
           if (listCard) {
             this.cards.push(listCard);
@@ -357,17 +371,17 @@ class DOMToCardsProcessor {
             this.cards.push(imgCard);
           }
         } else if (['table', 'thead', 'tbody', 'tr', 'th', 'td'].includes(tag)) {
-          // TABLES - flatten to text
+          // TABLES - flatten to text contents only
           // TODO: Future work - table cards
           this.pushText(extractTextContent(el, true));
         } else if (tag === 'code' || tag === 'pre' || tag === 'blockquote') {
-          // CODE - flatten to text
+          // CODE - flatten to text contents only
           this.flushPending();
           this.cards.push({ type: 'text', text: extractTextContent(el, false), container: 'Code' });
         } else if (tag === 'p') {
           // Independent paragraph - flush pending text first
           this.flushPending();
-          this.pushText(extractTextContent(el, true));
+          this.processRange(el.childNodes);
           this.flushPending();
         } else if (tag === 'br') {
           // LINE BREAK - treat as newline in pending text

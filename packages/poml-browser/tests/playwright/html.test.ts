@@ -1,4 +1,4 @@
-import { createArtifactDir, test } from './extension.spec';
+import { createArtifactDir, test, waitForStableDom } from './extension.spec';
 import { expect } from '@playwright/test';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -221,6 +221,7 @@ test.describe('htmlToCards', () => {
 
       await contentPage.goto(`${FIXTURE_ENDPOINT}/webpage/${file}`);
       await contentPage.waitForLoadState('networkidle');
+      await waitForStableDom(contentPage);
 
       // Test with complex parser (default)
       const complexResult = await serviceWorker.evaluate(
@@ -238,6 +239,8 @@ test.describe('htmlToCards', () => {
         },
         { options: { parser: 'complex' } },
       );
+
+      await contentPage.pause();
 
       expect(complexResult.cardModel).toBeTruthy();
       expect(complexResult.cardModel.content).toBeTruthy();
