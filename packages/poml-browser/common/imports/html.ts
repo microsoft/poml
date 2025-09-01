@@ -12,6 +12,7 @@ import {
 import { Readability } from '@mozilla/readability';
 import { srcToPngBase64 } from './image';
 import { eliminateHeaderCards } from '@common/utils/card';
+import { everywhere } from '@common/rpc';
 
 /**
  * Options for the htmlToCards function
@@ -29,10 +30,7 @@ export interface HtmlToCardsOptions {
 /**
  * Main function to convert HTML to CardModel
  */
-export async function htmlToCards(
-  html: string | Document,
-  options: HtmlToCardsOptions = {},
-): Promise<CardModel | undefined> {
+async function _htmlToCards(html: string | Document, options: HtmlToCardsOptions = {}): Promise<CardModel | undefined> {
   const { parser = 'complex' } = options;
 
   let doc: Document;
@@ -131,6 +129,8 @@ export async function htmlToCards(
     timestamp: new Date(),
   };
 }
+
+export const htmlToCards = everywhere('htmlToCards', _htmlToCards, ['content']);
 
 type ArrayLikeNodes = ArrayLike<ChildNode> | ReadonlyArray<ChildNode>;
 
