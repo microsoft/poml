@@ -80,6 +80,8 @@ export interface HeaderCardContent {
 
 export type CardContent = TextCardContent | ListCardContent | ImageCardContent | TableCardContent | NestedCardContent;
 
+export type CardContentWithHeader = CardContent | HeaderCardContent;
+
 interface ColumnDefinition {
   field: string;
   header: string;

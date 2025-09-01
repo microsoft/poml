@@ -7,6 +7,7 @@ import {
   NestedCardContent,
   ListCardContent,
   HeaderCardContent,
+  CardContentWithHeader,
 } from '@common/types';
 import { Readability } from '@mozilla/readability';
 import { srcToPngBase64 } from './image';
@@ -214,7 +215,7 @@ class DOMToCardsProcessor {
     // Line breaks
     'br',
   ];
-  private cards: (CardContent | HeaderCardContent)[] = [];
+  private cards: CardContentWithHeader[] = [];
   private pendingText: string[] = [];
 
   constructor() {}
@@ -334,7 +335,6 @@ class DOMToCardsProcessor {
           this.flushPending();
 
           const headerText = extractTextContent(el, true);
-          // Since the tree is flattened, just add header as text
           const textCard: HeaderCardContent = { type: 'header', text: headerText, level: headerLevel };
           this.cards.push(textCard);
         } else if (tag === 'ul' || tag === 'ol') {
