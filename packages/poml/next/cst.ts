@@ -59,43 +59,43 @@ export class ExtendedPomlParser extends CstParser {
 
   private isNextPragma = () => {
     if (this.LA(1).tokenType !== CommentOpen) {
-return false;
-}
+      return false;
+    }
     let k = 2;
     while (this.LA(k).tokenType === Whitespace) {
-k++;
-}
+      k++;
+    }
     return this.LA(k).tokenType === PragmaKeyword;
   };
 
   private isNextLiteralOpenTag = () => {
     if (this.LA(1).tokenType !== OpenBracket) {
-return false;
-}
+      return false;
+    }
     let k = 2;
     while (this.LA(k).tokenType === Whitespace) {
-k++;
-}
+      k++;
+    }
     const tName = this.LA(k);
     if (tName.tokenType !== Identifier) {
-return false;
-}
+      return false;
+    }
     const name = (tName.image || '').toLowerCase();
     return name === 'text' || name === 'template';
   };
 
   private isAtLiteralClose = () => {
     if (this.LA(1).tokenType !== ClosingOpenBracket) {
-return false;
-}
+      return false;
+    }
     let k = 2;
     while (this.LA(k).tokenType === Whitespace) {
-k++;
-}
+      k++;
+    }
     const t = this.LA(k);
     if (t.tokenType !== Identifier) {
-return false;
-}
+      return false;
+    }
     const name = (t.image || '').toLowerCase();
     return name === 'text' || name === 'template';
   };
