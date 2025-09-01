@@ -21,7 +21,7 @@ export const BackslashEscape = createToken({
 });
 export const CharacterEntity = createToken({
   name: 'CharacterEntity',
-  pattern: /&#x[0-9A-Fa-f]+;|&#[0-9]+;|&[a-zA-Z][a-zA-Z0-9]+;/,
+  pattern: /&#x[0-9A-Fa-f]+;|&#[0-9]+;|&[a-zA-Z][a-zA-Z0-9]*;|&;/,
 });
 // Backslash not followed by a valid escape sequence
 export const Backslash = createToken({ name: 'Backslash', pattern: /\\/ });
@@ -65,7 +65,7 @@ export const Whitespace = createToken({
  * - Incomplete tag delimiters such as / (/< is an exception, because < is a start of tag)
  * - Incomplete comment delimiters such as !-- or -- are OK
  * - Incorrect @pragma directive such as @pragm or @pragmaX will be matched
- * - Invalid character entities such as &abc (without semicolon) or & (by itself) or &;, &z; (invalid)
+ * - Invalid character entities such as &abc (without semicolon) or & (by itself)
  * - All other Unicode characters including emojis, CJK, etc.
  */
 export const Arbitrary = createToken({
@@ -73,7 +73,7 @@ export const Arbitrary = createToken({
   // Match anything except: <, >, quotes, =, backslash, whitespace, control chars
   // Allow single braces and slashes with lookahead constraints
   pattern:
-    /(?:[^<>"'{}=\\& \t\r\n\v\f/-]|{(?!{)|}(?!})|\/(?!>)|\-(?!\-+>)|&(?!#\d+;|x[0-9A-Fa-f]+;|[a-zA-Z][a-zA-Z0-9]+;))+/,
+    /(?:[^<>"'{}=\\& \t\r\n\v\f/-]|{(?!{)|}(?!})|\/(?!>)|\-(?!\-+>)|&(?!#\d+;|x[0-9A-Fa-f]+;|[a-zA-Z][a-zA-Z0-9]*;|;))+/,
   line_breaks: false,
 });
 

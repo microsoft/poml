@@ -17,6 +17,7 @@ import {
   Whitespace,
   Arbitrary,
   BackslashEscape,
+  CharacterEntity,
 } from 'poml/next/lexer';
 
 // Helper function to extract token images
@@ -293,6 +294,151 @@ describe('Token Types', () => {
       SingleQuote,
       CloseBracket,
     ]);
+  });
+
+  test('recognizes simple escapes', () => {
+    expect(tokenTypes('"a\\nb"')).toEqual([DoubleQuote, Identifier, BackslashEscape, Identifier, DoubleQuote]);
+
+    expect(tokenTypes("'a\\tb'")).toEqual([SingleQuote, Identifier, BackslashEscape, Identifier, SingleQuote]);
+
+    // Escaped quotes and backslash
+    expect(tokenTypes('"\\\" \\\\"')).toEqual([DoubleQuote, BackslashEscape, Whitespace, BackslashEscape, DoubleQuote]);
+  });
+
+  test('recognizes unicode and hex escapes', () => {
+    expect(tokenTypes('"A: \\x41"')).toEqual([
+      DoubleQuote,
+      Identifier, // A:
+      Whitespace,
+      BackslashEscape, // \x41
+      DoubleQuote,
+    ]);
+
+    expect(tokenTypes('"U: \\u0041"')).toEqual([
+      DoubleQuote,
+      Identifier, // U:
+      Whitespace,
+      BackslashEscape, // \u0041
+      DoubleQuote,
+    ]);
+
+    expect(tokenTypes('"emoji: \\U0001F600"')).toEqual([
+      DoubleQuote,
+      Identifier, // emoji:
+      Whitespace,
+      BackslashEscape, // \U0001F600
+      DoubleQuote,
+    ]);
+  });
+
+  test('recognizes escaped braces for templates', () => {
+    expect(tokenImages('pre \\{{ mid \\}} post')).toEqual(['pre', ' ', '\\{{', ' ', 'mid', ' ', '\\}}', ' ', 'post']);
+    expect(tokenTypes('pre \\{{ mid \\}} post')).toEqual([
+      Identifier,
+      Whitespace,
+      BackslashEscape,
+      Whitespace,
+      Identifier,
+      Whitespace,
+      BackslashEscape,
+      Whitespace,
+      Identifier,
+    ]);
+  });
+
+  test('invalid escapes fall back to Backslash + text', () => {
+    expect(tokenImages('"\\q"')).toEqual(['"', '\\', 'q', '"']);
+    expect(tokenTypes('"\\q"')).toEqual([DoubleQuote, Backslash, Identifier, DoubleQuote]);
+
+    // Incomplete hex/unicode
+    expect(tokenImages('"\\x4"')).toEqual(['"', '\\', 'x4', '"']);
+    expect(tokenTypes('"\\x4"')).toEqual([DoubleQuote, Backslash, Identifier, DoubleQuote]);
+
+    expect(tokenImages('"\\u123"')).toEqual(['"', '\\', 'u123', '"']);
+    expect(tokenTypes('"\\u123"')).toEqual([DoubleQuote, Backslash, Identifier, DoubleQuote]);
+  });
+
+  test('recognizes decimal, hex, and named entities', () => {
+    expect(tokenImages('Fish &amp; Chips')).toEqual(['Fish', ' ', '&amp;', ' ', 'Chips']);
+    expect(tokenTypes('Fish &amp; Chips')).toEqual([Identifier, Whitespace, CharacterEntity, Whitespace, Identifier]);
+
+    expect(tokenImages('Hex: &#x41; Dec: &#65;')).toEqual(['Hex:', ' ', '&#x41;', ' ', 'Dec:', ' ', '&#65;']);
+    const types = tokenTypes('Hex: &#x41; Dec: &#65;');
+    expect(types).toContain(CharacterEntity);
+  });
+
+  test('does not match invalid or incomplete entities', () => {
+    // Missing semicolon or bare ampersand should not be CharacterEntity
+    expect(tokenImages('A & B')).toEqual(['A', ' ', '&', ' ', 'B']);
+    const types = tokenTypes('A & B');
+    expect(types).not.toContain(CharacterEntity);
+
+    expect(tokenImages('Bad: &abc more')).toEqual(['Bad:', ' ', '&abc', ' ', 'more']);
+    expect(tokenTypes('Bad: &abc more')).not.toContain(CharacterEntity);
+  });
+
+  test('allows dot, colon, and hyphen', () => {
+    expect(tokenImages('<xml:tag.name data-value="x">')).toEqual([
+      '<',
+      'xml:tag.name',
+      ' ',
+      'data-value',
+      '=',
+      '"',
+      'x',
+      '"',
+      '>',
+    ]);
+    const types = tokenTypes('<xml:tag.name data-value="x">');
+    expect(types[1]).toBe(Identifier);
+    expect(types[3]).toBe(Identifier);
+  });
+
+  test('stops before comment close sequence', () => {
+    // Identifier should not consume the leading '-' that starts a comment close
+    expect(tokenImages('name--->')).toEqual(['name', '--->']);
+    expect(tokenTypes('name--->')).toEqual([Identifier, CommentClose]);
+  });
+
+  test('ASCII whitespace groups into Whitespace token', () => {
+    const ws = ' \t\n\r\v\f  ';
+    expect(tokenTypes(ws)).toEqual([Whitespace]);
+    expect(tokenImages(ws)).toEqual([ws]);
+  });
+
+  test('Unicode whitespace is not Whitespace', () => {
+    const nbsp = '\u00A0';
+    const emsp = '\u2003';
+    const ideographic = '\u3000';
+
+    // Single unicode spaces should be Arbitrary tokens
+    expect(tokenTypes(nbsp)).toEqual([Arbitrary]);
+    expect(tokenImages(nbsp)).toEqual(['\u00A0']);
+
+    expect(tokenTypes(emsp)).toEqual([Arbitrary]);
+    expect(tokenImages(emsp)).toEqual(['\u2003']);
+
+    expect(tokenTypes(ideographic)).toEqual([Arbitrary]);
+    expect(tokenImages(ideographic)).toEqual(['\u3000']);
+
+    // Mixed ASCII + Unicode whitespace keeps boundaries
+    expect(tokenImages('a ' + '\u2003' + ' b')).toEqual(['a', ' ', '\u2003', ' ', 'b']);
+    expect(tokenTypes('a ' + '\u2003' + ' b')).toEqual([Identifier, Whitespace, Arbitrary, Whitespace, Identifier]);
+  });
+
+  test('single braces and invalid ampersands are Arbitrary', () => {
+    expect(tokenTypes('{')).toEqual([Arbitrary]);
+    expect(tokenTypes('}')).toEqual([Arbitrary]);
+    expect(tokenTypes('&')).toEqual([Arbitrary]);
+    expect(tokenImages('&;')).toEqual(['&;']);
+    expect(tokenTypes('&;')).toEqual([CharacterEntity]);
+    expect(tokenImages('&z;')).toEqual(['&z;']); // still a CharacterEntity-like name by pattern
+    expect(tokenTypes('&z;')).toEqual([CharacterEntity]);
+  });
+
+  test('slash not followed by > stays in Arbitrary', () => {
+    expect(tokenImages('a/b')).toEqual(['a', '/b']);
+    expect(tokenTypes('a/b')).toEqual([Identifier, Arbitrary]);
   });
 });
 
