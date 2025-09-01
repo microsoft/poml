@@ -18,6 +18,7 @@ import {
   Arbitrary,
   BackslashEscape,
   CharacterEntity,
+  PragmaKeyword,
 } from 'poml/next/lexer';
 
 // Helper function to extract token images
@@ -245,6 +246,160 @@ describe('Edge Cases', () => {
         expect(result.tokens.length).toBeGreaterThan(0);
       }
     });
+  });
+
+  // Added by claude
+  test('should handle comment-like sequences in different contexts', () => {
+    // The pattern <!--(-(?!-+>))* could potentially misparse these
+    expect(tokenImages('a<!--b')).toEqual(['a', '<!--', 'b']);
+    expect(tokenImages('<!--->text')).toEqual(['<!---', '>', 'text']); // Single dash before >
+    expect(tokenImages('<!---text')).toEqual(['<!---', 'text']); // Triple dash without close
+    expect(tokenImages('text<!----text')).toEqual(['text', '<!----', 'text']); // Four dashes
+    expect(tokenImages('<!--a-b-c-->')).toEqual(['<!--', 'a-b-c', '-->']); // Dashes in content
+
+    // Edge case: comment opener followed immediately by closer
+    expect(tokenImages('<!---->')).toEqual(['<!--', '-->']);
+    expect(tokenImages('<!------>')).toEqual(['<!--', '---->']); // Four dashes then close
+  });
+
+  test('should handle backslash escapes at token boundaries correctly', () => {
+    // BackslashEscape pattern could conflict with regular Backslash
+    expect(tokenImages('\\n')).toEqual(['\\n']); // Valid escape
+    expect(tokenTypes('\\n')).toEqual([BackslashEscape]);
+
+    expect(tokenImages('\\q')).toEqual(['\\', 'q']); // Invalid escape
+    expect(tokenTypes('\\q')).toEqual([Backslash, Identifier]);
+
+    // Hex escapes at boundaries
+    expect(tokenImages('\\x4')).toEqual(['\\', 'x4']); // Incomplete hex (needs 2 digits)
+    expect(tokenImages('\\x4G')).toEqual(['\\', 'x4G']); // Invalid hex char
+    expect(tokenImages('\\xGG')).toEqual(['\\', 'xGG']); // No valid hex digits
+
+    // Unicode escapes with wrong digit count
+    expect(tokenImages('\\u123')).toEqual(['\\', 'u123']); // Too few digits (needs 4)
+    expect(tokenImages('\\u12345')).toEqual(['\\u1234', '5']); // Too many for \u
+    expect(tokenImages('\\U1234567')).toEqual(['\\', 'U1234567']); // Too few for \U (needs 8)
+    expect(tokenImages('\\U123456789')).toEqual(['\\U12345678', '9']); // Too many for \U
+
+    // Template brace escapes
+    expect(tokenImages('\\{{')).toEqual(['\\{{']); // Valid escape
+    expect(tokenImages('\\}}')).toEqual(['\\}}']); // Valid escape
+    expect(tokenImages('\\{')).toEqual(['\\', '{']); // Invalid - single brace
+    expect(tokenImages('\\}')).toEqual(['\\', '}']); // Invalid - single brace
+  });
+
+  test('should handle Arbitrary token lookahead constraints correctly', () => {
+    // The Arbitrary pattern has complex lookahead constraints for braces and slashes
+
+    // Single braces should be part of Arbitrary when not followed by same brace
+    expect(tokenImages('{a')).toEqual(['{a']);
+    expect(tokenTypes('{a')).toEqual([Arbitrary]);
+
+    expect(tokenImages('}b')).toEqual(['}b']);
+    expect(tokenTypes('}b')).toEqual([Arbitrary]);
+
+    // But double braces should be template markers
+    expect(tokenImages('{{a')).toEqual(['{{', 'a']);
+    expect(tokenTypes('{{a')).toEqual([TemplateOpen, Identifier]);
+
+    // Mixed scenarios
+    expect(tokenImages('a{b}c')).toEqual(['a', '{b}c']);
+    expect(tokenTypes('a{b}c')).toEqual([Identifier, Arbitrary]);
+
+    // Slash constraints
+    expect(tokenImages('a/b')).toEqual(['a', '/b']);
+    expect(tokenTypes('a/b')).toEqual([Identifier, Arbitrary]);
+
+    expect(tokenImages('a/>b')).toEqual(['a', '/>', 'b']);
+    expect(tokenTypes('a/>b')).toEqual([Identifier, SelfCloseBracket, Identifier]);
+
+    // Dash constraints (should not consume dashes that could start comment close)
+    expect(tokenImages('text--')).toEqual(['text--']);
+    expect(tokenImages('text---')).toEqual(['text---']);
+    expect(tokenImages('text-->')).toEqual(['text', '-->']);
+    expect(tokenImages('text--->')).toEqual(['text', '--->']);
+  });
+
+  test('should handle all character entity edge cases', () => {
+    // Valid entities
+    expect(tokenImages('&amp;')).toEqual(['&amp;']);
+    expect(tokenTypes('&amp;')).toEqual([CharacterEntity]);
+
+    expect(tokenImages('&#123;')).toEqual(['&#123;']);
+    expect(tokenTypes('&#123;')).toEqual([CharacterEntity]);
+
+    expect(tokenImages('&#xABCD;')).toEqual(['&#xABCD;']);
+    expect(tokenTypes('&#xABCD;')).toEqual([CharacterEntity]);
+
+    // Edge case: empty entity &;
+    expect(tokenImages('&;')).toEqual(['&;']);
+    expect(tokenTypes('&;')).toEqual([CharacterEntity]); // Pattern includes &;
+
+    // Invalid entities should NOT match
+    expect(tokenImages('&')).toEqual(['&']);
+    expect(tokenTypes('&')).toEqual([Arbitrary]);
+
+    expect(tokenImages('&abc')).toEqual(['&abc']); // Missing semicolon
+    expect(tokenTypes('&abc')).toEqual([Arbitrary]);
+
+    expect(tokenImages('&#')).toEqual(['&#']); // Incomplete numeric
+    expect(tokenTypes('&#')).toEqual([Arbitrary]);
+
+    expect(tokenImages('&#x')).toEqual(['&#x']); // Incomplete hex
+    expect(tokenTypes('&#x')).toEqual([Arbitrary]);
+
+    // Entities in context
+    expect(tokenImages('a&amp;b')).toEqual(['a', '&amp;', 'b']);
+    expect(tokenImages('&amp;&lt;&gt;')).toEqual(['&amp;', '&lt;', '&gt;']);
+  });
+
+  // 5. Test for token precedence and order conflicts
+  test('should respect token precedence in ambiguous cases', () => {
+    // ClosingOpenBracket must come before OpenBracket
+    expect(tokenImages('</')).toEqual(['</']);
+    expect(tokenTypes('</')).toEqual([ClosingOpenBracket]);
+
+    expect(tokenImages('<')).toEqual(['<']);
+    expect(tokenTypes('<')).toEqual([OpenBracket]);
+
+    // SelfCloseBracket must come before CloseBracket
+    expect(tokenImages('/>')).toEqual(['/>']);
+    expect(tokenTypes('/>')).toEqual([SelfCloseBracket]);
+
+    expect(tokenImages('>')).toEqual(['>']);
+    expect(tokenTypes('>')).toEqual([CloseBracket]);
+
+    // BackslashEscape must come before Backslash
+    expect(tokenImages('\\n')).toEqual(['\\n']);
+    expect(tokenTypes('\\n')).toEqual([BackslashEscape]);
+
+    expect(tokenImages('\\z')).toEqual(['\\', 'z']);
+    expect(tokenTypes('\\z')).toEqual([Backslash, Identifier]);
+
+    // Identifier pattern with special chars
+    expect(tokenImages('a-b')).toEqual(['a-b']); // Dash allowed in identifier
+    expect(tokenImages('a--b')).toEqual(['a--b']); // Double dash allowed
+    expect(tokenImages('a---b')).toEqual(['a---b']); // Triple dash allowed
+    expect(tokenImages('a-->')).toEqual(['a', '-->']); // But not before >
+    expect(tokenImages('a--->')).toEqual(['a', '--->']); // Comment close takes precedence
+
+    // Identifier with dots and colons
+    expect(tokenImages('ns:tag.name')).toEqual(['ns:tag.name']);
+    expect(tokenTypes('ns:tag.name')).toEqual([Identifier]);
+
+    // PragmaKeyword tests
+    expect(tokenImages('@pragma')).toEqual(['@pragma']);
+    expect(tokenTypes('@pragma')).toEqual([PragmaKeyword]);
+    expect(tokenImages('-- @pragma')).toEqual(['--', ' ', '@pragma']);
+    expect(tokenTypes('-- @pragma')).toEqual([Arbitrary, Whitespace, PragmaKeyword]);
+    expect(tokenTypes('--@pragma')).toEqual([Arbitrary]);
+    expect(tokenImages('<!--@pragma')).toEqual(['<!--', '@pragma']);
+
+    expect(tokenImages('@PRAGMA')).toEqual(['@PRAGMA']); // Case insensitive
+    expect(tokenTypes('@PRAGMA')).toEqual([PragmaKeyword]);
+
+    expect(tokenImages('@pragmaa')).toEqual(['@pragma', 'a']); // Not a keyword
+    expect(tokenTypes('@pragmaa')).toEqual([PragmaKeyword, Identifier]);
   });
 });
 
@@ -889,8 +1044,8 @@ describe('Malformed Patterns', () => {
     // Incorrect @pragma directive such as @pragm or @pragmaX will be matched as Arbitrary
     expect(tokenImages('@pragma')).toEqual(['@pragma']);
     expect(tokenImages('@pragm')).toEqual(['@pragm']);
-    expect(tokenImages('@pragmaX')).toEqual(['@pragmaX']);
-    expect(tokenImages('@pragma-extended')).toEqual(['@pragma-extended']);
+    expect(tokenImages('@pragmaX')).toEqual(['@pragma', 'X']);
+    expect(tokenImages('@pragma-extended')).toEqual(['@pragma', '-extended']);
     expect(tokenImages('@@pragma')).toEqual(['@@pragma']);
     expect(tokenImages('not@pragma')).toEqual(['not', '@pragma']);
     expect(tokenImages('@PRAGMA')).toEqual(['@PRAGMA']);
