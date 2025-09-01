@@ -65,29 +65,29 @@ export class ExtendedPomlParser extends CstParser {
     const isNextPragma = () => {
       // Peek after <!-- and optional whitespace: expect @pragma
       if (this.LA(1).tokenType !== CommentOpen) {
-return false;
-}
+        return false;
+      }
       let k = 2;
       while (this.LA(k).tokenType === Whitespace) {
-k++;
-}
+        k++;
+      }
       return this.LA(k).tokenType === PragmaKeyword;
     };
 
     const isNextLiteralOpenTag = () => {
       // Detect: < [ws]* Identifier("text" | "template")
       if (this.LA(1).tokenType !== OpenBracket) {
-return false;
-}
+        return false;
+      }
       let k = 2;
       // optional whitespace after "<"
       while (this.LA(k).tokenType === Whitespace) {
-k++;
-}
+        k++;
+      }
       const tName = this.LA(k);
       if (tName.tokenType !== Identifier) {
-return false;
-}
+        return false;
+      }
       const name = (tName.image || '').toLowerCase();
       return name === 'text' || name === 'template';
     };
@@ -399,17 +399,17 @@ return false;
           {
             GATE: () => {
               if (this.LA(1).tokenType !== ClosingOpenBracket) {
-return true;
-}
+                return true;
+              }
               // look ahead to see if it's </text> or </template>
               let k = 2;
               while (this.LA(k).tokenType === Whitespace) {
-k++;
-}
+                k++;
+              }
               const t = this.LA(k);
               if (t.tokenType !== Identifier) {
-return true;
-}
+                return true;
+              }
               const name = (t.image || '').toLowerCase();
               return !(name === 'text' || name === 'template');
             },
