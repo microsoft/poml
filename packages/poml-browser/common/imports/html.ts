@@ -10,6 +10,7 @@ import {
 } from '@common/types';
 import { Readability } from '@mozilla/readability';
 import { srcToPngBase64 } from './image';
+import { eliminateHeaderCards } from '@common/utils/card';
 
 /**
  * Options for the htmlToCards function
@@ -102,12 +103,8 @@ export async function htmlToCards(
 
   // Determine the final card structure
   if (contents.length === 0) {
-    // No content found, create empty text card
-    finalContent = {
-      type: 'text',
-      text: '',
-      caption: title,
-    } as TextCardContent;
+    notifyWarning('No content extracted from HTML');
+    return undefined;
   } else if (contents.length === 1) {
     // Single card, use it directly
     finalContent = contents[0];
@@ -227,7 +224,7 @@ class DOMToCardsProcessor {
     this.pendingText = [];
     await this.processRange(nodes);
     this.flushPending();
-    return this.cards;
+    return eliminateHeaderCards(this.cards);
   }
 
   /** Flatten the node tree to minimize nested levels */
@@ -375,7 +372,5 @@ class DOMToCardsProcessor {
         }
       }
     }
-    // Finally flush any remaining pending text
-    this.flushPending();
   }
 }
