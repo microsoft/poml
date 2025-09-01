@@ -1,4 +1,4 @@
-import { notifyError, notifyDebug } from '@common/notification';
+import { notifyError, notifyDebug, notifyWarning } from '@common/notification';
 import {
   CardModel,
   CardContent,
@@ -155,24 +155,8 @@ function normalizeText(s: string | null | undefined): string {
   return (s ?? '').replace(/\s+\n\s+/g, '\n').trim();
 }
 
-function extractTextContent(el: Element): string {
-  return normalizeText(el.textContent);
-}
-
-function processListElement(el: Element): string[] {
-  const tag = el.tagName.toLowerCase();
-  if (tag === 'li') {
-    const single = extractTextContent(el);
-    return single ? [single] : [];
-  }
-  const items: string[] = [];
-  el.querySelectorAll(':scope > li').forEach((li) => {
-    const t = extractTextContent(li);
-    if (t) {
-      items.push(t);
-    }
-  });
-  return items;
+function extractTextContent(el: Element, normalize: boolean): string {
+  return normalize ? normalizeText(el.textContent) : (el.textContent ?? '');
 }
 
 function* iterateTextAndImages(el: Element): Generator<Text | HTMLImageElement> {
@@ -197,18 +181,49 @@ function* iterateTextAndImages(el: Element): Generator<Text | HTMLImageElement> 
   }
 }
 
-export class DOMToCardsProcessor {
+class DOMToCardsProcessor {
+  // The list of elements we want to keep intact for structure
+  // The others are flattened at the beginning of processing
+  private meaningfulElements = [
+    // Headers
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    // Lists
+    'ul',
+    'ol',
+    'li',
+    // Images
+    'img',
+    // Tables
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
+    // Preformatted text
+    'pre',
+    // Code blocks
+    'code',
+    // Quotes
+    'blockquote',
+    // Paragraphs (keep for structure)
+    'p',
+    // Line breaks
+    'br',
+  ];
   private cards: CardContent[] = [];
   private pendingText: string[] = [];
-  private flattenedNodes: ChildNode[] = [];
 
   constructor() {}
 
-  /** Public entry */
   async process(nodes: ArrayLikeNodes): Promise<CardContent[]> {
     // First flatten the nodes for better header content collection
-    this.flattenedNodes = this.flattenNodes(nodes);
-    await this.processRange(this.flattenedNodes);
+    await this.processRange(nodes);
     this.flushPending();
     return this.cards;
   }
@@ -216,27 +231,36 @@ export class DOMToCardsProcessor {
   /** Flatten the node tree to minimize nested levels */
   private flattenNodes(nodes: ArrayLikeNodes): ChildNode[] {
     const result: ChildNode[] = [];
-    const processNode = (node: ChildNode) => {
-      if (isElementNode(node)) {
-        const tag = (node as Element).tagName.toLowerCase();
-        // Keep structural elements intact
-        if (getHeaderLevel(tag) > 0 || tag === 'ul' || tag === 'ol' || tag === 'li' || tag === 'img') {
+    const processNode = (node: ChildNode, normalize: boolean) => {
+      if (isTextNode(node)) {
+        // Always preserve text nodes
+        result.push(node);
+      } else if (isElementNode(node)) {
+        const el = node as Element;
+        const tag = el.tagName.toLowerCase();
+
+        // Keep these meaningful structural elements intact
+        if (this.meaningfulElements.includes(tag) || getHeaderLevel(tag) > 0) {
           result.push(node);
           return;
         }
-        // For containers like divs, flatten their children
-        if (tag === 'div' || tag === 'section' || tag === 'article' || tag === 'main') {
-          for (const child of node.childNodes) {
-            processNode(child);
-          }
+
+        // Skip script and style elements entirely
+        if (tag === 'script' || tag === 'style') {
           return;
         }
+
+        // For all other container elements (div, span, section, article, main, aside,
+        // nav, header, footer, etc.), flatten their children
+        for (const child of el.childNodes) {
+          processNode(child, tag === 'pre' || tag === 'code' ? false : normalize);
+        }
       }
-      result.push(node);
+      // Discard other node types (comments, etc.)
     };
 
     for (let i = 0; i < nodes.length; i++) {
-      processNode(nodes[i] as ChildNode);
+      processNode(nodes[i] as ChildNode, true);
     }
     return result;
   }
@@ -255,42 +279,24 @@ export class DOMToCardsProcessor {
   }
 
   private pushText(t: string | null | undefined) {
-    const text = normalizeText(t);
-    if (text) {
-      this.pendingText.push(text);
+    if (t) {
+      this.pendingText.push(t);
     }
-  }
-
-  private collectSectionNodes(
-    nodes: ArrayLikeNodes,
-    start: number,
-    headerLevel: number,
-  ): { section: ChildNode[]; nextIndex: number } {
-    const section: ChildNode[] = [];
-    let j = start + 1;
-
-    // Collect all siblings and their children until we hit a same or higher-level header
-    while (j < nodes.length) {
-      const next = nodes[j] as ChildNode;
-      if (isElementNode(next)) {
-        const lvl = getHeaderLevel(next.tagName.toLowerCase());
-        if (lvl > 0 && lvl <= headerLevel) {
-          // Found a header at the same or higher level, stop collecting
-          break;
-        }
-      }
-
-      // Add this node to the section
-      section.push(next);
-      j++;
-    }
-
-    return { section, nextIndex: j };
   }
 
   private listToCard(el: Element): ListCardContent | null {
     const tag = el.tagName.toLowerCase();
-    const items = processListElement(el);
+    const items: string[] = [];
+    if (tag === 'li') {
+      const single = extractTextContent(el, true);
+      items.push(single);
+    }
+    el.querySelectorAll(':scope > li').forEach((li) => {
+      const t = extractTextContent(li, true);
+      if (t) {
+        items.push(t);
+      }
+    });
     if (items.length === 0) {
       return null;
     }
@@ -308,56 +314,18 @@ export class DOMToCardsProcessor {
       };
       return card;
     } catch (err) {
-      console.warn('Failed to process image:', err);
+      notifyWarning('Failed to process image:', err);
       return null;
     }
   }
 
-  private async handleBlockElement(el: Element): Promise<void> {
-    const hasImages = el.querySelector('img') !== null;
-    if (!hasImages) {
-      this.pushText(el.textContent);
-      return;
-    }
-
-    let buffer: string[] = [];
-    for (const n of iterateTextAndImages(el)) {
-      if (isTextNode(n)) {
-        const t = normalizeText(n.textContent);
-        if (t) {
-          buffer.push(t);
-        }
-      } else {
-        if (buffer.length > 0) {
-          this.pushText(buffer.join(' ').trim());
-          buffer = [];
-          this.flushPending();
-        }
-        const imgCard = await this.imageElementToCard(n as HTMLImageElement);
-        if (imgCard) {
-          this.cards.push(imgCard);
-        }
-      }
-    }
-    if (buffer.length > 0) {
-      this.pushText(buffer.join(' ').trim());
-    }
-  }
-
-  private async processRange(nodes: ChildNode[] | ArrayLikeNodes): Promise<void> {
-    let i = 0;
-    while (i < nodes.length) {
-      const node = nodes[i] as ChildNode;
-
-      // TEXT
+  private async processRange(nodes: ArrayLikeNodes): Promise<void> {
+    const flattened = this.flattenNodes(nodes);
+    for (const node of flattened) {
       if (isTextNode(node)) {
+        // TEXT
         this.pushText(node.textContent);
-        i++;
-        continue;
-      }
-
-      // ELEMENTS
-      if (isElementNode(node)) {
+      } else if (isElementNode(node)) {
         const el = node as Element;
         const tag = el.tagName.toLowerCase();
 
@@ -366,97 +334,43 @@ export class DOMToCardsProcessor {
         if (headerLevel > 0) {
           this.flushPending();
 
-          const headerText = extractTextContent(el);
-          const { section, nextIndex } = this.collectSectionNodes(nodes, i, headerLevel);
-
-          if (section.length > 0) {
-            // Process section content recursively
-            const sectionProcessor = new DOMToCardsProcessor();
-            const sectionCards = await sectionProcessor.process(section);
-
-            if (sectionCards.length > 1) {
-              // Multiple cards: create nested structure with header as caption
-              const nested: NestedCardContent = { type: 'nested', cards: sectionCards, caption: headerText };
-              this.cards.push(nested);
-            } else if (sectionCards.length === 1) {
-              // Single card: add header as caption if not already present
-              const only = sectionCards[0] as any;
-              if (only.caption == null) {
-                only.caption = headerText;
-              }
-              this.cards.push(only);
-            } else {
-              // No cards from section: just add header as text
-              const textCard: TextCardContent = { type: 'text', text: headerText };
-              this.cards.push(textCard);
-            }
-          } else {
-            // No section content: just add header as text
-            const textCard: TextCardContent = { type: 'text', text: headerText };
-            this.cards.push(textCard);
-          }
-
-          i = nextIndex;
-          continue;
-        }
-
-        // LISTS
-        if (tag === 'ul' || tag === 'ol') {
+          const headerText = extractTextContent(el, true);
+          // Since the tree is flattened, just add header as text
+          const textCard: TextCardContent = { type: 'text', text: headerText };
+          this.cards.push(textCard);
+        } else if (tag === 'ul' || tag === 'ol') {
+          // LISTS
           this.flushPending();
           const listCard = this.listToCard(el);
           if (listCard) {
             this.cards.push(listCard);
           }
-          i++;
-          continue;
-        }
-
-        // IMAGES
-        if (tag === 'img') {
+        } else if (tag === 'img') {
+          // IMAGES
           this.flushPending();
           const imgCard = await this.imageElementToCard(el as HTMLImageElement);
           if (imgCard) {
             this.cards.push(imgCard);
           }
-          i++;
-          continue;
+        } else if (['table', 'thead', 'tbody', 'tr', 'th', 'td'].includes(tag)) {
+          // TABLES - flatten to text
+          // TODO: Future work - table cards
+          this.pushText(extractTextContent(el, true));
+        } else if (tag === 'code' || tag === 'pre' || tag === 'blockquote') {
+          // CODE - flatten to text
+          this.flushPending();
+          this.cards.push({ type: 'text', text: extractTextContent(el, false), container: 'Code' });
+        } else if (tag === 'p') {
+          // Independent paragraph - flush pending text first
+          this.flushPending();
+          this.pushText(extractTextContent(el, true));
+          this.flushPending();
+        } else if (tag === 'br') {
+          // LINE BREAK - treat as newline in pending text
+          this.pushText('');
         }
-
-        // BLOCKS
-        if (['p', 'div', 'blockquote', 'pre'].includes(tag)) {
-          await this.handleBlockElement(el);
-          i++;
-          continue;
-        }
-
-        // LINE BREAKS
-        if (tag === 'br') {
-          this.pendingText.push(''); // newline separator, preserved on join/trim rules
-          i++;
-          continue;
-        }
-
-        // IGNORED
-        if (tag === 'script' || tag === 'style') {
-          i++;
-          continue;
-        }
-
-        // STRAY LI (graceful)
-        if (tag === 'li') {
-          this.pushText(extractTextContent(el));
-          i++;
-          continue;
-        }
-
-        // DEFAULT
-        this.pushText(extractTextContent(el));
-        i++;
-        continue;
+        notifyDebug('Discarding unsupported element:', tag);
       }
-
-      // OTHER NODE TYPES
-      i++;
     }
   }
 }

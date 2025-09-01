@@ -49,6 +49,8 @@ npm run test:vitest        # Run unit tests with Vitest
 npm run test:playwright    # Run browser extension tests with Playwright
 ```
 
+**Important notes on building and testing for Claude:** As developers usually run a long-running watch process, please do not emit build commands by yourself. Do not run tests on your own. Instead, ask the developer to run them and provide feedback.
+
 ### Build Configuration
 
 The extension uses Rollup with special configuration for browser environment:
