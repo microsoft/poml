@@ -1,6 +1,10 @@
 import { Range } from './types';
 import { CstNode, IToken } from 'chevrotain';
 
+export interface AstNode {
+  range: Range; // start and end offsets in the source text
+}
+
 /**
  * Represents a JavaScript expression as a string.
  *
@@ -17,9 +21,8 @@ import { CstNode, IToken } from 'chevrotain';
  * - String literals with quotes: `"hello"` (use LiteralNode or ValueNode)
  * - POML markup: `<tag>` (use element nodes)
  */
-export interface ExpressionNode {
+export interface ExpressionNode extends AstNode {
   kind: 'EXPRESSION';
-  range: Range;
   value: string;
 }
 
@@ -45,9 +48,8 @@ export interface ExpressionNode {
  * - Template elements: <template>{{ this is a jinja template }}</template> (use LiteralNode)
  * - With quotes: `"{{ var }}"` (use ValueNode)
  */
-export interface TemplateNode {
+export interface TemplateNode extends AstNode {
   kind: 'TEMPLATE';
-  range: Range;
   value: ExpressionNode;
 }
 
@@ -90,9 +92,8 @@ export interface CstTemplateNode extends CstNode {
  * - Expressions: `x > 0` (use ExpressionNode)
  * - Template variables: `{{ var }}` (use TemplateNode)
  */
-export interface LiteralNode {
+export interface LiteralNode extends AstNode {
   kind: 'STRING';
-  range: Range;
   value: string;
 }
 
@@ -118,10 +119,14 @@ export interface LiteralNode {
  *
  * Note: The range includes quotes if present, but children exclude them.
  */
-export interface ValueNode {
+export interface ValueNode extends AstNode {
   kind: 'VALUE';
-  range: Range;
   children: (LiteralNode | TemplateNode)[];
+}
+
+export interface TextElementNode extends AstNode {
+  kind: 'TEXT';
+  value: string;
 }
 
 /**
@@ -167,9 +172,8 @@ export interface CstQuotedTemplateNode extends CstNode {
  * - Conditional loops: `if` attributes (use separate condition handling)
  * - Template interpolation: `{{ items }}` (use TemplateNode)
  */
-export interface ForIteratorNode {
+export interface ForIteratorNode extends AstNode {
   kind: 'FORITERATOR';
-  range: Range;
   iterator: LiteralNode;
   collection: ExpressionNode;
 }
@@ -218,9 +222,8 @@ export interface CstForIteratorNode extends CstNode {
  * - Spread attributes (not yet supported): `{...props}`
  * - Dynamic attribute names (not supported): `[attrName]="value"`
  */
-export interface AttributeNode {
+export interface AttributeNode extends AstNode {
   kind: 'ATTRIBUTE';
-  range: Range;
   key: LiteralNode;
   value: ValueNode | ForIteratorNode;
 }
@@ -260,9 +263,8 @@ export interface CstAttributeNode extends CstNode {
  * - Complete elements: opening + content + closing (use ElementNode)
  * - Invalid or malformed tags (treated as text)
  */
-export interface OpenTagNode {
+export interface OpenTagNode extends AstNode {
   kind: 'OPEN';
-  range: Range;
   value: LiteralNode; // tag name
   attributes: AttributeNode[];
 }
@@ -298,9 +300,8 @@ export interface OpenTagCstNode extends CstNode {
  * - Self-closing tags: `<br/>` (use SelfCloseTagNode)
  * - Tags with attributes (closing tags never have attributes)
  */
-export interface CloseTagNode {
+export interface CloseTagNode extends AstNode {
   kind: 'CLOSE';
-  range: Range;
   value: LiteralNode; // tag name
 }
 
@@ -333,9 +334,8 @@ export interface CloseTagCstNode extends CstNode {
  * - Separate open/close tags: `<div></div>` (use ElementNode)
  * - Tags without the self-closing slash: `<img>` (use OpenTagNode)
  */
-export interface SelfCloseElementNode {
+export interface SelfCloseElementNode extends AstNode {
   kind: 'SELFCLOSE';
-  range: Range;
   value: LiteralNode; // tag name
   attributes: AttributeNode[];
 }
@@ -374,9 +374,8 @@ export interface CstSelfCloseElementNode extends CstNode {
  * - Template variables: `{{ var }}` (use TemplateNode)
  * - Meta elements: `<meta>` tags (use MetaNode)
  */
-export interface ElementNode {
+export interface ElementNode extends AstNode {
   kind: 'ELEMENT';
-  range: Range;
   open: OpenTagNode;
   close: CloseTagNode;
   children: (ElementNode | LiteralElementNode | CommentNode | PragmaNode | ValueNode)[];
@@ -415,9 +414,8 @@ export interface CstElementContentNode extends CstNode {
  * Examples:
  * - `<!-- this is a comment -->`
  */
-export interface CommentNode {
+export interface CommentNode extends AstNode {
   kind: 'COMMENT';
-  range: Range;
   value: LiteralNode;
 }
 
@@ -444,22 +442,21 @@ export interface CstCommentNode extends CstNode {
  * - Specify version: `<!-- @pragma version >=1.0.0 <2.3.0 -->`
  * - Turn tags on/off: `<!-- @pragma components +reference -table -->`
  * - Turn speaker roles on/off: `<!-- @pragma speaker multi -->` or `single`
- * - White space policy: `<!-- @pragma whitespace pre -->` or `trim`, `collapse` or `remove`
+ * - White space policy: `<!-- @pragma whitespace pre -->` or `trim`, `collapse`
  *
  * Notes on white space policy:
  * - `pre`: preserve all whitespace as-is
  * - `trim`: trim leading/trailing whitespace in each element
  * - `collapse`: trim + collapse consecutive whitespace into a single space
- * - `remove`: collapse remove all whitespaces between two nested elements
+ *   If there are two inline="false" elements next to each other, space between them will be deleted.
  *
  * Each element type will have its own default whitespace policy.
  * For example, `<text>` defaults to `pre`, while `<paragraph>` defaults to `collapse`.
  * However, when a pragma is set, it overrides the default for subsequent elements.
  * It will affect the AST constructing stages, and also affecting the props sent to components.
  */
-export interface PragmaNode {
+export interface PragmaNode extends AstNode {
   kind: 'PRAGMA';
-  range: Range;
   identifier: LiteralNode;
   options: LiteralNode[];
 }
@@ -507,9 +504,8 @@ export interface CstPragmaNode extends CstNode {
  * 3. If you really need `<text>` in your POML. Recommended to use `&lt;text&gt;`
  *    outside of literal element.
  */
-export interface LiteralElementNode {
-  kind: 'TEXT';
-  range: Range;
+export interface LiteralElementNode extends AstNode {
+  kind: 'LITERAL';
   open: OpenTagNode;
   close: CloseTagNode;
   children: LiteralNode;
@@ -543,9 +539,8 @@ export interface CstLiteralElementNode extends CstNode {
  * Cases that do not apply:
  * - All nested elements
  */
-export interface RootNode {
+export interface RootNode extends AstNode {
   kind: 'ROOT';
-  range: Range;
   children: (ElementNode | LiteralElementNode | CommentNode | PragmaNode | ValueNode)[];
 }
 
