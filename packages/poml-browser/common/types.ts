@@ -1,7 +1,6 @@
 // The main content to be displayed in the browser extension UI and stored in storage
 // We are moving away from the old CardModel to this new CardModel system.
 export interface CardModel {
-  id: string;
   content: CardContent;
   source?: 'manual' | 'clipboard' | 'drop' | 'file' | 'webpage' | 'generated';
   url?: string; // could be a webpage URL or a file path
@@ -40,6 +39,14 @@ export interface TextCardContent {
   container?: PomlContainerType;
 }
 
+export interface ListCardContent {
+  type: 'list';
+  items: string[];
+  ordered?: boolean; // default: unordered
+  caption?: string; // Caption is for UI display only; no effect in POML conversion
+  container?: PomlContainerType; // Container has no effect for List cards
+}
+
 export interface ImageCardContent {
   type: 'image';
   base64: string; // must be base64-encoded PNG
@@ -63,7 +70,7 @@ export interface NestedCardContent {
   container?: PomlContainerType; // e.g., ExampleSet
 }
 
-export type CardContent = TextCardContent | ImageCardContent | TableCardContent | NestedCardContent;
+export type CardContent = TextCardContent | ListCardContent | ImageCardContent | TableCardContent | NestedCardContent;
 
 interface ColumnDefinition {
   field: string;

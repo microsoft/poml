@@ -32,7 +32,7 @@ interface NoEncodingOptions {
 type ReadFileOptions = TextEncodingOptions | Base64EncodingOptions | BinaryEncodingOptions | NoEncodingOptions;
 
 // Type helper to determine return type based on encoding
-type FileContent<T extends ReadFileOptions | undefined> = T extends TextEncodingOptions
+export type FileContent<T extends ReadFileOptions | undefined> = T extends TextEncodingOptions
   ? string
   : T extends Base64EncodingOptions
     ? string

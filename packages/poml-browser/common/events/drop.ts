@@ -1,4 +1,6 @@
-// export const handleDropEvent = async (event: DragEvent): Promise<PastedPayload> => {
+import { CardModel, TextCardContent, ImageCardContent } from '@common/types';
+
+// export const dropHandler = async (event: DragEvent): Promise<CardModel> => {
 //   const files: PastedFile[] = [];
 //   let plainText = '';
 
