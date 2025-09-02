@@ -8,6 +8,7 @@ You are a senior software engineer with expertise in Python, web security, and b
 
 Review the provided Python Flask application for security vulnerabilities, performance issues, and code quality.
 
+```python
 import sqlite3
 import hashlib
 from flask import Flask, request, render_template_string
@@ -89,9 +90,14 @@ class UserManager:
 if __name__ == '__main__':
     # Security issue: Debug mode in production
     app.run(debug=True, host='0.0.0.0')
+```
 
 Focus on security vulnerabilities, performance optimizations, and Python best practices.
 
 # Output Format
 
-Provide a structured code review with: 1. Critical security issues 2. Performance improvements 3. Code quality suggestions
+Provide a structured code review with: 
+
+1. Critical security issues
+2. Performance improvements
+3. Code quality suggestions
