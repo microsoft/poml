@@ -1,5 +1,6 @@
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import { cpSync, statSync } from 'fs';
 import pkg from './package.json' with { type: 'json' };
 
 const peerDependencies = Object.keys(pkg.peerDependencies || {});
@@ -33,6 +34,15 @@ export default {
   plugins: [
     json(),
     commonjs(),
+    {
+      name: 'copy-dts',
+      writeBundle() {
+        cpSync('.build', 'dist', {
+          recursive: true,
+          filter: (src) => statSync(src).isDirectory() || src.endsWith('.d.ts'),
+        });
+      },
+    },
   ],
   external: external,
 };
