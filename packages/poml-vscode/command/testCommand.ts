@@ -452,8 +452,8 @@ export class TestCommand implements Command {
     const response = await model.sendRequest(vscodePrompt, options, signal.token);
 
     for await (const chunk of response.stream) {
-      if ((response as any).value) {
-        yield (response as any).value;
+      if ((chunk as any).value) {
+        yield (chunk as any).value;
       } else {
         yield JSON.stringify(chunk);
       }
@@ -720,7 +720,7 @@ export class TestCommand implements Command {
    * Handles role mapping, content conversion, and message merging for the VS Code API
    */
   private pomlMessagesToVsCodeMessage(messages: Message[]): vscode.LanguageModelChatMessage[] {
-    // Step 1: Convert each POML message to VS Code format
+    // Convert each POML message to VS Code format
     const vscodeMessage = messages.map((msg) => {
       // Map POML speaker types to VS Code roles
       let role: vscode.LanguageModelChatMessageRole;
@@ -749,32 +749,15 @@ export class TestCommand implements Command {
       // This handles text, images, tool calls, and tool results
       const content = this.richContentToVsCodeMessageContent(msg.content);
 
-      return new vscode.LanguageModelChatMessage(role, content);
+      if (content.length === 1 && 'value' in content[0]) {
+        return new vscode.LanguageModelChatMessage(role, content[0].value);
+      } else {
+        return new vscode.LanguageModelChatMessage(role, content);
+      }
     });
 
-    // Step 2: Merge consecutive messages from the same role
-    // VS Code API works better when consecutive messages with the same role are merged
-    const mergedMessages: vscode.LanguageModelChatMessage[] = [];
-
-    for (const msg of vscodeMessage) {
-      // Add first message directly
-      if (mergedMessages.length === 0) {
-        mergedMessages.push(msg);
-        continue;
-      }
-
-      // Check if we can merge with the previous message
-      const lastMsg = mergedMessages[mergedMessages.length - 1];
-      if (lastMsg && lastMsg.role === msg.role) {
-        // Same role: merge content arrays by concatenation
-        lastMsg.content = lastMsg.content.concat(msg.content);
-      } else {
-        // Different role: add as new message
-        mergedMessages.push(msg);
-      }
-    }
-
-    return mergedMessages;
+    // TODO: Merge consecutive messages from the same role
+    return vscodeMessage;
   }
 
   /**
@@ -814,9 +797,6 @@ export class TestCommand implements Command {
       } else if (part.type.startsWith('image/')) {
         // Handle image content (with limitations)
         const binaryPart = part as ContentMultiMediaBinary;
-        if (!binaryPart.base64) {
-          throw new Error(`Image content must have base64 data, found: ${JSON.stringify(part)}`);
-        }
         // VS Code API doesn't fully support images, use placeholder text
         this.log('warn', 'Images in messages are not fully supported in VS Code chat API. Using placeholder text.');
         return { value: `[Image: ${binaryPart.alt || 'unsupported in text'}]` } satisfies vscode.LanguageModelTextPart;
@@ -852,14 +832,12 @@ export class TestCommand implements Command {
       if (t.type !== 'function') {
         throw new Error(`Unsupported tool type: ${t.type}. Only 'function' type is supported.`);
       }
-      const schema = jsonSchema(t.parameters);
       result.push({
         name: t.name,
         description: t.description,
-        inputSchema: schema,
+        inputSchema: t.parameters,
       });
     }
-    this.log('info', 'Registered tools: ' + Object.keys(result).join(', '));
     return result;
   }
 
