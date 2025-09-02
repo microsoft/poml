@@ -180,7 +180,6 @@ export class TestCommand implements Command {
 
     let timer = setTimeout(showProgress, nextInterval * 1000);
     let result: string[] = [];
-    let cancellationToken: vscode.CancellationTokenSource | undefined;
 
     try {
       const prompt = await this.renderPrompt(uri);
@@ -232,10 +231,6 @@ export class TestCommand implements Command {
         this.log('error', (e as any).stack);
       } else {
         this.log('error', String(e));
-      }
-    } finally {
-      if (cancellationToken) {
-        cancellationToken.dispose();
       }
     }
   }

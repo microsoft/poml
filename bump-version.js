@@ -81,7 +81,7 @@ function updatePythonVersions(baseVersion, timestamp) {
   const versionPath = path.join(__dirname, 'python/poml/_version.py');
   if (fs.existsSync(versionPath)) {
     let content = fs.readFileSync(versionPath, 'utf8');
-    content = content.replace(/__version__ = '.*'/, `__version__ = '${version}'`);
+    content = content.replace(/__version__ = ".*"/, `__version__ = "${version}"`);
     fs.writeFileSync(versionPath, content);
     console.log(`Updated _version.py to: ${version}`);
   }
