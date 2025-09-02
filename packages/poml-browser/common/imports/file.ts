@@ -6,7 +6,10 @@
  * Support encoding options like NodeJS API: fs.readFile(..., { encoding: 'utf-8' })
  */
 
+import { notifyDebug, notifyDebugVerbose } from '@common/notification';
 import { everywhere } from '@common/rpc';
+import { TextFile, BinaryFile } from '@common/types';
+import { lookup } from 'mime-types';
 
 type TextEncoding = 'utf-8' | 'utf8';
 type Base64Encoding = 'base64';
@@ -31,45 +34,64 @@ interface NoEncodingOptions {
 
 type ReadFileOptions = TextEncodingOptions | Base64EncodingOptions | BinaryEncodingOptions | NoEncodingOptions;
 
-// Type helper to determine return type based on encoding
-export type FileContent<T extends ReadFileOptions | undefined> = T extends TextEncodingOptions
-  ? string
-  : T extends Base64EncodingOptions
-    ? string
-    : T extends BinaryEncodingOptions
-      ? ArrayBuffer
-      : T extends NoEncodingOptions
-        ? string
-        : T extends undefined
-          ? string
-          : never;
-
 // Function overloads for precise type inference
-export async function readFile(filePath: string | File | Blob, options: TextEncodingOptions): Promise<string>;
-export async function readFile(filePath: string | File | Blob, options: Base64EncodingOptions): Promise<string>;
-export async function readFile(filePath: string | File | Blob, options: BinaryEncodingOptions): Promise<ArrayBuffer>;
-export async function readFile(filePath: string | File | Blob, options?: NoEncodingOptions): Promise<ArrayBuffer>;
-export async function readFile(filePath: string | File | Blob): Promise<ArrayBuffer>;
+export async function readFile(filePath: string | File | Blob, options: TextEncodingOptions): Promise<TextFile>;
+export async function readFile(filePath: string | File | Blob, options: Base64EncodingOptions): Promise<TextFile>;
+export async function readFile(filePath: string | File | Blob, options: BinaryEncodingOptions): Promise<BinaryFile>;
+export async function readFile(filePath: string | File | Blob, options?: NoEncodingOptions): Promise<BinaryFile>;
+export async function readFile(filePath: string | File | Blob): Promise<BinaryFile>;
 export async function readFile(
   filePath: string | File | Blob,
   options?: ReadFileOptions,
-): Promise<string | ArrayBuffer> {
+): Promise<TextFile | BinaryFile> {
   // Handle File or Blob objects directly
+  let arrayBuffer: ArrayBuffer;
+  let mimeType: string;
+  let size: number;
+
   if (filePath instanceof File || filePath instanceof Blob) {
-    return decodeContent(await filePath.arrayBuffer(), options?.encoding);
+    notifyDebugVerbose('Reading File/Blob object:', filePath);
+    arrayBuffer = await filePath.arrayBuffer();
+    mimeType = getMimeType(filePath, options);
+    notifyDebug(`File/Blob metadata: mimeType=${mimeType}, size=${size}`);
+    return {
+      content: decodeContent(arrayBuffer, options?.encoding),
+      mimeType,
+      size,
+    } as TextFile | BinaryFile;
+  } else {
+    return await _readFileEverywhere(filePath, options);
   }
-  return await _readFileEverywhere(filePath, options);
 }
 
-// Implementation
-async function _readFile(filePath: string, options?: ReadFileOptions): Promise<string | ArrayBuffer> {
-  console.log(`Reading file: ${filePath} with options:`, options);
+// Convenience helper functions
+export async function readTextFile(filePath: string | File | Blob): Promise<TextFile> {
+  return readFile(filePath, { encoding: 'utf-8' });
+}
+
+export async function readBinaryFile(filePath: string | File | Blob): Promise<BinaryFile> {
+  return readFile(filePath, { encoding: 'binary' });
+}
+
+// Implementation for remote file reading
+async function _readFile(filePath: string, options?: ReadFileOptions): Promise<TextFile | BinaryFile> {
+  notifyDebugVerbose(`Reading file: ${filePath} with options:`, options);
   // Step 1: Download/retrieve the content as ArrayBuffer
   const arrayBuffer = await downloadContent(filePath);
-  console.log(`Downloaded content for ${filePath}:`, arrayBuffer);
+  notifyDebugVerbose(`Downloaded content for ${filePath}:`, arrayBuffer);
 
-  // Step 2: Decode based on encoding option
-  return decodeContent(arrayBuffer, options?.encoding);
+  // Step 2: Get metadata
+  const mimeType = getMimeType(filePath, options);
+  const size = arrayBuffer.byteLength;
+  notifyDebugVerbose(`File metadata for ${filePath}: mimeType=${mimeType}, size=${size}`);
+
+  // Step 3: Decode based on encoding option and return appropriate interface
+  const content = decodeContent(arrayBuffer, options?.encoding);
+  return {
+    content,
+    mimeType,
+    size,
+  } as TextFile | BinaryFile;
 }
 
 const _readFileEverywhere = everywhere('_readFile', _readFile, 'background');
@@ -161,4 +183,24 @@ function decodeContent(arrayBuffer: ArrayBuffer, encoding?: SupportedEncoding): 
   }
 
   throw new Error(`Unsupported encoding: ${encoding}`);
+}
+
+/**
+ * Get MIME type from file path or URL
+ */
+function getMimeType(filePath: string | File | Blob, options?: ReadFileOptions): string {
+  if (filePath instanceof File || filePath instanceof Blob) {
+    if (filePath.type) {
+      return filePath.type;
+    }
+  } else {
+    // Try to infer from file extension
+    const type = lookup(filePath);
+    if (type) {
+      return type;
+    }
+  }
+
+  notifyDebugVerbose(`Could not determine MIME type from file path: ${filePath}, using fallback.`);
+  return options?.encoding === 'binary' || !options?.encoding ? 'application/octet-stream' : 'text/plain';
 }

@@ -122,6 +122,18 @@ export interface Image {
   height: number; // Height of the image in pixels
 }
 
+export interface TextFile {
+  content: string; // File content as text
+  mimeType: string; // MIME type of the file (e.g., 'text/plain', 'text/markdown')
+  size: number; // Size of the file in bytes
+}
+
+export interface BinaryFile {
+  content: ArrayBuffer; // File content as binary data
+  mimeType: string; // MIME type of the file (e.g., 'application/pdf', 'image/png')
+  size: number; // Size of the file in bytes
+}
+
 // Global registry type that will be extended by users
 export interface GlobalFunctions extends FunctionRegistry {
   // Please put the signatures of global functions here
@@ -138,7 +150,7 @@ export interface GlobalFunctions extends FunctionRegistry {
   _readFile: (
     filePath: string,
     options?: { encoding?: 'utf-8' | 'utf8' | 'base64' | 'binary' },
-  ) => Promise<string | ArrayBuffer>;
+  ) => Promise<TextFile | BinaryFile>;
 
   // Functions for testing purposes
   pingPongContent: (message: any, delay: number) => Promise<any>;
