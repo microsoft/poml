@@ -185,6 +185,22 @@ describe('mimeTypes', () => {
     });
   });
 
+  describe('custom types', () => {
+    it('should recognize "text/x-python" for .py files', () => {
+      expect(mimeTypes.lookup('.py')).toBe('text/x-python');
+      expect(mimeTypes.extension('text/x-python')).toBe('py');
+      expect(mimeTypes.charset('text/x-python')).toBe('UTF-8');
+      expect(mimeTypes.contentType('text/x-python')).toBe('text/x-python; charset=utf-8');
+    });
+
+    it('should recognize "text/x-poml" for .poml files', () => {
+      expect(mimeTypes.lookup('.poml')).toBe('text/x-poml');
+      expect(mimeTypes.extension('text/x-poml')).toBe('poml');
+      expect(mimeTypes.charset('text/x-poml')).toBe('UTF-8');
+      expect(mimeTypes.contentType('text/x-poml')).toBe('text/x-poml; charset=utf-8');
+    });
+  });
+
   describe('.lookup(path)', () => {
     it('should return mime type for file name', () => {
       expect(mimeTypes.lookup('page.html')).toBe('text/html');

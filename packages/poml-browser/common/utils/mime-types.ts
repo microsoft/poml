@@ -6,7 +6,7 @@ import dbJson from 'mime-db';
 
 // ---- Types ----
 
-type Source = 'nginx' | 'apache' | 'iana' | string | undefined;
+type Source = 'nginx' | 'apache' | 'iana' | 'default' | 'custom';
 
 interface MimeRecord {
   source?: Source;
@@ -18,6 +18,13 @@ type MimeDB = Record<string, MimeRecord>;
 
 // Some `mime-db` distributions don’t ship types; cast defensively.
 const db = dbJson as unknown as MimeDB;
+
+// Augmentations to `mime-db` types (if any) would go here
+db['application/x-python-code'] = { source: 'custom', extensions: ['pyc'] };
+db['text/x-python'] = { source: 'custom', extensions: ['py'], charset: 'UTF-8' };
+db['text/x-poml'] = { source: 'custom', extensions: ['poml'], charset: 'UTF-8' };
+db['text/x-pomx'] = { source: 'custom', extensions: ['pomx'], charset: 'UTF-8' };
+db['text/x-rst'] = { source: 'custom', extensions: ['rst'], charset: 'UTF-8' };
 
 // ---- Regex constants ----
 
@@ -193,11 +200,12 @@ const FACET_SCORES: Record<string, number> = {
 /**
  * Score mime source (logic inspired by `jshttp/mime-types`).
  */
-const SOURCE_SCORES: Record<string, number> = {
+const SOURCE_SCORES: Record<Source, number> = {
   nginx: 10,
   apache: 20,
   iana: 40,
   default: 30, // definitions added by `jshttp/mime-db` project?
+  custom: 50, // definitions added in this file
 };
 
 /**
