@@ -48,8 +48,12 @@ The following settings mainly control the language model used for POML testing f
 }
 ```
 
-**Options:** `openai`, `openaiResponse`, `microsoft`, `anthropic`, `google`
+**Options:** `vscode`, `openai`, `openaiResponse`, `microsoft`, `anthropic`, `google`
 **Default:** `openai`
+
+!!! note
+
+    If you have GitHub Copilot enabled in VS Code, you can set this to `vscode` to use VS Code's Language Model API. The API URL and API Key settings will be ignored in this case.
 
 ### Model Name
 
@@ -59,8 +63,11 @@ The following settings mainly control the language model used for POML testing f
 }
 ```
 
-**Default:** `gpt-4o`  
+**Default:** `gpt-4o`
+
 For Azure OpenAI, use the deployment name. For other providers, use the model code name.
+
+For GitHub Copilot in VS Code, the model name will be used as the family name to select the model. See [this guide](https://code.visualstudio.com/api/extension-guides/ai/language-model) for explanations of model families.
 
 ### Temperature
 
@@ -112,8 +119,6 @@ The API key can be:
 
 - A **string** for a single key used across all providers
 - An **object** with provider-specific keys, useful when switching between providers or when prompts override the provider at runtime
-
-**Note:** If you have GitHub Copilot enabled in VS Code, POML can automatically use VS Code's Language Model API when no API key is configured, providing seamless integration without additional setup.
 
 ### API URL
 

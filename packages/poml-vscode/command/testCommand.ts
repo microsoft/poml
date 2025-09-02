@@ -30,7 +30,7 @@ import ModelClient from '@azure-rest/ai-inference';
 import { AzureKeyCredential } from '@azure/core-auth';
 import { createSseStream } from '@azure/core-sse';
 import { fileURLToPath } from 'url';
-import { LanguageModelSetting, ApiConfigValue, Settings } from 'poml-vscode/settings';
+import { LanguageModelSetting, ApiConfigValue } from 'poml-vscode/settings';
 import { IncomingMessage } from 'node:http';
 import { getTelemetryReporter } from 'poml-vscode/util/telemetryClient';
 import { TelemetryEvent } from 'poml-vscode/util/telemetryServer';
