@@ -1,5 +1,5 @@
 // https://github.com/jshttp/mime-types
-// migrated to TypeScript for browser usage
+// Migrated by GPT-5 to TypeScript for in-browser usage
 // It relies on the `mime-db` package (JSON data). Use a bundler to include it.
 
 import dbJson from 'mime-db';
