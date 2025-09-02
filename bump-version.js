@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs'); // eslint-disable-line
-const path = require('path'); // eslint-disable-line
+const fs = require('fs');
+const path = require('path');
 
 function updateNodeJSVersions(baseVersion, timestamp) {
   const version = timestamp ? `${baseVersion}-nightly.${timestamp}` : baseVersion;
@@ -45,10 +45,10 @@ function updateNodeJSVersions(baseVersion, timestamp) {
   if (fs.existsSync(packageLockPath)) {
     let content = fs.readFileSync(packageLockPath, 'utf8');
     // Update root version
-    // eslint-disable-next-line no-regex-spaces
+
     content = content.replace(/^  "version": ".*?",$/m, `  "version": "${version}",`);
     // Update packages."" version
-    // eslint-disable-next-line no-regex-spaces
+
     content = content.replace(/^      "version": ".*?",$/m, `      "version": "${version}",`);
     fs.writeFileSync(packageLockPath, content);
     console.log(`Updated package-lock.json version to: ${version}`);
@@ -59,10 +59,10 @@ function updateNodeJSVersions(baseVersion, timestamp) {
   if (fs.existsSync(browserPackageLockPath)) {
     let browserLockContent = fs.readFileSync(browserPackageLockPath, 'utf8');
     // Update root version
-    // eslint-disable-next-line no-regex-spaces
+
     browserLockContent = browserLockContent.replace(/^  "version": ".*?",$/m, `  "version": "${version}",`);
     // Update packages."" version
-    // eslint-disable-next-line no-regex-spaces
+
     browserLockContent = browserLockContent.replace(/^      "version": ".*?",$/m, `      "version": "${version}",`);
     fs.writeFileSync(browserPackageLockPath, browserLockContent);
     console.log(`Updated packages/poml-browser/package-lock.json version to: ${version}`);
