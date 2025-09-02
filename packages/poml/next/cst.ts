@@ -41,6 +41,7 @@ import {
   CstLiteralElementNode,
   CstRootNode,
 } from './nodes';
+import { listComponentAliases } from 'poml/base';
 
 /**
  * Extended POML CST Parser
@@ -66,6 +67,25 @@ export class ExtendedPomlParser extends CstParser {
   public selfCloseElement!: (idxInOriginalText?: number) => CstSelfCloseElementNode;
   public element!: (idxInOriginalText?: number) => CstElementNode;
   public literalElement!: (idxInOriginalText?: number) => CstLiteralElementNode;
+
+  // ---- Tag names for rules (for CST nodes) ----
+  private validComponentNames: Set<string>;
+
+  // They are handled in file.tsx currently.
+  // I think they will be gradually moved to component registry in future.
+  private validDirectives: Set<string> = new Set([
+    'include',
+    'let',
+    'output-schema',
+    'outputschema',
+    'tool-definition',
+    'tool-def',
+    'tooldef',
+    'tool',
+    'template',
+  ]);
+  // This list affects the CST parser stage only.
+  private literalTagNames: Set<string> = new Set(['text', 'template']);
 
   // ---- Small helpers ----
   private anyOf = (tokenTypes: TokenType[], label?: string) =>
@@ -113,7 +133,17 @@ export class ExtendedPomlParser extends CstParser {
       return false;
     }
     const name = (t.image || '').toLowerCase();
+
+    // TODO: should match the opening tag name
     return name === 'text' || name === 'template';
+  };
+
+  private isValidOpenTag = (tagName: string) => {
+    // When pragma strict is enabled, only known component names are allowed as tags.
+    // Other component names will show as errors in the semantic analysis stage.
+    // When pragma strict is not enabled, tag names that are not known components
+    // will be treated as texts.
+    return this.validComponentNames.has(tagName.toLowerCase());
   };
 
   constructor() {
@@ -121,6 +151,7 @@ export class ExtendedPomlParser extends CstParser {
       outputCst: true,
       recoveryEnabled: true,
     });
+    this.validComponentNames = new Set(listComponentAliases());
 
     // ---------------------------
     // RULE DEFINITIONS (as properties)

@@ -264,8 +264,11 @@ export interface OpenTagNode extends AstNode {
 
 /**
  * Related CST node interfaces for parsing stage.
+ *
+ * Opening tag without the ending close bracket.
+ * Allow prefix sharing with SelfCloseElementNode.
  */
-export interface CstOpenTagNode extends CstNode {
+export interface CstOpenTagPartialNode extends CstNode {
   children: {
     OpenBracket?: IToken[];
     WsAfterBracket?: IToken[];
@@ -273,7 +276,6 @@ export interface CstOpenTagNode extends CstNode {
     WsAfterName?: IToken[];
     Attribute?: CstAttributeNode[];
     WsAfterAttribute?: IToken[];
-    CloseBracket?: IToken[];
   };
 }
 
@@ -334,21 +336,6 @@ export interface SelfCloseElementNode extends AstNode {
 }
 
 /**
- * Related CST node interfaces for parsing stage.
- */
-export interface CstSelfCloseElementNode extends CstNode {
-  children: {
-    OpenBracket?: IToken[];
-    WsAfterBracket?: IToken[];
-    TagName?: IToken[];
-    WsAfterName?: IToken[];
-    Attribute?: CstAttributeNode[];
-    WsAfterAttribute?: IToken[];
-    SelfCloseBracket?: IToken[];
-  };
-}
-
-/**
  * Represents a complete POML element with its content.
  *
  * Element nodes are high-level constructs that represent semantic POML
@@ -393,9 +380,12 @@ export interface TextElementNode extends AstNode {
  */
 export interface CstElementNode extends CstNode {
   children: {
-    OpenTag?: CstOpenTagNode[];
-    CloseTag?: CstCloseTagNode[];
+    OpenTagPartial?: CstOpenTagPartialNode[];
+    OpenTagCloseBracket?: IToken[];
     Content?: CstElementContentNode[];
+    CloseTag?: CstCloseTagNode[];
+    // Alternative, it can also be a self-closing tag.
+    SelfCloseBracket?: IToken[];
   };
 }
 
@@ -403,7 +393,6 @@ export interface CstElementContentNode extends CstNode {
   children: {
     Element?: CstElementNode[];
     LiteralElement?: CstLiteralElementNode[];
-    SelfCloseElement?: CstSelfCloseElementNode[];
     Comment?: CstCommentNode[];
     Pragma?: CstPragmaNode[];
     Template?: CstTemplateNode[];
@@ -523,11 +512,13 @@ export interface LiteralElementNode extends AstNode {
  */
 export interface CstLiteralElementNode extends CstNode {
   children: {
-    OpenTag?: CstOpenTagNode[];
+    OpenTagPartial?: CstOpenTagPartialNode[];
+    OpenTagCloseBracket?: IToken[];
     // All content between open and close tags is treated as literal text
     // including other tags, comments, pragmas, etc. except for `</text>`.
     TextContent?: IToken[];
     CloseTag?: CstCloseTagNode[];
+    // Literal element cannot be self-closing.
   };
 }
 
