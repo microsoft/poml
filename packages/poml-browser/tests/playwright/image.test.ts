@@ -101,6 +101,70 @@ test.describe('toPngBase64 image conversion tests', () => {
     expect(result.outputLength).toBeGreaterThan(0);
   });
 
+  test('handles non-base64 data URL input (SVG)', async ({ serviceWorker, sidebarPage }) => {
+    const artifactDir = createArtifactDir();
+    // Test with the exact SVG data URL from the user's example
+    const svgDataUrl =
+      'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect fill-opacity="0"/></svg>';
+
+    const result = await serviceWorker.evaluate(async (url) => {
+      const { toPngBase64 } = self as any;
+      const imageResult = await toPngBase64(url);
+      return {
+        success: true,
+        pngBase64: imageResult.base64,
+        width: imageResult.width,
+        height: imageResult.height,
+        mimeType: imageResult.mimeType,
+        outputLength: imageResult.base64.length,
+      };
+    }, svgDataUrl);
+
+    expect(result.success).toBe(true);
+    expect(result.pngBase64).toBeTruthy();
+    expect(result.width).toBe(64);
+    expect(result.height).toBe(64);
+    expect(result.mimeType).toBe('image/png');
+    expect(result.outputLength).toBeGreaterThan(0);
+
+    // Save converted image for review
+    const outputPath = join(artifactDir, 'svg_from_plain_data_url.png');
+    const resultBuffer = Buffer.from(result.pngBase64, 'base64');
+    writeFileSync(outputPath, resultBuffer);
+  });
+
+  test('handles non-base64 data URL with URL-encoded content', async ({ serviceWorker, sidebarPage }) => {
+    const artifactDir = createArtifactDir();
+    // Test with URL-encoded SVG
+    const encodedSvgDataUrl =
+      'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2240%22%20fill%3D%22red%22%2F%3E%3C%2Fsvg%3E';
+
+    const result = await serviceWorker.evaluate(async (url) => {
+      const { toPngBase64 } = self as any;
+      const imageResult = await toPngBase64(url);
+      return {
+        success: true,
+        pngBase64: imageResult.base64,
+        width: imageResult.width,
+        height: imageResult.height,
+        mimeType: imageResult.mimeType,
+        outputLength: imageResult.base64.length,
+      };
+    }, encodedSvgDataUrl);
+
+    expect(result.success).toBe(true);
+    expect(result.pngBase64).toBeTruthy();
+    expect(result.width).toBe(100);
+    expect(result.height).toBe(100);
+    expect(result.mimeType).toBe('image/png');
+    expect(result.outputLength).toBeGreaterThan(0);
+
+    // Save converted image for review
+    const outputPath = join(artifactDir, 'svg_from_encoded_data_url.png');
+    const resultBuffer = Buffer.from(result.pngBase64, 'base64');
+    writeFileSync(outputPath, resultBuffer);
+  });
+
   test('handles errors gracefully', async ({ serviceWorker, sidebarPage }) => {
     // Test with invalid input type
     const errorResult = await serviceWorker.evaluate(async () => {

@@ -38,6 +38,12 @@ export function binaryToDataURL(buffer: ArrayBuffer | Uint8Array, mimeType: stri
   return `data:${mimeType};base64,${base64}`;
 }
 
+export function stringToBase64(str: string): string {
+  const encoder = new TextEncoder();
+  const uint8Array = encoder.encode(str);
+  return binaryToBase64(uint8Array);
+}
+
 // Special marker to distinguish system-generated base64 from user-provided base64
 const SYSTEM_BASE64_MARKER = '__RPC_B64__';
 

@@ -1,5 +1,5 @@
 import { everywhere } from '@common/rpc';
-import { binaryToBase64 } from '@common/utils/base64';
+import { binaryToBase64, stringToBase64 } from '@common/utils/base64';
 import { Image } from '@common/types';
 import { notifyDebug } from '@common/notification';
 
@@ -33,11 +33,20 @@ async function downloadImage(input: DownloadImageInput, options?: ToPngBase64Opt
 
   if (typeof input === 'string') {
     // String input is treated as src
-    const dataUrlMatch = input.match(/^data:(.*?);base64,(.*)$/);
-    if (dataUrlMatch) {
-      // It's a data URL - extract MIME type and base64
-      mimeType = mimeType || dataUrlMatch[1];
-      base64Data = dataUrlMatch[2];
+    const base64DataUrlMatch = input.match(/^data:(.*?);base64,(.*)$/);
+    const plainDataUrlMatch = input.match(/^data:(.*?),(.*)$/);
+    if (base64DataUrlMatch) {
+      // It's a base64 data URL - extract MIME type and base64
+      mimeType = mimeType || base64DataUrlMatch[1];
+      base64Data = base64DataUrlMatch[2];
+    } else if (plainDataUrlMatch && !base64DataUrlMatch) {
+      // It's a plain data URL (not base64 encoded) - need to encode it
+      mimeType = mimeType || plainDataUrlMatch[1];
+      const plainData = plainDataUrlMatch[2];
+      // Decode URI component and convert to base64
+      const decodedData = decodeURIComponent(plainData);
+      // Convert string to Uint8Array then to base64
+      base64Data = stringToBase64(decodedData);
     } else if (input.startsWith('http://') || input.startsWith('https://')) {
       // It's a URL - try fetch first, then fall back to canvas method for CORS issues
       try {
