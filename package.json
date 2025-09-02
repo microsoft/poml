@@ -391,6 +391,18 @@
     "docs:serve": "npm run generate-component-spec && npm run typedoc && mkdocs serve",
     "docs:build": "npm run generate-component-spec && npm run typedoc && mkdocs build"
   },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,json,md,yml}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx,js,mjs}": [
+      "eslint --fix"
+    ],
+    "*.py": [
+      "isort",
+      "black --quiet"
+    ]
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-json": "^6.1.0",
@@ -419,7 +431,6 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.0.4",
     "lint-staged": "^16.1.5",
-    "micromatch": "^4.0.8",
     "prettier": "^3.4.1",
     "rollup": "^4.44.1",
     "ts-jest": "^29.4.0",
