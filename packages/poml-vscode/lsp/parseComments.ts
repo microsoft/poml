@@ -278,7 +278,7 @@ ${paramsString},
     ):
         ${docstring}
         ${methodBody}
-`;
+    `;
 }
 
 function generatePythonFile(jsonData: ComponentSpec[]): string {

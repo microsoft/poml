@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs'); // eslint-disable-line
+const path = require('path'); // eslint-disable-line
 
 function updateNodeJSVersions(baseVersion, timestamp) {
   const version = timestamp ? `${baseVersion}-nightly.${timestamp}` : baseVersion;
@@ -45,8 +45,10 @@ function updateNodeJSVersions(baseVersion, timestamp) {
   if (fs.existsSync(packageLockPath)) {
     let content = fs.readFileSync(packageLockPath, 'utf8');
     // Update root version
+    // eslint-disable-next-line no-regex-spaces
     content = content.replace(/^  "version": ".*?",$/m, `  "version": "${version}",`);
     // Update packages."" version
+    // eslint-disable-next-line no-regex-spaces
     content = content.replace(/^      "version": ".*?",$/m, `      "version": "${version}",`);
     fs.writeFileSync(packageLockPath, content);
     console.log(`Updated package-lock.json version to: ${version}`);
@@ -57,8 +59,10 @@ function updateNodeJSVersions(baseVersion, timestamp) {
   if (fs.existsSync(browserPackageLockPath)) {
     let browserLockContent = fs.readFileSync(browserPackageLockPath, 'utf8');
     // Update root version
+    // eslint-disable-next-line no-regex-spaces
     browserLockContent = browserLockContent.replace(/^  "version": ".*?",$/m, `  "version": "${version}",`);
     // Update packages."" version
+    // eslint-disable-next-line no-regex-spaces
     browserLockContent = browserLockContent.replace(/^      "version": ".*?",$/m, `      "version": "${version}",`);
     fs.writeFileSync(browserPackageLockPath, browserLockContent);
     console.log(`Updated packages/poml-browser/package-lock.json version to: ${version}`);
@@ -81,7 +85,7 @@ function updatePythonVersions(baseVersion, timestamp) {
   const versionPath = path.join(__dirname, 'python/poml/_version.py');
   if (fs.existsSync(versionPath)) {
     let content = fs.readFileSync(versionPath, 'utf8');
-    content = content.replace(/__version__ = ".*"/, `__version__ = "${version}"`);
+    content = content.replace(/__version__ = '.*'/, `__version__ = '${version}'`);
     fs.writeFileSync(versionPath, content);
     console.log(`Updated _version.py to: ${version}`);
   }

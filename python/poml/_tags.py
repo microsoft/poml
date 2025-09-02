@@ -1,10 +1,8 @@
 # This file is auto-generated from component documentation.
 # Do not edit manually. Run `npm run build-comment` to regenerate.
 
-from typing import Any, Dict, List, Optional, Union
-
+from typing import Optional, Any, Union, List, Dict
 # from numbers import Number # For more specific number types if needed
-
 
 class _TagLib:
 
@@ -52,7 +50,7 @@ class _TagLib:
             selectedPages=selectedPages,
             **kwargs,
         )
-
+    
     def role(
         self,
         caption: Optional[str] = None,
@@ -89,7 +87,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-
+    
     def task(
         self,
         caption: Optional[str] = None,
@@ -117,7 +115,7 @@ class _TagLib:
             ```xml
             <task>Cook a recipe on how to prepare a beef dish.</task>
             ```
-
+            
             When including a list of steps:
             ```xml
             <task>
@@ -139,7 +137,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-
+    
     def output_format(
         self,
         caption: Optional[str] = None,
@@ -178,7 +176,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-
+    
     def stepwise_instructions(
         self,
         caption: Optional[str] = None,
@@ -220,7 +218,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-
+    
     def hint(
         self,
         caption: Optional[str] = None,
@@ -256,7 +254,7 @@ class _TagLib:
             captionColon=captionColon,
             **kwargs,
         )
-
+    
     def introducer(
         self,
         caption: Optional[str] = None,
@@ -292,7 +290,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-
+    
     def example_set(
         self,
         caption: Optional[str] = None,
@@ -347,7 +345,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-
+    
     def example(
         self,
         caption: Optional[str] = None,
@@ -381,7 +379,7 @@ class _TagLib:
               <output>Paris</output>
             </example>
             ```
-
+            
             ```xml
             <task>Summarize the following passage in a single sentence.</task>
             <example>
@@ -400,7 +398,7 @@ class _TagLib:
             captionColon=captionColon,
             **kwargs,
         )
-
+    
     def example_input(
         self,
         caption: Optional[str] = None,
@@ -428,9 +426,9 @@ class _TagLib:
             ```xml
             <input>What is the capital of France?</input>
             ```
-
+            
             When used with a template:
-
+            
             ```xml
             <input>What is the capital of {{country}}?</input>
             ```
@@ -445,7 +443,7 @@ class _TagLib:
             captionColon=captionColon,
             **kwargs,
         )
-
+    
     def example_output(
         self,
         caption: Optional[str] = None,
@@ -473,9 +471,9 @@ class _TagLib:
             ```xml
             <output>The capital of France is Paris.</output>
             ```
-
+            
             When used with a template:
-
+            
             ```xml
             <output>The capital of {{country}} is {{capital}}.</output>
             ```
@@ -490,7 +488,7 @@ class _TagLib:
             captionColon=captionColon,
             **kwargs,
         )
-
+    
     def question(
         self,
         questionCaption: Optional[str] = None,
@@ -530,7 +528,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-
+    
     def system_message(
         self,
         **kwargs: Any,
@@ -547,7 +545,7 @@ class _TagLib:
             tag_name="SystemMessage",
             **kwargs,
         )
-
+    
     def human_message(
         self,
         **kwargs: Any,
@@ -564,7 +562,7 @@ class _TagLib:
             tag_name="HumanMessage",
             **kwargs,
         )
-
+    
     def ai_message(
         self,
         **kwargs: Any,
@@ -581,7 +579,7 @@ class _TagLib:
             tag_name="AiMessage",
             **kwargs,
         )
-
+    
     def message_content(
         self,
         content: Optional[Any] = None,
@@ -602,7 +600,7 @@ class _TagLib:
             content=content,
             **kwargs,
         )
-
+    
     def conversation(
         self,
         messages: Optional[Any] = None,
@@ -628,7 +626,7 @@ class _TagLib:
             selectedMessages=selectedMessages,
             **kwargs,
         )
-
+    
     def table(
         self,
         syntax: Optional[str] = None,
@@ -665,9 +663,9 @@ class _TagLib:
             ```xml
             <table records="{{[{ name: 'Alice', age: 20 }, { name: 'Bob', age: 30 }]}}" />
             ```
-
+            
             To import an excel file, and display the first 10 records in csv syntax:
-
+            
             ```xml
             <table src="data.xlsx" parser="excel" maxRecords="10" syntax="csv" />
             ```
@@ -685,7 +683,7 @@ class _TagLib:
             maxColumns=maxColumns,
             **kwargs,
         )
-
+    
     def tree(
         self,
         syntax: Optional[str] = None,
@@ -712,7 +710,7 @@ class _TagLib:
             showContent=showContent,
             **kwargs,
         )
-
+    
     def folder(
         self,
         syntax: Optional[str] = None,
@@ -752,7 +750,7 @@ class _TagLib:
             showContent=showContent,
             **kwargs,
         )
-
+    
     def captioned_paragraph(
         self,
         caption: Optional[str] = None,
@@ -793,7 +791,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-
+    
     def webpage(
         self,
         url: Optional[str] = None,
@@ -819,12 +817,12 @@ class _TagLib:
             ```xml
             <webpage url="https://example.com" />
             ```
-
+            
             Extract only specific content using a selector:
             ```xml
             <webpage url="https://example.com" selector="main article" />
             ```
-
+            
             Convert HTML to structured POML components:
             ```xml
             <webpage url="https://example.com" extractText="false" />
@@ -840,7 +838,7 @@ class _TagLib:
             selector=selector,
             **kwargs,
         )
-
+    
     def text(
         self,
         syntax: Optional[str] = None,
@@ -882,23 +880,23 @@ class _TagLib:
             ```xml
             <poml syntax="text">
             Contents of the whole prompt.
-
+            
             1. Your customized list.
             2. You don't need to know anything about POML.
             </poml>
             ```
-
+            
             To render the whole prompt in markdown syntax with a "human" speaker:
-
+            
             ```xml
             <poml syntax="markdown" speaker="human">
               <p>You are a helpful assistant.</p>
               <p>What is the capital of France?</p>
             </poml>
             ```
-
+            
             **Experimental usage with limits and priority:**
-
+            
             ```xml
             <poml syntax="markdown" tokenLimit="10">
               <p priority="1">This has lower priority and may be truncated first.</p>
@@ -920,7 +918,7 @@ class _TagLib:
             priority=priority,
             **kwargs,
         )
-
+    
     def paragraph(
         self,
         blankLine: Optional[bool] = None,
@@ -942,7 +940,7 @@ class _TagLib:
             blankLine=blankLine,
             **kwargs,
         )
-
+    
     def inline(
         self,
         syntax: Optional[str] = None,
@@ -991,7 +989,7 @@ class _TagLib:
             priority=priority,
             **kwargs,
         )
-
+    
     def newline(
         self,
         newLineCount: Optional[float] = None,
@@ -1013,7 +1011,7 @@ class _TagLib:
             newLineCount=newLineCount,
             **kwargs,
         )
-
+    
     def header(
         self,
         **kwargs: Any,
@@ -1033,7 +1031,7 @@ class _TagLib:
             tag_name="Header",
             **kwargs,
         )
-
+    
     def sub_content(
         self,
         **kwargs: Any,
@@ -1055,7 +1053,7 @@ class _TagLib:
             tag_name="SubContent",
             **kwargs,
         )
-
+    
     def bold(
         self,
         **kwargs: Any,
@@ -1072,7 +1070,7 @@ class _TagLib:
             tag_name="Bold",
             **kwargs,
         )
-
+    
     def italic(
         self,
         **kwargs: Any,
@@ -1089,7 +1087,7 @@ class _TagLib:
             tag_name="Italic",
             **kwargs,
         )
-
+    
     def strikethrough(
         self,
         **kwargs: Any,
@@ -1106,7 +1104,7 @@ class _TagLib:
             tag_name="Strikethrough",
             **kwargs,
         )
-
+    
     def underline(
         self,
         **kwargs: Any,
@@ -1123,7 +1121,7 @@ class _TagLib:
             tag_name="Underline",
             **kwargs,
         )
-
+    
     def code(
         self,
         inline: Optional[bool] = None,
@@ -1140,7 +1138,7 @@ class _TagLib:
             ```xml
             <code inline="true">const x = 42;</code>
             ```
-
+            
             ```xml
             <code lang="javascript">
             const x = 42;
@@ -1153,7 +1151,7 @@ class _TagLib:
             lang=lang,
             **kwargs,
         )
-
+    
     def list(
         self,
         listStyle: Optional[str] = None,
@@ -1178,7 +1176,7 @@ class _TagLib:
             listStyle=listStyle,
             **kwargs,
         )
-
+    
     def list_item(
         self,
         **kwargs: Any,
@@ -1199,7 +1197,7 @@ class _TagLib:
             tag_name="ListItem",
             **kwargs,
         )
-
+    
     def object(
         self,
         syntax: Optional[str] = None,
@@ -1224,7 +1222,7 @@ class _TagLib:
             data=data,
             **kwargs,
         )
-
+    
     def image(
         self,
         src: Optional[str] = None,
@@ -1273,7 +1271,7 @@ class _TagLib:
             syntax=syntax,
             **kwargs,
         )
-
+    
     def audio(
         self,
         src: Optional[str] = None,
@@ -1285,7 +1283,7 @@ class _TagLib:
         **kwargs: Any,
     ):
         """Audio (`<audio>`) embeds an audio file in the content.
-
+        
         Accepts either a file path (`src`) or base64-encoded audio data (`base64`).
         The MIME type can be provided via `type` or will be inferred from the file extension.
 
@@ -1315,7 +1313,7 @@ class _TagLib:
             syntax=syntax,
             **kwargs,
         )
-
+    
     def tool_request(
         self,
         id: Optional[str] = None,
@@ -1346,7 +1344,7 @@ class _TagLib:
             speaker=speaker,
             **kwargs,
         )
-
+    
     def tool_response(
         self,
         syntax: Optional[str] = None,
@@ -1385,3 +1383,4 @@ class _TagLib:
             speaker=speaker,
             **kwargs,
         )
+    

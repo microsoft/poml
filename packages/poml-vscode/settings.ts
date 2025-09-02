@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-export type LanguageModelProvider = 'vscode' | 'openai' | 'microsoft' | 'anthropic' | 'google';
+export type LanguageModelProvider = 'vscode' | 'openai' | 'openaiResponse' | 'microsoft' | 'anthropic' | 'google';
 
 export type ApiConfigValue = string | { [provider: string]: string };
 
