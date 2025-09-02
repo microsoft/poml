@@ -37,9 +37,9 @@ export interface ContentMultiMediaJson {
  */
 export interface ContentMultiMediaToolRequest {
   type: 'application/vnd.poml.toolrequest';
-  content: any;    // Tool input parameters, unserialized
-  id: string;      // Tool request ID
-  name: string;    // Tool name
+  content: any; // Tool input parameters, unserialized
+  id: string; // Tool request ID
+  name: string; // Tool name
 }
 
 /**
@@ -47,9 +47,9 @@ export interface ContentMultiMediaToolRequest {
  */
 export interface ContentMultiMediaToolResponse {
   type: 'application/vnd.poml.toolresponse';
-  content: RichContent;  // Tool output, unserialized
-  id: string;            // Tool call ID to response to
-  name: string;          // Tool name
+  content: RichContent; // Tool output, unserialized
+  id: string; // Tool call ID to response to
+  name: string; // Tool name
 }
 
 export type ContentMultiMedia =
@@ -160,7 +160,7 @@ export const irElement = (type: string, props: any, ...children: React.ReactNode
     Object.entries(props)
       .filter(([_, v]) => v !== undefined)
       .map(([k, v]) => {
-        const hyphenCaseKey = k.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+        const hyphenCaseKey = k.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
         if (typeof v === 'boolean') {
           return [hyphenCaseKey, v.toString()];
         } else if (typeof v === 'number') {
@@ -170,7 +170,7 @@ export const irElement = (type: string, props: any, ...children: React.ReactNode
         } else {
           return [hyphenCaseKey, v];
         }
-      })
+      }),
   );
 
   const trimmedChildren = trimChildrenWhiteSpace(children, props);
@@ -221,16 +221,14 @@ export function trimChildrenWhiteSpace(children: React.ReactNode, props: PropsBa
           }
           return trimmed;
         } else {
-          ErrorCollection.add(
-            ReadError.fromProps(`"${props.whiteSpace}" is not a valid whiteSpace option.`, props)
-          );
+          ErrorCollection.add(ReadError.fromProps(`"${props.whiteSpace}" is not a valid whiteSpace option.`, props));
           return child;
         }
       } else {
         return child;
       }
     })
-    .filter(c => c !== '');
+    .filter((c) => c !== '');
   return trimmedChildren;
 }
 
@@ -288,20 +286,14 @@ export class ReadError extends PomlError {
     public startIndex?: number,
     public endIndex?: number,
     public sourcePath?: string,
-    options?: PomlErrorOptions
+    options?: PomlErrorOptions,
   ) {
     super(message, options);
     this.name = 'ReadError';
   }
 
   public static fromProps(message: string, props: PropsBase, options?: PomlErrorOptions) {
-    return new ReadError(
-      message,
-      props.originalStartIndex,
-      props.originalEndIndex,
-      props.sourcePath,
-      options
-    );
+    return new ReadError(message, props.originalStartIndex, props.originalEndIndex, props.sourcePath, options);
   }
 }
 
@@ -314,7 +306,7 @@ export class WriteError extends PomlError {
     public irStartIndex?: number,
     public irEndIndex?: number,
     public relatedIr?: string,
-    options?: PomlErrorOptions
+    options?: PomlErrorOptions,
   ) {
     super(message, options);
     this.name = 'WriteError';
@@ -470,12 +462,10 @@ export const useWithCatch = <T,>(promise: Promise<T>, props: PropsBase) => {
     } else {
       ErrorCollection.add(
         ReadError.fromProps(
-          err && err.message
-            ? err.message
-            : 'Unknown error happened during asynchroneous process of rendering.',
+          err && err.message ? err.message : 'Unknown error happened during asynchroneous process of rendering.',
           props,
-          { cause: err }
-        )
+          { cause: err },
+        ),
       );
     }
   });
@@ -529,10 +519,7 @@ type AnyProps = { [x: string]: unknown };
 
 const StyleSheetContext = React.createContext<StyleSheet>({});
 
-export const StyleSheetProvider = ({
-  stylesheet,
-  children
-}: React.PropsWithChildren<{ stylesheet: StyleSheet }>) => {
+export const StyleSheetProvider = ({ stylesheet, children }: React.PropsWithChildren<{ stylesheet: StyleSheet }>) => {
   const currentStylesheet = React.useContext(StyleSheetContext);
   // Deep merge stylesheet
   stylesheet = deepMerge(currentStylesheet, stylesheet);
@@ -541,11 +528,7 @@ export const StyleSheetProvider = ({
 
 const useStyleSheet = () => React.useContext(StyleSheetContext);
 
-const computeStyles = <T,>(
-  currentProps: T,
-  component: PomlComponent,
-  _stylesheet?: StyleSheet
-): T => {
+const computeStyles = <T,>(currentProps: T, component: PomlComponent, _stylesheet?: StyleSheet): T => {
   const stylesheet = _stylesheet !== undefined ? _stylesheet : useStyleSheet();
 
   // priority, order, props
@@ -554,7 +537,7 @@ const computeStyles = <T,>(
     if (match === '*') {
       matches.push([0, index, props]);
     } else {
-      const matchResult: number[] = match.split(/\s+/g).map(indiv => {
+      const matchResult: number[] = match.split(/\s+/g).map((indiv) => {
         // FIXME: this is different from css rule
         if (indiv.startsWith('.')) {
           const currentClassName: string | undefined = (currentProps as any)?.className;
@@ -564,7 +547,7 @@ const computeStyles = <T,>(
           return component.getAliases().includes(indiv.toLowerCase()) ? 1 : 0;
         }
       });
-      if (matchResult.every(r => r > 0)) {
+      if (matchResult.every((r) => r > 0)) {
         matches.push([matchResult.reduce((a, b) => a + b, 0), index, props]);
       }
     }
@@ -585,10 +568,7 @@ const computeStyles = <T,>(
 // It's used to find related files specified in the source file.
 // It's also used to locate the source file for debugging purposes.
 const SourceContext = React.createContext<string>('');
-export const SourceProvider = ({
-  source,
-  children
-}: React.PropsWithChildren<{ source: string }>) => {
+export const SourceProvider = ({ source, children }: React.PropsWithChildren<{ source: string }>) => {
   return <SourceContext.Provider value={source}>{children}</SourceContext.Provider>;
 };
 export const expandRelative = (src: string) => {
@@ -653,7 +633,7 @@ export class PomlComponent {
 
   public getAliases(lower: boolean = true) {
     if (lower) {
-      return this.options.aliases.map(alias => alias.toLowerCase());
+      return this.options.aliases.map((alias) => alias.toLowerCase());
     } else {
       return this.options.aliases;
     }
@@ -663,25 +643,23 @@ export class PomlComponent {
     if (!props) {
       return;
     }
-    this.options.unwantedProps.forEach(key => {
+    this.options.unwantedProps.forEach((key) => {
       if (props[key] !== undefined) {
         ErrorCollection.add(
-          ReadError.fromProps(
-            `"${key}" is not supported (but provided) in ${this.officialName}.`,
-            props,
-            { severity: 'warning' }
-          )
+          ReadError.fromProps(`"${key}" is not supported (but provided) in ${this.officialName}.`, props, {
+            severity: 'warning',
+          }),
         );
       }
     });
   }
 
   private throwIfMissing(props: any) {
-    this.options.requiredProps.forEach(key => {
+    this.options.requiredProps.forEach((key) => {
       if (!props || props[key] === undefined) {
         throw ReadError.fromProps(
           `"${key}" is required but not provided for ${this.officialName}, available props are ${props ? Object.keys(props) : []}.`,
-          props
+          props,
         );
       }
     });
@@ -700,7 +678,7 @@ export class PomlComponent {
   }
 
   public spec(): ComponentSpec | undefined {
-    return (componentDocs as ComponentSpec[]).find(document => document.name === this.name);
+    return (componentDocs as ComponentSpec[]).find((document) => document.name === this.name);
   }
 
   public parameters(): Parameter[] {
@@ -713,9 +691,7 @@ export class PomlComponent {
     for (const base of bases) {
       const baseSpec = base.spec();
       if (baseSpec) {
-        parameters.push(
-          ...baseSpec.params.filter(p => !parameters.map(p => p.name).includes(p.name))
-        );
+        parameters.push(...baseSpec.params.filter((p) => !parameters.map((p) => p.name).includes(p.name)));
       }
     }
     return parameters;
@@ -737,7 +713,7 @@ export class PomlComponent {
         const componentSpec = component.spec();
         if (componentSpec) {
           for (const base of componentSpec.baseComponents) {
-            if (!toSearch.includes(base) && !result.map(c => c.name).includes(base)) {
+            if (!toSearch.includes(base) && !result.map((c) => c.name).includes(base)) {
               toSearch.push(base);
             }
           }
@@ -756,7 +732,7 @@ export class PomlComponent {
     const params = this.parameters();
     return Object.entries(props).reduce(
       (acc, [key, value]: [string, any]) => {
-        const param = params.find(param => param.name.toLowerCase() === key.toLowerCase());
+        const param = params.find((param) => param.name.toLowerCase() === key.toLowerCase());
         if (!param) {
           // Keep it.
           acc[key] = value;
@@ -792,9 +768,7 @@ export class PomlComponent {
               value = JSON.parse(value);
             } catch (e) {
               if (param.fallbackType !== 'string') {
-                ErrorCollection.add(
-                  ReadError.fromProps(`Fail to parse \"${key}\" with JSON parser`, props)
-                );
+                ErrorCollection.add(ReadError.fromProps(`Fail to parse "${key}" with JSON parser`, props));
               }
             }
           }
@@ -825,17 +799,14 @@ export class PomlComponent {
         if (param.choices.length > 0) {
           if (!param.choices.includes(value)) {
             ErrorCollection.add(
-              ReadError.fromProps(
-                `"${key}" should be one of ${param.choices.join(', ')}, not ${value}`,
-                props
-              )
+              ReadError.fromProps(`"${key}" should be one of ${param.choices.join(', ')}, not ${value}`, props),
             );
           }
         }
         acc[formalKey] = value;
         return acc;
       },
-      {} as { [key: string]: any }
+      {} as { [key: string]: any },
     );
   }
 
@@ -852,18 +823,12 @@ export class PomlComponent {
         const msg =
           'This prompt is asynchorous and still loading. Users should not see this message. ' +
           'If you see this message, please report it to the developer.';
-        return (
-          <React.Suspense fallback={<div>{msg}</div>}>{this.componentFunc(props)}</React.Suspense>
-        );
+        return <React.Suspense fallback={<div>{msg}</div>}>{this.componentFunc(props)}</React.Suspense>;
       } else {
         return this.componentFunc(props);
       }
     } catch (e) {
-      if (
-        e &&
-        typeof (e as any).message === 'string' &&
-        (e as any).message.startsWith('Suspense Exception:')
-      ) {
+      if (e && typeof (e as any).message === 'string' && (e as any).message.startsWith('Suspense Exception:')) {
         throw e;
       }
       if (e instanceof PomlError) {
@@ -871,8 +836,8 @@ export class PomlComponent {
       } else {
         ErrorCollection.add(
           ReadError.fromProps(`Error in component render of ${this.officialName}: ${e}`, props, {
-            cause: e
-          })
+            cause: e,
+          }),
         );
       }
       return null;
@@ -898,10 +863,8 @@ class ComponentRegistry {
     if (!options.aliases.includes(officialName)) {
       options.aliases = [officialName, ...options.aliases];
     }
-    options.aliases.forEach(alias => {
-      const aliasExisting = this.components.filter(c =>
-        c.getAliases().includes(alias.toLowerCase())
-      );
+    options.aliases.forEach((alias) => {
+      const aliasExisting = this.components.filter((c) => c.getAliases().includes(alias.toLowerCase()));
       if (aliasExisting.length > 0) {
         throw new SystemError(`Alias "${alias}" is already used by ${aliasExisting[0]}.`);
       }
@@ -913,7 +876,7 @@ class ComponentRegistry {
 
   public unregisterComponent(name: string) {
     const component = this.getComponent(name);
-    this.components = this.components.filter(c => c !== component);
+    this.components = this.components.filter((c) => c !== component);
   }
 
   public listComponents() {
@@ -921,15 +884,11 @@ class ComponentRegistry {
   }
 
   public getComponent(name: string, disabled?: Set<string>): PomlComponent | undefined;
-  public getComponent(
-    name: string,
-    returnReasonIfNotFound: true,
-    disabled?: Set<string>
-  ): PomlComponent | string;
+  public getComponent(name: string, returnReasonIfNotFound: true, disabled?: Set<string>): PomlComponent | string;
   public getComponent(
     name: string,
     returnReasonIfNotFound: boolean | Set<string> = false,
-    disabled: Set<string> | undefined = undefined
+    disabled: Set<string> | undefined = undefined,
   ): PomlComponent | string | undefined {
     if (returnReasonIfNotFound instanceof Set) {
       disabled = returnReasonIfNotFound;
@@ -937,7 +896,7 @@ class ComponentRegistry {
     }
 
     const hyphenToCamelCase = (s: string) => {
-      return s.toLowerCase().replace(/-([a-z])/g, g => g[1].toUpperCase());
+      return s.toLowerCase().replace(/-([a-z])/g, (g) => g[1].toUpperCase());
     };
 
     const nameVariants = [name.toLowerCase(), hyphenToCamelCase(name).toLowerCase()];
@@ -959,19 +918,17 @@ class ComponentRegistry {
       return undefined;
     }
 
-    const availableAliases = this.components
-      .flatMap(c => c.getAliases())
-      .filter(a => !disabled?.has(a));
+    const availableAliases = this.components.flatMap((c) => c.getAliases()).filter((a) => !disabled?.has(a));
 
-    const distances = availableAliases.map(alias => {
+    const distances = availableAliases.map((alias) => {
       return {
         alias: alias,
-        dist: distance(alias.toLowerCase(), name.toLowerCase())
+        dist: distance(alias.toLowerCase(), name.toLowerCase()),
       };
     });
     distances.sort((a, b) => a.dist - b.dist);
     const doYouMean = distances.filter((d, index) => index < 1 || d.dist <= 2);
-    return `Component ${name} not found. Do you mean: ${doYouMean.map(d => d.alias).join(', ')}?`;
+    return `Component ${name} not found. Do you mean: ${doYouMean.map((d) => d.alias).join(', ')}?`;
   }
 }
 
@@ -999,22 +956,22 @@ export function component(name: string, options?: string[] | NonStrictComponentO
               requiredProps: [],
               unwantedProps: [],
               applyStyleSheet: true,
-              asynchorous: false
+              asynchorous: false,
             }
           : {
               aliases: options.aliases ?? [],
               requiredProps: options.requiredProps ?? [],
               unwantedProps: options.unwantedProps ?? [],
               applyStyleSheet: options.applyStyleSheet ?? true,
-              asynchorous: options.asynchorous ?? false
+              asynchorous: options.asynchorous ?? false,
             }
         : {
             aliases: [],
             requiredProps: [],
             unwantedProps: [],
             applyStyleSheet: true,
-            asynchorous: false
-          }
+            asynchorous: false,
+          },
     );
     return registered.render.bind(registered) as T;
   };
@@ -1028,17 +985,11 @@ export function unregisterComponent(alias: string) {
  * Find a component by its alias. If not found, return a string that suggests the closest match.
  * @param alias Alias or official name.
  */
-export function findComponentByAlias(
-  alias: string,
-  disabled?: Set<string>
-): PomlComponent | string {
+export function findComponentByAlias(alias: string, disabled?: Set<string>): PomlComponent | string {
   return ComponentRegistry.instance.getComponent(alias, true, disabled);
 }
 
-export function findComponentByAliasOrUndefined(
-  alias: string,
-  disabled?: Set<string>
-): PomlComponent | undefined {
+export function findComponentByAliasOrUndefined(alias: string, disabled?: Set<string>): PomlComponent | undefined {
   return ComponentRegistry.instance.getComponent(alias, disabled);
 }
 

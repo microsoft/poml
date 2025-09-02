@@ -55,7 +55,7 @@ This is a regular markdown document that explains the task.
 Here are some key points to consider:
 
 - Data quality
-- Statistical significance  
+- Statistical significance
 - Business impact
 
 <examples>
@@ -77,7 +77,7 @@ The analysis shows...
   <task>Process the following data</task>
   <text>
     This is **markdown** content that will be processed as pure text.
-    
+
     - Item 1
     - Item 2
 
@@ -115,30 +115,31 @@ The core of the new architecture is a three-pass process: Segmentation, Metadata
 
 This initial pass is a crucial preprocessing step that scans the raw file content and partitions it into a hierarchical tree of segments. It does **not** parse the full XML structure of POML blocks; it only identifies their boundaries.
 
-* **Objective**: To classify every part of the file as `META`, `POML`, or `TEXT` and build a nested structure.
-* **Algorithm**:
+- **Objective**: To classify every part of the file as `META`, `POML`, or `TEXT` and build a nested structure.
+- **Algorithm**:
   1. Load all valid POML component tag names (including aliases) from `componentDocs.json`. This set of tags will be used for detection.
   2. Initialize the root of the segment tree as a single, top-level `TEXT` segment spanning the entire file, unless the root segment is a single `<poml>...</poml>` block spanning the whole file (in which case it will be treated as a `POML` segment).
   3. Use a stack-based algorithm to scan the text.
-    * When an opening tag (e.g., `<task>`) that matches a known POML component is found, push its name and start position onto the stack. This marks the beginning of a potential `POML` segment.
-    * When a closing tag (e.g., `</task>`) is found that matches the tag at the top of the stack, pop the stack. This marks a complete `POML` segment. This new segment is added as a child to the current parent segment in the tree.
-    * The special `<text>` tag is handled recursively. If a `<text>` tag is found *inside* a `POML` segment, the scanner will treat its content as a nested `TEXT` segment. This `TEXT` segment can, in turn, contain more `POML` children.
-    * Any content not enclosed within identified `POML` tags remains part of its parent `TEXT` segment.
+  - When an opening tag (e.g., `<task>`) that matches a known POML component is found, push its name and start position onto the stack. This marks the beginning of a potential `POML` segment.
+  - When a closing tag (e.g., `</task>`) is found that matches the tag at the top of the stack, pop the stack. This marks a complete `POML` segment. This new segment is added as a child to the current parent segment in the tree.
+  - The special `<text>` tag is handled recursively. If a `<text>` tag is found _inside_ a `POML` segment, the scanner will treat its content as a nested `TEXT` segment. This `TEXT` segment can, in turn, contain more `POML` children.
+  - Any content not enclosed within identified `POML` tags remains part of its parent `TEXT` segment.
   4. `<meta>` tags are treated specially. They are identified and parsed into `META` segments at any level but are logically hoisted and processed first. They should not have children.
-* **Output**: A `Segment` tree. For backward compatibility, if the root segment is a single `<poml>...</poml>` block spanning the whole file, the system can revert to the original, simpler parsing model.
+
+- **Output**: A `Segment` tree. For backward compatibility, if the root segment is a single `<poml>...</poml>` block spanning the whole file, the system can revert to the original, simpler parsing model.
 
 **`Segment` Interface**: The `children` property is key to representing the nested structure of mixed-content files.
 
 ```typescript
 interface Segment {
-  id: string;                      // Unique ID for caching and React keys
+  id: string; // Unique ID for caching and React keys
   kind: 'META' | 'TEXT' | 'POML';
   start: number;
   end: number;
-  content: string;                 // The raw string content of the segment
-  parent?: Segment;                 // Reference to the parent segment
-  children: Segment[];             // Nested segments (e.g., a POML block within text)
-  tagName?: string;                 // For POML segments, the name of the root tag (e.g., 'task')
+  content: string; // The raw string content of the segment
+  parent?: Segment; // Reference to the parent segment
+  children: Segment[]; // Nested segments (e.g., a POML block within text)
+  tagName?: string; // For POML segments, the name of the root tag (e.g., 'task')
 }
 ```
 
@@ -146,9 +147,9 @@ interface Segment {
 
 Once the segment tree is built, all `META` segments are processed.
 
-  * **Extraction**: Traverse the tree to find all `META` segments.
-  * **Population**: Parse the content of each `<meta>` tag and populate the global `PomlContext` object.
-  * **Removal**: After processing, `META` segments are removed from the tree to prevent them from being rendered.
+- **Extraction**: Traverse the tree to find all `META` segments.
+- **Population**: Parse the content of each `<meta>` tag and populate the global `PomlContext` object.
+- **Removal**: After processing, `META` segments are removed from the tree to prevent them from being rendered.
 
 **`PomlContext` Interface**: This context object is the single source of truth for the entire file, passed through all readers. It's mutable, allowing stateful operations like `<let>` to have a file-wide effect.
 
@@ -157,8 +158,8 @@ interface PomlContext {
   variables: { [key: string]: any }; // For {{ substitutions }} and <let> (Read/Write)
   texts: { [key: string]: React.ReactElement }; // Maps TEXT_ID to content for <text> replacement (Read/Write)
   stylesheet: { [key: string]: string }; // Merged styles from all <meta> tags (Read-Only during render)
-  minimalPomlVersion?: string;      // From <meta> (Read-Only)
-  sourcePath: string;                // File path for resolving includes (Read-Only)
+  minimalPomlVersion?: string; // From <meta> (Read-Only)
+  sourcePath: string; // File path for resolving includes (Read-Only)
 }
 ```
 
@@ -166,20 +167,18 @@ interface PomlContext {
 
 Rendering starts at the root of the segment tree and proceeds recursively. A controller dispatches segments to the appropriate reader.
 
-* **`PureTextReader`**: Handles `TEXT` segments.
+- **`PureTextReader`**: Handles `TEXT` segments.
+  - Currently we directly render the pure-text contents as a single React element. In future, we can:
+    - Renders the text content, potentially using a Markdown processor.
+    - Performs variable substitutions (`{{...}}`) using the `variables` from `PomlContext`. The logic from `handleText` in the original `PomlFile` should be extracted into a shared utility for this.
+  - Iterates through its `children` segments. For each child `POML` segment, it calls the `PomlReader`.
 
-  * Currently we directly render the pure-text contents as a single React element. In future, we can:
-    * Renders the text content, potentially using a Markdown processor.
-    * Performs variable substitutions (`{{...}}`) using the `variables` from `PomlContext`. The logic from `handleText` in the original `PomlFile` should be extracted into a shared utility for this.
-  * Iterates through its `children` segments. For each child `POML` segment, it calls the `PomlReader`.
+- **`PomlReader`**: Handles `POML` segments.
+  - **Pre-processing**: Before parsing, it replaces any direct child `<text>` regions with a self-closing placeholder tag containing a unique ID: `<text ref="TEXT_ID_123" />`. The original content of the `<text>` segment is stored in `context.texts`. This ensures the XML parser inside `PomlFile` doesn't fail on non-XML content (like Markdown).
+  - **Delegation**: Instantiates a modified `PomlFile` class with the processed segment content and the shared `PomlContext`.
+  - **Rendering**: Calls the `pomlFile.react(context)` method to render the segment.
 
-* **`PomlReader`**: Handles `POML` segments.
-
-  * **Pre-processing**: Before parsing, it replaces any direct child `<text>` regions with a self-closing placeholder tag containing a unique ID: `<text ref="TEXT_ID_123" />`. The original content of the `<text>` segment is stored in `context.texts`. This ensures the XML parser inside `PomlFile` doesn't fail on non-XML content (like Markdown).
-  * **Delegation**: Instantiates a modified `PomlFile` class with the processed segment content and the shared `PomlContext`.
-  * **Rendering**: Calls the `pomlFile.react(context)` method to render the segment.
-
-* **`IntelliSense Layer`**: The segment tree makes it easy to provide context-aware IntelliSense. By checking the `kind` of the segment at the cursor's offset, the request can be routed to the correct provider—either the `PomlReader`'s XML-aware completion logic or a simpler text/variable completion provider for `TEXT` segments.
+- **`IntelliSense Layer`**: The segment tree makes it easy to provide context-aware IntelliSense. By checking the `kind` of the segment at the cursor's offset, the request can be routed to the correct provider—either the `PomlReader`'s XML-aware completion logic or a simpler text/variable completion provider for `TEXT` segments.
 
 **`Reader` Interface**: This interface defines the contract for both `PureTextReader` and `PomlReader`.
 
@@ -199,21 +198,21 @@ To achieve this design, the existing `PomlFile` class needs significant refactor
 
 1. **Constructor (`new PomlFile`)**:
 
-  * **Remove Auto-Wrapping**: The `autoAddPoml` logic must be **removed**. The `PomlReader` will only pass it well-formed XML content corresponding to a single `POML` segment. The constructor will now assume the input `text` is a valid XML string.
-  * **Receive Context**: The constructor should accept the `PomlContext` object to access shared state.
+- **Remove Auto-Wrapping**: The `autoAddPoml` logic must be **removed**. The `PomlReader` will only pass it well-formed XML content corresponding to a single `POML` segment. The constructor will now assume the input `text` is a valid XML string.
+- **Receive Context**: The constructor should accept the `PomlContext` object to access shared state.
 
 2. **State Management (`handleLet`)**:
 
-  * The `<let>` tag's implementation must be modified to read from and write to the **shared `PomlContext.variables` object**, not a local context. This ensures that a variable defined in one POML block is available to subsequent POML blocks in the same file.
+- The `<let>` tag's implementation must be modified to read from and write to the **shared `PomlContext.variables` object**, not a local context. This ensures that a variable defined in one POML block is available to subsequent POML blocks in the same file.
 
 3. **Handling `<include>`**:
 
-  * The `handleInclude` method should be **removed** from `PomlFile`. Inclusion is now handled at a higher level by the main processing pipeline. When the `PomlReader` encounters an `<include>` tag, it will invoke the entire pipeline (Segmentation, Metadata, Rendering) on the included file and insert the resulting React elements.
+- The `handleInclude` method should be **removed** from `PomlFile`. Inclusion is now handled at a higher level by the main processing pipeline. When the `PomlReader` encounters an `<include>` tag, it will invoke the entire pipeline (Segmentation, Metadata, Rendering) on the included file and insert the resulting React elements.
 
 4. **Parsing `TEXT` Placeholders**:
 
-  * The core `parseXmlElement` method needs a new branch to handle the `<text ref="..." />` placeholder.
-  * When it encounters this element:
-    1. It extracts the `ref` attribute (e.g., `"TEXT_ID_123"`).
-    2. It looks up the corresponding raw text from `context.texts`.
-    3. It fetches from the `context.texts` map and returns a React element containing the pure text content.
+- The core `parseXmlElement` method needs a new branch to handle the `<text ref="..." />` placeholder.
+- When it encounters this element:
+  1. It extracts the `ref` attribute (e.g., `"TEXT_ID_123"`).
+  2. It looks up the corresponding raw text from `context.texts`.
+  3. It fetches from the `context.texts` map and returns a React element containing the pure text content.

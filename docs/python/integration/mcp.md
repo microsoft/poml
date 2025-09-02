@@ -2,10 +2,12 @@
 
 The Model Context Protocol (MCP) is an open protocol that enables seamless integration between LLM applications and external data sources and tools. MCP provides a standardized way for AI models to access context and invoke tools from various services.
 
+<!-- prettier-ignore -->
 !!! warning
 
     POML does not have built-in support for MCP yet. Currently, we resort to tool calls with templates to emulate MCP-like behavior. Native support for MCP is planned for a future release.
 
+<!-- prettier-ignore -->
 !!! note
 
     Some providers support calling MCP servers remotely, e.g., [OpenAI Response API](https://platform.openai.com/docs/api-reference/responses). Those behaviors are outside the scope of this document because developers do not need to handle MCP invocations at all.

@@ -67,30 +67,17 @@ const PresentationApproach = React.createContext<
  * Used by components to determine how to render themselves.
  */
 export const computePresentation = (
-  props:
-    | PropsMarkupBase
-    | PropsSerializeBase
-    | PropsFreeBase
-    | PropsMultiMediaBase
-    | PropsPresentationBase
+  props: PropsMarkupBase | PropsSerializeBase | PropsFreeBase | PropsMultiMediaBase | PropsPresentationBase,
 ): Presentation => {
   const result = computePresentationOrUndefined(props);
   if (!result) {
-    throw ReadError.fromProps(
-      `No presentation approach found in context or currently: ${props}`,
-      props
-    );
+    throw ReadError.fromProps(`No presentation approach found in context or currently: ${props}`, props);
   }
   return result;
 };
 
 export const computePresentationOrUndefined = (
-  props:
-    | PropsMarkupBase
-    | PropsSerializeBase
-    | PropsFreeBase
-    | PropsMultiMediaBase
-    | PropsPresentationBase
+  props: PropsMarkupBase | PropsSerializeBase | PropsFreeBase | PropsMultiMediaBase | PropsPresentationBase,
 ): Presentation | undefined => {
   if (
     props.presentation === 'markup' ||
@@ -111,21 +98,11 @@ export namespace Markup {
    * Encloses a markup component.
    * It could produce nothing if it's not necessary to wrap the component.
    */
-  export const Environment = component('Markup.Environment')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const Environment = component('Markup.Environment')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const parentPresentation = React.useContext(PresentationApproach);
 
     // presentation is extracted but not used here. We are already in markup mode.
-    let {
-      presentation,
-      markupLang,
-      children,
-      originalStartIndex,
-      originalEndIndex,
-      writerOptions,
-      sourcePath
-    } = props;
+    let { presentation, markupLang, children, originalStartIndex, originalEndIndex, writerOptions, sourcePath } = props;
 
     if (!markupLang) {
       if (parentPresentation?.presentation === 'markup') {
@@ -137,8 +114,7 @@ export namespace Markup {
 
     return parentPresentation?.presentation === 'markup' &&
       (parentPresentation as PropsMarkupBase).markupLang === markupLang &&
-      (!writerOptions ||
-        (parentPresentation as PropsMarkupBase).writerOptions === writerOptions) ? (
+      (!writerOptions || (parentPresentation as PropsMarkupBase).writerOptions === writerOptions) ? (
       <>{children}</>
     ) : (
       irElement(
@@ -148,17 +124,16 @@ export namespace Markup {
           value={{
             presentation: 'markup',
             markupLang: markupLang,
-            writerOptions: writerOptions
-          }}
-        >
+            writerOptions: writerOptions,
+          }}>
           {trimChildrenWhiteSpace(children, props)}
-        </PresentationApproach.Provider>
+        </PresentationApproach.Provider>,
       )
     );
   });
 
   export const EncloseSerialize = component('Markup.EncloseSerialize')((
-    props: React.PropsWithChildren<InlineProps & CodeProps>
+    props: React.PropsWithChildren<InlineProps & CodeProps>,
   ) => {
     const { children, inline = false, ...others } = props;
     return (
@@ -168,9 +143,7 @@ export namespace Markup {
     );
   });
 
-  const SimpleMarkupComponent = (
-    props: React.PropsWithChildren<PropsMarkupBase & { tagName: string }>
-  ) => {
+  const SimpleMarkupComponent = (props: React.PropsWithChildren<PropsMarkupBase & { tagName: string }>) => {
     // Sometimes it helps to extract attributes like markupLang to avoid too many props sent to IR.
     // But this is not necessary.
     const { children, tagName, markupLang, presentation, ...others } = props;
@@ -191,23 +164,21 @@ export namespace Markup {
   // The paragraph in our context is the most common block element.
   // It can be nested, and represent complex sections and rich texts.
   export const Paragraph = component('Markup.Paragraph')((
-    props: React.PropsWithChildren<PropsMarkupBase & ParagraphProps>
+    props: React.PropsWithChildren<PropsMarkupBase & ParagraphProps>,
   ) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="p">
+      <SimpleMarkupComponent {...others} tagName='p'>
         {children}
       </SimpleMarkupComponent>
     );
   });
 
   // Inline is a light-weight element that is wrapped by two spaces.
-  export const Inline = component('Markup.Inline')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const Inline = component('Markup.Inline')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="span">
+      <SimpleMarkupComponent {...others} tagName='span'>
         {children}
       </SimpleMarkupComponent>
     );
@@ -220,16 +191,12 @@ export namespace Markup {
 
   export const Newline = component('Markup.Newline')((props: PropsMarkupBase & NewlineProps) => {
     const { newlineCount, ...others } = props;
-    return (
-      <Markup.Environment {...others}>
-        {irElement('nl', { count: newlineCount, ...others })}
-      </Markup.Environment>
-    );
+    return <Markup.Environment {...others}>{irElement('nl', { count: newlineCount, ...others })}</Markup.Environment>;
   });
 
   // Header is a block that is usually used to emphasize the title of a section.
   export const Header = component('Markup.Header')((
-    props: React.PropsWithChildren<PropsMarkupBase & ParagraphProps>
+    props: React.PropsWithChildren<PropsMarkupBase & ParagraphProps>,
   ) => {
     const ctxLevel = React.useContext(HeaderLevel);
     const { children, ...others } = props;
@@ -239,9 +206,9 @@ export namespace Markup {
           'h',
           {
             level: ctxLevel,
-            ...others
+            ...others,
           },
-          children
+          children,
         )}
       </Markup.Environment>
     );
@@ -250,7 +217,7 @@ export namespace Markup {
   // SubContent usually follows a header and states that the headers inside it are sub-headers.
   // It's same as a paragraph in all other aspects.
   export const SubContent = component('Markup.SubContent')((
-    props: React.PropsWithChildren<PropsMarkupBase & Markup.ParagraphProps>
+    props: React.PropsWithChildren<PropsMarkupBase & Markup.ParagraphProps>,
   ) => {
     const { children, ...others } = props;
     const ctxLevel = React.useContext(HeaderLevel);
@@ -263,48 +230,40 @@ export namespace Markup {
   });
 
   // Bold is a Inline element that is used to emphasize the text.
-  export const Bold = component('Markup.Bold')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const Bold = component('Markup.Bold')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="b">
+      <SimpleMarkupComponent {...others} tagName='b'>
         {children}
       </SimpleMarkupComponent>
     );
   });
 
   // Italic is a Inline element that is used to emphasize the text.
-  export const Italic = component('Markup.Italic')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const Italic = component('Markup.Italic')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="i">
+      <SimpleMarkupComponent {...others} tagName='i'>
         {children}
       </SimpleMarkupComponent>
     );
   });
 
   // Strikethrough is a Inline element that is used to represent deleted text.
-  export const Strikethrough = component('Markup.Strikethrough')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const Strikethrough = component('Markup.Strikethrough')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="s">
+      <SimpleMarkupComponent {...others} tagName='s'>
         {children}
       </SimpleMarkupComponent>
     );
   });
 
   // Underline is a Inline element that is used to represent underlined text.
-  export const Underline = component('Markup.Underline')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const Underline = component('Markup.Underline')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="u">
+      <SimpleMarkupComponent {...others} tagName='u'>
         {children}
       </SimpleMarkupComponent>
     );
@@ -316,11 +275,11 @@ export namespace Markup {
   }
 
   export const Code = component('Markup.Code')((
-    props: React.PropsWithChildren<PropsMarkupBase & InlineProps & CodeProps>
+    props: React.PropsWithChildren<PropsMarkupBase & InlineProps & CodeProps>,
   ) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="code">
+      <SimpleMarkupComponent {...others} tagName='code'>
         {children}
       </SimpleMarkupComponent>
     );
@@ -334,76 +293,64 @@ export namespace Markup {
   export const ListItemIndexContext = React.createContext<number>(0);
 
   export const List = component('Markup.List')((
-    props: React.PropsWithChildren<PropsMarkupBase & ListProps & ParagraphProps>
+    props: React.PropsWithChildren<PropsMarkupBase & ListProps & ParagraphProps>,
   ) => {
     const { children, listStyle = 'dash', ...others } = props;
     if (!['star', 'dash', 'plus', 'decimal', 'latin'].includes(listStyle)) {
       throw ReadError.fromProps(`Invalid list style: ${listStyle}`, others);
     }
-    return (
-      <Markup.Environment {...others}>
-        {irElement('list', { listStyle, ...others }, children)}
-      </Markup.Environment>
-    );
+    return <Markup.Environment {...others}>{irElement('list', { listStyle, ...others }, children)}</Markup.Environment>;
   });
 
   export const ListItem = component('Markup.ListItem')((
-    props: React.PropsWithChildren<PropsMarkupBase & ParagraphProps>
+    props: React.PropsWithChildren<PropsMarkupBase & ParagraphProps>,
   ) => {
     const { children, ...others } = props;
     return irElement('item', { ...others }, children);
   });
 
   export const TableContainer = component('Markup.TableContainer')((
-    props: React.PropsWithChildren<PropsMarkupBase & ParagraphProps>
+    props: React.PropsWithChildren<PropsMarkupBase & ParagraphProps>,
   ) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="table">
+      <SimpleMarkupComponent {...others} tagName='table'>
         {children}
       </SimpleMarkupComponent>
     );
   });
 
-  export const TableHead = component('Markup.TableHead')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const TableHead = component('Markup.TableHead')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="thead">
+      <SimpleMarkupComponent {...others} tagName='thead'>
         {children}
       </SimpleMarkupComponent>
     );
   });
 
-  export const TableBody = component('Markup.TableBody')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const TableBody = component('Markup.TableBody')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="tbody">
+      <SimpleMarkupComponent {...others} tagName='tbody'>
         {children}
       </SimpleMarkupComponent>
     );
   });
 
-  export const TableRow = component('Markup.TableRow')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const TableRow = component('Markup.TableRow')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="trow">
+      <SimpleMarkupComponent {...others} tagName='trow'>
         {children}
       </SimpleMarkupComponent>
     );
   });
 
-  export const TableCell = component('Markup.TableCell')((
-    props: React.PropsWithChildren<PropsMarkupBase>
-  ) => {
+  export const TableCell = component('Markup.TableCell')((props: React.PropsWithChildren<PropsMarkupBase>) => {
     const { children, ...others } = props;
     return (
-      <SimpleMarkupComponent {...others} tagName="tcell">
+      <SimpleMarkupComponent {...others} tagName='tcell'>
         {children}
       </SimpleMarkupComponent>
     );
@@ -421,7 +368,7 @@ export namespace Serialize {
    * if it's unnamed.
    */
   export const Environment = component('Serialize.Environment')((
-    props: React.PropsWithChildren<PropsSerializeBase>
+    props: React.PropsWithChildren<PropsSerializeBase & InlineProps>,
   ) => {
     const parentPresentation = React.useContext(PresentationApproach);
 
@@ -435,6 +382,7 @@ export namespace Serialize {
       originalEndIndex,
       writerOptions,
       sourcePath,
+      inline,
       ...others
     } = props;
 
@@ -460,24 +408,23 @@ export namespace Serialize {
             originalStartIndex,
             originalEndIndex,
             writerOptions,
-            sourcePath
+            sourcePath,
           },
           <PresentationApproach.Provider
             value={{
               presentation: 'serialize',
               serializer: serializer,
-              writerOptions: writerOptions
-            }}
-          >
+              writerOptions: writerOptions,
+            }}>
             {trimChildrenWhiteSpace(children, props)}
-          </PresentationApproach.Provider>
+          </PresentationApproach.Provider>,
         )
       );
     if (parentPresentation?.presentation === 'markup') {
       // If the parent is in markup mode, we need a wrapper (e.g., ```json...```).
-      // TODO: support inline = true
+      // Support inline rendering when requested; default remains block fence.
       elem = (
-        <Markup.EncloseSerialize inline={false} lang={serializer} {...others}>
+        <Markup.EncloseSerialize inline={inline ?? false} lang={serializer} {...others}>
           {elem}
         </Markup.EncloseSerialize>
       );
@@ -500,9 +447,7 @@ export namespace Serialize {
    * 2. When the children contain unnamed values, it presents as a list.
    * 3. When the children contain multiple elements including text elements, they are concatenated into a list.
    */
-  export const Any = component('Serialize.Any')((
-    props: React.PropsWithChildren<AnyProps & PropsSerializeBase>
-  ) => {
+  export const Any = component('Serialize.Any')((props: React.PropsWithChildren<AnyProps & PropsSerializeBase>) => {
     const { name, type, children, ...others } = props;
     const attrs: { [key: string]: any } = {};
     if (name !== undefined) {
@@ -522,9 +467,7 @@ export namespace Serialize {
       attrs.type = type;
     }
     return (
-      <Serialize.Environment {...others}>
-        {irElement('any', { name, type, ...others }, children)}
-      </Serialize.Environment>
+      <Serialize.Environment {...others}>{irElement('any', { name, type, ...others }, children)}</Serialize.Environment>
     );
   });
 
@@ -534,7 +477,7 @@ export namespace Serialize {
 
   // Object is to quickly insert an external data into the current document.
   export const Object = component('Serialize.Object')((
-    props: React.PropsWithChildren<ObjectProps & PropsSerializeBase>
+    props: React.PropsWithChildren<ObjectProps & PropsSerializeBase>,
   ) => {
     const { data, ...others } = props;
 
@@ -552,7 +495,7 @@ export namespace Free {
    * which will be kept as is without any processing.
    */
   export const Environment = component('Free.Environment')((
-    props: React.PropsWithChildren<PropsFreeBase>
+    props: React.PropsWithChildren<PropsFreeBase & InlineProps>,
   ) => {
     const parentPresentation = React.useContext(PresentationApproach);
 
@@ -566,6 +509,7 @@ export namespace Free {
       writerOptions,
       sourcePath,
       whiteSpace = 'pre',
+      inline,
       ...others
     } = props;
 
@@ -580,18 +524,17 @@ export namespace Free {
           <PresentationApproach.Provider
             value={{
               presentation: 'free',
-              writerOptions: writerOptions
-            }}
-          >
+              writerOptions: writerOptions,
+            }}>
             {trimChildrenWhiteSpace(children, { ...props, whiteSpace })}
-          </PresentationApproach.Provider>
+          </PresentationApproach.Provider>,
         )
       );
     if (parentPresentation?.presentation === 'markup') {
       // If the parent is in markup mode, we need a wrapper (e.g., ```...```).
-      // TODO: support inline = true
+      // Support inline rendering when requested; default remains block fence.
       elem = (
-        <Markup.EncloseSerialize inline={false} {...others}>
+        <Markup.EncloseSerialize inline={inline ?? false} {...others}>
           {elem}
         </Markup.EncloseSerialize>
       );
@@ -630,19 +573,12 @@ export namespace MultiMedia {
   }
 
   export const Environment = component('MultiMedia.Environment')((
-    props: React.PropsWithChildren<PropsMultiMediaBase>
+    props: React.PropsWithChildren<PropsMultiMediaBase>,
   ) => {
     const parentPresentation = React.useContext(PresentationApproach);
 
-    const {
-      presentation,
-      children,
-      originalStartIndex,
-      originalEndIndex,
-      writerOptions,
-      sourcePath,
-      ...others
-    } = props;
+    const { presentation, children, originalStartIndex, originalEndIndex, writerOptions, sourcePath, ...others } =
+      props;
 
     return parentPresentation?.presentation === 'multimedia' &&
       (!writerOptions || parentPresentation?.writerOptions === writerOptions) ? (
@@ -654,29 +590,22 @@ export namespace MultiMedia {
         <PresentationApproach.Provider
           value={{
             presentation: 'multimedia',
-            writerOptions: writerOptions
-          }}
-        >
+            writerOptions: writerOptions,
+          }}>
           {trimChildrenWhiteSpace(children, props)}
-        </PresentationApproach.Provider>
+        </PresentationApproach.Provider>,
       )
     );
   });
 
   export const Image = component('MultiMedia.Image')((props: PropsMultiMediaBase & ImageProps) => {
     const { ...others } = props;
-    return (
-      <MultiMedia.Environment {...others}>{irElement('img', { ...others })}</MultiMedia.Environment>
-    );
+    return <MultiMedia.Environment {...others}>{irElement('img', { ...others })}</MultiMedia.Environment>;
   });
 
   export const Audio = component('MultiMedia.Audio')((props: PropsMultiMediaBase & AudioProps) => {
     const { ...others } = props;
-    return (
-      <MultiMedia.Environment {...others}>
-        {irElement('audio', { ...others })}
-      </MultiMedia.Environment>
-    );
+    return <MultiMedia.Environment {...others}>{irElement('audio', { ...others })}</MultiMedia.Environment>;
   });
 
   export interface ToolRequestProps {
@@ -700,7 +629,7 @@ export namespace MultiMedia {
   });
 
   export const ToolResponse = component('MultiMedia.ToolResponse')((
-    props: React.PropsWithChildren<PropsMultiMediaBase & ToolResponseProps>
+    props: React.PropsWithChildren<PropsMultiMediaBase & ToolResponseProps>,
   ) => {
     const { id, name, children, ...others } = props;
     return (

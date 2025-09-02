@@ -1,6 +1,6 @@
-import mlflow
 import os
 
+import mlflow
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_openai import ChatOpenAI
@@ -16,7 +16,7 @@ if __name__ == "__main__":
         model="gpt-4.1-nano",
         base_url=os.environ["OPENAI_API_BASE"],
         api_key=os.environ["OPENAI_API_KEY"],
-        max_tokens=128
+        max_tokens=128,
     )
 
     prompt_template = PromptTemplate.from_template(
@@ -36,4 +36,4 @@ if __name__ == "__main__":
     print(result)
 
     trace_id = mlflow.get_last_active_trace_id()
-    check_trace(trace_id, ['ChatOpenAI'])
+    check_trace(trace_id, ["ChatOpenAI"])

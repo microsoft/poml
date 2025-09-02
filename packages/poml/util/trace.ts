@@ -1,7 +1,9 @@
-import { mkdirSync, writeFileSync, openSync, closeSync, writeSync, symlinkSync } from './fs';
+import { mkdirSync, writeFileSync, openSync, closeSync, writeSync, symlinkSync, readdirSync } from 'fs';
 import path from 'path';
 
-interface Base64Wrapper { __base64__: string }
+interface Base64Wrapper {
+  __base64__: string;
+}
 
 function replaceBuffers(value: any): any {
   if (Buffer.isBuffer(value)) {
@@ -65,15 +67,29 @@ function nextIndex(sourcePath?: string): [number, string, number] {
     return [0, '', -1];
   }
   const fileName = sourcePath ? path.basename(sourcePath, '.poml') : '';
+
   for (let i = 1; ; i++) {
     const idxStr = i.toString().padStart(4, '0');
+
+    // 1) If ANY file in traceDir starts with this index, skip it.
+    //    This makes the sequence independent of fileName.
+    const entries = readdirSync(traceDir);
+    const indexTaken = entries.some((entry) => entry.startsWith(idxStr));
+    if (indexTaken) {
+      continue;
+    }
+
+    // 2) Build our own target using the (possibly present) fileName.
     const prefix = path.join(traceDir, idxStr) + (fileName ? `.${fileName}` : '');
     const filePath = `${prefix}.poml`;
+
     try {
+      // 3) Atomically create our file. If it races and now exists, loop again.
       const fd = openSync(filePath, 'wx');
       return [i, prefix, fd];
     } catch (err: any) {
       if (err.code === 'EEXIST') {
+        // Someone created a file with this index between steps (1) and (3); try next i.
         continue;
       }
       throw err;
@@ -81,7 +97,14 @@ function nextIndex(sourcePath?: string): [number, string, number] {
   }
 }
 
-export function dumpTrace(markup: string, context?: any, stylesheet?: any, result?: any, sourcePath?: string, prettyResult?: string) {
+export function dumpTrace(
+  markup: string,
+  context?: any,
+  stylesheet?: any,
+  result?: any,
+  sourcePath?: string,
+  prettyResult?: string,
+) {
   if (!isTracing()) {
     return;
   }

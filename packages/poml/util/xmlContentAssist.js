@@ -1,18 +1,8 @@
 // Adapted from https://github.com/SAP/xml-tools/blob/master/packages/content-assist/lib/content-assist.js
 
-const {
-  defaultsDeep,
-  forEach,
-  isArray,
-  find,
-  findIndex,
-  flatMap,
-  identity,
-  last,
-  isEmpty
-} = require('lodash');  // eslint-disable-line
-const { BaseXmlCstVisitor } = require('@xml-tools/parser');  // eslint-disable-line
-const { findNextTextualToken } = require('@xml-tools/common');  // eslint-disable-line
+const { defaultsDeep, forEach, isArray, find, findIndex, flatMap, identity, last, isEmpty } = require('lodash');
+const { BaseXmlCstVisitor } = require('@xml-tools/parser');
+const { findNextTextualToken } = require('@xml-tools/common');
 
 function getSuggestions(options) {
   const actualOptions = defaultsDeep(options, {
@@ -23,14 +13,14 @@ function getSuggestions(options) {
       attributeName: [],
       attributeValue: [],
     },
-    context: undefined
+    context: undefined,
   });
 
   let { providerType, providerArgs } = computeCompletionSyntacticContext({
     cst: actualOptions.cst,
     tokenVector: actualOptions.tokenVector,
     ast: actualOptions.ast,
-    offset: actualOptions.offset
+    offset: actualOptions.offset,
   });
 
   // Inject Additional semantic context for the content assist providers.
@@ -41,9 +31,7 @@ function getSuggestions(options) {
   } else {
     const selectedProviders = actualOptions.providers[providerType];
 
-    const suggestions = flatMap(selectedProviders, suggestionProvider =>
-      suggestionProvider(providerArgs)
-    );
+    const suggestions = flatMap(selectedProviders, (suggestionProvider) => suggestionProvider(providerArgs));
     return suggestions;
   }
 }
@@ -54,7 +42,6 @@ function computeCompletionSyntacticContext({ cst, ast: docAst, offset, tokenVect
   return contextVisitor.result;
 }
 
-/* eslint-disable no-unused-vars -- consistent signatures in visitor methods even if they are empty placeholders */
 class SuggestionContextVisitorWithClose extends BaseXmlCstVisitor {
   constructor(docAst, offset, tokenVector) {
     super();
@@ -163,7 +150,7 @@ class SuggestionContextVisitorWithClose extends BaseXmlCstVisitor {
         this.result.providerArgs = {
           element: astNode.parent,
           attribute: astNode,
-          prefix: prefix !== '' ? prefix : undefined
+          prefix: prefix !== '' ? prefix : undefined,
         };
         this.found = true;
       }
@@ -180,7 +167,7 @@ class SuggestionContextVisitorWithClose extends BaseXmlCstVisitor {
         this.result.providerArgs = {
           element: astNode.parent,
           attribute: astNode,
-          prefix: prefix !== '' ? prefix : undefined
+          prefix: prefix !== '' ? prefix : undefined,
         };
         this.found = true;
       }
@@ -199,7 +186,6 @@ class SuggestionContextVisitorWithClose extends BaseXmlCstVisitor {
   /* istanbul ignore next - place holder*/
   misc(ctx, astNode) {}
 }
-/* eslint-enable no-unused-vars -- see matching pair above */
 
 function handleElementNameWithoutPrefixScenario(ctx, astNode, visitor) {
   /* istanbul ignore else - Very difficult to reproduce specific partial CSTs */
@@ -217,10 +203,7 @@ function handleElementNameWithPrefixScenario(ctx, astNode, visitor) {
   /* istanbul ignore else - Very difficult to reproduce specific partial CSTs */
   if (exists(ctx.Name)) {
     const nameTok = ctx.Name[0];
-    if (
-      nameTok.startOffset < visitor.targetOffset &&
-      nameTok.endOffset + 1 >= visitor.targetOffset
-    ) {
+    if (nameTok.startOffset < visitor.targetOffset && nameTok.endOffset + 1 >= visitor.targetOffset) {
       visitor.result.providerType = 'elementName';
       const prefixLength = visitor.targetOffset - nameTok.startOffset;
       const prefix = nameTok.image.substring(0, prefixLength);
@@ -246,10 +229,7 @@ function handleElementNameCloseWithPrefixScenario(ctx, astNode, visitor) {
   /* istanbul ignore else - Very difficult to reproduce specific partial CSTs */
   if (exists(ctx.END_NAME)) {
     const nameTok = ctx.END_NAME[0];
-    if (
-      nameTok.startOffset < visitor.targetOffset &&
-      nameTok.endOffset + 1 >= visitor.targetOffset
-    ) {
+    if (nameTok.startOffset < visitor.targetOffset && nameTok.endOffset + 1 >= visitor.targetOffset) {
       visitor.result.providerType = 'elementNameClose';
       const prefixLength = visitor.targetOffset - nameTok.startOffset;
       const prefix = nameTok.image.substring(0, prefixLength);
@@ -295,12 +275,9 @@ function handleNewAttributeKeyScenario(ctx, astNode, tokenVector, visitor) {
     attributesRange.from <= visitor.targetOffset
   ) {
     const isNotInExistingAttribute =
-      find(ctx.attribute, attribCst => {
+      find(ctx.attribute, (attribCst) => {
         const attribLoc = attribCst.location;
-        return (
-          visitor.targetOffset >= attribLoc.startOffset &&
-          visitor.targetOffset <= attribLoc.endOffset
-        );
+        return visitor.targetOffset >= attribLoc.startOffset && visitor.targetOffset <= attribLoc.endOffset;
       }) === undefined;
 
     // inside attribute area but not contained in any existing attribute
@@ -310,7 +287,7 @@ function handleNewAttributeKeyScenario(ctx, astNode, tokenVector, visitor) {
       visitor.result.providerArgs = {
         element: astNode,
         attribute: undefined,
-        prefix: undefined
+        prefix: undefined,
       };
       visitor.found = true;
     }
@@ -331,7 +308,7 @@ function handleNewAttributeKeyScenario(ctx, astNode, tokenVector, visitor) {
       { endOffset: attributesRange.to },
       tokenVector,
       visitor,
-      astNode
+      astNode,
     );
     /**
      * Heuristic when we have no attribute range, e.g:
@@ -340,25 +317,12 @@ function handleNewAttributeKeyScenario(ctx, astNode, tokenVector, visitor) {
      * </people>
      */
   } else if (hasTerminatedAttribRange === false) {
-    handleNewAttributeKeyForPartialElement(
-      ctx.Name ? ctx.Name[0] : ctx.OPEN[0],
-      tokenVector,
-      visitor,
-      astNode
-    );
+    handleNewAttributeKeyForPartialElement(ctx.Name ? ctx.Name[0] : ctx.OPEN[0], tokenVector, visitor, astNode);
   }
 }
 
-function handleNewAttributeKeyForPartialElement(
-  possibleAttribKeyRangeStartTok,
-  tokenVector,
-  visitor,
-  astNode
-) {
-  const nextAfterElemNameTok = findNextTextualToken(
-    tokenVector,
-    possibleAttribKeyRangeStartTok.endOffset
-  );
+function handleNewAttributeKeyForPartialElement(possibleAttribKeyRangeStartTok, tokenVector, visitor, astNode) {
+  const nextAfterElemNameTok = findNextTextualToken(tokenVector, possibleAttribKeyRangeStartTok.endOffset);
   if (
     visitor.targetOffset > possibleAttribKeyRangeStartTok.endOffset &&
     (nextAfterElemNameTok === null || // `null`` means there are no more textual tokens in the input
@@ -368,7 +332,7 @@ function handleNewAttributeKeyForPartialElement(
     visitor.result.providerArgs = {
       element: astNode,
       attribute: undefined,
-      prefix: undefined
+      prefix: undefined,
     };
     visitor.found = true;
   }
@@ -391,13 +355,9 @@ function handleElementContentScenario(ctx, astNode, visitor) {
     }
   }
 
-  if (
-    hasContentRange &&
-    visitor.targetOffset <= contentRange.to &&
-    contentRange.from <= visitor.targetOffset
-  ) {
+  if (hasContentRange && visitor.targetOffset <= contentRange.to && contentRange.from <= visitor.targetOffset) {
     const allContentChildren = flatMap(ctx.content[0].children, identity);
-    const innerContentPart = find(allContentChildren, subContent => {
+    const innerContentPart = find(allContentChildren, (subContent) => {
       // Handling either CSTNodes or Tokens
       const subContentLoc = subContent.location ? subContent.location : subContent;
 
@@ -406,10 +366,7 @@ function handleElementContentScenario(ctx, astNode, visitor) {
       // <person>⇶abc</person> --> Inside the CharData Location, but does not have any prefix
       const targetOffsetForPrefix = visitor.targetOffset - 1;
 
-      return (
-        targetOffsetForPrefix >= subContentLoc.startOffset &&
-        targetOffsetForPrefix <= subContentLoc.endOffset
-      );
+      return targetOffsetForPrefix >= subContentLoc.startOffset && targetOffsetForPrefix <= subContentLoc.endOffset;
     });
 
     // ElementContent without prefix
@@ -418,7 +375,7 @@ function handleElementContentScenario(ctx, astNode, visitor) {
       visitor.result.providerArgs = {
         element: astNode,
         textContent: undefined,
-        prefix: undefined
+        prefix: undefined,
       };
       visitor.found = true;
     } else if (innerContentPart.name === 'chardata') {
@@ -429,7 +386,7 @@ function handleElementContentScenario(ctx, astNode, visitor) {
       visitor.result.providerArgs = {
         element: astNode,
         textContent: textContentsAstNode,
-        prefix: textContentsAstNode.text.substring(0, prefixEnd)
+        prefix: textContentsAstNode.text.substring(0, prefixEnd),
       };
       visitor.found = true;
     }
@@ -442,5 +399,5 @@ function exists(tokArr) {
 
 module.exports = {
   computeCompletionSyntacticContext: computeCompletionSyntacticContext,
-  getSuggestions: getSuggestions
+  getSuggestions: getSuggestions,
 };

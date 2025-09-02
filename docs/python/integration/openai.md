@@ -42,8 +42,8 @@ POML supports runtime parameters through the `<runtime>` tag. These parameters a
 <poml>
   <system-msg>You are a helpful assistant.</system-msg>
   <human-msg>Hello!</human-msg>
-  
-  <runtime 
+
+  <runtime
     model="gpt-4.1"
     temperature="0.7"
     max-tokens="150"
@@ -100,7 +100,7 @@ POML supports OpenAI's function calling through tool definitions:
 ```xml
 <poml>
   <p>What is my horoscope? I am an Aquarius.</p>
-  
+
   <tool-definition name="get_horoscope" description="Get today's horoscope for an astrological sign.">
   {
       "type": "object",
@@ -113,7 +113,7 @@ POML supports OpenAI's function calling through tool definitions:
       "required": ["sign"]
   }
   </tool-definition>
-  
+
   <!-- Handle tool interactions with context -->
   <tool-request if="tool_request" id="{{ tool_request.id }}" name="{{ tool_request.name }}" parameters="{{ tool_request.parameters }}" />
   <tool-response if="tool_response" id="{{ tool_response.id }}" name="{{ tool_response.name }}">

@@ -124,6 +124,13 @@ jobs:
           python openai_tool_call.py
         shell: bash
 
+      - name: Run OpenAI Pydantic test
+        if: inputs.integration == 'openai'
+        run: |
+          cd python/tests/integration
+          python openai_pydantic.py
+        shell: bash
+
       - name: Run mlflow additional integration tests
         if: inputs.integration == 'mlflow'
         env:

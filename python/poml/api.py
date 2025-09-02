@@ -4,11 +4,13 @@ import json
 import os
 import re
 import tempfile
+import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Union
+
 from pydantic import BaseModel
-import warnings
+
 from .cli import run
 
 __all__ = [
@@ -152,7 +154,7 @@ def _latest_trace_prefix() -> Optional[Path]:
     return latest_prefix
 
 
-def _read_latest_traced_file(file_suffix: str) -> Optional[str]:
+def _read_latest_traced_file(file_suffix: str, encoding: str | None = None) -> Optional[str]:
     """Read the most recent traced file with the given suffix."""
     prefix = _latest_trace_prefix()
     if prefix is None:
@@ -160,25 +162,25 @@ def _read_latest_traced_file(file_suffix: str) -> Optional[str]:
     path = Path(str(prefix) + file_suffix)
     if not path.exists():
         return None
-    with open(path, "r") as f:
+    with open(path, "r", encoding=encoding) as f:
         return f.read()
 
 
-def trace_artifact(file_suffix: str, contents: str | bytes) -> Optional[Path]:
-    """Write an additional artifact file for the most recent ``poml`` call."""
+def trace_artifact(file_suffix: str, contents: str | bytes, encoding: str | None = None) -> Optional[Path]:
+    """Write an additional artifact file for the most recent ``poml`` call. This API is experimental."""
     prefix = _latest_trace_prefix()
     if prefix is None:
         return None
     suffix = file_suffix if file_suffix.startswith(".") else f".{file_suffix}"
     path = Path(str(prefix) + suffix)
     mode = "wb" if isinstance(contents, (bytes, bytearray)) else "w"
-    with open(path, mode) as f:
+    with open(path, mode, encoding=(None if "b" in mode else encoding)) as f:
         f.write(contents)
     return path
 
 
-def write_file(content: str):
-    temp_file = tempfile.NamedTemporaryFile("w")
+def write_file(content: str, encoding: str | None = None):
+    temp_file = tempfile.NamedTemporaryFile("w", encoding=encoding)
     temp_file.write(content)
     temp_file.flush()
     return temp_file
@@ -413,8 +415,8 @@ def _poml_response_to_langchain(messages: List[PomlMessage]) -> List[Dict[str, A
 def _camel_case_to_snake_case(name: str) -> str:
     """Convert CamelCase to snake_case."""
     # Insert one underscore before each uppercase letter, then convert to lowercase
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
 def poml(
@@ -424,6 +426,7 @@ def poml(
     chat: bool = True,
     output_file: str | Path | None = None,
     format: OutputFormat = "message_dict",
+    encoding: str | None = None,
     extra_args: Optional[List[str]] = None,
 ) -> list | dict | str | PomlFrame:
     """Process POML markup and return the result in the specified format.
@@ -452,6 +455,8 @@ def poml(
             - "openai_chat": OpenAI Chat Completion API format with tool support
             - "langchain": LangChain message format with structured data
             - "pydantic": PomlFrame object with typed Pydantic models
+        encoding: Optional file encoding for both reading input POML file and
+            writing output file.
         extra_args: Additional command-line arguments to pass to the POML processor.
 
     Returns:
@@ -461,14 +466,14 @@ def poml(
         - dict when format="dict", "openai_chat", or "langchain"
         - PomlFrame when format="pydantic"
 
-        For format="message_dict": Returns just the messages array for backward 
+        For format="message_dict": Returns just the messages array for backward
         compatibility. Example: `[{"speaker": "human", "content": "Hello"}]`
 
         For format="dict": Returns complete structure with all metadata.
         Example: `{"messages": [...], "schema": {...}, "tools": [...], "runtime": {...}}`
 
-        For format="openai_chat": Returns OpenAI Chat Completion format with tool/schema 
-        support. Includes "messages" in OpenAI format, "tools" if present, "response_format" 
+        For format="openai_chat": Returns OpenAI Chat Completion format with tool/schema
+        support. Includes "messages" in OpenAI format, "tools" if present, "response_format"
         for JSON schema if present, and runtime parameters converted to `snake_case`.
 
         For format="langchain": Returns LangChain format preserving all metadata with
@@ -517,7 +522,7 @@ def poml(
                 path = Path(markup)
                 trace_record["markup_path"] = str(path)
                 if path.exists():
-                    trace_record["markup"] = path.read_text()
+                    trace_record["markup"] = path.read_text(encoding=encoding)
             else:
                 trace_record["markup"] = str(markup)
 
@@ -527,14 +532,14 @@ def poml(
                 if os.path.exists(str(context)):
                     cpath = Path(context)
                     trace_record["context_path"] = str(cpath)
-                    trace_record["context"] = cpath.read_text()
+                    trace_record["context"] = cpath.read_text(encoding=encoding)
             if isinstance(stylesheet, dict):
                 trace_record["stylesheet"] = json.dumps(stylesheet)
             elif stylesheet:
                 if os.path.exists(str(stylesheet)):
                     spath = Path(stylesheet)
                     trace_record["stylesheet_path"] = str(spath)
-                    trace_record["stylesheet"] = spath.read_text()
+                    trace_record["stylesheet"] = spath.read_text(encoding=encoding)
 
         if isinstance(markup, Path):
             if not markup.exists():
@@ -549,9 +554,9 @@ def poml(
                         f"The markup '{markup}' looks like a file path, but it does not exist. Assuming it is a POML string."
                     )
 
-                temp_input_file = write_file(markup)
+                temp_input_file = write_file(markup, encoding=encoding)
                 markup = Path(temp_input_file.name)
-        with tempfile.NamedTemporaryFile("r") as temp_output_file:
+        with tempfile.NamedTemporaryFile("r", encoding=encoding) as temp_output_file:
             if output_file is None:
                 output_file = temp_output_file.name
                 output_file_specified = False
@@ -561,7 +566,7 @@ def poml(
                     output_file = str(output_file)
             args = ["-f", str(markup), "-o", output_file]
             if isinstance(context, dict):
-                temp_context_file = write_file(json.dumps(context))
+                temp_context_file = write_file(json.dumps(context), encoding=encoding)
                 args.extend(["--context-file", temp_context_file.name])
             elif context:
                 if os.path.exists(context):
@@ -570,7 +575,7 @@ def poml(
                     raise FileNotFoundError(f"File not found: {context}")
 
             if isinstance(stylesheet, dict):
-                temp_stylesheet_file = write_file(json.dumps(stylesheet))
+                temp_stylesheet_file = write_file(json.dumps(stylesheet), encoding=encoding)
                 args.extend(["--stylesheet-file", temp_stylesheet_file.name])
             elif stylesheet:
                 if os.path.exists(stylesheet):
@@ -595,7 +600,7 @@ def poml(
                 )
 
             if output_file_specified:
-                with open(output_file, "r") as output_file_handle:
+                with open(output_file, "r", encoding=encoding) as output_file_handle:
                     result = output_file_handle.read()
             else:
                 result = temp_output_file.read()
@@ -605,7 +610,7 @@ def poml(
                 return_result = trace_result = result
             else:
                 parsed_result = trace_result = json.loads(result)
-                
+
                 # Handle the new CLI result format with messages, schema, tools, runtime
                 if isinstance(parsed_result, dict) and "messages" in parsed_result:
                     cli_result = parsed_result
@@ -633,8 +638,8 @@ def poml(
                     poml_frame = PomlFrame(
                         messages=pydantic_messages,
                         output_schema=cli_result.get("schema"),
-                        tools=cli_result.get("tools"), 
-                        runtime=cli_result.get("runtime")
+                        tools=cli_result.get("tools"),
+                        runtime=cli_result.get("runtime"),
                     )
 
                     if format == "pydantic":
@@ -643,17 +648,20 @@ def poml(
                         # Return OpenAI-compatible format
                         openai_messages = _poml_response_to_openai_chat(pydantic_messages)
                         openai_result: dict = {"messages": openai_messages}
-                        
+
                         # Add tools if present
                         if poml_frame.tools:
-                            openai_result["tools"] = [{
-                                "type": "function",
-                                "function": {
-                                    "name": tool.get("name", ""),
-                                    "description": tool.get("description", ""),
-                                    "parameters": tool.get("parameters", {})
-                                }  # FIXME: hot-fix for the wrong format at node side
-                            } for tool in poml_frame.tools]
+                            openai_result["tools"] = [
+                                {
+                                    "type": "function",
+                                    "function": {
+                                        "name": tool.get("name", ""),
+                                        "description": tool.get("description", ""),
+                                        "parameters": tool.get("parameters", {}),
+                                    },  # FIXME: hot-fix for the wrong format at node side
+                                }
+                                for tool in poml_frame.tools
+                            ]
                         if poml_frame.output_schema:
                             openai_result["response_format"] = {
                                 "type": "json_schema",
@@ -661,13 +669,12 @@ def poml(
                                     "name": "schema",  # TODO: support schema name
                                     "schema": poml_frame.output_schema,
                                     "strict": True,  # Ensure strict validation
-                                }
+                                },
                             }
                         if poml_frame.runtime:
-                            openai_result.update({
-                                _camel_case_to_snake_case(k): v
-                                for k, v in poml_frame.runtime.items()
-                            })
+                            openai_result.update(
+                                {_camel_case_to_snake_case(k): v for k, v in poml_frame.runtime.items()}
+                            )
 
                         return_result = openai_result
                     elif format == "langchain":
@@ -686,9 +693,9 @@ def poml(
                 current_version = _current_trace_version()
                 if trace_prefix is None or current_version is None:
                     raise RuntimeError("Weave tracing requires local tracing to be enabled.")
-                poml_content = _read_latest_traced_file(".poml")
-                context_content = _read_latest_traced_file(".context.json")
-                stylesheet_content = _read_latest_traced_file(".stylesheet.json")
+                poml_content = _read_latest_traced_file(".poml", encoding=encoding)
+                context_content = _read_latest_traced_file(".context.json", encoding=encoding)
+                stylesheet_content = _read_latest_traced_file(".stylesheet.json", encoding=encoding)
 
                 weave.log_poml_call(
                     trace_prefix.name,
@@ -705,9 +712,9 @@ def poml(
                 current_version = _current_trace_version()
                 if trace_prefix is None or current_version is None:
                     raise RuntimeError("AgentOps tracing requires local tracing to be enabled.")
-                poml_content = _read_latest_traced_file(".poml")
-                context_content = _read_latest_traced_file(".context.json")
-                stylesheet_content = _read_latest_traced_file(".stylesheet.json")
+                poml_content = _read_latest_traced_file(".poml", encoding=encoding)
+                context_content = _read_latest_traced_file(".context.json", encoding=encoding)
+                stylesheet_content = _read_latest_traced_file(".stylesheet.json", encoding=encoding)
                 agentops.log_poml_call(
                     trace_prefix.name,
                     str(markup),
@@ -723,9 +730,9 @@ def poml(
                 current_version = _current_trace_version()
                 if trace_prefix is None or current_version is None:
                     raise RuntimeError("MLflow tracing requires local tracing to be enabled.")
-                poml_content = _read_latest_traced_file(".poml")
-                context_content = _read_latest_traced_file(".context.json")
-                stylesheet_content = _read_latest_traced_file(".stylesheet.json")
+                poml_content = _read_latest_traced_file(".poml", encoding=encoding)
+                context_content = _read_latest_traced_file(".context.json", encoding=encoding)
+                stylesheet_content = _read_latest_traced_file(".stylesheet.json", encoding=encoding)
                 mlflow.log_poml_call(
                     trace_prefix.name,
                     poml_content or str(markup),

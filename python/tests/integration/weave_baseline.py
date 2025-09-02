@@ -1,7 +1,8 @@
-import weave
 import os
-from openai import OpenAI
 from datetime import datetime, timedelta, timezone
+
+import weave
+from openai import OpenAI
 from weave_utils import check_trace
 
 if __name__ == "__main__":

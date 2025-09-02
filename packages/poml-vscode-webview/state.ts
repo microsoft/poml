@@ -1,6 +1,6 @@
-import $ from "jquery";
-import { MessagePoster } from "./util";
-import { WebviewState, WebviewMessage, WebviewUserOptions } from "../poml-vscode/panel/types";
+import $ from 'jquery';
+import { MessagePoster } from './util';
+import { WebviewState, WebviewMessage, WebviewUserOptions } from '../poml-vscode/panel/types';
 
 export function getData(key: string): any {
   // Preview data must be stored in the DOM (webview-state) by the extension side.

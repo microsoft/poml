@@ -1,0 +1,13 @@
+<!-- Part of prompts for 404_travel_expense_agent.py -->
+<poml>
+  <task>Classify travel docs and extract with high recall. Return numbers as numbers. Compute ONLY per-document subtotals_by_category (no combined totals).</task>
+
+  <cp caption="File: {{ file }}">
+    <img if="{{ file.endsWith('.png') || file.endsWith('.jpg') }}" src="{{ file }}" />
+    <document if="{{ file.endsWith('.pdf') }}" src="{{ file }}" parser="pdf" />
+  </cp>
+
+  <hint>For each file, return JSON per schema. If unknown, omit. Avoid hallucinating.</hint>
+  <output-schema>{{ document_output_schema }}</output-schema>
+
+</poml>

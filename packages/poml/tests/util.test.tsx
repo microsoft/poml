@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { describe, expect, test } from '@jest/globals';
-import { readFileSync } from '../util/fs';
+import { readFileSync } from 'fs';
 import { component } from 'poml/base';
 import { Writable } from 'stream';
 import { parseText, readSource } from 'poml/util';
@@ -47,7 +47,7 @@ describe('content', () => {
       last_name: 'Penddreth',
       email: 'jpenddreth0@census.gov',
       gender: 'Female',
-      ip_address: '26.58.193.2'
+      ip_address: '26.58.193.2',
     });
 
     const image = readSource('assets/tomCat.jpg', __dirname, 'buffer');
@@ -57,6 +57,8 @@ describe('content', () => {
 
 describe('preprocessImage', () => {
   const sampleImagePath = __dirname + '/assets/tomCat.jpg';
+  const sampleImageURL =
+    'https://raw.githubusercontent.com/ultmaster/poml-test-fixtures/e2bed155890e4cf853a515a990660328799ee5e3/image/gpt-5-random-image.png';
   const sampleImageBase64 = readFileSync(sampleImagePath).toString('base64');
 
   test('should process an image from a supported file path', async () => {
@@ -73,6 +75,12 @@ describe('preprocessImage', () => {
     expect(metadata.format).toBe('png');
   });
 
+  test('should process an image from an URL', async () => {
+    const result = await preprocessImage({ src: sampleImageURL });
+    expect(result.base64).toBeTruthy();
+    expect(result.mimeType).toBe('image/png');
+  });
+
   test('should resize the image with the resize parameter', async () => {
     const result = await preprocessImage({ base64: sampleImageBase64, type: 'png', resize: 0.5 });
     expect(result.base64).toBeTruthy();
@@ -86,20 +94,23 @@ describe('preprocessImage', () => {
 
 describe('sse', () => {
   test('should render a component with a promise', async () => {
-    const dummyPromise = () => new Promise<string>(resolve => setTimeout(() => resolve('done'), 500));
+    const dummyPromise = () => new Promise<string>((resolve) => setTimeout(() => resolve('done'), 500));
     const CustomComponent = component('custom')((props: any) => {
       const msg = React.use<string>(dummyPromise());
       return <div>{msg}</div>;
     });
     const result = await reactRender(
-      <React.Suspense fallback="loading">
+      <React.Suspense fallback='loading'>
         <CustomComponent />
-      </React.Suspense>);
+      </React.Suspense>,
+    );
     expect(result).toContain('done');
     const resultShell = await reactRender(
-      <React.Suspense fallback="loading">
+      <React.Suspense fallback='loading'>
         <CustomComponent />
-      </React.Suspense>, true);
+      </React.Suspense>,
+      true,
+    );
     expect(resultShell).toMatch(/loading|done/);
   });
 });

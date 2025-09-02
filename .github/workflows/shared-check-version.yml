@@ -4,16 +4,19 @@ on:
   workflow_call:
     outputs:
       version:
-        description: "The version from the project files"
+        description: 'The version from the project files'
         value: ${{ jobs.check-version.outputs.version }}
       tag_version:
-        description: "The version from the git tag"
+        description: 'The version from the git tag'
         value: ${{ jobs.check-version.outputs.tag_version }}
       npm_version:
-        description: "The version from package.json"
+        description: 'The version from package.json'
         value: ${{ jobs.check-version.outputs.npm_version }}
+      browser_version:
+        description: 'The version from poml-browser package.json'
+        value: ${{ jobs.check-version.outputs.browser_version }}
       pypi_version:
-        description: "The version from pyproject.toml"
+        description: 'The version from pyproject.toml'
         value: ${{ jobs.check-version.outputs.pypi_version }}
 
 jobs:
@@ -25,6 +28,7 @@ jobs:
       version: ${{ steps.get_version.outputs.version }}
       tag_version: ${{ steps.get_tag.outputs.tag_version }}
       npm_version: ${{ steps.get_npm_version.outputs.npm_version }}
+      browser_version: ${{ steps.get_browser_version.outputs.browser_version }}
       pypi_version: ${{ steps.get_pypi_version.outputs.pypi_version }}
     steps:
       - name: Checkout code
@@ -43,6 +47,13 @@ jobs:
           NPM_VERSION=$(node -p "require('./packages/poml-build/package.json').version")
           echo "npm_version=$NPM_VERSION" >> $GITHUB_OUTPUT
           echo "NPM version: $NPM_VERSION"
+
+      - name: Get version from poml-browser package.json
+        id: get_browser_version
+        run: |
+          BROWSER_VERSION=$(node -p "require('./packages/poml-browser/package.json').version")
+          echo "browser_version=$BROWSER_VERSION" >> $GITHUB_OUTPUT
+          echo "Browser version: $BROWSER_VERSION"
 
       - name: Set primary version
         id: get_version
@@ -68,17 +79,24 @@ jobs:
       - name: Verify versions are in sync
         run: |
           NPM_VERSION=${{ steps.get_npm_version.outputs.npm_version }}
+          BROWSER_VERSION=${{ steps.get_browser_version.outputs.browser_version }}
           PYPI_VERSION=${{ steps.get_pypi_version.outputs.pypi_version }}
-          
+
           echo "Comparing versions:"
           echo "  NPM (package.json): $NPM_VERSION"
+          echo "  Browser (poml-browser/package.json): $BROWSER_VERSION"
           echo "  PyPI (pyproject.toml): $PYPI_VERSION"
-          
+
           if [ "$NPM_VERSION" != "$PYPI_VERSION" ]; then
             echo "Error: Version mismatch between package.json ($NPM_VERSION) and pyproject.toml ($PYPI_VERSION)"
             exit 1
           fi
-          
+
+          if [ "$BROWSER_VERSION" != "$PYPI_VERSION" ]; then
+            echo "Error: Version mismatch between poml-browser/package.json ($BROWSER_VERSION) and pyproject.toml ($PYPI_VERSION)"
+            exit 1
+          fi
+
           echo "✅ All project versions are synchronized"
 
       - name: Verify version matches tag
@@ -86,7 +104,7 @@ jobs:
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             PRIMARY_VERSION=${{ steps.get_version.outputs.version }}
             TAG_VERSION=${{ steps.get_tag.outputs.tag_version }}
-            
+
             if [ "$PRIMARY_VERSION" != "$TAG_VERSION" ]; then
               echo "Error: Primary version ($PRIMARY_VERSION) does not match tag ($TAG_VERSION)"
               exit 1

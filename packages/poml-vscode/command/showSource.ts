@@ -7,17 +7,16 @@ import { TelemetryEvent } from 'poml-vscode/util/telemetryServer';
 export class ShowSourceCommand implements Command {
   public readonly id = 'poml.showSource';
 
-  public constructor(
-    private readonly previewManager: POMLWebviewPanelManager
-  ) { }
+  public constructor(private readonly previewManager: POMLWebviewPanelManager) {}
 
   public execute() {
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.CommandInvoked, {
-      command: this.id
+      command: this.id,
     });
     if (this.previewManager.activePreviewResource) {
-      return vscode.workspace.openTextDocument(this.previewManager.activePreviewResource)
-        .then(document => vscode.window.showTextDocument(document));
+      return vscode.workspace
+        .openTextDocument(this.previewManager.activePreviewResource)
+        .then((document) => vscode.window.showTextDocument(document));
     }
     return undefined;
   }

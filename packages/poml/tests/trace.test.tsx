@@ -1,4 +1,4 @@
-import fs from '../util/fs';
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
@@ -64,5 +64,20 @@ describe('trace dumps', () => {
     expect(rerender).toBe('hello world');
 
     fs.rmSync(origDir, { recursive: true, force: true });
+  });
+
+  test('nextIndex skips index when any file with that index exists', async () => {
+    // Create a file with index 0001 but different name to test case 1 logic
+    fs.writeFileSync(path.join(traceDir, '0001.different.poml'), 'existing file');
+
+    // Now dump a trace which should skip 0001 and use 0002
+    dumpTrace('<p>Test</p>', { test: 'value' });
+
+    // Check that no 0001.poml was created (should be skipped)
+    expect(fs.existsSync(path.join(traceDir, '0001.poml'))).toBe(false);
+
+    // Check that 0002.poml was created instead
+    expect(fs.existsSync(path.join(traceDir, '0002.poml'))).toBe(true);
+    expect(fs.existsSync(path.join(traceDir, '0002.context.json'))).toBe(true);
   });
 });

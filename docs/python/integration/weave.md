@@ -44,8 +44,8 @@ poml.set_trace("weave", trace_dir="pomlruns")
 # Use POML as usual
 client = OpenAI()
 messages = poml.poml(
-    "explain_code.poml", 
-    context={"code_path": "sample.py"}, 
+    "explain_code.poml",
+    context={"code_path": "sample.py"},
     format="openai_chat"
 )
 
@@ -66,7 +66,7 @@ Each POML call is logged as a Weave operation with:
 - **Operation Name**: "poml"
 - **Prompt Content**: The raw POML source
 - **Context Variables**: All context variables passed to the POML call
-- **Stylesheet**: Any stylesheet configuration  
+- **Stylesheet**: Any stylesheet configuration
 - **Result**: The processed prompt structure sent to the LLM
 
 ### Prompt Publishing
@@ -83,7 +83,7 @@ POML prompts are automatically published as versioned Weave objects:
 
 ### Example Trace Data
 
-```json
+````json
 {
   "inputs": {
     "prompt": "weave://.../001.explain_code:v0",
@@ -103,7 +103,7 @@ POML prompts are automatically published as versioned Weave objects:
     }
   }
 }
-```
+````
 
 ## See Also
 

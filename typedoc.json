@@ -1,7 +1,7 @@
 {
   "entryPoints": [
     "packages/poml/index.ts",
-    "packages/poml/base.tsx", 
+    "packages/poml/base.tsx",
     "packages/poml/cli.ts",
     "packages/poml/essentials.tsx",
     "packages/poml/file.tsx",

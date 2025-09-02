@@ -1,7 +1,8 @@
+import time
+
 import mlflow
 import mlflow.genai
-import time
-from common_utils import print_section, print_separator, Colors
+from common_utils import Colors, print_section, print_separator
 
 
 def check_trace(trace_id, must_have, delay_seconds=5):

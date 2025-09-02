@@ -19,6 +19,7 @@ Configure POML in VS Code settings (`Ctrl+,` or `Cmd+,`).
 ```
 
 For multiple providers with different API keys, which is useful when overriding the default provider setting in POML files:
+
 ```json
 {
   "poml.languageModel.provider": "openai",
@@ -30,7 +31,7 @@ For multiple providers with different API keys, which is useful when overriding 
   },
   "poml.languageModel.apiUrl": {
     "openai": "https://api.openai.com/v1/",
-    "microsoft": "https://your-resource.openai.azure.com/"
+    "microsoft": "https://your-resource.openai.azure.com/openai"
   }
 }
 ```
@@ -47,7 +48,7 @@ The following settings mainly control the language model used for POML testing f
 }
 ```
 
-**Options:** `openai`, `microsoft`, `anthropic`, `google`  
+**Options:** `openai`, `openaiResponse`, `microsoft`, `anthropic`, `google`
 **Default:** `openai`
 
 ### Model Name
@@ -57,6 +58,7 @@ The following settings mainly control the language model used for POML testing f
   "poml.languageModel.model": "gpt-4o"
 }
 ```
+
 **Default:** `gpt-4o`  
 For Azure OpenAI, use the deployment name. For other providers, use the model code name.
 
@@ -67,6 +69,7 @@ For Azure OpenAI, use the deployment name. For other providers, use the model co
   "poml.languageModel.temperature": 0.5
 }
 ```
+
 **Default:** `0.5`  
 **Range:** `0.0` to `2.0`  
 Controls randomness in responses. Lower values are more deterministic.
@@ -78,6 +81,7 @@ Controls randomness in responses. Lower values are more deterministic.
   "poml.languageModel.maxTokens": 2000
 }
 ```
+
 **Default:** `0` (unlimited)  
 Maximum number of completion tokens to generate.
 
@@ -90,6 +94,7 @@ Maximum number of completion tokens to generate.
 ```
 
 Or use provider-specific keys:
+
 ```json
 {
   "poml.languageModel.apiKey": {
@@ -104,6 +109,7 @@ Or use provider-specific keys:
 **Required** for most providers. Keep this secure and never commit to version control.
 
 The API key can be:
+
 - A **string** for a single key used across all providers
 - An **object** with provider-specific keys, useful when switching between providers or when prompts override the provider at runtime
 
@@ -118,25 +124,29 @@ The API key can be:
 ```
 
 Or use provider-specific URLs:
+
 ```json
 {
   "poml.languageModel.apiUrl": {
     "openai": "https://api.openai.com/v1/",
-    "microsoft": "https://westeurope.api.cognitive.microsoft.com/",
+    "microsoft": "https://westeurope.api.cognitive.microsoft.com/openai",
     "anthropic": "https://api.anthropic.com/"
   }
 }
 ```
 
 **Examples:**
+
 - OpenAI: `https://api.openai.com/v1/`
 - Azure OpenAI: `https://westeurope.api.cognitive.microsoft.com/openai`
 - Custom OpenAI-compatible: `https://api.example.com/v2/`
 
 The API URL can be:
+
 - A **string** for a single URL used across all providers
 - An **object** with provider-specific URLs, useful when different providers require different endpoints
 
+<!-- prettier-ignore -->
 !!! warning
 
     If you are using Azure OpenAI and encounter a `Resource not found` error, you may want to change the configuration from `https://xxx.cognitiveservices.azure.com/` to `https://xxx.cognitiveservices.azure.com/openai` or vice versa. Refer to [Vercel AI Azure Provider](https://ai-sdk.dev/providers/ai-sdk-providers/azure) for more details.
@@ -148,22 +158,25 @@ The API URL can be:
   "poml.languageModel.apiVersion": "2024-02-15-preview"
 }
 ```
+
 **Optional** - Mainly used for OpenAI and Azure OpenAI services.
 
 ### Provider-Specific Examples
 
 #### Azure OpenAI
+
 ```json
 {
   "poml.languageModel.provider": "microsoft",
   "poml.languageModel.model": "my-gpt4-deployment",
   "poml.languageModel.apiKey": "your-azure-api-key",
-  "poml.languageModel.apiUrl": "https://your-resource.openai.azure.com/",
+  "poml.languageModel.apiUrl": "https://your-resource.openai.azure.com/openai",
   "poml.languageModel.apiVersion": "2024-02-15-preview"
 }
 ```
 
 #### Anthropic Claude
+
 ```json
 {
   "poml.languageModel.provider": "anthropic",
@@ -173,6 +186,7 @@ The API URL can be:
 ```
 
 #### Google Gemini
+
 ```json
 {
   "poml.languageModel.provider": "google",
@@ -193,6 +207,7 @@ The API URL can be:
   "poml.scrollEditorWithPreview": true
 }
 ```
+
 **Default:** `true`  
 Synchronize scrolling between editor and preview panes.
 
@@ -204,17 +219,20 @@ Synchronize scrolling between editor and preview panes.
   "poml.doubleClickToSwitchToEditor": true
 }
 ```
+
 **Default:** `true`  
 Highlight current editor selection in preview and enable double-click navigation.
 
 ## Development Settings
 
 ### Debugging
+
 ```json
 {
   "poml.trace": "verbose"
 }
 ```
+
 **Options:** `off`, `verbose`  
 **Default:** `off`
 
@@ -227,5 +245,6 @@ Enable detailed tracing for troubleshooting.
   "poml.telemetry.connection": ""
 }
 ```
+
 **Default:** `""` (empty)  
 Development setting for telemetry connection string.
