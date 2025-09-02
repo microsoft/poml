@@ -1,10 +1,10 @@
+# fmt: off
 # This file is auto-generated from component documentation.
 # Do not edit manually. Run `npm run build-comment` to regenerate.
 
 from typing import Any, Dict, List, Optional, Union
 
 # from numbers import Number # For more specific number types if needed
-
 
 class _TagLib:
 
@@ -117,7 +117,7 @@ class _TagLib:
             ```xml
             <task>Cook a recipe on how to prepare a beef dish.</task>
             ```
-
+            
             When including a list of steps:
             ```xml
             <task>
@@ -381,7 +381,7 @@ class _TagLib:
               <output>Paris</output>
             </example>
             ```
-
+            
             ```xml
             <task>Summarize the following passage in a single sentence.</task>
             <example>
@@ -428,9 +428,9 @@ class _TagLib:
             ```xml
             <input>What is the capital of France?</input>
             ```
-
+            
             When used with a template:
-
+            
             ```xml
             <input>What is the capital of {{country}}?</input>
             ```
@@ -473,9 +473,9 @@ class _TagLib:
             ```xml
             <output>The capital of France is Paris.</output>
             ```
-
+            
             When used with a template:
-
+            
             ```xml
             <output>The capital of {{country}} is {{capital}}.</output>
             ```
@@ -665,9 +665,9 @@ class _TagLib:
             ```xml
             <table records="{{[{ name: 'Alice', age: 20 }, { name: 'Bob', age: 30 }]}}" />
             ```
-
+            
             To import an excel file, and display the first 10 records in csv syntax:
-
+            
             ```xml
             <table src="data.xlsx" parser="excel" maxRecords="10" syntax="csv" />
             ```
@@ -819,12 +819,12 @@ class _TagLib:
             ```xml
             <webpage url="https://example.com" />
             ```
-
+            
             Extract only specific content using a selector:
             ```xml
             <webpage url="https://example.com" selector="main article" />
             ```
-
+            
             Convert HTML to structured POML components:
             ```xml
             <webpage url="https://example.com" extractText="false" />
@@ -882,23 +882,23 @@ class _TagLib:
             ```xml
             <poml syntax="text">
             Contents of the whole prompt.
-
+            
             1. Your customized list.
             2. You don't need to know anything about POML.
             </poml>
             ```
-
+            
             To render the whole prompt in markdown syntax with a "human" speaker:
-
+            
             ```xml
             <poml syntax="markdown" speaker="human">
               <p>You are a helpful assistant.</p>
               <p>What is the capital of France?</p>
             </poml>
             ```
-
+            
             **Experimental usage with limits and priority:**
-
+            
             ```xml
             <poml syntax="markdown" tokenLimit="10">
               <p priority="1">This has lower priority and may be truncated first.</p>
@@ -1140,7 +1140,7 @@ class _TagLib:
             ```xml
             <code inline="true">const x = 42;</code>
             ```
-
+            
             ```xml
             <code lang="javascript">
             const x = 42;
@@ -1285,7 +1285,7 @@ class _TagLib:
         **kwargs: Any,
     ):
         """Audio (`<audio>`) embeds an audio file in the content.
-
+        
         Accepts either a file path (`src`) or base64-encoded audio data (`base64`).
         The MIME type can be provided via `type` or will be inferred from the file extension.
 
