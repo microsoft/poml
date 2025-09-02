@@ -9,7 +9,7 @@
 import { notifyDebug, notifyDebugVerbose } from '@common/notification';
 import { everywhere } from '@common/rpc';
 import { TextFile, BinaryFile } from '@common/types';
-import { lookup } from 'mime-types';
+import { lookup } from '@common/utils/mime-types';
 
 type TextEncoding = 'utf-8' | 'utf8';
 type Base64Encoding = 'base64';
@@ -53,6 +53,7 @@ export async function readFile(
     notifyDebugVerbose('Reading File/Blob object:', filePath);
     arrayBuffer = await filePath.arrayBuffer();
     mimeType = getMimeType(filePath, options);
+    size = filePath.size;
     notifyDebug(`File/Blob metadata: mimeType=${mimeType}, size=${size}`);
     return {
       content: decodeContent(arrayBuffer, options?.encoding),

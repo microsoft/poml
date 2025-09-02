@@ -179,6 +179,7 @@ export default [
         tsconfig: './tsconfig.json',
         include: ['poml-browser/background/**/*', 'poml-browser/common/**/*', 'poml-browser/stubs/**/*', 'poml/**/*'],
       }),
+      json(),
       nodeResolve({
         jsnext: true,
         main: true,
@@ -218,6 +219,7 @@ export default [
         tsconfig: './tsconfig.json',
         include: ['poml-browser/contentScript/**/*', 'poml-browser/common/**/*'],
       }),
+      json(),
       nodeResolve({
         jsnext: true,
         main: true,
