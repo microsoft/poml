@@ -144,7 +144,7 @@ export interface GlobalFunctions extends FunctionRegistry {
     base64: string | { base64: ArrayBuffer | string } | { src: string },
     options?: { mimeType?: string },
   ) => Promise<Image>;
-  htmlToCards: (html: string | Document, options?: { parser?: 'simple' | 'complex' }) => Promise<CardModel | undefined>;
+  htmlToCard: (html: string | Document, options?: { parser?: 'simple' | 'complex' }) => Promise<CardModel | undefined>;
 
   // Internal functions used by everywhere()
   _readFile: (

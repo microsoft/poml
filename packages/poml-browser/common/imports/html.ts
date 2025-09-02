@@ -21,7 +21,7 @@ import { eliminateHeaderCards } from '@common/utils/card';
 import { everywhere } from '@common/rpc';
 
 /**
- * Options for the htmlToCards function
+ * Options for the htmlToCard function
  */
 export interface HtmlToCardsOptions {
   /**
@@ -43,7 +43,7 @@ export interface HtmlToCardsOptions {
 /**
  * Main function to convert HTML to CardModel
  */
-async function _htmlToCards(
+async function _htmlToCard(
   html: string | Document | null,
   options?: Partial<HtmlToCardsOptions>,
 ): Promise<CardModel | undefined> {
@@ -149,7 +149,7 @@ async function _htmlToCards(
   };
 }
 
-export const htmlToCards = everywhere('htmlToCards', _htmlToCards, ['content']);
+export const htmlToCard = everywhere('htmlToCard', _htmlToCard, ['content']);
 
 type ArrayLikeNodes = ArrayLike<ChildNode> | ReadonlyArray<ChildNode>;
 
