@@ -45,10 +45,8 @@ function updateNodeJSVersions(baseVersion, timestamp) {
   if (fs.existsSync(packageLockPath)) {
     let content = fs.readFileSync(packageLockPath, 'utf8');
     // Update root version
-
     content = content.replace(/^  "version": ".*?",$/m, `  "version": "${version}",`);
     // Update packages."" version
-
     content = content.replace(/^      "version": ".*?",$/m, `      "version": "${version}",`);
     fs.writeFileSync(packageLockPath, content);
     console.log(`Updated package-lock.json version to: ${version}`);
@@ -59,10 +57,8 @@ function updateNodeJSVersions(baseVersion, timestamp) {
   if (fs.existsSync(browserPackageLockPath)) {
     let browserLockContent = fs.readFileSync(browserPackageLockPath, 'utf8');
     // Update root version
-
     browserLockContent = browserLockContent.replace(/^  "version": ".*?",$/m, `  "version": "${version}",`);
     // Update packages."" version
-
     browserLockContent = browserLockContent.replace(/^      "version": ".*?",$/m, `      "version": "${version}",`);
     fs.writeFileSync(browserPackageLockPath, browserLockContent);
     console.log(`Updated packages/poml-browser/package-lock.json version to: ${version}`);
