@@ -8,7 +8,7 @@ module.exports = {
   // This is the modified rule for Python files
   '*.py': (filenames) => {
     // Define the patterns for files you want to IGNORE
-    const filesToIgnore = ['**/python/poml/_tags.py', '**/assets/**', '**/*_version.py'];
+    const filesToIgnore = ['python/poml/_tags.py', '**/assets/**', '**/*_version.py'];
 
     // Filter the staged files, keeping only the ones that DO NOT match the ignore patterns
     const filesToProcess = micromatch.not(filenames, filesToIgnore);
