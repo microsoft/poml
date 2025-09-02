@@ -18,7 +18,7 @@ export interface AstNode {
  *
  * Cases that do not apply:
  * - Template syntax including braces: `{{ expression }}` (use TemplateNode)
- * - String literals with quotes: `"hello"` (use LiteralNode or ValueNode)
+ * - String literals with quotes: `"hello"` (use ValueNode)
  * - POML markup: `<tag>` (use element nodes)
  */
 export interface ExpressionNode extends AstNode {
@@ -98,7 +98,8 @@ export interface LiteralNode extends AstNode {
 }
 
 /**
- * Represents a composite value that may contain text and/or templates.
+ * Represents a composite value that may contain text.
+ * Used specifically for the "quotes" in attribute values.
  *
  * Value nodes are containers for mixed content, handling both pure text
  * and interpolated templates. They preserve quote information when used
@@ -107,26 +108,18 @@ export interface LiteralNode extends AstNode {
  * Cases that apply:
  * - Quoted attribute values: `"some text"`, `'single quoted'`
  * - Mixed content with templates: `"Hello, {{ userName }}!"`
- * - Text content between tags: `>  some text  <` (including whitespace)
- * - Unquoted template values in certain contexts
+ * - Unquoted template values in certain attribute contexts
  * - Multi-part content: `"Price: ${{amount}} USD"`
  *
  * Cases that do not apply:
  * - Attribute keys: `class=...` (the `class` part uses LiteralNode)
- * - Pure expressions without quotes: `if=condition` (use ExpressionNode)
- * - Tag names: `div` (use LiteralNode)
- * - Standalone template variables not in a value context
+ * - Pure expressions without quotes: `if=condition` (illegal)
  *
  * Note: The range includes quotes if present, but children exclude them.
  */
 export interface ValueNode extends AstNode {
   kind: 'VALUE';
   children: (LiteralNode | TemplateNode)[];
-}
-
-export interface TextElementNode extends AstNode {
-  kind: 'TEXT';
-  value: string;
 }
 
 /**
@@ -272,7 +265,7 @@ export interface OpenTagNode extends AstNode {
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface OpenTagCstNode extends CstNode {
+export interface CstOpenTagNode extends CstNode {
   children: {
     OpenBracket?: IToken[];
     WsAfterBracket?: IToken[];
@@ -308,7 +301,7 @@ export interface CloseTagNode extends AstNode {
 /**
  * Related CST node interfaces for parsing stage.
  */
-export interface CloseTagCstNode extends CstNode {
+export interface CstCloseTagNode extends CstNode {
   children: {
     ClosingOpenBracket?: IToken[];
     WsAfterBracket?: IToken[];
@@ -378,7 +371,21 @@ export interface ElementNode extends AstNode {
   kind: 'ELEMENT';
   open: OpenTagNode;
   close: CloseTagNode;
-  children: (ElementNode | LiteralElementNode | CommentNode | PragmaNode | ValueNode)[];
+  children: (ElementNode | LiteralElementNode | CommentNode | PragmaNode | TextElementNode)[];
+}
+
+/**
+ * Very similar to ValueNode, but specifically for text content between tags.
+ *
+ * Cases that apply:
+ * - Text content between tags: `>  some text  <` (including whitespace)
+ *
+ * Cases that do not apply:
+ * - Text inside <text> or other literal elements (use LiteralElementNode)
+ */
+export interface TextElementNode extends AstNode {
+  kind: 'TEXT';
+  value: string;
 }
 
 /**
@@ -386,8 +393,8 @@ export interface ElementNode extends AstNode {
  */
 export interface CstElementNode extends CstNode {
   children: {
-    OpenTag?: OpenTagCstNode[];
-    CloseTag?: CloseTagCstNode[];
+    OpenTag?: CstOpenTagNode[];
+    CloseTag?: CstCloseTagNode[];
     Content?: CstElementContentNode[];
   };
 }
@@ -491,8 +498,8 @@ export interface CstPragmaNode extends CstNode {
  * - Explicit text elements: `<text>Literal {{ not_interpolated }}</text>`
  *
  * Cases that do not apply:
- * - Regular text content with interpolation (use ValueNode)
- * - Plain text outside elements (use ValueNode)
+ * - Regular text content with interpolation (use TextElementNode or ValueNode)
+ * - Plain text outside elements (use TextElementNode)
  * - Elements allowing template processing (use ElementNode)
  * - Text with attributes enabling processing (future feature)
  *
@@ -516,11 +523,11 @@ export interface LiteralElementNode extends AstNode {
  */
 export interface CstLiteralElementNode extends CstNode {
   children: {
-    OpenTag?: OpenTagCstNode[];
+    OpenTag?: CstOpenTagNode[];
     // All content between open and close tags is treated as literal text
     // including other tags, comments, pragmas, etc. except for `</text>`.
     TextContent?: IToken[];
-    CloseTag?: CloseTagCstNode[];
+    CloseTag?: CstCloseTagNode[];
   };
 }
 
@@ -584,6 +591,7 @@ export type StrictNode =
   | SelfCloseElementNode
   | ElementNode
   | LiteralElementNode
+  | TextElementNode
   | CommentNode
   | PragmaNode
   | RootNode;

@@ -1,4 +1,3 @@
-// cstParser.ts
 import { CstParser, CstNode, IToken, TokenType } from 'chevrotain';
 import {
   AllTokens,
@@ -26,6 +25,23 @@ import {
   extendedPomlLexer,
 } from './lexer';
 
+import {
+  CstTemplateNode,
+  CstQuotedNode,
+  CstQuotedTemplateNode,
+  CstForIteratorNode,
+  CstAttributeNode,
+  CstOpenTagNode,
+  CstCloseTagNode,
+  CstSelfCloseElementNode,
+  CstElementNode,
+  CstElementContentNode,
+  CstCommentNode,
+  CstPragmaNode,
+  CstLiteralElementNode,
+  CstRootNode,
+} from './nodes';
+
 /**
  * Extended POML CST Parser
  *
@@ -36,20 +52,20 @@ import {
  */
 export class ExtendedPomlParser extends CstParser {
   // ---- Rule property declarations (so TS knows they exist) ----
-  public root!: (idxInOriginalText?: number) => CstNode;
-  public elementContentNode!: (idxInOriginalText?: number) => CstNode;
-  public templateNode!: (idxInOriginalText?: number) => CstNode;
-  public comment!: (idxInOriginalText?: number) => CstNode;
-  public pragma!: (idxInOriginalText?: number) => CstNode;
-  public quotedNoTemplate!: (idxInOriginalText?: number) => CstNode;
-  public quotedTemplate!: (idxInOriginalText?: number) => CstNode;
-  public forIteratorValue!: (idxInOriginalText?: number) => CstNode;
-  public attribute!: (idxInOriginalText?: number) => CstNode;
-  public openTag!: (idxInOriginalText?: number) => CstNode;
-  public closeTag!: (idxInOriginalText?: number) => CstNode;
-  public selfCloseElement!: (idxInOriginalText?: number) => CstNode;
-  public element!: (idxInOriginalText?: number) => CstNode;
-  public literalElement!: (idxInOriginalText?: number) => CstNode;
+  public root!: (idxInOriginalText?: number) => CstRootNode;
+  public elementContentNode!: (idxInOriginalText?: number) => CstElementContentNode;
+  public templateNode!: (idxInOriginalText?: number) => CstTemplateNode;
+  public comment!: (idxInOriginalText?: number) => CstCommentNode;
+  public pragma!: (idxInOriginalText?: number) => CstPragmaNode;
+  public quoted!: (idxInOriginalText?: number) => CstQuotedNode;
+  public quotedTemplate!: (idxInOriginalText?: number) => CstQuotedTemplateNode;
+  public forIteratorValue!: (idxInOriginalText?: number) => CstForIteratorNode;
+  public attribute!: (idxInOriginalText?: number) => CstAttributeNode;
+  public openTag!: (idxInOriginalText?: number) => CstOpenTagNode;
+  public closeTag!: (idxInOriginalText?: number) => CstCloseTagNode;
+  public selfCloseElement!: (idxInOriginalText?: number) => CstSelfCloseElementNode;
+  public element!: (idxInOriginalText?: number) => CstElementNode;
+  public literalElement!: (idxInOriginalText?: number) => CstLiteralElementNode;
 
   // ---- Small helpers ----
   private anyOf = (tokenTypes: TokenType[], label?: string) =>
@@ -197,7 +213,7 @@ export class ExtendedPomlParser extends CstParser {
       // Options: unquoted tokens or quoted strings (no templates inside these)
       this.MANY(() => {
         this.OR([
-          { ALT: () => this.SUBRULE(this.quotedNoTemplate, { LABEL: 'PragmaOption' }) },
+          { ALT: () => this.SUBRULE(this.quoted, { LABEL: 'PragmaOption' }) },
           {
             ALT: () => {
               this.OR(
@@ -217,7 +233,7 @@ export class ExtendedPomlParser extends CstParser {
       this.CONSUME(CommentClose);
     });
 
-    this.quotedNoTemplate = this.RULE('quotedNoTemplate', () => {
+    this.quoted = this.RULE('quoted', () => {
       this.OR([
         {
           ALT: () => {
@@ -370,6 +386,7 @@ export class ExtendedPomlParser extends CstParser {
     this.literalElement = this.RULE('literalElement', () => {
       this.SUBRULE(this.openTag, { LABEL: 'OpenTag' });
 
+      // TODO: the ending tag should match the starting tag name (text/template)
       // Everything until the matching </text> or </template> is treated as raw text
       this.MANY(() => {
         this.OR([
