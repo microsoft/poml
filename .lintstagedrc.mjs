@@ -1,13 +1,12 @@
-const micromatch = require('micromatch');
+import micromatch from 'micromatch';
 
-module.exports = {
-  // Your other rules remain the same
+export default {
+  // Rules for typescript, javascript, json, markdown, yaml files
   '*.{ts,tsx,js,mjs,json,md,yml}': ['prettier --write'],
   '*.{ts,tsx,js,mjs}': ['eslint --fix'],
 
-  // This is the modified rule for Python files
+  // Rules for python files, ignoring specific files and directories
   '*.py': (filenames) => {
-    // Define the patterns for files you want to IGNORE
     const filesToIgnore = ['python/poml/_tags.py', '**/assets/**', '**/*_version.py'];
 
     // Filter the staged files, keeping only the ones that DO NOT match the ignore patterns
