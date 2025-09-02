@@ -717,21 +717,27 @@ export class TestCommand implements Command {
 
   /**
    * Convert POML messages to VS Code LanguageModelChatMessage format
+   * Handles role mapping, content conversion, and message merging for the VS Code API
    */
   private pomlMessagesToVsCodeMessage(messages: Message[]): vscode.LanguageModelChatMessage[] {
+    // Step 1: Convert each POML message to VS Code format
     const vscodeMessage = messages.map((msg) => {
+      // Map POML speaker types to VS Code roles
       let role: vscode.LanguageModelChatMessageRole;
 
       switch (msg.speaker) {
         case 'human':
+          // Human messages map directly to User role
           role = vscode.LanguageModelChatMessageRole.User;
           break;
         case 'ai':
+          // AI messages map to Assistant role
           role = vscode.LanguageModelChatMessageRole.Assistant;
           break;
         case 'tool': // Tool responses are typically treated as user response messages in VS Code
         case 'system':
           // VS Code doesn't have a direct system role, treat as user
+          // This ensures tool responses and system messages are properly handled
           role = vscode.LanguageModelChatMessageRole.User;
           break;
         default:
@@ -739,25 +745,31 @@ export class TestCommand implements Command {
           role = vscode.LanguageModelChatMessageRole.User;
       }
 
-      // Convert content to string format
-      // VS Code LanguageModelChatMessage expects string content
+      // Convert POML RichContent to VS Code message content parts
+      // This handles text, images, tool calls, and tool results
       const content = this.richContentToVsCodeMessageContent(msg.content);
 
       return new vscode.LanguageModelChatMessage(role, content);
     });
 
-    // Merge consecutive messages from the same role
+    // Step 2: Merge consecutive messages from the same role
+    // VS Code API works better when consecutive messages with the same role are merged
     const mergedMessages: vscode.LanguageModelChatMessage[] = [];
+
     for (const msg of vscodeMessage) {
+      // Add first message directly
       if (mergedMessages.length === 0) {
         mergedMessages.push(msg);
         continue;
       }
+
+      // Check if we can merge with the previous message
       const lastMsg = mergedMessages[mergedMessages.length - 1];
       if (lastMsg && lastMsg.role === msg.role) {
-        // Merge content arrays
+        // Same role: merge content arrays by concatenation
         lastMsg.content = lastMsg.content.concat(msg.content);
       } else {
+        // Different role: add as new message
         mergedMessages.push(msg);
       }
     }
@@ -765,37 +777,51 @@ export class TestCommand implements Command {
     return mergedMessages;
   }
 
+  /**
+   * Convert POML RichContent to VS Code message content parts
+   * Handles various content types including text, images, tool calls, and tool results
+   */
   private richContentToVsCodeMessageContent(
     content: RichContent,
   ): (vscode.LanguageModelTextPart | vscode.LanguageModelToolResultPart | vscode.LanguageModelToolCallPart)[] {
+    // Handle simple string content
     if (typeof content === 'string') {
       return [{ value: content }];
     }
 
+    // Helper function to flatten nested content structures into a string
+    // Used for tool results which need to be stringified
     const flattenMessageContent = (content: any): string => {
       if (typeof content === 'string') {
         return content;
       } else if (Array.isArray(content)) {
+        // Recursively flatten array elements and join with newlines
         return content.map(flattenMessageContent).join('\n');
       } else if (typeof content === 'object' && 'value' in content) {
+        // Extract and flatten the value property
         return flattenMessageContent(content.value);
       } else {
+        // Fallback: stringify any other content type
         return JSON.stringify(content);
       }
     };
 
-    // If it's an array, we need to handle mixed content
+    // Process each part of the rich content array
     return content.map((part) => {
       if (typeof part === 'string') {
+        // Handle plain text parts
         return { value: part } satisfies vscode.LanguageModelTextPart;
       } else if (part.type.startsWith('image/')) {
+        // Handle image content (with limitations)
         const binaryPart = part as ContentMultiMediaBinary;
         if (!binaryPart.base64) {
           throw new Error(`Image content must have base64 data, found: ${JSON.stringify(part)}`);
         }
+        // VS Code API doesn't fully support images, use placeholder text
         this.log('warn', 'Images in messages are not fully supported in VS Code chat API. Using placeholder text.');
         return { value: `[Image: ${binaryPart.alt || 'unsupported in text'}]` } satisfies vscode.LanguageModelTextPart;
       } else if (part.type === 'application/vnd.poml.toolrequest') {
+        // Handle tool call requests
         const toolRequest = part as ContentMultiMediaToolRequest;
         return {
           callId: toolRequest.id,
@@ -803,12 +829,15 @@ export class TestCommand implements Command {
           input: toolRequest.content,
         } satisfies vscode.LanguageModelToolCallPart;
       } else if (part.type === 'application/vnd.poml.toolresponse') {
+        // Handle tool call responses
         const toolResponse = part as ContentMultiMediaToolResponse;
+        // Tool results need to be flattened to string format
         return {
           callId: toolResponse.id,
           content: [flattenMessageContent(this.richContentToVercelToolResult(toolResponse.content))],
         } satisfies vscode.LanguageModelToolResultPart;
       } else {
+        // Throw error for unsupported content types
         throw new Error(`Unsupported content type: ${part.type}`);
       }
     });
