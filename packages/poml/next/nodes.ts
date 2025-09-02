@@ -273,9 +273,9 @@ export interface CstOpenTagPartialNode extends CstNode {
     OpenBracket?: IToken[];
     WsAfterBracket?: IToken[];
     TagName?: IToken[];
-    WsAfterName?: IToken[];
+    WsBeforeEachAttribute?: IToken[];
     Attribute?: CstAttributeNode[];
-    WsAfterAttribute?: IToken[];
+    WsAfterAll?: IToken[];
   };
 }
 
@@ -467,9 +467,9 @@ export interface CstPragmaNode extends CstNode {
     PragmaKeyword?: IToken[];
     WsAfterPragma?: IToken[];
     PragmaIdentifier?: IToken[];
-    WsAfterIdentifier?: IToken[];
+    WsBeforeEachOption?: IToken[];
     PragmaOption?: (IToken | CstQuotedNode)[];
-    WsAfterContent?: IToken[];
+    WsAfterAll?: IToken[];
     CommentClose?: IToken[];
   };
 }
