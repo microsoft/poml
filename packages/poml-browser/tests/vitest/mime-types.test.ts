@@ -243,4 +243,40 @@ describe('mimeTypes', () => {
       });
     });
   });
+
+  describe('category annotations', () => {
+    it('classifies text as plain', () => {
+      expect(mimeTypes.category('text/plain')).toBe('plain');
+      expect(mimeTypes.category('text/csv')).toBe('plain');
+    });
+
+    it('classifies common code types as code', () => {
+      expect(mimeTypes.category('application/json')).toBe('code');
+      expect(mimeTypes.category('text/markdown')).toBe('code');
+      expect(mimeTypes.category('text/x-python')).toBe('code');
+    });
+
+    it('classifies +json/+xml/+yaml suffix types as code', () => {
+      expect(mimeTypes.category('application/geo+json')).toBe('code');
+      expect(mimeTypes.category('application/atom+xml')).toBe('code');
+      expect(mimeTypes.category('application/raml+yaml')).toBe('code');
+    });
+
+    it('classifies media types by family', () => {
+      expect(mimeTypes.category('image/png')).toBe('image');
+      expect(mimeTypes.category('audio/mpeg')).toBe('audio');
+      expect(mimeTypes.category('video/mp4')).toBe('video');
+    });
+
+    it('classifies custom types', () => {
+      expect(mimeTypes.category('text/x-poml')).toBe('code');
+      expect(mimeTypes.category('text/x-pomx')).toBe('code');
+      expect(mimeTypes.category('text/x-rst')).toBe('code');
+      expect(mimeTypes.category('application/x-python-code')).toBe('unknown');
+    });
+
+    it('defaults unknown to unknown', () => {
+      expect(mimeTypes.category('application/octet-stream')).toBe('unknown');
+    });
+  });
 });

@@ -8,8 +8,10 @@
 
 import { notifyDebug, notifyDebugVerbose } from '@common/notification';
 import { everywhere } from '@common/rpc';
-import { TextFile, BinaryFile } from '@common/types';
+import { TextFile, BinaryFile, CardModel, TextCardContent, ImageCardContent } from '@common/types';
 import { lookup } from '@common/utils/mime-types';
+import { toPngBase64 } from './image';
+import { htmlToCard } from './html';
 
 type TextEncoding = 'utf-8' | 'utf8';
 type Base64Encoding = 'base64';
@@ -72,6 +74,281 @@ export async function readTextFile(filePath: string | File | Blob): Promise<Text
 
 export async function readBinaryFile(filePath: string | File | Blob): Promise<BinaryFile> {
   return readFile(filePath, { encoding: 'binary' });
+}
+
+/**
+ * Options for fileToCard function
+ */
+export interface FileToCardOptions {
+  /**
+   * Encoding option for reading text files
+   */
+  encoding?: SupportedEncoding;
+
+  /**
+   * Minimum image size in pixels (width or height) to include.
+   * Images smaller than this will be ignored.
+   * @default 64
+   */
+  minimumImageSize?: number;
+
+  /**
+   * Maximum file size in bytes to process.
+   * Files larger than this will be rejected.
+   * @default 20MB
+   */
+  maxFileSize?: number;
+
+  /**
+   * Source identifier for the card
+   * @default 'file'
+   */
+  source?: 'file' | 'drop' | 'manual' | 'clipboard' | 'generated' | 'webpage';
+}
+
+/**
+ * Convert a file to a CardModel with appropriate content type detection
+ */
+export async function fileToCard(filePath: string | File | Blob, options?: FileToCardOptions): Promise<CardModel> {
+  const {
+    minimumImageSize = 64,
+    maxFileSize = 20 * 1024 * 1024, // 20MB
+    source = 'file',
+    encoding,
+  } = options || {};
+
+  // Check file size for File/Blob objects
+  if ((filePath instanceof File || filePath instanceof Blob) && filePath.size > maxFileSize) {
+    throw new Error(`File too large (${filePath.size} bytes > ${maxFileSize} bytes)`);
+  }
+
+  // Determine file type using mime-types inference
+  let actualMimeType: string;
+  let fileName: string;
+
+  if (filePath instanceof File) {
+    const inferredMimeType = lookup(filePath.name) || filePath.type;
+    actualMimeType = filePath.type || inferredMimeType;
+    fileName = filePath.name;
+  } else if (filePath instanceof Blob) {
+    actualMimeType = filePath.type || 'application/octet-stream';
+    fileName = 'blob';
+  } else {
+    const inferredMimeType = lookup(filePath);
+    actualMimeType = inferredMimeType || 'application/octet-stream';
+    fileName = filePath.split('/').pop() || filePath;
+  }
+
+  notifyDebugVerbose(`File ${fileName}: using MIME type=${actualMimeType}`);
+
+  // Process based on MIME type
+  if (actualMimeType?.startsWith('image/')) {
+    return await processImageFile(filePath, fileName, actualMimeType, minimumImageSize, source);
+  } else if (actualMimeType?.startsWith('text/')) {
+    if (actualMimeType === 'text/html') {
+      return await processHtmlFile(filePath, fileName, actualMimeType, source);
+    } else {
+      return await processTextFile(filePath, fileName, actualMimeType, source, encoding);
+    }
+  } else {
+    // For non-text, non-image files, try to determine if it's actually text
+    return await processBinaryOrUnknownFile(filePath, fileName, actualMimeType, source);
+  }
+}
+
+/**
+ * Process an image file and return ImageCardContent
+ */
+async function processImageFile(
+  filePath: string | File | Blob,
+  fileName: string,
+  mimeType: string,
+  minimumImageSize: number,
+  source: string,
+): Promise<CardModel> {
+  notifyDebugVerbose(`Processing image file: ${fileName}`);
+
+  let imageInput: string | { src: string };
+
+  if (filePath instanceof File || filePath instanceof Blob) {
+    imageInput = { src: URL.createObjectURL(filePath) };
+  } else {
+    imageInput = { src: filePath };
+  }
+
+  const image = await toPngBase64(imageInput);
+
+  if (image.width < minimumImageSize && image.height < minimumImageSize) {
+    throw new Error(`Image too small (${image.width}x${image.height}) below minimum size ${minimumImageSize}px`);
+  }
+
+  const content: ImageCardContent = {
+    type: 'image',
+    base64: image.base64,
+    alt: fileName,
+    caption: fileName,
+  };
+
+  return {
+    content,
+    source: source as any,
+    mimeType,
+    timestamp: new Date(),
+  };
+}
+
+/**
+ * Process a text file and return TextCardContent
+ */
+async function processTextFile(
+  filePath: string | File | Blob,
+  fileName: string,
+  _mimeType: string,
+  source: string,
+  encoding?: SupportedEncoding,
+): Promise<CardModel> {
+  notifyDebugVerbose(`Processing text file: ${fileName}`);
+
+  const fileData = (await readFile(filePath, { encoding: (encoding || 'utf-8') as any })) as TextFile;
+
+  if (!fileData.content.trim()) {
+    throw new Error(`Empty text file: ${fileName}`);
+  }
+
+  const content: TextCardContent = {
+    type: 'text',
+    text: fileData.content,
+    caption: fileName,
+  };
+
+  // Determine container type based on file extension
+  const extension = fileName.toLowerCase().split('.').pop();
+  if (
+    ['js', 'ts', 'py', 'java', 'cpp', 'c', 'h', 'css', 'html', 'xml', 'json', 'yaml', 'yml'].includes(extension || '')
+  ) {
+    content.container = 'Code';
+  }
+
+  return {
+    content,
+    source: source as any,
+    mimeType: fileData.mimeType,
+    timestamp: new Date(),
+  };
+}
+
+/**
+ * Process an HTML file using htmlToCard
+ */
+async function processHtmlFile(
+  filePath: string | File | Blob,
+  fileName: string,
+  _mimeType: string,
+  source: string,
+): Promise<CardModel> {
+  notifyDebugVerbose(`Processing HTML file: ${fileName}`);
+
+  const fileData = (await readFile(filePath, { encoding: 'utf-8' })) as TextFile;
+
+  if (!fileData.content.trim()) {
+    throw new Error(`Empty HTML file: ${fileName}`);
+  }
+
+  // Try to process as HTML first
+  try {
+    const htmlCard = await htmlToCard(fileData.content, { parser: 'complex' });
+    if (htmlCard) {
+      htmlCard.source = source as any;
+      htmlCard.mimeType = fileData.mimeType;
+      if (!htmlCard.content.caption) {
+        htmlCard.content.caption = fileName;
+      }
+      return htmlCard;
+    }
+  } catch (htmlError) {
+    notifyDebug(`Failed to process as HTML, falling back to text: ${htmlError}`);
+  }
+
+  // Fallback to text processing
+  const content: TextCardContent = {
+    type: 'text',
+    text: fileData.content,
+    caption: fileName,
+    container: 'Code',
+  };
+
+  return {
+    content,
+    source: source as any,
+    mimeType: fileData.mimeType,
+    timestamp: new Date(),
+  };
+}
+
+/**
+ * Process a file that appears to be binary or of unknown type
+ */
+async function processBinaryOrUnknownFile(
+  filePath: string | File | Blob,
+  fileName: string,
+  mimeType: string,
+  source: string,
+): Promise<CardModel> {
+  notifyDebugVerbose(`Processing binary/unknown file type: ${fileName} (${mimeType})`);
+
+  // Try to read as text first to see if it's actually readable text
+  try {
+    const textData = (await readFile(filePath, { encoding: 'utf-8' })) as TextFile;
+
+    // Check if content looks like text (contains printable characters)
+    if (isProbablyText(textData.content)) {
+      notifyDebug(`File ${fileName} appears to be text despite binary MIME type, treating as text`);
+
+      const content: TextCardContent = {
+        type: 'text',
+        text: textData.content,
+        caption: fileName,
+      };
+
+      return {
+        content,
+        source: source as any,
+        mimeType: textData.mimeType,
+        timestamp: new Date(),
+      };
+    }
+  } catch (textError) {
+    notifyDebugVerbose(`Failed to read as text: ${textError}`);
+  }
+
+  // File is truly binary - throw error
+  throw new Error(`Cannot process binary file: ${fileName} (${mimeType}). Only text and image files are supported.`);
+}
+
+/**
+ * Check if content is probably text (contains mostly printable characters)
+ */
+function isProbablyText(content: string): boolean {
+  if (!content) {
+    return false;
+  }
+
+  // Check for null bytes (strong indicator of binary content)
+  if (content.includes('\0')) {
+    return false;
+  }
+
+  // Count printable characters
+  let printableCount = 0;
+  for (let i = 0; i < Math.min(content.length, 1000); i++) {
+    const char = content.charCodeAt(i);
+    if ((char >= 32 && char <= 126) || char === 9 || char === 10 || char === 13) {
+      printableCount++;
+    }
+  }
+
+  const ratio = printableCount / Math.min(content.length, 1000);
+  return ratio > 0.8; // If more than 80% of characters are printable, consider it text
 }
 
 // Implementation for remote file reading

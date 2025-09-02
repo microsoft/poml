@@ -7,24 +7,19 @@ import dbJson from 'mime-db';
 // ---- Types ----
 
 type Source = 'nginx' | 'apache' | 'iana' | 'default' | 'custom';
+type Category = 'plain' | 'code' | 'image' | 'audio' | 'video' | 'unknown';
 
 interface MimeRecord {
   source?: Source;
   extensions?: string[];
   charset?: string;
+  category?: Category;
 }
 
 type MimeDB = Record<string, MimeRecord>;
 
 // Some `mime-db` distributions don’t ship types; cast defensively.
 const db = dbJson as unknown as MimeDB;
-
-// Augmentations to `mime-db` types (if any) would go here
-db['application/x-python-code'] = { source: 'custom', extensions: ['pyc'] };
-db['text/x-python'] = { source: 'custom', extensions: ['py'], charset: 'UTF-8' };
-db['text/x-poml'] = { source: 'custom', extensions: ['poml'], charset: 'UTF-8' };
-db['text/x-pomx'] = { source: 'custom', extensions: ['pomx'], charset: 'UTF-8' };
-db['text/x-rst'] = { source: 'custom', extensions: ['rst'], charset: 'UTF-8' };
 
 // ---- Regex constants ----
 
@@ -87,6 +82,21 @@ export function contentType(str: string): string | null {
     }
   }
   return mime;
+}
+
+/**
+ * Get the category for a MIME type.
+ */
+export function category(type: string): Category | null {
+  populateMaps(extensions, types);
+  if (!type || typeof type !== 'string') {
+    return null;
+  }
+
+  const match = EXTRACT_TYPE_REGEXP.exec(type);
+  const mime = match && db[match[1].toLowerCase()];
+
+  return mime ? (mime.category ?? null) : null;
 }
 
 /**
@@ -243,9 +253,6 @@ function mimeScore(mimeType: string, source: Source = 'default'): number {
   return facetScore + sourceScore + typeScore + lengthScore;
 }
 
-// Initialize maps at module load (safe in browser)
-populateMaps(extensions, types);
-
 // ---- Default export (optional convenience) ----
 export default {
   charset,
@@ -256,3 +263,93 @@ export default {
   lookup,
   types,
 };
+
+// ---- Augmentations to `mime-db` types (if any) would go here ----
+db['application/x-python-code'] = { source: 'custom', extensions: ['pyc'], category: 'unknown' };
+db['text/x-python'] = { source: 'custom', extensions: ['py'], charset: 'UTF-8', category: 'code' };
+db['text/x-poml'] = { source: 'custom', extensions: ['poml'], charset: 'UTF-8', category: 'code' };
+db['text/x-pomx'] = { source: 'custom', extensions: ['pomx'], charset: 'UTF-8', category: 'code' };
+db['text/x-rst'] = { source: 'custom', extensions: ['rst'], charset: 'UTF-8', category: 'code' };
+
+// Code Mime Types
+const codeMimeTypes = new Set([
+  'application/dart',
+  'application/ecmascript',
+  'application/javascript',
+  'application/json',
+  'application/ld+json',
+  'application/manifest+json',
+  'application/node',
+  'application/raml+yaml',
+  'application/sql',
+  'application/vnd.coffeescript',
+  'application/vnd.dart',
+  'application/vnd.mozilla.xul+xml',
+  'application/voicexml+xml',
+  'application/wasm',
+  'application/wsdl+xml',
+  'application/x-csh',
+  'application/x-httpd-php',
+  'application/x-javascript',
+  'application/x-perl',
+  'application/x-sh',
+  'application/x-tcl',
+  'application/xaml+xml',
+  'application/xml',
+  'application/xml-dtd',
+  'application/xproc+xml',
+  'application/xslt+xml',
+  'application/yaml',
+  'text/coffeescript',
+  'text/cql',
+  'text/css',
+  'text/ecmascript',
+  'text/html',
+  'text/jade',
+  'text/javascript',
+  'text/jsx',
+  'text/less',
+  'text/markdown',
+  'text/mathml',
+  'text/mdx',
+  'text/sgml',
+  'text/shex',
+  'text/slim',
+  'text/stylus',
+  'text/vnd.sun.j2me.app-descriptor',
+  'text/wgsl',
+  'text/x-asm',
+  'text/x-c',
+  'text/x-component',
+  'text/x-fortran',
+  'text/x-handlebars-template',
+  'text/x-java-source',
+  'text/x-lua',
+  'text/x-markdown',
+  'text/x-pascal',
+  'text/x-processing',
+  'text/x-sass',
+  'text/x-scss',
+  'text/xml',
+  'text/yaml',
+  'x-shader/x-fragment',
+  'x-shader/x-vertex',
+]);
+
+for (const type in db) {
+  if (!db[type].category) {
+    if (codeMimeTypes.has(type) || type.endsWith('+json') || type.endsWith('+xml') || type.endsWith('+yaml')) {
+      db[type].category = 'code';
+    } else if (type.startsWith('image/')) {
+      db[type].category = 'image';
+    } else if (type.startsWith('text/')) {
+      db[type].category = 'plain';
+    } else if (type.startsWith('audio/')) {
+      db[type].category = 'audio';
+    } else if (type.startsWith('video/')) {
+      db[type].category = 'video';
+    } else {
+      db[type].category = 'unknown';
+    }
+  }
+}
