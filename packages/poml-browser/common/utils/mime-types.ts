@@ -1,17 +1,6 @@
-// mime-types.ts
-// MIT Licensed — migrated to TypeScript for browser usage
-
-/**
- * This module provides:
- *  - charset(type)
- *  - contentType(str)
- *  - extension(type)
- *  - lookup(pathOrExt)
- *  - extensions: Record<mime, string[]>
- *  - types: Record<extension, mime>
- *
- * It relies on the `mime-db` package (JSON data). Use a bundler to include it.
- */
+// https://github.com/jshttp/mime-types
+// migrated to TypeScript for browser usage
+// It relies on the `mime-db` package (JSON data). Use a bundler to include it.
 
 import dbJson from 'mime-db';
 
@@ -47,46 +36,48 @@ export const types: Record<string, string> = Object.create(null);
 
 /**
  * Get the default charset for a MIME type.
- * Returns "UTF-8" for text/* when unspecified, or false when unknown.
+ * Returns "UTF-8" for text/* when unspecified, or null when unknown.
  */
-export function charset(type: string): string | false {
+export function charset(type: string): string | null {
+  populateMaps(extensions, types);
   if (!type || typeof type !== 'string') {
-return false;
-}
+    return null;
+  }
 
   const match = EXTRACT_TYPE_REGEXP.exec(type);
   const mime = match && db[match[1].toLowerCase()];
 
   if (mime && mime.charset) {
-return mime.charset;
-}
+    return mime.charset;
+  }
 
   if (match && TEXT_TYPE_REGEXP.test(match[1])) {
-return 'UTF-8';
-}
+    return 'UTF-8';
+  }
 
-  return false;
+  return null;
 }
 
 /**
  * Create a full Content-Type header given a MIME type or extension.
  * Adds a default charset when appropriate.
  */
-export function contentType(str: string): string | false {
+export function contentType(str: string): string | null {
+  populateMaps(extensions, types);
   if (!str || typeof str !== 'string') {
-return false;
-}
+    return null;
+  }
 
   const mime = str.indexOf('/') === -1 ? lookup(str) : str;
   if (!mime) {
-return false;
-}
+    return null;
+  }
 
   if (mime.indexOf('charset') === -1) {
     const cs = charset(mime);
     if (cs) {
-return `${mime}; charset=${cs.toLowerCase()}`;
-}
+      return `${mime}; charset=${cs.toLowerCase()}`;
+    }
   }
   return mime;
 }
@@ -94,16 +85,17 @@ return `${mime}; charset=${cs.toLowerCase()}`;
 /**
  * Get the default extension for a MIME type.
  */
-export function extension(type: string): string | false {
+export function extension(type: string): string | null {
+  populateMaps(extensions, types);
   if (!type || typeof type !== 'string') {
-return false;
-}
+    return null;
+  }
 
   const match = EXTRACT_TYPE_REGEXP.exec(type);
   const exts = match && extensions[match[1].toLowerCase()];
   if (!exts || !exts.length) {
-return false;
-}
+    return null;
+  }
 
   return exts[0];
 }
@@ -112,32 +104,38 @@ return false;
  * Lookup the MIME type for a file path or extension.
  * Accepts "ext", ".ext", or "dir/file.ext".
  */
-export function lookup(pathOrExt: string): string | false {
+export function lookup(pathOrExt: string): string | null {
+  populateMaps(extensions, types);
   if (!pathOrExt || typeof pathOrExt !== 'string') {
-return false;
-}
+    return null;
+  }
 
   // emulate Node's path.extname('x.' + str).slice(1) without Node:
   const ext = getExtension(pathOrExt);
   if (!ext) {
-return false;
-}
+    return null;
+  }
 
-  return types[ext] || false;
+  return types[ext] || null;
 }
 
 // ---- Internal helpers ----
+
+let _initialized = false;
 
 /**
  * Populate the extensions and types maps using mime-db.
  */
 function populateMaps(extMap: Record<string, string[]>, typeMap: Record<string, string>) {
+  if (_initialized) {
+    return;
+  }
   Object.keys(db).forEach((type) => {
     const record = db[type];
     const exts = record.extensions;
     if (!exts || !exts.length) {
-return;
-}
+      return;
+    }
 
     // mime -> extensions
     extMap[type] = exts;
@@ -148,6 +146,7 @@ return;
       typeMap[ext] = preferredType(ext, typeMap[ext], type);
     }
   });
+  _initialized = true;
 }
 
 /**
@@ -171,8 +170,8 @@ function getExtension(input: string): string {
   const s = `x.${input}`;
   const idx = s.lastIndexOf('.');
   if (idx === -1 || idx === s.length - 1) {
-return '';
-}
+    return '';
+  }
   return s.slice(idx + 1).toLowerCase();
 }
 
@@ -220,8 +219,8 @@ const TYPE_SCORES: Record<string, number> = {
  */
 function mimeScore(mimeType: string, source: Source = 'default'): number {
   if (mimeType === 'application/octet-stream') {
-return 0;
-}
+    return 0;
+  }
 
   const [type, subtype] = mimeType.split('/');
   const facet = subtype.replace(/(\.|x-).*/, '$1');
