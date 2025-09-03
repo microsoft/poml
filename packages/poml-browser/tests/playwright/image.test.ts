@@ -1,6 +1,6 @@
 import { createArtifactDir, test } from './extension.spec';
 import { expect } from '@playwright/test';
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { join, basename, extname } from 'path';
 
 import config from '../../playwright.config';
@@ -192,17 +192,6 @@ test.describe('toPngBase64 image conversion tests', () => {
 
     expect(invalidBase64Result.error).toContain('Failed to load image with MIME type');
   });
-});
-
-test.describe('srcToPngBase64 image conversion tests', () => {
-  const testImages = [
-    { file: 'gpt-5-random-image.png', mimeType: 'image/png' },
-    { file: 'sample_1280×853.jpeg', mimeType: 'image/jpeg' },
-    { file: 'google-webp-gallery.webp', mimeType: 'image/webp' },
-    { file: 'video-to-gif-sample.gif', mimeType: 'image/gif' },
-    { file: 'sample1.bmp', mimeType: 'image/bmp' },
-    { file: 'wikipedia-example.svg', mimeType: 'image/svg+xml' },
-  ];
 
   test('converts image URL to PNG base64', async ({ serviceWorker, sidebarPage }) => {
     for (const { file } of testImages) {
@@ -252,5 +241,191 @@ test.describe('srcToPngBase64 image conversion tests', () => {
 
     expect(result.error).toBeTruthy();
     expect(result.error).toMatch(/Failed to load image/i);
+  });
+});
+
+test.describe('cardFromImage card creation tests', () => {
+  const testImages = [
+    { file: 'gpt-5-random-image.png', mimeType: 'image/png' },
+    { file: 'sample_1280×853.jpeg', mimeType: 'image/jpeg' },
+    { file: 'google-webp-gallery.webp', mimeType: 'image/webp' },
+    { file: 'wikipedia-example.svg', mimeType: 'image/svg+xml' },
+  ];
+
+  test('creates card from URL and verifies PNG conversion', async ({ serviceWorker, sidebarPage }) => {
+    const artifactDir = createArtifactDir();
+
+    for (const { file, mimeType } of testImages) {
+      const url = `${FIXTURE_ENDPOINT}/image/${file}`;
+
+      const result = await serviceWorker.evaluate(
+        async ({ imageUrl, expectedMimeType, fileName }) => {
+          const { cardFromImage } = self as any;
+          if (!cardFromImage) {
+            throw new Error('cardFromImage function not found');
+          }
+
+          const card = await cardFromImage(imageUrl);
+
+          // Verify PNG conversion by checking base64 header
+          const header = Array.from(atob(card.content.base64).slice(0, 8)).map((c) => c.charCodeAt(0));
+
+          return {
+            success: true,
+            card: {
+              contentType: card.content.type,
+              alt: card.content.alt,
+              url: card.url,
+              source: card.source,
+              mimeType: card.mimeType,
+              hasTimestamp: !!card.timestamp,
+              isPNG: header.join(',') === '137,80,78,71,13,10,26,10', // PNG signature
+            },
+          };
+        },
+        { imageUrl: url, expectedMimeType: mimeType, fileName: file },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.card.contentType).toBe('image');
+      expect(result.card.alt).toBe(file);
+      expect(result.card.url).toBe(url);
+      expect(result.card.source).toBe('webpage');
+      expect(result.card.mimeType).toBe('image/png');
+      expect(result.card.hasTimestamp).toBe(true);
+      expect(result.card.isPNG).toBe(true); // All images should be converted to PNG
+    }
+
+    // Save sample card for review
+    const sampleUrl = `${FIXTURE_ENDPOINT}/image/${testImages[0].file}`;
+    const sampleResult = await serviceWorker.evaluate(async (url) => {
+      const { cardFromImage } = self as any;
+      const card = await cardFromImage(url);
+      return {
+        ...card,
+        timestamp: card.timestamp?.toISOString(),
+        content: { ...card.content, base64: card.content.base64.substring(0, 50) + '...' },
+      };
+    }, sampleUrl);
+    writeFileSync(join(artifactDir, 'sample_image_card.json'), JSON.stringify(sampleResult, null, 2));
+  });
+
+  test('creates card from File/Blob with custom source', async ({ serviceWorker, sidebarPage }) => {
+    const imagePath = join(testFixturesPath, 'image', 'sample_1280×853.jpeg');
+    const imageBuffer = readFileSync(imagePath);
+
+    // Test File object
+    const fileResult = await serviceWorker.evaluate(async (buffer) => {
+      const { cardFromImage } = self as any;
+      const uint8Array = new Uint8Array(buffer);
+      const file = new File([uint8Array], 'test-image.jpeg', { type: 'image/jpeg' });
+
+      const card = await cardFromImage(file, { source: 'clipboard' });
+      return {
+        contentType: card.content.type,
+        alt: card.content.alt,
+        url: card.url,
+        mimeType: card.mimeType,
+        source: card.source,
+      };
+    }, Array.from(imageBuffer));
+
+    expect(fileResult.contentType).toBe('image');
+    expect(fileResult.alt).toBe('test-image.jpeg');
+    expect(fileResult.url).toBe('test-image.jpeg');
+    expect(fileResult.mimeType).toBe('image/png');
+    expect(fileResult.source).toBe('clipboard');
+
+    // Test Blob object
+    const blobResult = await serviceWorker.evaluate(async (buffer) => {
+      const { cardFromImage } = self as any;
+      const uint8Array = new Uint8Array(buffer);
+      const blob = new Blob([uint8Array], { type: 'image/jpeg' });
+
+      const card = await cardFromImage(blob, { source: 'drag-drop' });
+      return {
+        contentType: card.content.type,
+        alt: card.content.alt,
+        url: card.url,
+        mimeType: card.mimeType,
+        source: card.source,
+      };
+    }, Array.from(imageBuffer));
+
+    expect(blobResult.contentType).toBe('image');
+    expect(blobResult.alt).toBe('blob');
+    expect(blobResult.url).toBe(undefined);
+    expect(blobResult.mimeType).toBe('image/png');
+    expect(blobResult.source).toBe('drag-drop');
+  });
+
+  test('handles data URLs including non-base64 SVG', async ({ serviceWorker, sidebarPage }) => {
+    // Test base64 data URL
+    const imagePath = join(testFixturesPath, 'image', 'gpt-5-random-image.png');
+    const imageBuffer = readFileSync(imagePath);
+    const base64DataUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+
+    const base64Result = await serviceWorker.evaluate(async (url) => {
+      const { cardFromImage } = self as any;
+      const card = await cardFromImage(url);
+      return {
+        contentType: card.content.type,
+        hasBase64: !!card.content.base64,
+        mimeType: card.mimeType,
+      };
+    }, base64DataUrl);
+
+    expect(base64Result.contentType).toBe('image');
+    expect(base64Result.hasBase64).toBe(true);
+    expect(base64Result.mimeType).toBe('image/png');
+
+    // Test non-base64 SVG data URL
+    const svgDataUrl =
+      'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="40" fill="blue"/></svg>';
+
+    const svgResult = await serviceWorker.evaluate(async (url) => {
+      const { cardFromImage } = self as any;
+      const card = await cardFromImage(url);
+      const header = Array.from(atob(card.content.base64).slice(0, 8)).map((c) => c.charCodeAt(0));
+      return {
+        contentType: card.content.type,
+        isPNG: header.join(',') === '137,80,78,71,13,10,26,10',
+        mimeType: card.mimeType,
+      };
+    }, svgDataUrl);
+
+    expect(svgResult.contentType).toBe('image');
+    expect(svgResult.isPNG).toBe(true);
+    expect(svgResult.mimeType).toBe('image/png');
+  });
+
+  test('handles errors for invalid inputs', async ({ serviceWorker, sidebarPage }) => {
+    // Test with invalid URL scheme
+    const invalidUrlResult = await serviceWorker.evaluate(async () => {
+      const { cardFromImage } = self as any;
+      try {
+        await cardFromImage('invalid://not-a-real-url');
+        return { error: null };
+      } catch (error) {
+        return { error: (error as Error).message };
+      }
+    });
+
+    expect(invalidUrlResult.error).toBeTruthy();
+    expect(invalidUrlResult.error).toContain('Could not determine MIME type');
+
+    // Test with non-image URL
+    const textUrl = `${FIXTURE_ENDPOINT}/plain/hello.txt`;
+    const nonImageResult = await serviceWorker.evaluate(async (url) => {
+      const { cardFromImage } = self as any;
+      try {
+        await cardFromImage(url);
+        return { error: null };
+      } catch (error) {
+        return { error: (error as Error).message };
+      }
+    }, textUrl);
+
+    expect(nonImageResult.error).toBeTruthy();
   });
 });

@@ -226,6 +226,7 @@ async function _toPngBase64(input: DownloadImageInput, options?: ToPngBase64Opti
   const partialImage = await downloadImage(input, options);
 
   // Step 2: Convert to PNG and get dimensions
+  // The mime type returned by toPngBase64 is the original mime type, not always 'image/png'
   return convertToPng(partialImage);
 }
 
@@ -247,7 +248,11 @@ export async function cardFromImage(filePath: string | File | Blob, options?: Cr
     imageInput = { src: filePath };
   }
 
-  const image = await toPngBase64(imageInput, { mimeType: metadata.mimeType });
+  const image = await toPngBase64(
+    imageInput,
+    // If the mime type contains something useful, pass it along to help
+    metadata.mimeType !== 'application/octet-stream' ? { mimeType: metadata.mimeType } : undefined,
+  );
   const content = {
     type: 'image',
     base64: image.base64,
@@ -259,7 +264,7 @@ export async function cardFromImage(filePath: string | File | Blob, options?: Cr
     content,
     url: metadata.url,
     source: source,
-    mimeType: metadata.mimeType,
+    mimeType: image.mimeType, // must be image/png I'm afraid
     timestamp: new Date(),
   };
 }
