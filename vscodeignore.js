@@ -1,5 +1,5 @@
 // This script generates a .vscodeignore file based on the package-lock.json.
-
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const path = require('path');
 

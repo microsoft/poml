@@ -137,7 +137,10 @@ export interface PropsBase {
 
   // Experimental
   writerOptions?: object;
-  whiteSpace?: 'pre' | 'filter' | 'trim';
+  whiteSpace?: 'pre' | 'filter' | 'trim' | 'collapse';
+
+  // Enforce inline on every element.
+  inline?: boolean;
 
   /** Soft character limit before truncation is applied. */
   charLimit?: number;
@@ -995,4 +998,10 @@ export function findComponentByAliasOrUndefined(alias: string, disabled?: Set<st
 
 export function listComponents() {
   return ComponentRegistry.instance.listComponents();
+}
+
+export function listComponentAliases() {
+  return listComponents()
+    .map((c) => c.getAliases())
+    .flat();
 }
