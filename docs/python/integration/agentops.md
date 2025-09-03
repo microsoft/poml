@@ -45,8 +45,8 @@ poml.set_trace("agentops", trace_dir="pomlruns")
 # Use POML as usual
 client = OpenAI()
 messages = poml.poml(
-    "explain_code.poml", 
-    context={"code_path": "sample.py"}, 
+    "explain_code.poml",
+    context={"code_path": "sample.py"},
     format="openai_chat"
 )
 
@@ -62,7 +62,7 @@ response = client.chat.completions.create(
 
 When AgentOps integration is enabled, POML automatically captures POML Operations. Each POML call is logged as an operation with:
 
-- **Operation Name**: "poml" 
+- **Operation Name**: "poml"
 - **Prompt Content**: The raw POML source
 - **Context Variables**: All context variables passed to the POML call
 - **Stylesheet**: Any stylesheet configuration
@@ -70,7 +70,7 @@ When AgentOps integration is enabled, POML automatically captures POML Operation
 
 ### Example Trace Data
 
-```json
+````json
 {
   "resource_attributes": {
     "imported_libraries": "[\"agentops\",\"poml\"]"
@@ -90,7 +90,7 @@ When AgentOps integration is enabled, POML automatically captures POML Operation
     }
   }
 }
-```
+````
 
 ## See Also
 

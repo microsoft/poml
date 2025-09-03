@@ -8,7 +8,7 @@ describe('stringToElement', () => {
     const text = '<Markup.Paragraph>Hello, world!</Markup.Paragraph>';
     const element = new PomlFile(text).react();
     expect(await read(element)).toBe(
-      '<env presentation=\"markup\" markup-lang=\"markdown\" original-start-index=\"0\" original-end-index=\"49\"><p original-start-index=\"0\" original-end-index=\"49\">Hello, world!</p></env>'
+      '<env presentation="markup" markup-lang="markdown" original-start-index="0" original-end-index="49"><p original-start-index="0" original-end-index="49">Hello, world!</p></env>',
     );
   });
 
@@ -18,7 +18,7 @@ describe('stringToElement', () => {
     const element = new PomlFile(text).react();
     expect((element.props as any).children.length).toBe(4);
     expect(await read(element)).toBe(
-      '<env presentation=\"markup\" markup-lang=\"markdown\" original-start-index=\"0\" original-end-index=\"112\"><p original-start-index=\"0\" original-end-index=\"112\"><h level=\"1\" original-start-index=\"18\" original-end-index=\"55\">hello</h> <b original-start-index=\"59\" original-end-index=\"90\">world</b></p></env>'
+      '<env presentation="markup" markup-lang="markdown" original-start-index="0" original-end-index="112"><p original-start-index="0" original-end-index="112"><h level="1" original-start-index="18" original-end-index="55">hello</h> <b original-start-index="59" original-end-index="90">world</b></p></env>',
     );
     expect(await read(element)).toBe(await read(text));
     expect(write(await read(element))).toBe('# hello\n\n**world**');
@@ -28,7 +28,7 @@ describe('stringToElement', () => {
     const text = '<Markup.Paragraph> {{name}} </Markup.Paragraph>';
     const element = new PomlFile(text).react({ name: 'world' });
     expect(await read(element)).toBe(
-      '<env presentation=\"markup\" markup-lang=\"markdown\" original-start-index=\"0\" original-end-index=\"46\"><p original-start-index=\"0\" original-end-index=\"46\">world</p></env>'
+      '<env presentation="markup" markup-lang="markdown" original-start-index="0" original-end-index="46"><p original-start-index="0" original-end-index="46">world</p></env>',
     );
   });
 
@@ -37,7 +37,7 @@ describe('stringToElement', () => {
     const text = '<list listStyle="decimal"><item>Do not have</item></list>';
     const element = new PomlFile(text).react();
     expect(write(await read(element))).toBe('1. Do not have');
-  
+
     const textComplex = `<list listStyle="decimal">
     <item>Do not have</item>
     <item>true</item>
@@ -52,7 +52,7 @@ describe('stringToElement', () => {
     const text = '<Markup.Header writerOptions="{{{markdownBaseHeaderLevel: 3}}}">hello</Markup.Header>';
     const element = new PomlFile(text).react();
     expect((element.props as any).writerOptions).toStrictEqual({ markdownBaseHeaderLevel: 3 });
-  })
+  });
 
   test('attrVariable', () => {
     const text = '<Markup.Paragraph blankLine="{{true}}">hello</Markup.Paragraph>';
@@ -64,14 +64,14 @@ describe('stringToElement', () => {
     const markup = '<p syntax="html">hello</p>';
     const element = new PomlFile(markup).react();
     expect(await read(element)).toBe(
-      '<env presentation=\"markup\" markup-lang=\"html\" original-start-index=\"0\" original-end-index=\"25\"><p original-start-index=\"0\" original-end-index=\"25\">hello</p></env>'
+      '<env presentation="markup" markup-lang="html" original-start-index="0" original-end-index="25"><p original-start-index="0" original-end-index="25">hello</p></env>',
     );
 
     const markupHyphen = '<serialize.object syntax="json" data="{{myData}}"/>';
     const elementHyphen = new PomlFile(markupHyphen).react({
       myData: {
-        name: 'world'
-      }
+        name: 'world',
+      },
     });
     expect(await poml(elementHyphen)).toBe('{\n  "name": "world"\n}');
   });
@@ -80,9 +80,7 @@ describe('stringToElement', () => {
     const text =
       '<poml><p>{{name}}</p><stylesheet>{"p": {"speaker": "ai"}}</stylesheet><context>{"name": "world"}</context></poml>';
     const element = new PomlFile(text).react();
-    expect(write(await read(element), { speaker: true })).toStrictEqual([
-      { speaker: 'ai', content: 'world' }
-    ]);
+    expect(write(await read(element), { speaker: true })).toStrictEqual([{ speaker: 'ai', content: 'world' }]);
 
     const text2 = `<poml><p>hello world<p speaker="human">{{name}}</p></p>
 <stylesheet>
@@ -99,7 +97,7 @@ describe('stringToElement', () => {
 </context></poml>`;
     const element2 = new PomlFile(text2).react();
     expect(write(await read(element2), { speaker: true })).toStrictEqual([
-      { speaker: 'human', content: 'hello world\n\nworld' }
+      { speaker: 'human', content: 'hello world\n\nworld' },
     ]);
   });
 
@@ -124,7 +122,9 @@ describe('stringToElement', () => {
 <task>Legacy System Migration Analysis</task>
 </poml>`;
     const element = write(await read(text));
-    expect(element).toBe('<role>Senior Systems Architecture Consultant</role>\n<task>Legacy System Migration Analysis</task>');
+    expect(element).toBe(
+      '<role>Senior Systems Architecture Consultant</role>\n<task>Legacy System Migration Analysis</task>',
+    );
   });
 
   test('escape', async () => {
@@ -180,7 +180,7 @@ describe('templateEngine', () => {
   test('forLoopNested', async () => {
     const text = '<p><p for="i in [1,2,3]"><p>{{i}}</p></p></p>';
     expect(await poml(text)).toBe('1\n\n2\n\n3');
-  })
+  });
 
   test('forLoopIf', async () => {
     const text = '<p><p for="i in [0,1,2]" if="i % 2 == 0">{{i}}</p></p>';
@@ -193,8 +193,7 @@ describe('templateEngine', () => {
   });
 
   test('ifCondition', async () => {
-    const text =
-      '<p><p if="true">hello</p><p if="i == 0">world</p><p if="{{ i == 1 }}">foo</p></p>';
+    const text = '<p><p if="true">hello</p><p if="i == 0">world</p><p if="{{ i == 1 }}">foo</p></p>';
     expect(write(await read(text, undefined, { i: 0 }))).toBe('hello\n\nworld');
     expect(ErrorCollection.empty()).toBe(true);
     expect(write(await read(text, undefined, { i: 1 }))).toBe('hello\n\nfoo');
@@ -208,8 +207,7 @@ describe('templateEngine', () => {
   });
 
   test('letFileError', () => {
-    const text1 =
-      '<let src="assets/peopleList.json" name="people" /><p>hello {{people[0].name.first}}</p>';
+    const text1 = '<let src="assets/peopleList.json" name="people" /><p>hello {{people[0].name.first}}</p>';
     read(text1, undefined, undefined, undefined, __filename);
     expect(ErrorCollection.empty()).toBe(false);
     const error = ErrorCollection.first();
@@ -229,8 +227,7 @@ describe('templateEngine', () => {
   });
 
   test('letFile', async () => {
-    const text =
-      '<let src="assets/peopleList.json" name="people" /><p>hello {{people[0].first_name}}</p>';
+    const text = '<let src="assets/peopleList.json" name="people" /><p>hello {{people[0].first_name}}</p>';
     expect(write(await read(text, undefined, undefined, undefined, __filename))).toBe('hello Jeanette');
   });
 
@@ -316,7 +313,7 @@ describe('templateEngine', () => {
     const ir = await read(text);
     expect(await poml(text)).toBe('2\n\n4');
     expect(ErrorCollection.empty()).toBe(true);
-  })
+  });
 });
 
 describe('expressionEvaluation', () => {
@@ -332,18 +329,18 @@ describe('expressionEvaluation', () => {
     </poml>`;
     const file = new PomlFile(text);
     file.react();
-    
+
     const tokens = file.getExpressionTokens();
     // Should have tokens for: let value attribute and meta eval content
     expect(tokens.length).toBeGreaterThanOrEqual(2);
-    
+
     // Find the let value token
-    const letToken = tokens.find(t => t.expression === '["name", "age"]');
+    const letToken = tokens.find((t) => t.expression === '["name", "age"]');
     expect(letToken).toBeDefined();
     expect(letToken?.type).toBe('expression');
-    
+
     // Find the output-schema eval token
-    const metaToken = tokens.find(t => t.expression?.includes('z.object'));
+    const metaToken = tokens.find((t) => t.expression?.includes('z.object'));
     expect(metaToken).toBeDefined();
     expect(metaToken?.type).toBe('expression');
   });
@@ -370,21 +367,21 @@ describe('expressionEvaluation', () => {
     </poml>`;
     const file = new PomlFile(text);
     file.react();
-    
+
     // Verify the schema was created successfully
     const schema = file.getResponseSchema();
     expect(schema).toBeDefined();
-    
+
     // Verify expression tokens are collected
     const tokens = file.getExpressionTokens();
-    const metaToken = tokens.find(t => t.expression?.includes('z.object'));
+    const metaToken = tokens.find((t) => t.expression?.includes('z.object'));
     expect(metaToken).toBeDefined();
     expect(metaToken?.type).toBe('expression');
-    
+
     // The expression should be the full z.object expression
     expect(metaToken?.expression?.trim()).toContain('z.object');
     expect(metaToken?.expression?.trim()).toContain('z.number()');
-    
+
     ErrorCollection.clear();
   });
 
@@ -395,17 +392,19 @@ describe('expressionEvaluation', () => {
     file.react();
     const tokens = file.getExpressionTokens();
     expect(tokens.length).toBe(2);
-    expect(file.getExpressionEvaluations({ start: tokens[0].range.start, end: tokens[0].range.end })).toStrictEqual([3]);
-    expect(file.getExpressionEvaluations({ start: tokens[1].range.start, end: tokens[1].range.end })).toStrictEqual([3]);
+    expect(file.getExpressionEvaluations({ start: tokens[0].range.start, end: tokens[0].range.end })).toStrictEqual([
+      3,
+    ]);
+    expect(file.getExpressionEvaluations({ start: tokens[1].range.start, end: tokens[1].range.end })).toStrictEqual([
+      3,
+    ]);
   });
 });
 
 describe('include', () => {
   test('basic include', async () => {
     const text = '<poml><include src="assets/includeChild.poml"/></poml>';
-    const result = write(
-      await read(text, undefined, { name: 'world' }, undefined, __filename)
-    );
+    const result = write(await read(text, undefined, { name: 'world' }, undefined, __filename));
     expect(result).toBe('hello world');
   });
 
@@ -417,17 +416,13 @@ describe('include', () => {
 
   test('include if', async () => {
     const text = '<poml><include src="assets/includeChild.poml" if="false"/></poml>';
-    const result = write(
-      await read(text, undefined, { name: 'world' }, undefined, __filename)
-    );
+    const result = write(await read(text, undefined, { name: 'world' }, undefined, __filename));
     expect(result).toStrictEqual([]);
   });
 
   test('nested include', async () => {
     const text = '<poml><include src="assets/includeNested.poml"/></poml>';
-    const result = write(
-      await read(text, undefined, { name: 'world' }, undefined, __filename)
-    );
+    const result = write(await read(text, undefined, { name: 'world' }, undefined, __filename));
     expect(result).toBe('hello world\n\n3\n\n4');
   });
 });
@@ -448,8 +443,8 @@ describe('testPropsPreprocess', () => {
     expect(result).toStrictEqual([
       {
         speaker: 'human',
-        content: '**Input:** hello\n\n**Output:** world'
-      }
+        content: '**Input:** hello\n\n**Output:** world',
+      },
     ]);
   });
 });
@@ -462,7 +457,7 @@ describe('lspFeatures', () => {
     expect(hover).toStrictEqual({
       type: 'element',
       range: { start: 1, end: 1 },
-      element: 'p'
+      element: 'p',
     });
   });
 
@@ -473,7 +468,7 @@ describe('lspFeatures', () => {
     expect(completion).toContainEqual({
       type: 'element',
       range: { start: 1, end: 1 },
-      element: 'Paragraph'
+      element: 'Paragraph',
     });
   });
 
@@ -485,8 +480,8 @@ describe('lspFeatures', () => {
       {
         type: 'element',
         range: { start: 7, end: 8 },
-        element: 'div'
-      }
+        element: 'div',
+      },
     ]);
   });
 
@@ -498,8 +493,8 @@ describe('lspFeatures', () => {
       {
         type: 'element',
         range: { start: 1, end: 9 },
-        element: 'output-format'
-      }
+        element: 'output-format',
+      },
     ]);
   });
 
@@ -511,8 +506,8 @@ describe('lspFeatures', () => {
       {
         type: 'element',
         range: { start: 13, end: 16 },
-        element: 'paragraph'
-      }
+        element: 'paragraph',
+      },
     ]);
   });
 
@@ -524,8 +519,8 @@ describe('lspFeatures', () => {
       {
         type: 'element',
         range: { start: text.length - 1, end: text.length - 2 },
-        element: 'random'
-      }
+        element: 'random',
+      },
     ]);
   });
 
@@ -538,8 +533,8 @@ describe('lspFeatures', () => {
         type: 'attribute',
         range: { start: 10, end: 11 },
         element: 'Question',
-        attribute: 'speaker'
-      }
+        attribute: 'speaker',
+      },
     ]);
   });
 
@@ -552,7 +547,7 @@ describe('lspFeatures', () => {
       attribute: 'questionCaption',
       element: 'Question',
       range: { end: 9, start: 9 },
-      type: 'attribute'
+      type: 'attribute',
     });
   });
 
@@ -565,7 +560,7 @@ describe('lspFeatures', () => {
       range: { start: 19, end: 18 },
       element: 'Question',
       attribute: 'speaker',
-      value: 'human'
+      value: 'human',
     });
   });
 });
@@ -589,12 +584,12 @@ describe('meta elements', () => {
     const schema = file.getResponseSchema();
     expect(schema).toBeDefined();
     expect(schema?.toOpenAPI()).toEqual({
-      type: "object",
+      type: 'object',
       properties: {
-        name: { type: "string" },
-        age: { type: "number" }
+        name: { type: 'string' },
+        age: { type: 'number' },
       },
-      required: ["name"]
+      required: ['name'],
     });
   });
 
@@ -706,7 +701,7 @@ describe('meta elements', () => {
     expect(runtimeParams).toEqual({
       temperature: 0.7,
       maxTokens: 1000,
-      model: "gpt-4"
+      model: 'gpt-4',
     });
   });
 
@@ -728,7 +723,7 @@ describe('meta elements', () => {
       topP: 0.9,
       frequencyPenalty: 0.5,
       presencePenalty: 0.3,
-      stopSequences: ["END", "STOP"]
+      stopSequences: ['END', 'STOP'],
     });
   });
 
@@ -746,7 +741,7 @@ describe('meta elements', () => {
     expect(runtimeParams).toEqual({
       stream: true,
       debug: false,
-      enableLogging: true
+      enableLogging: true,
     });
   });
 
@@ -766,7 +761,7 @@ describe('meta elements', () => {
       temperature: 0.7,
       maxTokens: 2000,
       seed: 12345,
-      timeout: 30.5
+      timeout: 30.5,
     });
   });
 
@@ -782,9 +777,9 @@ describe('meta elements', () => {
     file.react();
     const runtimeParams = file.getRuntimeParameters();
     expect(runtimeParams).toEqual({
-      stop: ["\n", "END"],
+      stop: ['\n', 'END'],
       config: { retry: 3, timeout: 5000 },
-      metadata: { user: "test", session: 123 }
+      metadata: { user: 'test', session: 123 },
     });
   });
 
@@ -803,12 +798,12 @@ describe('meta elements', () => {
     file.react();
     const runtimeParams = file.getRuntimeParameters();
     expect(runtimeParams).toEqual({
-      model: "gpt-4",
+      model: 'gpt-4',
       temperature: 0.8,
       maxOutputTokens: 1000,
       stream: true,
-      stopSequences: ["END", "STOP"],
-      customConfig: { advanced: true }
+      stopSequences: ['END', 'STOP'],
+      customConfig: { advanced: true },
     });
   });
 
@@ -824,9 +819,9 @@ describe('meta elements', () => {
     file.react();
     const runtimeParams = file.getRuntimeParameters();
     expect(runtimeParams).toEqual({
-      validJson: ["test"],
-      invalidJson: '{"missing": quote}',  // Falls back to string
-      notJson: "just a string"
+      validJson: ['test'],
+      invalidJson: '{"missing": quote}', // Falls back to string
+      notJson: 'just a string',
     });
   });
 
@@ -849,9 +844,9 @@ describe('meta elements', () => {
     expect(runtimeParams).toEqual({
       temperature: 0.8,
       maxTokens: 2000,
-      model: "gpt-4",
+      model: 'gpt-4',
       debug: true,
-      stopSequences: ["END", "STOP"]
+      stopSequences: ['END', 'STOP'],
     });
   });
 
@@ -885,18 +880,18 @@ describe('meta elements', () => {
     expect(schema).toBeDefined();
     const openApiSchema = schema?.toOpenAPI();
     expect(openApiSchema).toEqual({
-      type: "object",
+      type: 'object',
       properties: {
         username: {
-          type: "string",
-          maxLength: 50
+          type: 'string',
+          maxLength: 50,
         },
         email: {
-          type: "string",
-          format: "email"
-        }
+          type: 'string',
+          format: 'email',
+        },
       },
-      required: ["username"]
+      required: ['username'],
     });
     expect(ErrorCollection.empty()).toBe(true);
     ErrorCollection.clear();
@@ -934,24 +929,24 @@ describe('meta elements', () => {
     expect(toolsSchema).toBeDefined();
     const tools = toolsSchema?.getTools();
     expect(tools).toHaveLength(1);
-    expect(tools![0].name).toBe("calculate");
-    expect(tools![0].description).toBe("Perform mathematical calculations");
+    expect(tools![0].name).toBe('calculate');
+    expect(tools![0].description).toBe('Perform mathematical calculations');
     const inputSchema = tools![0].inputSchema.toOpenAPI();
     expect(inputSchema).toEqual({
-      type: "object",
+      type: 'object',
       properties: {
         operation: {
-          type: "string",
-          enum: ["add", "subtract", "multiply", "divide"]
+          type: 'string',
+          enum: ['add', 'subtract', 'multiply', 'divide'],
         },
         a: {
-          type: "number"
+          type: 'number',
         },
         b: {
-          type: "number"
-        }
+          type: 'number',
+        },
       },
-      required: ["operation", "a", "b"]
+      required: ['operation', 'a', 'b'],
     });
     expect(ErrorCollection.empty()).toBe(true);
     ErrorCollection.clear();
@@ -979,14 +974,14 @@ describe('meta elements', () => {
     expect(toolsSchema).toBeDefined();
     const tools = toolsSchema?.getTools();
     expect(tools).toHaveLength(1);
-    expect(tools![0].name).toBe("calculate");
-    expect(tools![0].description).toBe("Perform mathematical calculations");
+    expect(tools![0].name).toBe('calculate');
+    expect(tools![0].description).toBe('Perform mathematical calculations');
     const inputSchema = tools![0].inputSchema.toOpenAPI();
     expect(inputSchema).toEqual({
-      type: "object",
+      type: 'object',
       properties: {
-        operation: { type: "string" }
-      }
+        operation: { type: 'string' },
+      },
     });
     expect(ErrorCollection.empty()).toBe(true);
     ErrorCollection.clear();
@@ -1013,10 +1008,10 @@ describe('meta elements', () => {
     expect(schema).toBeDefined();
     const openApiSchema = schema?.toOpenAPI();
     expect(openApiSchema).toEqual({
-      type: "object",
+      type: 'object',
       properties: {
-        result: { type: "string" }
-      }
+        result: { type: 'string' },
+      },
     });
     expect(ErrorCollection.empty()).toBe(true);
     ErrorCollection.clear();
@@ -1046,15 +1041,15 @@ describe('meta elements', () => {
     const schema = file.getResponseSchema();
     expect(schema).toBeDefined();
     expect(schema?.toOpenAPI()).toEqual({
-      type: "object",
+      type: 'object',
       properties: {
-        name: { type: "string" },
-        age: { 
-          type: "number",
+        name: { type: 'string' },
+        age: {
+          type: 'number',
           minimum: 0,
-          maximum: 100
-        }
-      }
+          maximum: 100,
+        },
+      },
     });
     ErrorCollection.clear();
   });

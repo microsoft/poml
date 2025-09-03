@@ -1,9 +1,11 @@
+import os
+
 import mlflow
 import mlflow.openai
+from mlflow_utils import check_prompt, check_trace
 from openai import OpenAI
-import os
+
 import poml
-from mlflow_utils import check_trace, check_prompt
 
 if __name__ == "__main__":
     poml.set_trace("mlflow", trace_dir="pomlruns")

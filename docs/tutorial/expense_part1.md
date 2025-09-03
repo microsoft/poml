@@ -96,6 +96,7 @@ for document_path in document_paths:
     documents.append(document)
 ```
 
+<!-- prettier-ignore -->
 !!! note
 
     The `to_strict_json_schema` function automatically converts your Pydantic models into JSON schemas that guide the LLM's output format. You can also use `Document.model_json_schema()` from [Pydantic official](https://docs.pydantic.dev/latest/concepts/json_schema/) instead of `to_strict_json_schema()`, but it may produce a less strict schema that may result in 400 Bad Request errors from the LLM.
@@ -116,6 +117,7 @@ Now let's create the POML file that handles the document extraction (and save it
 </poml>
 ```
 
+<!-- prettier-ignore -->
 !!! note
 
     The `<task>` and `<hint>` components are both "intention components" that help organize your prompts. They serve to denote special parts of instructions. When rendered, the only difference between them is their caption - `<task>` renders with "# Task" while `<hint>` renders with `**Hint:**`. Using these semantic components is not necessary when using POML, but they help you maintain clean, understandable, optimizable prompt structures rather than mixing all instructions together.

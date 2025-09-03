@@ -1,4 +1,3 @@
-
 # Template Engine
 
 The template engine of POML allows you to incorporate dynamic content and control structures. Here are some key features.
@@ -37,7 +36,7 @@ This is task No. 1.
 
 POML supports various JavaScript expressions within the double curly brackets. This includes but is not limited to:
 
-- **Variables:**  `{{variableName}}`
+- **Variables:** `{{variableName}}`
 - **Arithmetic:** `{{a + b}}`, `{{x * y}}`, `{{count / total}}`
 - **String Concatenation:** `{{firstName + " " + lastName}}`
 - **Array Access:** `{{myArray[0]}}`
@@ -81,7 +80,7 @@ Note that when using the `value` attribute, string literals must be properly quo
 </poml>
 ```
 
-This imports the contents of `users.json` and assigns it to the `users` variable.  The `src` attribute specifies the path to the file (relative to the POML file). The optional `type` attribute can specify the file type (e.g., "json", "text", "csv"). If not provided, POML attempts to infer it from the file extension.
+This imports the contents of `users.json` and assigns it to the `users` variable. The `src` attribute specifies the path to the file (relative to the POML file). The optional `type` attribute can specify the file type (e.g., "json", "text", "csv"). If not provided, POML attempts to infer it from the file extension.
 
 ### Syntax 3: Importing data from a file without a name
 
@@ -91,6 +90,7 @@ This imports the contents of `users.json` and assigns it to the `users` variable
   <p>API Key: {{apiKey}}</p>
 </poml>
 ```
+
 If `config.json` contains `{ "apiKey": "your_api_key" }`, this will output "API Key: your_api_key". When you use `src` without `name`, and the file content is a JSON object, the properties of that object are directly added to the context.
 
 ### Syntax 4: Setting a variable using inline JSON
@@ -134,6 +134,7 @@ The attributes of components will be automatically cast based on their defined t
 - **Boolean:** If an attribute is defined as a boolean, values like `"true"`, `1`, `"1"`, or `{{true}}` will be cast to the boolean value `true`. Similarly, `"false"`, `0`, `"0"`, or `{{false}}` will be cast to `false`.
 - **Number:** If an attribute is defined as a number, values like `"123"`, `45.6`, `{{anyNumber}}` or `{{myNumber+1.3}}` will be cast to their corresponding numeric values.
 - **Object:** If an attribute is defined as an object, POML will attempt to parse the attribute value as a JSON string. For example, `data="{{{name: 'John', age: 30}}}"` or `data='{"name":"John","age":30}'` will be parsed into the corresponding JavaScript object.
+
 * **String:** If an attribute is a string, no casting is performed.
 
 In the following example, the first auto-casting happened at let, where `true` is converted to boolean at `let` expression.

@@ -1,4 +1,4 @@
-import fs from './fs';
+import * as fs from 'fs';
 import path from 'path';
 
 interface PreprocessAudioArgs {
@@ -29,12 +29,18 @@ function canonicalizeType(type: string | undefined, src?: string): string {
   if (src) {
     const ext = path.extname(src).toLowerCase();
     switch (ext) {
-      case '.mp3': return 'audio/mpeg';
-      case '.wav': return 'audio/wav';
-      case '.ogg': return 'audio/ogg';
-      case '.flac': return 'audio/flac';
-      case '.aac': return 'audio/aac';
-      default: throw new Error('Cannot determine audio format');
+      case '.mp3':
+        return 'audio/mpeg';
+      case '.wav':
+        return 'audio/wav';
+      case '.ogg':
+        return 'audio/ogg';
+      case '.flac':
+        return 'audio/flac';
+      case '.aac':
+        return 'audio/aac';
+      default:
+        throw new Error('Cannot determine audio format');
     }
   }
   throw new Error('Cannot determine audio format');

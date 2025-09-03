@@ -7,7 +7,7 @@ describe('Schema', () => {
     test('should create a Schema from a Zod schema', () => {
       const zodSchema = z.object({
         name: z.string(),
-        age: z.number()
+        age: z.number(),
       });
 
       const schema = Schema.fromZod(zodSchema);
@@ -22,9 +22,9 @@ describe('Schema', () => {
         type: 'object',
         properties: {
           name: { type: 'string' },
-          age: { type: 'number' }
+          age: { type: 'number' },
         },
-        required: ['name']
+        required: ['name'],
       };
 
       const schema = Schema.fromOpenAPI(openApiSchema);
@@ -37,7 +37,7 @@ describe('Schema', () => {
       const numberSchema = { type: 'number' };
       const booleanSchema = { type: 'boolean' };
       const arraySchema = { type: 'array', items: { type: 'string' } };
-      
+
       expect(() => Schema.fromOpenAPI(stringSchema)).not.toThrow();
       expect(() => Schema.fromOpenAPI(numberSchema)).not.toThrow();
       expect(() => Schema.fromOpenAPI(booleanSchema)).not.toThrow();
@@ -47,10 +47,10 @@ describe('Schema', () => {
     test('should handle schemas without type property', () => {
       const schemaWithoutType = {
         properties: {
-          name: { type: 'string' }
-        }
+          name: { type: 'string' },
+        },
       };
-      
+
       // This should not throw - JSON Schema allows schemas without explicit type
       expect(() => Schema.fromOpenAPI(schemaWithoutType)).not.toThrow();
     });
@@ -60,7 +60,7 @@ describe('Schema', () => {
     test('should return the original Zod schema when created from Zod', () => {
       const zodSchema = z.object({
         id: z.string(),
-        count: z.number()
+        count: z.number(),
       });
 
       const schema = Schema.fromZod(zodSchema);
@@ -72,9 +72,9 @@ describe('Schema', () => {
         type: 'object',
         properties: {
           name: { type: 'string' },
-          age: { type: 'number' }
+          age: { type: 'number' },
         },
-        required: ['name']
+        required: ['name'],
       };
 
       const schema = Schema.fromOpenAPI(openApiSchema);
@@ -103,8 +103,8 @@ describe('Schema', () => {
       const openApiSchema = {
         type: 'object',
         properties: {
-          email: { type: 'string', format: 'email' }
-        }
+          email: { type: 'string', format: 'email' },
+        },
       };
 
       const schema = Schema.fromOpenAPI(openApiSchema);
@@ -115,7 +115,7 @@ describe('Schema', () => {
       const zodSchema = z.object({
         name: z.string(),
         age: z.number().optional(),
-        tags: z.array(z.string())
+        tags: z.array(z.string()),
       });
 
       const schema = Schema.fromZod(zodSchema);
@@ -142,14 +142,10 @@ describe('ToolsSchema', () => {
   describe('addZodTool', () => {
     test('should add a tool with Zod schema', () => {
       const zodSchema = z.object({
-        sign: z.string().describe('An astrological sign like Taurus or Aquarius')
+        sign: z.string().describe('An astrological sign like Taurus or Aquarius'),
       });
 
-      toolsSchema.addZodTool(
-        'get_horoscope',
-        "Get today's horoscope for an astrological sign",
-        zodSchema
-      );
+      toolsSchema.addZodTool('get_horoscope', "Get today's horoscope for an astrological sign", zodSchema);
 
       expect(toolsSchema.size()).toBe(1);
       const tool = toolsSchema.getTool('get_horoscope');
@@ -164,7 +160,7 @@ describe('ToolsSchema', () => {
 
       toolsSchema.addZodTool('my_tool', 'First description', zodSchema1);
       expect(() => toolsSchema.addZodTool('my_tool', 'Second description', zodSchema2)).toThrow(
-        'Tool with name "my_tool" already exists'
+        'Tool with name "my_tool" already exists',
       );
       expect(toolsSchema.size()).toBe(1);
       const tool = toolsSchema.getTool('my_tool');
@@ -178,9 +174,9 @@ describe('ToolsSchema', () => {
         type: 'object',
         properties: {
           city: { type: 'string', description: 'The city name' },
-          units: { type: 'string', enum: ['celsius', 'fahrenheit'] }
+          units: { type: 'string', enum: ['celsius', 'fahrenheit'] },
         },
-        required: ['city']
+        required: ['city'],
       };
 
       toolsSchema.addOpenAPITool('get_weather', 'Get current weather for a city', openApiSchema);
@@ -196,7 +192,7 @@ describe('ToolsSchema', () => {
     test('should convert tools to Vercel AI SDK format', () => {
       const zodSchema = z.object({
         query: z.string(),
-        limit: z.number().optional()
+        limit: z.number().optional(),
       });
 
       toolsSchema.addZodTool('search', 'Search for information', zodSchema);
@@ -225,7 +221,7 @@ describe('ToolsSchema', () => {
     test('should convert tools to OpenAI function calling format', () => {
       const zodSchema = z.object({
         location: z.string(),
-        unit: z.enum(['celsius', 'fahrenheit']).optional()
+        unit: z.enum(['celsius', 'fahrenheit']).optional(),
       });
 
       toolsSchema.addZodTool('get_temperature', 'Get temperature for a location', zodSchema);
@@ -257,9 +253,9 @@ describe('ToolsSchema', () => {
       const openApiSchema = {
         type: 'object',
         properties: {
-          message: { type: 'string' }
+          message: { type: 'string' },
         },
-        required: ['message']
+        required: ['message'],
       };
 
       toolsSchema.addOpenAPITool('send_message', 'Send a message', openApiSchema);

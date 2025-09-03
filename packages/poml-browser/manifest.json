@@ -1,0 +1,57 @@
+{
+  "name": "Prompt Scratchpad",
+  "version": "0.1",
+  "manifest_version": 3,
+  "description": "Orchestrate the prompts in browser sidebar.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqSSJAhHxuLEhBFr9pYJFdZopB3Eh97arS2ggdxd2HwsCC81Lc26zA+1+ETYW8ygkJBQZzwdY6MAJt0a39fUcKqyqM0RO0SOjY/8THCOKryrzCzo5A58yMpa3lVFz7xku4vHdPs8SW5WmOgOTnZg0sXROeRW39tETemIMkjmtT4KZElOEpX+jzRLcqxsp7QMuu7IvtVySMSlYbMkJJ3TuZ8pFcTss1ASxV2S7P2VFVa1bfSQ9thJsGFNMrKEcMK0FzcgjkFsYJoVq8s7ZRcesa7Pfqf80fNtjLdj/Kzbocg6rDI6CkZnzFg2FIzfbhHGbSgXbiqHVcMnZ58RS+mriHwIDAQAB",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "sidePanel",
+    "activeTab",
+    "tabs",
+    "scripting",
+    "clipboardRead",
+    "clipboardWrite",
+    "identity",
+    "webNavigation",
+    "storage"
+  ],
+  "host_permissions": [
+    "file:///*",
+    "https://docs.google.com/*",
+    "https://docs.googleapis.com/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "minimum_chrome_version": "138",
+  "side_panel": {
+    "default_path": "ui/index.html"
+  },
+  "action": {
+    "default_icon": {
+      "16": "images/icon16.png",
+      "32": "images/icon32.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    },
+    "default_title": "Open Prompt Scratchpad"
+  },
+  "oauth2": {
+    "client_id": "542473423331-1oskhbapcri97omqcjjgcb9df3i17pbr.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/documents.readonly"]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "external/pdf.mjs",
+        "external/pdf.min.mjs",
+        "external/pdf.worker.mjs",
+        "external/pdf.worker.min.mjs"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

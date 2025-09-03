@@ -40,14 +40,14 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
     .replace(/^\/\*\*?/, '')
     .replace(/\*\/$/, '')
     .split('\n')
-    .map(line => line.replace(/^\s*\*( )?/, ''))
-    .map(line => line.replace(/\s+$/, ''))
+    .map((line) => line.replace(/^\s*\*( )?/, ''))
+    .map((line) => line.replace(/\s+$/, ''))
     .join('\n');
 
   // Recognize description, @param and @example in the comment.
   const descriptionRegex = /([\s\S]*?)(?=@param|@example|@see|$)/;
-  const paramRegex =
-    /@param\s+(\{([\S'"\|]+?)\}\s+)?(\w+)\s+-\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
+
+  const paramRegex = /@param\s+(\{([\S'"\|]+?)\}\s+)?(\w+)\s+-\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
   const exampleRegex = /@example\s+([\s\S]*?)(?=@param|@example|@see|$)/;
   const seeRegex = /@see\s+([\s\S]*?)(?=@param|@example|@see|$)/g;
 
@@ -73,7 +73,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
       fallbackType = 'string';
     } else if (paramMatch[2] && paramMatch[2].includes('|')) {
       type = 'string';
-      choices = paramMatch[2].split('|').map(choice => choice.replace(/['"\s]/g, '').trim());
+      choices = paramMatch[2].split('|').map((choice) => choice.replace(/['"\s]/g, '').trim());
     } else if (paramMatch[2]) {
       type = paramMatch[2];
     }
@@ -85,7 +85,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
       choices,
       description: paramMatch[4].trim(),
       defaultValue: defaultMatch ? defaultMatch[1] : undefined,
-      required: false
+      required: false,
     });
   }
   const exampleMatch = strippedComment.match(exampleRegex);
@@ -102,7 +102,7 @@ function tsCommentToMarkdown(comment: string): ComponentSpec {
     description,
     params,
     example,
-    baseComponents
+    baseComponents,
   };
 }
 
@@ -118,8 +118,7 @@ function extractTsComments(text: string) {
 
 function extractComponentComments(text: string) {
   const comments: ComponentSpec[] = [];
-  const commentRegex =
-    /(\/\*\*([\s\S]*?)\*\/)\nexport const [\w]+ = component\(['"](\w+)['"](,[\S\s]*?)?\)/g;
+  const commentRegex = /(\/\*\*([\s\S]*?)\*\/)\nexport const [\w]+ = component\(['"](\w+)['"](,[\S\s]*?)?\)/g;
   let match;
   while ((match = commentRegex.exec(text)) !== null) {
     const doc = { name: match[3], ...tsCommentToMarkdown(match[2]) };
@@ -146,18 +145,20 @@ function scanComponentDocs(folderPath: string) {
   for (const filePath of walk(folderPath)) {
     const tsCode = readFileSync(filePath, { encoding: 'utf-8' });
     const components = extractComponentComments(tsCode);
-    const names = components.map(c => c.name!);
+    const names = components.map((c) => c.name!);
     allComments.push(...components);
     if (filePath.endsWith('essentials.tsx') || filePath.endsWith('utils.tsx')) {
-      basicComponents.push(...names.filter(name => name !== 'Image' && name !== 'Object' && !name.startsWith('Tool')));
-      dataDisplays.push(...names.filter(name => name === 'Image' || name === 'Object'));
-      utilities.push(...names.filter(name => name.startsWith('Tool')));
+      basicComponents.push(
+        ...names.filter((name) => name !== 'Image' && name !== 'Object' && !name.startsWith('Tool')),
+      );
+      dataDisplays.push(...names.filter((name) => name === 'Image' || name === 'Object'));
+      utilities.push(...names.filter((name) => name.startsWith('Tool')));
     } else if (filePath.endsWith('instructions.tsx')) {
       intentions.push(...names);
-    } else if (filePath.endsWith('document.tsx') || filePath.endsWith('table.tsx')) {
-      dataDisplays.push(...names);
-    } else {
+    } else if (filePath.endsWith('message.tsx')) {
       utilities.push(...names);
+    } else {
+      dataDisplays.push(...names);
     }
   }
   return allComments;
@@ -170,12 +171,12 @@ function docsToMarkdown(docs: ComponentSpec[]) {
     { title: 'Basic Components', names: basicComponents },
     { title: 'Intentions', names: intentions },
     { title: 'Data Displays', names: dataDisplays },
-    { title: 'Utilities', names: utilities }
+    { title: 'Utilities', names: utilities },
   ];
   for (const { title, names } of categories) {
     parts.push(`## ${title}`);
     for (const name of names.sort()) {
-      const doc = docs.find(d => d.name === name)!;
+      const doc = docs.find((d) => d.name === name)!;
       parts.push(`### ${name}`);
       parts.push(formatComponentDocumentation(doc, 4));
     }
@@ -230,7 +231,7 @@ function generatePythonMethod(tag: ComponentSpec): string {
   let argsDocstring = '';
   const callArgsList: string[] = [`tag_name="${tag.name}"`];
 
-  tag.params.forEach(param => {
+  tag.params.forEach((param) => {
     const paramName = param.name; // Use original JSON name for Python parameter
     const pythonType = getPythonType(param.type, paramName);
     const typeHint = `Optional[${pythonType}]`;
@@ -240,12 +241,11 @@ function generatePythonMethod(tag: ComponentSpec): string {
 
     let paramDesc = param.description.replace(/\n/g, '\n                ');
     if (param.defaultValue !== undefined) {
-      const defValStr =
-        typeof param.defaultValue === 'string' ? `"${param.defaultValue}"` : param.defaultValue;
+      const defValStr = typeof param.defaultValue === 'string' ? `"${param.defaultValue}"` : param.defaultValue;
       paramDesc += ` Default is \`${defValStr}\`.`;
     }
     if (param.choices && param.choices.length > 0) {
-      paramDesc += ` Choices: ${param.choices.map(c => `\`${JSON.stringify(c)}\``).join(', ')}.`;
+      paramDesc += ` Choices: ${param.choices.map((c) => `\`${JSON.stringify(c)}\``).join(', ')}.`;
     }
     argsDocstring += `            ${paramName} (${typeHint}): ${paramDesc}\n`;
   });
@@ -278,14 +278,15 @@ ${paramsString},
     ):
         ${docstring}
         ${methodBody}
-    `;
+`;
 }
 
 function generatePythonFile(jsonData: ComponentSpec[]): string {
-  let pythonCode = `# This file is auto-generated from component documentation.
+  let pythonCode = `# fmt: off
+# This file is auto-generated from component documentation.
 # Do not edit manually. Run \`npm run build-comment\` to regenerate.
 
-from typing import Optional, Any, Union, List, Dict
+from typing import Optional, Any, Union, List, Dict  # isort:skip
 # from numbers import Number # For more specific number types if needed
 
 class _TagLib:
@@ -297,7 +298,7 @@ class _TagLib:
         raise NotImplementedError("This method should be implemented by subclasses.")
 `;
 
-  jsonData.forEach(tag => {
+  jsonData.forEach((tag) => {
     if (!tag.name) {
       console.warn('Skipping tag with no name:', tag);
       return;

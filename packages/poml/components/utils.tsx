@@ -9,7 +9,7 @@ import {
   computeSyntaxContext,
   SubContent,
   Newline,
-  Inline
+  Inline,
 } from 'poml/essentials';
 
 export interface BaseCaptionedParagraphProps extends PropsSyntaxAny {
@@ -27,13 +27,7 @@ interface CaptionedParagraphProps extends BaseCaptionedParagraphProps {
 // Helper components for caption text.
 // Try not to use it in syntaxes other than markup.
 const CaptionText = component('CaptionText')((props: CaptionedParagraphProps) => {
-  const {
-    caption,
-    captionTextTransform = 'none',
-    captionStyle = 'header',
-    captionEnding,
-    ...others
-  } = props;
+  const { caption, captionTextTransform = 'none', captionStyle = 'header', captionEnding, ...others } = props;
   let captionText = caption;
   switch (captionTextTransform) {
     case 'upper':
@@ -43,18 +37,12 @@ const CaptionText = component('CaptionText')((props: CaptionedParagraphProps) =>
       captionText = captionText.toLowerCase();
       break;
     case 'capitalize':
-      captionText =
-        captionText.length >= 1
-          ? captionText.charAt(0).toUpperCase() + captionText.slice(1)
-          : captionText;
+      captionText = captionText.length >= 1 ? captionText.charAt(0).toUpperCase() + captionText.slice(1) : captionText;
       break;
     case 'none':
       break;
     default:
-      throw ReadError.fromProps(
-        `Unsupported caption text transform: ${captionTextTransform}`,
-        others
-      );
+      throw ReadError.fromProps(`Unsupported caption text transform: ${captionTextTransform}`, others);
   }
   const computedCaptionEnding =
     captionEnding === undefined
@@ -70,37 +58,21 @@ const CaptionText = component('CaptionText')((props: CaptionedParagraphProps) =>
 });
 
 export const Caption = component('Caption', {
-  requiredProps: ['caption']
+  requiredProps: ['caption'],
 })((props: CaptionedParagraphProps) => {
   const presentation = computeSyntaxContext(props);
   if (presentation === 'markup') {
-    const {
-      caption,
-      captionStyle = 'header',
-      captionEnding,
-      captionTailingSpace,
-      ...others
-    } = props;
+    const { caption, captionStyle = 'header', captionEnding, captionTailingSpace, ...others } = props;
     if (captionStyle === 'header') {
       return (
         <Header {...others}>
-          <CaptionText
-            caption={caption}
-            captionStyle={captionStyle}
-            captionEnding={captionEnding}
-            {...others}
-          />
+          <CaptionText caption={caption} captionStyle={captionStyle} captionEnding={captionEnding} {...others} />
         </Header>
       );
     } else if (captionStyle === 'bold') {
       const result = (
         <Bold {...others}>
-          <CaptionText
-            caption={caption}
-            captionStyle={captionStyle}
-            captionEnding={captionEnding}
-            {...others}
-          />
+          <CaptionText caption={caption} captionStyle={captionStyle} captionEnding={captionEnding} {...others} />
         </Bold>
       );
       if (captionTailingSpace === undefined || captionTailingSpace) {
@@ -120,12 +92,7 @@ export const Caption = component('Caption', {
     } else if (captionStyle === 'plain') {
       const result = (
         <Inline>
-          <CaptionText
-            caption={caption}
-            captionStyle={captionStyle}
-            captionEnding={captionEnding}
-            {...others}
-          />
+          <CaptionText caption={caption} captionStyle={captionStyle} captionEnding={captionEnding} {...others} />
         </Inline>
       );
       if (captionTailingSpace === undefined || captionTailingSpace) {
@@ -187,7 +154,7 @@ export const Caption = component('Caption', {
  */
 export const CaptionedParagraph = component('CaptionedParagraph', {
   aliases: ['cp'],
-  requiredProps: ['caption']
+  requiredProps: ['caption'],
 })((props: React.PropsWithChildren<CaptionedParagraphProps>) => {
   const presentation = computeSyntaxContext(props);
   if (presentation === 'markup') {

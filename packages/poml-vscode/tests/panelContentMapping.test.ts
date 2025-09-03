@@ -19,12 +19,18 @@ test('panel embeds line numbers', () => {
     rawText: '<p speaker="ai">hello</p>',
     ir: '',
     content: [msg],
-    sourceMap: [{
-      startIndex: 0, endIndex: 20, irStartIndex: 0, irEndIndex: 0, speaker: 'ai',
-      content: [{ startIndex: 0, endIndex: 20, irStartIndex: 0, irEndIndex: 0, content: 'hello' }]
-    }],
-    extensionResourcePath: p => p,
-    localResourcePath: p => p,
+    sourceMap: [
+      {
+        startIndex: 0,
+        endIndex: 20,
+        irStartIndex: 0,
+        irEndIndex: 0,
+        speaker: 'ai',
+        content: [{ startIndex: 0, endIndex: 20, irStartIndex: 0, irEndIndex: 0, content: 'hello' }],
+      },
+    ],
+    extensionResourcePath: (p) => p,
+    localResourcePath: (p) => p,
   });
   assert.ok(html.includes('data-line="0"'));
 });

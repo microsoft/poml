@@ -81,51 +81,53 @@ markdown_extensions:
 nav:
   - Getting Started: index.md
   - Tutorial:
-    - Quick Start: tutorial/quickstart.md
-    - Travel Expense Agent:
-      - Part 1 - Build Workflow: tutorial/expense_part1.md
-      - Part 2 - Debug with VS Code Extension: tutorial/expense_part2.md
+      - Quick Start: tutorial/quickstart.md
+      - Travel Expense Agent:
+          - Part 1 - Build Workflow: tutorial/expense_part1.md
+          - Part 2 - Debug with VS Code Extension: tutorial/expense_part2.md
   - Language Spec:
-    - Basic Syntax: language/basic.md
-    - Template Engine: language/template.md
-    - Meta: language/meta.md
-    - Fine-grained Control:
-      - White Space Control: language/white-space.md
-      - Token Control: language/token.md
-    - References:
-      - Components: language/components.md
+      - Basic Syntax: language/basic.md
+      - Template Engine: language/template.md
+      - Meta: language/meta.md
+      - Fine-grained Control:
+          - White Space Control: language/white-space.md
+          - Token Control: language/token.md
+      - References:
+          - Components: language/components.md
   - Visual Studio Code:
-    - Overview: vscode/index.md
-    - Features: vscode/features.md
-    - Configuration: vscode/configuration.md
+      - Overview: vscode/index.md
+      - Features: vscode/features.md
+      - Configuration: vscode/configuration.md
   - Python:
-    - Overview: python/index.md
-    - Tracing: python/trace.md
-    - Integrations:
-      - OpenAI: python/integration/openai.md
-      - LangChain: python/integration/langchain.md
-      - MCP: python/integration/mcp.md
-      - MLflow: python/integration/mlflow.md
-      - AgentOps: python/integration/agentops.md
-      - Weave: python/integration/weave.md
-    - References:
-      - Core: python/reference/core.md
-      - Integration: python/reference/integration.md
-      - Prompt: python/reference/prompt.md
+      - Overview: python/index.md
+      - Tracing: python/trace.md
+      - Integrations:
+          - OpenAI: python/integration/openai.md
+          - LangChain: python/integration/langchain.md
+          - MCP: python/integration/mcp.md
+          - MLflow: python/integration/mlflow.md
+          - AgentOps: python/integration/agentops.md
+          - Weave: python/integration/weave.md
+      - References:
+          - Core: python/reference/core.md
+          - Integration: python/reference/integration.md
+          - Prompt: python/reference/prompt.md
   - TypeScript:
-    - Overview: typescript/index.md
-    - References:
-      - index: typescript/reference/index.md
-      - base: typescript/reference/base.md
-      - cli: typescript/reference/cli.md
-      - essentials: typescript/reference/essentials.md
-      - file: typescript/reference/file.md
-      - writer: typescript/reference/writer.md
-      - components: typescript/reference/components.md
+      - Overview: typescript/index.md
+      - References:
+          - index: typescript/reference/index.md
+          - base: typescript/reference/base.md
+          - cli: typescript/reference/cli.md
+          - essentials: typescript/reference/essentials.md
+          - file: typescript/reference/file.md
+          - writer: typescript/reference/writer.md
+          - components: typescript/reference/components.md
   - Deep Dive:
-    - IR Specification: deep-dive/ir.md
-    - Proposals:
-      - Extended POML: deep-dive/proposals/poml_extended.md
+      - IR Specification: deep-dive/ir.md
+      - Proposals:
+          - Extended POML: deep-dive/proposals/poml_extended.md
+  - Miscellaneous:
+      - Contributing: contributing.md
 
 extra:
   version:

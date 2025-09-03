@@ -1,9 +1,10 @@
 import os
-from openai import OpenAI
-import agentops
-import poml
-from agentops_utils import get_trace_id, check_trace
 
+import agentops
+from agentops_utils import check_trace, get_trace_id
+from openai import OpenAI
+
+import poml
 
 if __name__ == "__main__":
     api_key = os.environ["AGENTOPS_API_KEY"]
@@ -18,10 +19,7 @@ if __name__ == "__main__":
     messages = poml.poml("../assets/explain_code.poml", context={"code_path": "sample.py"}, format="openai_chat")
     print(messages)
 
-    response = client.chat.completions.create(
-        model="gpt-4.1-nano",
-        **messages
-    )
+    response = client.chat.completions.create(model="gpt-4.1-nano", **messages)
 
     print(response.choices[0].message.content)
     agentops.end_trace(trace, "Success")

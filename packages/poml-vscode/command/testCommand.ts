@@ -11,7 +11,20 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAzure } from '@ai-sdk/azure';
-import { ModelMessage, streamText, streamObject, tool, Output, jsonSchema, Tool, TextStreamPart, TextPart, ImagePart, ToolCallPart, ToolResultPart } from 'ai';
+import {
+  ModelMessage,
+  streamText,
+  streamObject,
+  tool,
+  Output,
+  jsonSchema,
+  Tool,
+  TextStreamPart,
+  TextPart,
+  ImagePart,
+  ToolCallPart,
+  ToolResultPart,
+} from 'ai';
 
 import ModelClient from '@azure-rest/ai-inference';
 import { AzureKeyCredential } from '@azure/core-auth';
@@ -27,9 +40,11 @@ let _globalGenerationController: GenerationController | undefined = undefined;
 
 class GenerationController {
   private readonly abortControllers: AbortController[];
+  private readonly cancellationTokens: vscode.CancellationTokenSource[];
 
   private constructor() {
     this.abortControllers = [];
+    this.cancellationTokens = [];
   }
 
   public static getNewAbortController() {
@@ -41,12 +56,25 @@ class GenerationController {
     return controller;
   }
 
+  public static getNewCancellationToken() {
+    if (!_globalGenerationController) {
+      _globalGenerationController = new GenerationController();
+    }
+    const tokenSource = new vscode.CancellationTokenSource();
+    _globalGenerationController.cancellationTokens.push(tokenSource);
+    return tokenSource;
+  }
+
   public static abortAll() {
     if (_globalGenerationController) {
       for (const controller of _globalGenerationController.abortControllers) {
         controller.abort();
       }
+      for (const tokenSource of _globalGenerationController.cancellationTokens) {
+        tokenSource.cancel();
+      }
       _globalGenerationController.abortControllers.length = 0;
+      _globalGenerationController.cancellationTokens.length = 0;
     }
   }
 }
@@ -85,7 +113,7 @@ export class TestCommand implements Command {
 
   public async testPrompt(uri: vscode.Uri) {
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.CommandInvoked, {
-      command: this.id
+      command: this.id,
     });
     const fileUrl = fileURLToPath(uri.toString());
     this.outputChannel.show(true);
@@ -100,38 +128,47 @@ export class TestCommand implements Command {
     // Check if language model settings are configured
     const setting = this.getLanguageModelSettings(uri);
     if (!setting) {
-      vscode.window.showErrorMessage('Language model settings are not configured. Please configure your language model settings first.');
+      vscode.window.showErrorMessage(
+        'Language model settings are not configured. Please configure your language model settings first.',
+      );
       this.log('error', 'Prompt test aborted: Language model settings not found.');
       return;
     }
-    
+
     if (!setting.provider) {
-      vscode.window.showErrorMessage('Language model provider is not configured. Please set your provider in the extension settings.');
+      vscode.window.showErrorMessage(
+        'Language model provider is not configured. Please set your provider in the extension settings.',
+      );
       this.log('error', 'Prompt test aborted: setting.provider is not configured.');
       return;
     }
-    
+
     if (!setting.model) {
-      vscode.window.showErrorMessage('Language model is not configured. Please set your model in the extension settings.');
+      vscode.window.showErrorMessage(
+        'Language model is not configured. Please set your model in the extension settings.',
+      );
       this.log('error', 'Prompt test aborted: setting.model is not configured.');
       return;
     }
-    
-    const apiKey = this.getProviderApiKey(setting);
-    if (!apiKey) {
-      vscode.window.showWarningMessage('API key is not configured. Please set your API key in the extension settings.');
-      this.log('warn', 'API key is not configured for the provider.');
+
+    if (setting.provider !== 'vscode') {
+      const apiKey = this.getProviderApiKey(setting);
+      if (!apiKey) {
+        vscode.window.showWarningMessage(
+          'API key is not configured. Please set your API key in the extension settings.',
+        );
+        this.log('warn', 'API key is not configured for the provider.');
+      }
+
+      const apiUrl = this.getProviderApiUrl(setting);
+      if (!apiUrl) {
+        this.log('info', 'No API URL configured, using default for the provider.');
+      }
+    } else {
+      this.log('info', 'Using VS Code language model API (GitHub Copilot). API URL and keys are ignored.');
     }
 
-    const apiUrl = this.getProviderApiUrl(setting);
-    if (!apiUrl) {
-      this.log('info', 'No API URL configured, using default for the provider.');
-    }
-
-    this.log(
-      'info',
-      `Testing prompt with ${this.isChatting ? 'chat model' : 'text completion model'}: ${fileUrl}`
-    );
+    this.log('info', `Testing prompt with ${this.isChatting ? 'chat model' : 'text completion model'}: ${fileUrl}`);
     const startTime = Date.now();
     let nextInterval: number = 1;
     const showProgress = () => {
@@ -143,13 +180,14 @@ export class TestCommand implements Command {
 
     let timer = setTimeout(showProgress, nextInterval * 1000);
     let result: string[] = [];
+
     try {
       const prompt = await this.renderPrompt(uri);
       const setting = this.getLanguageModelSettings(uri);
       reporter?.reportTelemetry(TelemetryEvent.PromptTestingStart, {
         ...reportParams,
         languageModel: JSON.stringify(setting),
-        rendered: JSON.stringify(prompt)
+        rendered: JSON.stringify(prompt),
       });
 
       const stream = this.routeStream(prompt, setting);
@@ -166,13 +204,16 @@ export class TestCommand implements Command {
         this.outputChannel.appendLine('');
       }
       const timeElapsed = Date.now() - startTime;
-      this.log('info', `Test completed in ${Math.round(timeElapsed / 1000)} seconds. Language models can make mistakes. Check important info.`);
+      this.log(
+        'info',
+        `Test completed in ${Math.round(timeElapsed / 1000)} seconds. Language models can make mistakes. Check important info.`,
+      );
 
       if (reporter) {
         reporter.reportTelemetry(TelemetryEvent.PromptTestingEnd, {
           ...reportParams,
           result: result.join(''),
-          timeElapsed: timeElapsed
+          timeElapsed: timeElapsed,
         });
       }
     } catch (e) {
@@ -182,7 +223,7 @@ export class TestCommand implements Command {
         reporter.reportTelemetry(TelemetryEvent.PromptTestingError, {
           ...reportParams,
           error: e ? e.toString() : '',
-          partialResult: result.join('')
+          partialResult: result.join(''),
         });
       }
 
@@ -208,25 +249,21 @@ export class TestCommand implements Command {
       stylesheets: options.stylesheets,
     };
 
-    const response: PreviewResponse = await getClient().sendRequest<PreviewResponse>(
-      PreviewMethodName,
-      requestParams
-    );
+    const response: PreviewResponse = await getClient().sendRequest<PreviewResponse>(PreviewMethodName, requestParams);
     if (response.error) {
       throw new Error(`Error rendering prompt: ${uri}\n${response.error}`);
     }
     return response;
   }
 
-  private async *routeStream(
-    prompt: PreviewResponse,
-    settings: LanguageModelSetting,
-  ): AsyncGenerator<string> {
+  private async *routeStream(prompt: PreviewResponse, settings: LanguageModelSetting): AsyncGenerator<string> {
     const runtime = prompt.runtime;
     const provider = runtime?.provider || settings.provider;
     const apiUrl = this.getProviderApiUrl(settings, runtime);
-    
-    if (provider === 'microsoft' && apiUrl?.includes('.models.ai.azure.com')) {
+
+    if (provider === 'vscode') {
+      yield* this.vscodeModelStream(prompt, settings);
+    } else if (provider === 'microsoft' && apiUrl?.includes('.models.ai.azure.com')) {
       yield* this.azureAiStream(prompt.content as Message[], settings, runtime);
     } else if (prompt.responseSchema && (!prompt.tools || prompt.tools.length === 0)) {
       yield* this.handleResponseSchemaStream(prompt, settings);
@@ -252,8 +289,9 @@ export class TestCommand implements Command {
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
-    const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
-      : prompt.content as string;
+    const vercelPrompt = this.isChatting
+      ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
+      : (prompt.content as string);
 
     if (prompt.tools) {
       throw new Error('Tools are not supported when response schema is provided.');
@@ -261,6 +299,10 @@ export class TestCommand implements Command {
 
     if (!prompt.responseSchema) {
       throw new Error('Response schema is required but not provided.');
+    }
+
+    if (!this.isChatting) {
+      this.log('warn', 'Using a chat model for non-chat prompt. This may lead to suboptimal results.');
     }
 
     const abortController = GenerationController.getNewAbortController();
@@ -285,11 +327,19 @@ export class TestCommand implements Command {
     prompt: PreviewResponse,
     settings: LanguageModelSetting,
   ): AsyncGenerator<string> {
-    const vercelPrompt = this.isChatting ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
-      : prompt.content as string;
+    const vercelPrompt = this.isChatting
+      ? this.pomlMessagesToVercelMessage(prompt.content as Message[])
+      : (prompt.content as string);
+
+    if (!this.isChatting) {
+      this.log('warn', 'Using a chat model for non-chat prompt. This may lead to suboptimal results.');
+    }
 
     if (prompt.responseSchema) {
-      this.log('warn', 'Output schema and tools are both provided. This is experimental and is only supported for some models.');
+      this.log(
+        'warn',
+        'Output schema and tools are both provided. This is experimental and is only supported for some models.',
+      );
     }
     const abortController = GenerationController.getNewAbortController();
 
@@ -301,9 +351,11 @@ export class TestCommand implements Command {
       },
       abortSignal: abortController.signal,
       tools: prompt.tools ? this.toVercelTools(prompt.tools) : undefined,
-      experimental_output: prompt.responseSchema && Output.object({
-        schema: this.toVercelResponseSchema(prompt.responseSchema),
-      }),
+      experimental_output:
+        prompt.responseSchema &&
+        Output.object({
+          schema: this.toVercelResponseSchema(prompt.responseSchema),
+        }),
       ...this.vercelRequestParameters(settings, prompt.runtime),
     });
 
@@ -331,7 +383,11 @@ export class TestCommand implements Command {
       return `${newline}[Reasoning]`;
     } else if (chunk.type === 'reasoning-end') {
       return '\n[/Reasoning]';
-    } else if (['start', 'finish', 'text-start', 'text-end', 'start-step', 'finish-step', 'message-metadata'].includes(chunk.type)) {
+    } else if (
+      ['start', 'finish', 'text-start', 'text-end', 'start-step', 'finish-step', 'message-metadata'].includes(
+        chunk.type,
+      )
+    ) {
       return null;
     } else if (chunk.type === 'abort') {
       return `${newline}[Aborted]`;
@@ -345,9 +401,10 @@ export class TestCommand implements Command {
 
   private formatUsageInfo(chunk: any, lastChunkEndline: boolean): string {
     const newline = lastChunkEndline ? '' : '\n';
-    let usageInfo = `${newline}[Usage: input=${chunk.totalUsage.inputTokens}, output=${chunk.totalUsage.outputTokens}, ` +
+    let usageInfo =
+      `${newline}[Usage: input=${chunk.totalUsage.inputTokens}, output=${chunk.totalUsage.outputTokens}, ` +
       `total=${chunk.totalUsage.totalTokens}`;
-    
+
     if (chunk.totalUsage.cachedInputTokens) {
       usageInfo += `, cached=${chunk.totalUsage.cachedInputTokens}`;
     }
@@ -355,14 +412,53 @@ export class TestCommand implements Command {
       usageInfo += `, reasoning=${chunk.totalUsage.reasoningTokens}`;
     }
     usageInfo += ']';
-    
+
     return usageInfo;
+  }
+
+  private async *vscodeModelStream(prompt: PreviewResponse, settings: LanguageModelSetting): AsyncGenerator<string> {
+    if (!('lm' in vscode) || typeof vscode.lm?.selectChatModels !== 'function') {
+      throw new Error('VS Code language model API is not available.');
+    }
+    const modelSelector = {
+      vendor: 'copilot',
+      family: prompt.runtime?.model || settings.model,
+    };
+    this.log('info', `Selecting VS Code language model with ${JSON.stringify(modelSelector)}`);
+    const models = await vscode.lm.selectChatModels(modelSelector);
+    if (!models.length) {
+      throw new Error(`No VS Code language models available with selector: ${JSON.stringify(modelSelector)}`);
+    } else if (models.length > 1) {
+      this.log('info', `Multiple VS Code language models found. The first one will be used: ${JSON.stringify(models)}`);
+    }
+
+    const model = models[0];
+    const signal = GenerationController.getNewCancellationToken();
+
+    const vscodePrompt = this.isChatting
+      ? this.pomlMessagesToVsCodeMessage(prompt.content as Message[])
+      : [vscode.LanguageModelChatMessage.User(prompt.content as string)];
+
+    const options = {
+      justification: 'Initiated by POML extension for VS Code',
+      tools: prompt.tools ? this.toVsCodeTools(prompt.tools) : [],
+    };
+
+    const response = await model.sendRequest(vscodePrompt, options, signal.token);
+
+    for await (const chunk of response.stream) {
+      if ((chunk as any).value) {
+        yield (chunk as any).value;
+      } else {
+        yield JSON.stringify(chunk);
+      }
+    }
   }
 
   private async *azureAiStream(
     prompt: Message[],
     settings: LanguageModelSetting,
-    runtime?: { [key: string]: any }
+    runtime?: { [key: string]: any },
   ): AsyncGenerator<string> {
     const apiUrl = this.getProviderApiUrl(settings, runtime);
     const apiKey = this.getProviderApiKey(settings, runtime);
@@ -391,8 +487,8 @@ export class TestCommand implements Command {
         body: {
           messages: this.toMessageObjects(prompt, 'openai'),
           stream: true,
-          ...args
-        }
+          ...args,
+        },
       })
       .asNodeStream();
 
@@ -403,7 +499,7 @@ export class TestCommand implements Command {
 
     if (response.status !== '200') {
       throw new Error(
-        `Failed to get chat completions (status code ${response.status}): ${await streamToString(stream)}`
+        `Failed to get chat completions (status code ${response.status}): ${await streamToString(stream)}`,
       );
     }
 
@@ -431,17 +527,23 @@ export class TestCommand implements Command {
     const provider = runtime?.provider || settings.provider;
     const apiKey = this.getProviderApiKey(settings, runtime);
     const apiUrl = this.getProviderApiUrl(settings, runtime);
-    
+
     if (runtime?.provider && runtime.provider !== settings.provider) {
       this.log('info', `Provider overridden from '${settings.provider}' to '${runtime.provider}' by runtime`);
       this.log('info', `Using ${apiUrl} as the API endpoint.`);
 
       // Warn if apiKey or apiUrl are plain strings when provider is overridden
       if (typeof settings.apiKey === 'string' && settings.apiKey) {
-        this.log('warn', `API key is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`);
+        this.log(
+          'warn',
+          `API key is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`,
+        );
       }
       if (typeof settings.apiUrl === 'string' && settings.apiUrl) {
-        this.log('warn', `API URL is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`);
+        this.log(
+          'warn',
+          `API URL is configured as a plain string but provider was overridden from '${settings.provider}' to '${runtime.provider}'. Consider using provider-specific configuration: {"${settings.provider}": "...", "${runtime.provider}": "..."}`,
+        );
       }
     }
 
@@ -454,20 +556,27 @@ export class TestCommand implements Command {
       case 'microsoft':
         return createAzure({
           baseURL: apiUrl,
-          apiKey: apiKey
+          apiKey: apiKey,
         });
       case 'openai':
         return createOpenAI({
           baseURL: apiUrl,
-          apiKey: apiKey
-        });
+          apiKey: apiKey,
+        }).chat;
+      case 'openaiResponse':
+        return createOpenAI({
+          baseURL: apiUrl,
+          apiKey: apiKey,
+        }).responses;
       case 'google':
         return createGoogleGenerativeAI({
           baseURL: apiUrl,
-          apiKey: apiKey
+          apiKey: apiKey,
         });
     }
-    throw new Error(`Unsupported provider: ${provider}. Supported providers are: openai, anthropic, microsoft, google.`);
+    throw new Error(
+      `Unsupported provider: ${provider}. Supported providers are: openai, anthropic, microsoft, google.`,
+    );
   }
 
   private getActiveVercelModel(settings: LanguageModelSetting, runtime?: { [key: string]: any }) {
@@ -485,9 +594,9 @@ export class TestCommand implements Command {
     if (typeof content === 'string') {
       return { type: 'text' as const, value: content };
     }
-    
+
     // If it's an array, we need to handle mixed content
-    const convertedContent = content.map(part => {
+    const convertedContent = content.map((part) => {
       if (typeof part === 'string') {
         return { type: 'text' as const, text: part };
       } else if (part.type.startsWith('image/')) {
@@ -505,7 +614,7 @@ export class TestCommand implements Command {
     if (convertedContent.length === 1 && convertedContent[0].type === 'text') {
       return { type: 'text' as const, value: convertedContent[0].text };
     }
-    
+
     // Otherwise, return the structured content array
     return { type: 'content' as const, value: convertedContent };
   }
@@ -515,7 +624,7 @@ export class TestCommand implements Command {
       ai: 'assistant',
       human: 'user',
       system: 'system',
-      tool: 'tool'
+      tool: 'tool',
     };
     const result: ModelMessage[] = [];
     for (const msg of messages) {
@@ -523,38 +632,41 @@ export class TestCommand implements Command {
         throw new Error(`Message must have a speaker, found: ${JSON.stringify(msg)}`);
       }
       const role = speakerToRole[msg.speaker];
-      const contents = typeof msg.content === 'string' ? msg.content : msg.content.map(part => {
-        if (typeof part === 'string') {
-          return { type: 'text', text: part } satisfies TextPart;
-        } else if (part.type.startsWith('image/')) {
-          const binaryPart = part as ContentMultiMediaBinary;
-          if (!binaryPart.base64) {
-            throw new Error(`Image content must have base64 data, found: ${JSON.stringify(part)}`);
-          }
-          return { type: 'image', image: binaryPart.base64 } satisfies ImagePart;
-        } else if (part.type === 'application/vnd.poml.toolrequest') {
-          const toolRequest = part as ContentMultiMediaToolRequest;
-          return {
-            type: 'tool-call',
-            toolCallId: toolRequest.id,
-            toolName: toolRequest.name,
-            input: toolRequest.content
-          } satisfies ToolCallPart;
-        } else if (part.type === 'application/vnd.poml.toolresponse') {
-          const toolResponse = part as ContentMultiMediaToolResponse;
-          return {
-            type: 'tool-result',
-            toolCallId: toolResponse.id,
-            toolName: toolResponse.name,
-            output: this.richContentToVercelToolResult(toolResponse.content)
-          } satisfies ToolResultPart;
-        } else {
-          throw new Error(`Unsupported content type: ${part.type}`);
-        }
-      });
+      const contents =
+        typeof msg.content === 'string'
+          ? msg.content
+          : msg.content.map((part) => {
+              if (typeof part === 'string') {
+                return { type: 'text', text: part } satisfies TextPart;
+              } else if (part.type.startsWith('image/')) {
+                const binaryPart = part as ContentMultiMediaBinary;
+                if (!binaryPart.base64) {
+                  throw new Error(`Image content must have base64 data, found: ${JSON.stringify(part)}`);
+                }
+                return { type: 'image', image: binaryPart.base64 } satisfies ImagePart;
+              } else if (part.type === 'application/vnd.poml.toolrequest') {
+                const toolRequest = part as ContentMultiMediaToolRequest;
+                return {
+                  type: 'tool-call',
+                  toolCallId: toolRequest.id,
+                  toolName: toolRequest.name,
+                  input: toolRequest.content,
+                } satisfies ToolCallPart;
+              } else if (part.type === 'application/vnd.poml.toolresponse') {
+                const toolResponse = part as ContentMultiMediaToolResponse;
+                return {
+                  type: 'tool-result',
+                  toolCallId: toolResponse.id,
+                  toolName: toolResponse.name,
+                  output: this.richContentToVercelToolResult(toolResponse.content),
+                } satisfies ToolResultPart;
+              } else {
+                throw new Error(`Unsupported content type: ${part.type}`);
+              }
+            });
       result.push({
         role: role as any,
-        content: contents as any
+        content: contents as any,
       });
     }
     return result;
@@ -572,9 +684,9 @@ export class TestCommand implements Command {
       const schema = jsonSchema(t.parameters);
       result[t.name] = tool({
         description: t.description,
-        inputSchema: schema
+        inputSchema: schema,
       });
-    };
+    }
     this.log('info', 'Registered tools: ' + Object.keys(result).join(', '));
     return result;
   }
@@ -588,14 +700,140 @@ export class TestCommand implements Command {
       ai: 'assistant',
       human: 'user',
       system: 'system',
-      tool: 'tool'
+      tool: 'tool',
     };
-    return messages.map(msg => {
+    return messages.map((msg) => {
       return {
         role: speakerMapping[msg.speaker] ?? msg.speaker,
-        content: msg.content
+        content: msg.content,
       };
     });
+  }
+
+  /**
+   * Convert POML messages to VS Code LanguageModelChatMessage format
+   * Handles role mapping, content conversion, and message merging for the VS Code API
+   */
+  private pomlMessagesToVsCodeMessage(messages: Message[]): vscode.LanguageModelChatMessage[] {
+    // Convert each POML message to VS Code format
+    const vscodeMessage = messages.map((msg) => {
+      // Map POML speaker types to VS Code roles
+      let role: vscode.LanguageModelChatMessageRole;
+
+      switch (msg.speaker) {
+        case 'human':
+          // Human messages map directly to User role
+          role = vscode.LanguageModelChatMessageRole.User;
+          break;
+        case 'ai':
+          // AI messages map to Assistant role
+          role = vscode.LanguageModelChatMessageRole.Assistant;
+          break;
+        case 'tool': // Tool responses are typically treated as user response messages in VS Code
+        case 'system':
+          // VS Code doesn't have a direct system role, treat as user
+          // This ensures tool responses and system messages are properly handled
+          role = vscode.LanguageModelChatMessageRole.User;
+          break;
+        default:
+          // Default to user for unknown speakers
+          role = vscode.LanguageModelChatMessageRole.User;
+      }
+
+      // Convert POML RichContent to VS Code message content parts
+      // This handles text, images, tool calls, and tool results
+      const content = this.richContentToVsCodeMessageContent(msg.content);
+
+      if (content.length === 1 && 'value' in content[0]) {
+        return new vscode.LanguageModelChatMessage(role, content[0].value);
+      } else {
+        return new vscode.LanguageModelChatMessage(role, content);
+      }
+    });
+
+    // TODO: Merge consecutive messages from the same role
+    return vscodeMessage;
+  }
+
+  /**
+   * Convert POML RichContent to VS Code message content parts
+   * Handles various content types including text, images, tool calls, and tool results
+   */
+  private richContentToVsCodeMessageContent(
+    content: RichContent,
+  ): (vscode.LanguageModelTextPart | vscode.LanguageModelToolResultPart | vscode.LanguageModelToolCallPart)[] {
+    // Handle simple string content
+    if (typeof content === 'string') {
+      return [{ value: content }];
+    }
+
+    // Helper function to flatten nested content structures into a string
+    // Used for tool results which need to be stringified
+    const flattenMessageContent = (content: any): string => {
+      if (typeof content === 'string') {
+        return content;
+      } else if (Array.isArray(content)) {
+        // Recursively flatten array elements and join with newlines
+        return content.map(flattenMessageContent).join('\n');
+      } else if (typeof content === 'object' && 'value' in content) {
+        // Extract and flatten the value property
+        return flattenMessageContent(content.value);
+      } else {
+        // Fallback: stringify any other content type
+        return JSON.stringify(content);
+      }
+    };
+
+    // Process each part of the rich content array
+    return content.map((part) => {
+      if (typeof part === 'string') {
+        // Handle plain text parts
+        return { value: part } satisfies vscode.LanguageModelTextPart;
+      } else if (part.type.startsWith('image/')) {
+        // Handle image content (with limitations)
+        const binaryPart = part as ContentMultiMediaBinary;
+        // VS Code API doesn't fully support images, use placeholder text
+        this.log('warn', 'Images in messages are not fully supported in VS Code chat API. Using placeholder text.');
+        return { value: `[Image: ${binaryPart.alt || 'unsupported in text'}]` } satisfies vscode.LanguageModelTextPart;
+      } else if (part.type === 'application/vnd.poml.toolrequest') {
+        // Handle tool call requests
+        const toolRequest = part as ContentMultiMediaToolRequest;
+        return {
+          callId: toolRequest.id,
+          name: toolRequest.name,
+          input: toolRequest.content,
+        } satisfies vscode.LanguageModelToolCallPart;
+      } else if (part.type === 'application/vnd.poml.toolresponse') {
+        // Handle tool call responses
+        const toolResponse = part as ContentMultiMediaToolResponse;
+        // Tool results need to be flattened to string format
+        return {
+          callId: toolResponse.id,
+          content: [flattenMessageContent(this.richContentToVercelToolResult(toolResponse.content))],
+        } satisfies vscode.LanguageModelToolResultPart;
+      } else {
+        // Throw error for unsupported content types
+        throw new Error(`Unsupported content type: ${part.type}`);
+      }
+    });
+  }
+
+  private toVsCodeTools(tools: { [key: string]: any }[]) {
+    const result: vscode.LanguageModelChatTool[] = [];
+    for (const t of tools) {
+      if (!t.name || !t.parameters) {
+        throw new Error(`Tool must have name and parameters: ${JSON.stringify(t)}`);
+      }
+      if (t.type !== 'function') {
+        throw new Error(`Unsupported tool type: ${t.type}. Only 'function' type is supported.`);
+      }
+      result.push({
+        name: t.name,
+        description: t.description,
+        inputSchema: t.parameters,
+      });
+    }
+    return result;
   }
 
   private getLanguageModelSettings(uri: vscode.Uri) {
@@ -611,7 +849,7 @@ export class TestCommand implements Command {
     if (typeof value === 'string') {
       return value || undefined;
     }
-    
+
     // It's an object, so extract the provider-specific value
     const extracted = value[provider];
     return extracted || undefined;
@@ -654,7 +892,7 @@ export class TestRerunCommand implements Command {
 
   public execute(...args: any[]): void {
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.CommandInvoked, {
-      command: this.id
+      command: this.id,
     });
     if (lastCommand) {
       this.outputChannel.clear();
@@ -668,7 +906,7 @@ export class TestRerunCommand implements Command {
 export class TestAbortCommand implements Command {
   public readonly id = 'poml.testAbort';
 
-  public constructor(private readonly previewManager: POMLWebviewPanelManager) { }
+  public constructor(private readonly previewManager: POMLWebviewPanelManager) {}
 
   public execute() {
     getTelemetryReporter()?.reportTelemetry(TelemetryEvent.PromptTestingAbort, {});

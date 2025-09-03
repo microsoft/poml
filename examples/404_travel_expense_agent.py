@@ -1,7 +1,8 @@
 import json
-from typing import List, Optional, Dict, Literal, Union
+from typing import Dict, List, Literal, Optional, Union
+
 from openai import OpenAI
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 import poml
 from poml.integration.pydantic import to_strict_json_schema
@@ -23,16 +24,12 @@ def tarvel_expense_agent(document_paths: List[str], employee_email: str):
             "document_output_schema": to_strict_json_schema(Document),
         }
         print(context)
-        extraction_prompt = poml.poml(
-            "203_expense_extract_document.poml", context, format="openai_chat"
-        )
+        extraction_prompt = poml.poml("203_expense_extract_document.poml", context, format="openai_chat")
         extraction_resp = client.chat.completions.create(
             **extraction_prompt,
             **extra_params,
         )
-        document = Document.model_validate_json(
-            extraction_resp.choices[0].message.content
-        )
+        document = Document.model_validate_json(extraction_resp.choices[0].message.content)
         documents.append(document)
         print("=== EXTRACTED DOCUMENT ===")
         print(document.model_dump_json())
@@ -44,16 +41,12 @@ def tarvel_expense_agent(document_paths: List[str], employee_email: str):
         "extracted_documents": [doc.model_dump() for doc in documents],
         "rules_output_schema": to_strict_json_schema(RelevantRules),
     }
-    rules_prompt = poml.poml(
-        "204_expense_extract_rules.poml", context, format="openai_chat"
-    )
+    rules_prompt = poml.poml("204_expense_extract_rules.poml", context, format="openai_chat")
     rules_resp = client.chat.completions.create(
         **rules_prompt,
         **extra_params,
     )
-    relevant_rules = RelevantRules.model_validate_json(
-        rules_resp.choices[0].message.content
-    )
+    relevant_rules = RelevantRules.model_validate_json(rules_resp.choices[0].message.content)
     print("=== RELEVANT RULES ===")
     print(relevant_rules.model_dump_json(indent=2))
     print()
@@ -65,16 +58,12 @@ def tarvel_expense_agent(document_paths: List[str], employee_email: str):
         "relevant_rules": relevant_rules.model_dump(),
         "compliance_output_schema": to_strict_json_schema(ComplianceCheck),
     }
-    compliance_prompt = poml.poml(
-        "205_expense_check_compliance.poml", context, format="openai_chat"
-    )
+    compliance_prompt = poml.poml("205_expense_check_compliance.poml", context, format="openai_chat")
     compliance_resp = client.chat.completions.create(
         **compliance_prompt,
         **extra_params,
     )
-    compliance_check = ComplianceCheck.model_validate_json(
-        compliance_resp.choices[0].message.content
-    )
+    compliance_check = ComplianceCheck.model_validate_json(compliance_resp.choices[0].message.content)
     print("=== COMPLIANCE CHECK ===")
     print(compliance_check.model_dump_json(indent=2))
     print()
@@ -86,9 +75,7 @@ def tarvel_expense_agent(document_paths: List[str], employee_email: str):
         "relevant_rules": relevant_rules.model_dump(),
         "compliance_result": compliance_check.model_dump(),
     }
-    email_prompt = poml.poml(
-        "206_expense_send_email.poml", context, format="openai_chat"
-    )
+    email_prompt = poml.poml("206_expense_send_email.poml", context, format="openai_chat")
     email_resp = client.chat.completions.create(
         **email_prompt,
         **extra_params,
@@ -126,9 +113,7 @@ class Document(BaseModel):
     source: str = Field(..., description="Filename or doc label")
     doc_type: Literal["hotel_invoice", "flight_itinerary", "receipt", "other"]
     merchant: Optional[str] = Field(..., description="Merchant or provider name")
-    currency: Optional[str] = Field(
-        ..., description="ISO currency code, e.g., USD, EUR"
-    )
+    currency: Optional[str] = Field(..., description="ISO currency code, e.g., USD, EUR")
     lines: List[LineItem]
     subtotals_by_category: List[TotalByCategory] = Field(
         ...,
@@ -140,12 +125,8 @@ class Document(BaseModel):
 
 
 class TripContext(BaseModel):
-    is_international: Optional[bool] = Field(
-        ..., description="Indicates whether the trip is international."
-    )
-    trip_length_days: Optional[float] = Field(
-        ..., description="Number of days for the trip."
-    )
+    is_international: Optional[bool] = Field(..., description="Indicates whether the trip is international.")
+    trip_length_days: Optional[float] = Field(..., description="Number of days for the trip.")
 
 
 class Rule(BaseModel):
@@ -153,15 +134,13 @@ class Rule(BaseModel):
     category: str = Field(
         ...,
         description=(
-            "Type of expense the rule applies to, such as lodging, meals, "
-            "transportation, insurance, or booking."
+            "Type of expense the rule applies to, such as lodging, meals, " "transportation, insurance, or booking."
         ),
     )
     type: str = Field(
         ...,
         description=(
-            "Defines the kind of restriction, such as daily cap, receipt "
-            "threshold, or preapproval requirement."
+            "Defines the kind of restriction, such as daily cap, receipt " "threshold, or preapproval requirement."
         ),
     )
     scope: str = Field(
@@ -172,21 +151,13 @@ class Rule(BaseModel):
     value: Optional[Union[str, float, bool]] = Field(
         ..., description="Limit or requirement. Can be numeric, boolean, or text."
     )
-    unit: Optional[str] = Field(
-        ..., description="Measurement unit such as USD/day, hours, or enum value."
-    )
-    requires_preapproval: Optional[bool] = Field(
-        ..., description="True if the expense requires preapproval."
-    )
-    non_reimbursable: Optional[bool] = Field(
-        ..., description="True if the expense is not reimbursable."
-    )
+    unit: Optional[str] = Field(..., description="Measurement unit such as USD/day, hours, or enum value.")
+    requires_preapproval: Optional[bool] = Field(..., description="True if the expense requires preapproval.")
+    non_reimbursable: Optional[bool] = Field(..., description="True if the expense is not reimbursable.")
 
 
 class RelevantRules(BaseModel):
-    trip_context: TripContext = Field(
-        ..., description="Context about the trip used for applying rules."
-    )
+    trip_context: TripContext = Field(..., description="Context about the trip used for applying rules.")
     rules: List[Rule] = Field(..., description="List of policy rules to apply.")
 
 
@@ -200,9 +171,7 @@ class RuleCheck(BaseModel):
         ...,
         description="Short reference: category sums, lines, dates, class of service, receipt threshold checks, etc.",
     )
-    over_by: Optional[float] = Field(
-        ..., description="Amount exceeding the cap, if any."
-    )
+    over_by: Optional[float] = Field(..., description="Amount exceeding the cap, if any.")
     severity: Literal["low", "medium", "high"]
     suggested_fix: str
 

@@ -1,5 +1,6 @@
 # Controlling White Space
 
+<!-- prettier-ignore -->
 !!! warning
 
     This feature is experimental and may change in future releases. Use with caution.
@@ -14,11 +15,12 @@ The `whiteSpace` attribute (or `white-space`) can be applied to most POML compon
 - **`filter`** (default for other syntaxes): Removes leading and trailing whitespace, and normalizes internal whitespace in the gaps between elements.
 - **`trim`**: Trims whitespace from the beginning and end of the content.
 
+<!-- prettier-ignore -->
 !!! note
 
     `whiteSpace` only applies to the current component, not its children. If you are applying to multiple components, consider using [stylesheets](./meta.md).
 
-## Example Usage 
+## Example Usage
 
 ```xml
 <poml>

@@ -1,6 +1,5 @@
 const log = console.log;
-console.log = (m, ...a) =>
-  /Cannot polyfill `(DOMMatrix|Path2D)`/.test(m) ? null : log(m, ...a);
+console.log = (m, ...a) => (/Cannot polyfill `(DOMMatrix|Path2D)`/.test(m) ? null : log(m, ...a));
 
 // import * as PDFJS from 'pdfjs-dist';
 // import PDFJS from 'pdfjs-dist/legacy/build/pdf.js';
@@ -51,7 +50,8 @@ export async function pdfParse(pdfBuffer: ArrayBuffer | Buffer, maxPages?: numbe
 
 async function extractTextFromPage(page: PDFJS.PDFPageProxy): Promise<string> {
   const textContent = await page.getTextContent();
-  let lastY, text = '';
+  let lastY,
+    text = '';
   for (let item of textContent.items) {
     if (lastY == (item as any).transform[5] || !lastY) {
       text += (item as any).str;

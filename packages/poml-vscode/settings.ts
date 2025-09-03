@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-export type LanguageModelProvider = 'openai' | 'microsoft' | 'anthropic' | 'google';
+export type LanguageModelProvider = 'vscode' | 'openai' | 'openaiResponse' | 'microsoft' | 'anthropic' | 'google';
 
 export type ApiConfigValue = string | { [provider: string]: string };
 
@@ -67,7 +67,7 @@ export class Settings {
       apiUrl: pomlSettings.get<ApiConfigValue>('languageModel.apiUrl', '') || undefined,
       apiVersion: pomlSettings.get<string>('languageModel.apiVersion', '') || undefined,
       maxTokens: pomlSettings.get<number>('languageModel.maxTokens', 0) || undefined,
-    }
+    };
 
     this.styles = pomlSettings.get<string[]>('styles', []);
   }
@@ -111,21 +111,17 @@ export class SettingsManager {
   private readonly previewSettingsForWorkspaces = new Map<string, Settings>();
   private readonly resourceOptions = new Map<string, ResourceOptions>();
 
-  public loadAndCacheSettings(
-    resource: vscode.Uri
-  ): Settings {
+  public loadAndCacheSettings(resource: vscode.Uri): Settings {
     const config = Settings.getForResource(resource);
     this.previewSettingsForWorkspaces.set(this.getKey(resource), config);
     return config;
   }
 
-  public hasSettingsChanged(
-    resource: vscode.Uri
-  ): boolean {
+  public hasSettingsChanged(resource: vscode.Uri): boolean {
     const key = this.getKey(resource);
     const currentSettings = this.previewSettingsForWorkspaces.get(key);
     const newSettings = Settings.getForResource(resource);
-    return (!currentSettings || !currentSettings.isEqualTo(newSettings));
+    return !currentSettings || !currentSettings.isEqualTo(newSettings);
   }
 
   public getResourceOptions(resource: vscode.Uri): ResourceOptions {
@@ -140,7 +136,10 @@ export class SettingsManager {
   }
 
   public setResourceOptions(resource: vscode.Uri, options: ResourceOptions) {
-    this.resourceOptions.set(resource.fsPath, { contexts: [...options.contexts], stylesheets: [...options.stylesheets] });
+    this.resourceOptions.set(resource.fsPath, {
+      contexts: [...options.contexts],
+      stylesheets: [...options.stylesheets],
+    });
   }
 
   public hasResourceOptions(resource: vscode.Uri): boolean {
@@ -176,9 +175,7 @@ export class SettingsManager {
     return undefined;
   }
 
-  private getKey(
-    resource: vscode.Uri
-  ): string {
+  private getKey(resource: vscode.Uri): string {
     const folder = vscode.workspace.getWorkspaceFolder(resource);
     return folder ? folder.uri.toString() : '';
   }

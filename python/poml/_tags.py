@@ -1,7 +1,8 @@
+# fmt: off
 # This file is auto-generated from component documentation.
 # Do not edit manually. Run `npm run build-comment` to regenerate.
 
-from typing import Optional, Any, Union, List, Dict
+from typing import Optional, Any, Union, List, Dict  # isort:skip
 # from numbers import Number # For more specific number types if needed
 
 class _TagLib:
@@ -50,7 +51,7 @@ class _TagLib:
             selectedPages=selectedPages,
             **kwargs,
         )
-    
+
     def role(
         self,
         caption: Optional[str] = None,
@@ -87,7 +88,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-    
+
     def task(
         self,
         caption: Optional[str] = None,
@@ -137,7 +138,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-    
+
     def output_format(
         self,
         caption: Optional[str] = None,
@@ -176,7 +177,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-    
+
     def stepwise_instructions(
         self,
         caption: Optional[str] = None,
@@ -218,7 +219,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-    
+
     def hint(
         self,
         caption: Optional[str] = None,
@@ -254,7 +255,7 @@ class _TagLib:
             captionColon=captionColon,
             **kwargs,
         )
-    
+
     def introducer(
         self,
         caption: Optional[str] = None,
@@ -290,7 +291,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-    
+
     def example_set(
         self,
         caption: Optional[str] = None,
@@ -345,7 +346,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-    
+
     def example(
         self,
         caption: Optional[str] = None,
@@ -398,7 +399,7 @@ class _TagLib:
             captionColon=captionColon,
             **kwargs,
         )
-    
+
     def example_input(
         self,
         caption: Optional[str] = None,
@@ -443,7 +444,7 @@ class _TagLib:
             captionColon=captionColon,
             **kwargs,
         )
-    
+
     def example_output(
         self,
         caption: Optional[str] = None,
@@ -488,7 +489,7 @@ class _TagLib:
             captionColon=captionColon,
             **kwargs,
         )
-    
+
     def question(
         self,
         questionCaption: Optional[str] = None,
@@ -528,7 +529,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-    
+
     def system_message(
         self,
         **kwargs: Any,
@@ -545,7 +546,7 @@ class _TagLib:
             tag_name="SystemMessage",
             **kwargs,
         )
-    
+
     def human_message(
         self,
         **kwargs: Any,
@@ -562,7 +563,7 @@ class _TagLib:
             tag_name="HumanMessage",
             **kwargs,
         )
-    
+
     def ai_message(
         self,
         **kwargs: Any,
@@ -579,7 +580,7 @@ class _TagLib:
             tag_name="AiMessage",
             **kwargs,
         )
-    
+
     def message_content(
         self,
         content: Optional[Any] = None,
@@ -600,7 +601,7 @@ class _TagLib:
             content=content,
             **kwargs,
         )
-    
+
     def conversation(
         self,
         messages: Optional[Any] = None,
@@ -626,7 +627,7 @@ class _TagLib:
             selectedMessages=selectedMessages,
             **kwargs,
         )
-    
+
     def table(
         self,
         syntax: Optional[str] = None,
@@ -683,7 +684,7 @@ class _TagLib:
             maxColumns=maxColumns,
             **kwargs,
         )
-    
+
     def tree(
         self,
         syntax: Optional[str] = None,
@@ -710,7 +711,7 @@ class _TagLib:
             showContent=showContent,
             **kwargs,
         )
-    
+
     def folder(
         self,
         syntax: Optional[str] = None,
@@ -750,7 +751,7 @@ class _TagLib:
             showContent=showContent,
             **kwargs,
         )
-    
+
     def captioned_paragraph(
         self,
         caption: Optional[str] = None,
@@ -791,7 +792,7 @@ class _TagLib:
             captionEnding=captionEnding,
             **kwargs,
         )
-    
+
     def webpage(
         self,
         url: Optional[str] = None,
@@ -838,7 +839,7 @@ class _TagLib:
             selector=selector,
             **kwargs,
         )
-    
+
     def text(
         self,
         syntax: Optional[str] = None,
@@ -918,7 +919,7 @@ class _TagLib:
             priority=priority,
             **kwargs,
         )
-    
+
     def paragraph(
         self,
         blankLine: Optional[bool] = None,
@@ -940,7 +941,7 @@ class _TagLib:
             blankLine=blankLine,
             **kwargs,
         )
-    
+
     def inline(
         self,
         syntax: Optional[str] = None,
@@ -989,7 +990,7 @@ class _TagLib:
             priority=priority,
             **kwargs,
         )
-    
+
     def newline(
         self,
         newLineCount: Optional[float] = None,
@@ -1011,7 +1012,7 @@ class _TagLib:
             newLineCount=newLineCount,
             **kwargs,
         )
-    
+
     def header(
         self,
         **kwargs: Any,
@@ -1031,7 +1032,7 @@ class _TagLib:
             tag_name="Header",
             **kwargs,
         )
-    
+
     def sub_content(
         self,
         **kwargs: Any,
@@ -1053,7 +1054,7 @@ class _TagLib:
             tag_name="SubContent",
             **kwargs,
         )
-    
+
     def bold(
         self,
         **kwargs: Any,
@@ -1070,7 +1071,7 @@ class _TagLib:
             tag_name="Bold",
             **kwargs,
         )
-    
+
     def italic(
         self,
         **kwargs: Any,
@@ -1087,7 +1088,7 @@ class _TagLib:
             tag_name="Italic",
             **kwargs,
         )
-    
+
     def strikethrough(
         self,
         **kwargs: Any,
@@ -1104,7 +1105,7 @@ class _TagLib:
             tag_name="Strikethrough",
             **kwargs,
         )
-    
+
     def underline(
         self,
         **kwargs: Any,
@@ -1121,7 +1122,7 @@ class _TagLib:
             tag_name="Underline",
             **kwargs,
         )
-    
+
     def code(
         self,
         inline: Optional[bool] = None,
@@ -1151,7 +1152,7 @@ class _TagLib:
             lang=lang,
             **kwargs,
         )
-    
+
     def list(
         self,
         listStyle: Optional[str] = None,
@@ -1176,7 +1177,7 @@ class _TagLib:
             listStyle=listStyle,
             **kwargs,
         )
-    
+
     def list_item(
         self,
         **kwargs: Any,
@@ -1197,7 +1198,7 @@ class _TagLib:
             tag_name="ListItem",
             **kwargs,
         )
-    
+
     def object(
         self,
         syntax: Optional[str] = None,
@@ -1222,7 +1223,7 @@ class _TagLib:
             data=data,
             **kwargs,
         )
-    
+
     def image(
         self,
         src: Optional[str] = None,
@@ -1241,7 +1242,7 @@ class _TagLib:
         Note that syntax must be specified as `multimedia` to show the image.
 
         Args:
-            src (Optional[str]): The path to the image file.
+            src (Optional[str]): The path or URL to the image file.
             alt (Optional[str]): The alternative text to show when the image cannot be displayed.
             base64 (Optional[str]): The base64 encoded image data. It can not be specified together with `src`.
             type (Optional[str]): The MIME type of the image **to be shown**. If not specified, it will be inferred from the file extension.
@@ -1271,7 +1272,7 @@ class _TagLib:
             syntax=syntax,
             **kwargs,
         )
-    
+
     def audio(
         self,
         src: Optional[str] = None,
@@ -1313,7 +1314,7 @@ class _TagLib:
             syntax=syntax,
             **kwargs,
         )
-    
+
     def tool_request(
         self,
         id: Optional[str] = None,
@@ -1344,7 +1345,7 @@ class _TagLib:
             speaker=speaker,
             **kwargs,
         )
-    
+
     def tool_response(
         self,
         syntax: Optional[str] = None,
@@ -1383,4 +1384,3 @@ class _TagLib:
             speaker=speaker,
             **kwargs,
         )
-    

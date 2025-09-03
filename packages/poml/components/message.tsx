@@ -1,4 +1,11 @@
-import { component, ContentMultiMedia, ContentMultiMediaBinary, ContentMultiMediaToolRequest, ContentMultiMediaToolResponse, RichContent } from 'poml/base';
+import {
+  component,
+  ContentMultiMedia,
+  ContentMultiMediaBinary,
+  ContentMultiMediaToolRequest,
+  ContentMultiMediaToolResponse,
+  RichContent,
+} from 'poml/base';
 import { Text, Image, ToolRequest, ToolResponse } from 'poml/essentials';
 import * as React from 'react';
 import { Message } from 'poml/base';
@@ -14,12 +21,10 @@ import { parsePythonStyleSlice } from './utils';
  * <system-msg>Answer concisely.</system-msg>
  * ```
  */
-export const SystemMessage = component('SystemMessage', ['system-msg'])((
-  props: React.PropsWithChildren
-) => {
+export const SystemMessage = component('SystemMessage', ['system-msg'])((props: React.PropsWithChildren) => {
   const { children, ...others } = props;
   return (
-    <Text speaker="system" {...others}>
+    <Text speaker='system' {...others}>
       {children}
     </Text>
   );
@@ -35,12 +40,10 @@ export const SystemMessage = component('SystemMessage', ['system-msg'])((
  * <user-msg>What is the capital of France?</user-msg>
  * ```
  */
-export const HumanMessage = component('HumanMessage', ['human-msg'])((
-  props: React.PropsWithChildren
-) => {
+export const HumanMessage = component('HumanMessage', ['human-msg'])((props: React.PropsWithChildren) => {
   const { children, ...others } = props;
   return (
-    <Text speaker="human" {...others}>
+    <Text speaker='human' {...others}>
       {children}
     </Text>
   );
@@ -59,12 +62,11 @@ export const HumanMessage = component('HumanMessage', ['human-msg'])((
 export const AiMessage = component('AiMessage', ['ai-msg'])((props: React.PropsWithChildren) => {
   const { children, ...others } = props;
   return (
-    <Text speaker="ai" {...others}>
+    <Text speaker='ai' {...others}>
       {children}
     </Text>
   );
 });
-
 
 interface MessageContentProps {
   content: RichContent;
@@ -72,16 +74,16 @@ interface MessageContentProps {
 
 /**
  * Display a message content.
- * 
+ *
  * @param {object|string} content - The content of the message. It can be a string, or an array of strings and multimedia content.
- * 
+ *
  * @example
  * ```xml
  * <msg-content content="What is the capital of France?" />
  * ```
  */
 export const MessageContent = component('MessageContent', ['msg-content'])((
-  props: React.PropsWithChildren<MessageContentProps>
+  props: React.PropsWithChildren<MessageContentProps>,
 ) => {
   const { children, content, ...others } = props;
 
@@ -94,29 +96,22 @@ export const MessageContent = component('MessageContent', ['msg-content'])((
       );
     } else if (media.type.startsWith('image/')) {
       const image = media as ContentMultiMediaBinary;
-      return (
-        <Image key={key} base64={image.base64} alt={image.alt} type={image.type} {...others} />
-      );
+      return <Image key={key} base64={image.base64} alt={image.alt} type={image.type} {...others} />;
     } else if (media.type === 'application/vnd.poml.toolrequest') {
       const toolRequest = media as ContentMultiMediaToolRequest;
       return (
-        <ToolRequest 
-          key={key} 
-          id={toolRequest.id} 
-          name={toolRequest.name} 
-          parameters={toolRequest.content} 
-          {...others} 
+        <ToolRequest
+          key={key}
+          id={toolRequest.id}
+          name={toolRequest.name}
+          parameters={toolRequest.content}
+          {...others}
         />
       );
     } else if (media.type === 'application/vnd.poml.toolresponse') {
       const toolResponse = media as ContentMultiMediaToolResponse;
       return (
-        <ToolResponse 
-          key={key} 
-          id={toolResponse.id} 
-          name={toolResponse.name} 
-          {...others}
-        >
+        <ToolResponse key={key} id={toolResponse.id} name={toolResponse.name} {...others}>
           <MessageContent content={toolResponse.content} {...others} />
         </ToolResponse>
       );
@@ -151,7 +146,7 @@ interface ConversationProps {
  * ```
  */
 export const Conversation = component('Conversation', ['conversation'])((
-  props: React.PropsWithChildren<ConversationProps>
+  props: React.PropsWithChildren<ConversationProps>,
 ) => {
   let { children, messages, selectedMessages, ...others } = props;
   if (selectedMessages) {

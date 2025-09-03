@@ -1,12 +1,11 @@
-import os
-import json
 import asyncio
-from openai import OpenAI
-
-from mcp import ClientSession, types
-from mcp.client.sse import sse_client
+import json
+import os
 
 from common_utils import print_section
+from mcp import ClientSession, types
+from mcp.client.sse import sse_client
+from openai import OpenAI
 
 client = OpenAI(
     base_url=os.environ["OPENAI_API_BASE"],

@@ -2,7 +2,7 @@ name: Test on Nightly Packages
 
 on:
   schedule:
-    - cron: '0 23 * * *'  # After package publish
+    - cron: '0 23 * * *' # After package publish
   workflow_dispatch:
 
 jobs:

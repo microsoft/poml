@@ -13,6 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "black",
+  "isort",
   "flake8",
   "pytest",
   "hatch",
@@ -58,3 +59,26 @@ include = [
 
 [project.scripts]
 poml-cli = "poml.cli:entrypoint"
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # Exclude auto-generated files and directories
+  python/poml/_tags\.py
+  | assets
+  | _version\.py
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_first_party = ["poml"]
+extend_skip_glob = [
+  "python/poml/_tags.py",
+  "assets/*",
+  "_version.py",
+]

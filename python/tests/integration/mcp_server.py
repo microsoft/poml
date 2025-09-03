@@ -1,6 +1,6 @@
-import re
 import random
-from typing import Dict, Any
+import re
+from typing import Any, Dict
 
 from fastmcp import FastMCP
 
@@ -63,7 +63,7 @@ def _eval_dice(expr: str) -> int:
         "provide a result of the roll.\n\n"
         "Example input: 2d6 + 1d4\n"
         "Example output: 14"
-    )
+    ),
 )
 def roll(diceRollExpression: str) -> str:
     """

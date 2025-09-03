@@ -1,4 +1,4 @@
-import fs from '../util/fs';
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
@@ -75,7 +75,7 @@ describe('trace dumps', () => {
 
     // Check that no 0001.poml was created (should be skipped)
     expect(fs.existsSync(path.join(traceDir, '0001.poml'))).toBe(false);
-    
+
     // Check that 0002.poml was created instead
     expect(fs.existsSync(path.join(traceDir, '0002.poml'))).toBe(true);
     expect(fs.existsSync(path.join(traceDir, '0002.context.json'))).toBe(true);
