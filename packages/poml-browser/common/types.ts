@@ -2,13 +2,19 @@
 // We are moving away from the old CardModel to this new CardModel system.
 export interface CardModel {
   content: CardContent;
-  source?: 'manual' | 'clipboard' | 'drop' | 'file' | 'webpage' | 'generated';
+  source?: CardSource;
   url?: string; // could be a webpage URL or a file path
   mimeType?: string; // MIME type of the source, e.g. text/markdown, image/png. Not critical for now.
   excerpt?: string;
   tags?: string[];
   debug?: string;
   timestamp?: Date;
+}
+
+export type CardSource = 'manual' | 'clipboard' | 'drop' | 'file' | 'webpage' | 'generated';
+
+export interface CreateCardOptions {
+  source?: CardSource;
 }
 
 export type PomlContainerType =
@@ -144,7 +150,10 @@ export interface GlobalFunctions extends FunctionRegistry {
     base64: string | { base64: ArrayBuffer | string } | { src: string },
     options?: { mimeType?: string },
   ) => Promise<Image>;
-  htmlToCard: (html: string | Document, options?: { parser?: 'simple' | 'complex' }) => Promise<CardModel | undefined>;
+  cardFromHtml: (
+    html: string | Document,
+    options?: { parser?: 'simple' | 'complex' },
+  ) => Promise<CardModel | undefined>;
 
   // Internal functions used by everywhere()
   _readFile: (

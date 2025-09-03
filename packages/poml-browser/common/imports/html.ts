@@ -14,6 +14,8 @@ import {
   ListCardContent,
   HeaderCardContent,
   CardContentWithHeader,
+  CreateCardOptions,
+  CardSource,
 } from '@common/types';
 import { Readability } from '@mozilla/readability';
 import { toPngBase64 } from './image';
@@ -21,34 +23,40 @@ import { eliminateHeaderCards } from '@common/utils/card';
 import { everywhere } from '@common/rpc';
 
 /**
- * Options for the htmlToCard function
+ * Options for the cardFromHtml function
  */
-export interface HtmlToCardsOptions {
+export interface CardFromHtmlOptions extends CreateCardOptions {
   /**
    * Parser mode:
    * - 'simple': Use Readability output as a single text card
    * - 'complex': Use custom parser with headers, images, lists, etc.
    * @default 'complex'
    */
-  parser: 'simple' | 'complex';
+  parser?: 'simple' | 'complex';
 
   /**
    * Minimum image size in pixels (width or height) to include.
    * Images smaller than this will be ignored.
    * @default 64
    */
-  minimumImageSize: number;
+  minimumImageSize?: number;
+
+  /**
+   * Source description for the CardModel
+   * @default 'webpage'
+   */
+  source?: CardSource;
 }
 
 /**
  * Main function to convert HTML to CardModel
  */
-async function _htmlToCard(
+async function _cardFromHtml(
   html: string | Document | null,
-  options?: Partial<HtmlToCardsOptions>,
+  options?: CardFromHtmlOptions,
 ): Promise<CardModel | undefined> {
-  const { parser = 'complex', minimumImageSize = 64 } = options || {};
-  const optWithDefault = { parser, minimumImageSize };
+  const { parser = 'complex', minimumImageSize = 64, source = 'webpage' } = options || {};
+  const optWithDefault = { parser, minimumImageSize, source };
 
   let doc: Document;
   let url: string | undefined;
@@ -142,14 +150,15 @@ async function _htmlToCard(
   // Create the CardModel
   return {
     content: finalContent,
-    source: 'webpage',
+    source: source,
+    mimeType: 'text/html',
     url,
     excerpt,
     timestamp: new Date(),
   };
 }
 
-export const htmlToCard = everywhere('htmlToCard', _htmlToCard, ['content']);
+export const cardFromHtml = everywhere('cardFromHtml', _cardFromHtml, ['content']);
 
 type ArrayLikeNodes = ArrayLike<ChildNode> | ReadonlyArray<ChildNode>;
 
@@ -236,9 +245,9 @@ class DOMToCardsProcessor {
   ];
   private cards: CardContentWithHeader[] = [];
   private pendingText: string[] = [];
-  private options: HtmlToCardsOptions;
+  private options: Required<CardFromHtmlOptions>;
 
-  constructor(options: HtmlToCardsOptions) {
+  constructor(options: Required<CardFromHtmlOptions>) {
     this.options = options;
   }
 

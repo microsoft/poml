@@ -2,4 +2,4 @@
 
 export { getSettings, setSettings } from '../common/settings';
 export { pingPong } from '../common/rpc';
-export { htmlToCard } from '@common/imports/html';
+export { cardFromHtml } from '@common/imports/html';

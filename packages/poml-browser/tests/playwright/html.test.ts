@@ -21,7 +21,7 @@ function flattenCards(...cards: CardContent[]): CardContent[] {
   return result;
 }
 
-test.describe('htmlToCard', () => {
+test.describe('cardFromHtml', () => {
   // Simple tests with made-up strings
   const simpleTestCases = [
     {
@@ -77,14 +77,14 @@ test.describe('htmlToCard', () => {
       test(`simple - ${name}`, async ({ serviceWorker, sidebarPage }) => {
         const result = await serviceWorker.evaluate(
           async ({ htmlContent, options }) => {
-            const { htmlToCard } = self as any;
+            const { cardFromHtml } = self as any;
 
-            if (!htmlToCard) {
-              throw new Error('htmlToCard function not found in service worker');
+            if (!cardFromHtml) {
+              throw new Error('cardFromHtml function not found in service worker');
             }
 
             try {
-              const cardModel = await htmlToCard(htmlContent, options);
+              const cardModel = await cardFromHtml(htmlContent, options);
               return {
                 success: true,
                 cardModel,
@@ -144,8 +144,8 @@ test.describe('htmlToCard', () => {
 
     const result = await serviceWorker.evaluate(
       async ({ htmlContent, options }) => {
-        const { htmlToCard } = self as any;
-        const cardModel = await htmlToCard(htmlContent, options);
+        const { cardFromHtml } = self as any;
+        const cardModel = await cardFromHtml(htmlContent, options);
         return { cardModel };
       },
       { htmlContent: html, options: { parser: 'simple' } },
@@ -161,9 +161,9 @@ test.describe('htmlToCard', () => {
     for (const html of testCases) {
       const result = await serviceWorker.evaluate(
         async ({ htmlContent }) => {
-          const { htmlToCard } = self as any;
+          const { cardFromHtml } = self as any;
           try {
-            const cardModel = await htmlToCard(htmlContent, {});
+            const cardModel = await cardFromHtml(htmlContent, {});
             return { success: true, cardModel };
           } catch (error) {
             return { success: false, error: (error as Error).message };
@@ -226,9 +226,9 @@ test.describe('htmlToCard', () => {
       // Test with complex parser (default)
       const complexResult = await serviceWorker.evaluate(
         async ({ options }) => {
-          const { htmlToCard } = self as any;
+          const { cardFromHtml } = self as any;
           const startTime = performance.now();
-          const cardModel = await htmlToCard(null, options);
+          const cardModel = await cardFromHtml(null, options);
           const endTime = performance.now();
 
           return {

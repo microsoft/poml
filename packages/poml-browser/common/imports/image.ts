@@ -1,7 +1,8 @@
 import { everywhere } from '@common/rpc';
 import { binaryToBase64, stringToBase64 } from '@common/utils/base64';
-import { Image } from '@common/types';
-import { notifyDebug } from '@common/notification';
+import { pathInfo } from '@common/utils/path';
+import { CardModel, CreateCardOptions, Image, ImageCardContent } from '@common/types';
+import { notifyDebug, notifyDebugVerbose } from '@common/notification';
 
 /**
  * Options for the toPngBase64 function
@@ -229,3 +230,36 @@ async function _toPngBase64(input: DownloadImageInput, options?: ToPngBase64Opti
 }
 
 export const toPngBase64 = everywhere('toPngBase64', _toPngBase64, ['sidebar', 'content']);
+
+export async function cardFromImage(filePath: string | File | Blob, options?: CreateCardOptions): Promise<CardModel> {
+  const metadata = pathInfo(filePath);
+  notifyDebugVerbose(
+    `Processing image file: ${metadata.name} with type: ${metadata.mimeType} (file path: ${metadata.url})`,
+  );
+
+  const { source = 'webpage' } = options || {};
+
+  let imageInput: { base64: ArrayBuffer } | { src: string };
+
+  if (filePath instanceof File || filePath instanceof Blob) {
+    imageInput = { base64: await filePath.arrayBuffer() };
+  } else {
+    imageInput = { src: filePath };
+  }
+
+  const image = await toPngBase64(imageInput, { mimeType: metadata.mimeType });
+  const content = {
+    type: 'image',
+    base64: image.base64,
+    alt: metadata.name,
+    // caption is not available now.
+  } satisfies ImageCardContent;
+
+  return {
+    content,
+    url: metadata.url,
+    source: source,
+    mimeType: metadata.mimeType,
+    timestamp: new Date(),
+  };
+}
