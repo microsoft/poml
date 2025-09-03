@@ -140,6 +140,32 @@ export interface BinaryFile {
   size: number; // Size of the file in bytes
 }
 
+/**
+ * Options for the cardFromHtml function
+ */
+export interface CardFromHtmlOptions extends CreateCardOptions {
+  /**
+   * Parser mode:
+   * - 'simple': Use Readability output as a single text card
+   * - 'complex': Use custom parser with headers, images, lists, etc.
+   * @default 'complex'
+   */
+  parser?: 'simple' | 'complex';
+
+  /**
+   * Minimum image size in pixels (width or height) to include.
+   * Images smaller than this will be ignored.
+   * @default 64
+   */
+  minimumImageSize?: number;
+
+  /**
+   * Source description for the CardModel
+   * @default 'webpage'
+   */
+  source?: CardSource;
+}
+
 // Global registry type that will be extended by users
 export interface GlobalFunctions extends FunctionRegistry {
   // Please put the signatures of global functions here
@@ -150,10 +176,7 @@ export interface GlobalFunctions extends FunctionRegistry {
     base64: string | { base64: ArrayBuffer | string } | { src: string },
     options?: { mimeType?: string },
   ) => Promise<Image>;
-  cardFromHtml: (
-    html: string | Document,
-    options?: { parser?: 'simple' | 'complex' },
-  ) => Promise<CardModel | undefined>;
+  cardFromHtml: (html: string | Document, options?: CardFromHtmlOptions) => Promise<CardModel>;
 
   // Internal functions used by everywhere()
   _readFile: (

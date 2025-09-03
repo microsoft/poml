@@ -14,8 +14,7 @@ import {
   ListCardContent,
   HeaderCardContent,
   CardContentWithHeader,
-  CreateCardOptions,
-  CardSource,
+  CardFromHtmlOptions,
 } from '@common/types';
 import { Readability } from '@mozilla/readability';
 import { toPngBase64 } from './image';
@@ -23,38 +22,9 @@ import { eliminateHeaderCards } from '@common/utils/card';
 import { everywhere } from '@common/rpc';
 
 /**
- * Options for the cardFromHtml function
- */
-export interface CardFromHtmlOptions extends CreateCardOptions {
-  /**
-   * Parser mode:
-   * - 'simple': Use Readability output as a single text card
-   * - 'complex': Use custom parser with headers, images, lists, etc.
-   * @default 'complex'
-   */
-  parser?: 'simple' | 'complex';
-
-  /**
-   * Minimum image size in pixels (width or height) to include.
-   * Images smaller than this will be ignored.
-   * @default 64
-   */
-  minimumImageSize?: number;
-
-  /**
-   * Source description for the CardModel
-   * @default 'webpage'
-   */
-  source?: CardSource;
-}
-
-/**
  * Main function to convert HTML to CardModel
  */
-async function _cardFromHtml(
-  html: string | Document | null,
-  options?: CardFromHtmlOptions,
-): Promise<CardModel | undefined> {
+async function _cardFromHtml(html: string | Document | null, options?: CardFromHtmlOptions): Promise<CardModel> {
   const { parser = 'complex', minimumImageSize = 64, source = 'webpage' } = options || {};
   const optWithDefault = { parser, minimumImageSize, source };
 
@@ -104,8 +74,7 @@ async function _cardFromHtml(
     } else {
       // Complex parser: custom processing with headers, images, lists, etc.
       if (!article.content) {
-        notifyError('Readability.js returned no content from the document');
-        return undefined;
+        throw new Error('Readability.js returned no content from the document');
       }
       const cleanDoc = htmlStringToDocument(article.content);
       notifyDebugVerbose('Cleaned document for custom HTML processing:', cleanDoc);
@@ -121,16 +90,15 @@ async function _cardFromHtml(
   }
 
   if (contents.length === 0) {
-    notifyError('No content could be extracted from the document');
-    return undefined;
+    throw new Error('No content could be extracted from the document');
   }
 
   let finalContent: CardContent;
 
   // Determine the final card structure
   if (contents.length === 0) {
-    notifyWarning('No content extracted from HTML');
-    return undefined;
+    notifyWarning('Contents array is empty after processing HTML');
+    throw new Error('No content extracted from HTML');
   } else if (contents.length === 1) {
     // Single card, use it directly
     finalContent = contents[0];
@@ -184,28 +152,6 @@ function normalizeText(s: string | null | undefined): string {
 
 function extractTextContent(el: Element, normalize: boolean): string {
   return normalize ? normalizeText(el.textContent) : (el.textContent ?? '');
-}
-
-function* iterateTextAndImages(el: Element): Generator<Text | HTMLImageElement> {
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
-    acceptNode(node) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        return NodeFilter.FILTER_ACCEPT;
-      }
-      if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName.toUpperCase() === 'IMG') {
-        return NodeFilter.FILTER_ACCEPT;
-      }
-      return NodeFilter.FILTER_SKIP;
-    },
-  });
-  while (walker.nextNode()) {
-    const n = walker.currentNode;
-    if (n.nodeType === Node.TEXT_NODE) {
-      yield n as Text;
-    } else if ((n as Element).tagName.toUpperCase() === 'IMG') {
-      yield n as HTMLImageElement;
-    }
-  }
 }
 
 class DOMToCardsProcessor {

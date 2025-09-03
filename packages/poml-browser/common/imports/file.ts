@@ -8,10 +8,10 @@
 
 import { notifyDebug, notifyDebugMoreVerbose, notifyDebugVerbose, notifyInfo } from '@common/notification';
 import { everywhere } from '@common/rpc';
-import { TextFile, BinaryFile, CardModel, TextCardContent, CardSource, CreateCardOptions } from '@common/types';
+import { TextFile, BinaryFile, CardModel, CardFromHtmlOptions, CardSource, CreateCardOptions } from '@common/types';
 import { category, lookup } from '@common/utils/mime-types';
 import { cardFromImage } from './image';
-import { cardFromHtml, CardFromHtmlOptions } from './html';
+import { cardFromHtml } from './html';
 import { pathInfo, mimeType } from '@common/utils/path';
 
 type TextEncoding = 'utf-8' | 'utf8';
