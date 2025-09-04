@@ -206,47 +206,51 @@ export async function commandLine(args: CliArgs) {
 
   ErrorCollection.clear();
 
-  const pomlFile = new PomlFile(input, readOptions, sourcePath);
-  let reactElement = pomlFile.react(context);
-  reactElement = React.createElement(StyleSheetProvider, { stylesheet }, reactElement);
+  let result: CliResult | undefined;
+  let prettyOutput: string | undefined;
+  try {
+    const pomlFile = new PomlFile(input, readOptions, sourcePath);
+    let reactElement = pomlFile.react(context);
+    reactElement = React.createElement(StyleSheetProvider, { stylesheet }, reactElement);
 
-  const ir = await read(input, readOptions, context, stylesheet, sourcePath);
+    const ir = await read(input, readOptions, context, stylesheet, sourcePath);
 
-  const speakerMode = args.speakerMode === true || args.speakerMode === undefined;
-  const prettyPrint = args.prettyPrint === true;
-  let resultMessages = write(ir, { speaker: speakerMode });
-  const prettyOutput = speakerMode
-    ? (resultMessages as Message[])
-        .map((message) => `===== ${message.speaker} =====\n\n${renderContent(message.content)}`)
-        .join('\n\n')
-    : renderContent(resultMessages as RichContent);
-  const result: CliResult = {
-    messages: resultMessages,
-    schema: pomlFile.getResponseSchema()?.toOpenAPI(),
-    tools: pomlFile.getToolsSchema()?.toOpenAI(),
-    runtime: pomlFile.getRuntimeParameters(),
-  };
-  const output = prettyPrint ? prettyOutput : JSON.stringify(result);
+    const speakerMode = args.speakerMode === true || args.speakerMode === undefined;
+    const prettyPrint = args.prettyPrint === true;
+    let resultMessages = write(ir, { speaker: speakerMode });
+    prettyOutput = speakerMode
+      ? (resultMessages as Message[])
+          .map((message) => `===== ${message.speaker} =====\n\n${renderContent(message.content)}`)
+          .join('\n\n')
+      : renderContent(resultMessages as RichContent);
+    result = {
+      messages: resultMessages,
+      schema: pomlFile.getResponseSchema()?.toOpenAPI(),
+      tools: pomlFile.getToolsSchema()?.toOpenAI(),
+      runtime: pomlFile.getRuntimeParameters(),
+    };
+    const output = prettyPrint ? prettyOutput : JSON.stringify(result);
 
-  if (isTracing()) {
-    try {
-      dumpTrace(input, context, stylesheet, result, sourcePath, prettyOutput);
-    } catch (err: any) {
-      ErrorCollection.add(new SystemError('Failed to dump trace', { cause: err }));
+    if (args.strict === true || args.strict === undefined) {
+      if (!ErrorCollection.empty()) {
+        throw ErrorCollection.first();
+      }
     }
-  }
 
-  if (args.strict === true || args.strict === undefined) {
-    if (!ErrorCollection.empty()) {
-      throw ErrorCollection.first();
+    if (args.output) {
+      const outputPath = path.resolve(workingDirectory, args.output);
+      writeFileSync(outputPath, output);
+    } else {
+      process.stdout.write(output);
     }
-  }
-
-  if (args.output) {
-    const outputPath = path.resolve(workingDirectory, args.output);
-    writeFileSync(outputPath, output);
-  } else {
-    process.stdout.write(output);
+  } finally {
+    if (isTracing()) {
+      try {
+        dumpTrace(input, context, stylesheet, result, sourcePath, prettyOutput);
+      } catch (err: any) {
+        ErrorCollection.add(new SystemError('Failed to dump trace', { cause: err }));
+      }
+    }
   }
 }
 

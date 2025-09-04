@@ -66,6 +66,32 @@ describe('trace dumps', () => {
     fs.rmSync(origDir, { recursive: true, force: true });
   });
 
+  test('context and stylesheet are dumped when rendering fails', async () => {
+    const origDir = fs.mkdtempSync(path.join(os.tmpdir(), 'orig-'));
+    const mainPath = path.join(origDir, 'main.poml');
+    // Missing include triggers an error during rendering
+    fs.writeFileSync(mainPath, '<poml><include src="missing.poml"/></poml>');
+
+    await expect(
+      commandLine({
+        file: mainPath,
+        speakerMode: false,
+        context: ['name=world'],
+        stylesheet: '{"p": {"speaker": "ai"}}',
+      }),
+    ).rejects.toThrow();
+
+    const prefix = path.join(traceDir, '0001.main');
+    const contextDump = fs.readFileSync(`${prefix}.context.json`, 'utf8');
+    expect(contextDump).toContain('name');
+    const stylesheetDump = fs.readFileSync(`${prefix}.stylesheet.json`, 'utf8');
+    expect(stylesheetDump).toContain('speaker');
+    const envContent = fs.readFileSync(`${prefix}.env`, 'utf8').trim();
+    expect(envContent).toBe(`SOURCE_PATH=${mainPath}`);
+
+    fs.rmSync(origDir, { recursive: true, force: true });
+  });
+
   test('nextIndex skips index when any file with that index exists', async () => {
     // Create a file with index 0001 but different name to test case 1 logic
     fs.writeFileSync(path.join(traceDir, '0001.different.poml'), 'existing file');
