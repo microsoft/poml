@@ -424,7 +424,7 @@
     "@typescript-eslint/parser": "^8.41.0",
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.0",
-    "@vscode/vsce": "^3.5.0",
+    "@vscode/vsce": "^3.6.0",
     "copy-webpack-plugin": "^12.0.2",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
