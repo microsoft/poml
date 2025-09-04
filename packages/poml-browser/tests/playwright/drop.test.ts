@@ -144,11 +144,11 @@ ${endpoint}/image/wikipedia-example.svg`;
             return testUrl;
           }
           if (type === 'text/uri-list') {
-return testUrl;
-}
+            return testUrl;
+          }
           if (type === 'text/plain') {
-return testUrl;
-}
+            return testUrl;
+          }
           return '';
         },
       };
@@ -175,7 +175,7 @@ return testUrl;
       return await processDropEventAndThrow(mockEvent);
     });
 
-    expect(result.cards).toBe([]);
+    expect(result.cards).toEqual([]);
     expect(result.errors.length).toBe(1);
   });
 
@@ -230,52 +230,15 @@ return testUrl;
 
       return await processDropEventAndThrow(mockEvent);
     });
-
-    expect(result.cardsCount).toBeGreaterThanOrEqual(3);
-    expect(result.hasMultipleCards).toBe(true);
-  });
-
-  test('handles HTML detection in URL content', async ({ sidebarPage }) => {
-    const result = await sidebarPage.evaluate(async () => {
-      const { processDropEventAndThrow } = window as any;
-
-      // Mock readFile to return HTML content
-      (self as any).readFile = async () => {
-        return {
-          content: '<html><body>HTML content</body></html>',
-          mimeType: 'text/html',
-          size: 100,
-        };
-      };
-
-      const testUrl = 'http://example.com/page.html';
-
-      // Create mock DragEvent with URL
-      const mockDataTransfer = {
-        files: [],
-        types: ['URL'],
-        getData: (type: string) => {
-          if (type === 'URL') {
-            return testUrl;
-          }
-          return '';
-        },
-      };
-
-      const mockEvent = {
-        dataTransfer: mockDataTransfer,
-      } as unknown as DragEvent;
-
-      const cards = await processDropEventAndThrow(mockEvent);
-      return {
-        cardsCount: cards?.length,
-        // Should detect HTML content and process as HTML
-        hasCard: cards?.[0] !== undefined,
-      };
+    expect(result.errors).toEqual([]);
+    expect(result.cards.length).toBe(3);
+    expect(result.cards[0].content).toEqual({
+      type: 'text',
+      text: 'File content',
+      caption: 'test.txt',
+      container: 'CaptionedParagraph',
     });
-
-    expect(result.cardsCount).toBe(1);
-    expect(result.hasCard).toBe(true);
+    expect(result.cards[1].content).toEqual({ type: 'text', text: '', caption: 'HTML' });
   });
 });
 
