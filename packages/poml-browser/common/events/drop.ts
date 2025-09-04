@@ -101,6 +101,7 @@ export async function processDropEventAndThrow(event: DragEvent): Promise<{ card
   for (const url of urlsToProcess) {
     try {
       const card = await cardFromFile(url, { source: 'drop' });
+      notifyDebug(`Processed dropped URL: ${url}`, card);
       cards.push(card);
     } catch (error) {
       postError(`Failed to process URL ${url} from drop, caused by ${String(error)}`);
@@ -117,7 +118,7 @@ export async function processDropEventAndThrow(event: DragEvent): Promise<{ card
       if (looksLikeSingleUrl && seenUrls.has(trimmed)) {
         notifyDebugVerbose('Skipping text/plain because it duplicates an already-processed URL');
       } else {
-        notifyDebugVerbose('Processing dropped text content');
+        notifyDebugVerbose('Processing dropped text content', textData);
         try {
           const textCard = cardFromText(textData, { source: 'drop' });
           cards.push(textCard);
