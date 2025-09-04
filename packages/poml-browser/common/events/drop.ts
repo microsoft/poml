@@ -3,14 +3,7 @@ import { CardModel } from '@common/types';
 import { cardFromFile } from '@common/imports/file';
 import { cardFromText } from '@common/imports/text';
 import { cardFromHtml } from '@common/imports/html';
-
-function parseUriList(data: string): string[] {
-  // Spec prefers CRLF; accept LF as fallback. Ignore comment lines (#...).
-  return data
-    .split(/\r\n|\n/)
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith('#'));
-}
+import { parseUriList } from '@common/imports/uri';
 
 /**
  * Main function to process drop events and convert to CardModels.
