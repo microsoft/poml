@@ -1,6 +1,6 @@
 import { notifyError, notifyInfo, notifyDebug, notifyDebugVerbose } from '@common/notification';
 import { CardModel } from '@common/types';
-import { cardFromFile, readFile } from '@common/imports/file';
+import { cardFromFile } from '@common/imports/file';
 import { cardFromText } from '@common/imports/text';
 import { cardFromHtml } from '@common/imports/html';
 
