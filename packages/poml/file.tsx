@@ -77,7 +77,7 @@ export class PomlFile {
     this.text = this.config.crlfToLf ? text.replace(/\r\n/g, '\n') : text;
     this.sourcePath = sourcePath;
     if (this.sourcePath) {
-      const envFile = this.sourcePath.replace(/(source)?\.poml$/i, '.env');
+      const envFile = this.sourcePath.replace(/(\.source)?\.poml$/i, '.env');
       if (existsSync(envFile)) {
         try {
           const envText = readFileSync(envFile, 'utf8');
