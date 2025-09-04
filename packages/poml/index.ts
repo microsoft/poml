@@ -18,7 +18,7 @@ import './presentation';
 import './essentials';
 import './components';
 import { reactRender } from './util/reactRender';
-import { dumpTrace, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
+import { dumpTrace, dumpTraceInclude, setTrace, clearTrace, isTracing, parseJsonWithBuffers } from './util/trace';
 
 export type { RichContent, Message, SourceMapRichContent, SourceMapMessage };
 export { richContentFromSourceMap };
@@ -206,11 +206,7 @@ export async function commandLine(args: CliArgs) {
 
   ErrorCollection.clear();
 
-  const pomlFile = new PomlFile(input, readOptions, sourcePath);
-  let reactElement = pomlFile.react(context);
-  reactElement = React.createElement(StyleSheetProvider, { stylesheet }, reactElement);
-
-  const ir = await read(input, readOptions, context, stylesheet, sourcePath);
+  const [ir, pomlFile] = await _readWithFile(input, readOptions, context, stylesheet, sourcePath);
 
   const speakerMode = args.speakerMode === true || args.speakerMode === undefined;
   const prettyPrint = args.prettyPrint === true;
@@ -222,15 +218,20 @@ export async function commandLine(args: CliArgs) {
     : renderContent(resultMessages as RichContent);
   const result: CliResult = {
     messages: resultMessages,
-    schema: pomlFile.getResponseSchema()?.toOpenAPI(),
-    tools: pomlFile.getToolsSchema()?.toOpenAI(),
-    runtime: pomlFile.getRuntimeParameters(),
+    schema: pomlFile?.getResponseSchema()?.toOpenAPI(),
+    tools: pomlFile?.getToolsSchema()?.toOpenAI(),
+    runtime: pomlFile?.getRuntimeParameters(),
   };
   const output = prettyPrint ? prettyOutput : JSON.stringify(result);
 
   if (isTracing()) {
     try {
-      dumpTrace(input, context, stylesheet, result, sourcePath, prettyOutput);
+      const basePrefix = dumpTrace(input, context, stylesheet, result, sourcePath, prettyOutput);
+      if (basePrefix && pomlFile) {
+        for (const t of pomlFile.getIncludedTraces()) {
+          dumpTraceInclude(basePrefix, t.markup, t.context, t.sourcePath);
+        }
+      }
     } catch (err: any) {
       ErrorCollection.add(new SystemError('Failed to dump trace', { cause: err }));
     }

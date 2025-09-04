@@ -56,6 +56,7 @@ interface Range {
 export class PomlFile {
   private text: string;
   private sourcePath: string | undefined;
+  private tracePath: string | undefined;
   private config: PomlReaderConfig;
   private ast: XMLDocument | undefined;
   private cst: CstNode;
@@ -67,6 +68,7 @@ export class PomlFile {
   private responseSchema: Schema | undefined;
   private toolsSchema: ToolsSchema | undefined;
   private runtimeParameters: { [key: string]: any } | undefined;
+  private includedTraces: { markup: string; context: any; sourcePath?: string }[] = [];
 
   constructor(text: string, options?: PomlReaderOptions, sourcePath?: string) {
     this.config = {
@@ -76,6 +78,7 @@ export class PomlFile {
     };
     this.text = this.config.crlfToLf ? text.replace(/\r\n/g, '\n') : text;
     this.sourcePath = sourcePath;
+    this.tracePath = sourcePath;
     if (this.sourcePath) {
       const envFile = this.sourcePath.replace(/(source)?\.poml$/i, '.env');
       if (existsSync(envFile)) {
@@ -241,6 +244,10 @@ export class PomlFile {
 
   public getRuntimeParameters(): { [key: string]: any } | undefined {
     return this.runtimeParameters;
+  }
+
+  public getIncludedTraces() {
+    return this.includedTraces;
   }
 
   public xmlRootElement(): XMLElement | undefined {
@@ -629,22 +636,58 @@ export class PomlFile {
 
     const source = src.value;
 
+    let includePath =
+      this.sourcePath && !path.isAbsolute(source) ? path.join(path.dirname(this.sourcePath), source) : source;
+
+    if (this.tracePath) {
+      const dir = path.dirname(this.tracePath);
+      const base = path.basename(this.tracePath).replace(/\.source\.poml$/i, '.poml');
+      const match = base.match(/^(\d{4})\./);
+      if (match) {
+        const idx = match[1];
+        const envPath = path.join(dir, base.replace(/\.poml$/i, '.env'));
+        if (existsSync(envPath)) {
+          try {
+            const envText = readFileSync(envPath, 'utf8');
+            const mainMatch = envText.match(/^SOURCE_PATH=(.*)$/m);
+            if (mainMatch) {
+              const originalMain = mainMatch[1];
+              const originalInclude = path.isAbsolute(source) ? source : path.join(path.dirname(originalMain), source);
+              const childBase = path.basename(originalInclude, '.poml');
+              const childEnv = path.join(dir, `${idx}.${childBase}.env`);
+              if (existsSync(childEnv)) {
+                const childEnvText = readFileSync(childEnv, 'utf8');
+                const childMatch = childEnvText.match(/^SOURCE_PATH=(.*)$/m);
+                if (childMatch && childMatch[1] === originalInclude) {
+                  const useSource = this.tracePath.endsWith('.source.poml');
+                  const candidate = path.join(dir, `${idx}.${childBase}${useSource ? '.source.poml' : '.poml'}`);
+                  if (existsSync(candidate)) {
+                    includePath = candidate;
+                  }
+                }
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    }
+
     let text: string;
     try {
-      text = readSource(source, this.sourcePath ? path.dirname(this.sourcePath) : undefined, 'string');
+      text = readFileSync(includePath, 'utf8');
     } catch (e) {
       this.reportError(
-        e !== undefined && (e as Error).message ? (e as Error).message : `Error reading source: ${source}`,
+        e !== undefined && (e as Error).message ? (e as Error).message : `Error reading source: ${includePath}`,
         this.xmlAttributeValueRange(src),
         e,
       );
       return <></>;
     }
 
-    const includePath =
-      this.sourcePath && !path.isAbsolute(source) ? path.join(path.dirname(this.sourcePath), source) : source;
-
     const included = new PomlFile(text, this.config, includePath);
+    this.includedTraces.push({ markup: text, context, sourcePath: includePath }, ...included.getIncludedTraces());
     const root = included.xmlRootElement();
     if (!root) {
       return <></>;
