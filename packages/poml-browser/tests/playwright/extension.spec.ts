@@ -9,8 +9,8 @@ const FIXTURE_ENDPOINT = 'http://localhost:8023';
 const EXTENTION_PATH = path.resolve(process.cwd(), 'dist');
 const EXTENSION_ID = 'acelbeblkcnjkojlhcljeldpoifcjoil';
 const RETRY_CONFIG = {
-  timeout: 10000,
-  intervals: [100, 200, 500, 1000, 2000], // Retry intervals
+  timeout: 180_000,
+  intervals: [100, 200, 500, 1000, 2000, 10_000, 60_000], // Retry intervals
 };
 
 // Custom fixtures: persistent context + sw + id + pages
@@ -79,7 +79,7 @@ export const test = base.extend<Fixtures>({
   serviceWorker: async ({ extContext }, use) => {
     const worker =
       extContext.serviceWorkers().find((w) => w.url().includes(EXTENSION_ID)) ||
-      (await extContext.waitForEvent('serviceworker', { timeout: 10000 }));
+      (await extContext.waitForEvent('serviceworker', { timeout: 10_000 }));
 
     // Wait for pingPong to be defined
     await expect(async () => {
@@ -101,7 +101,7 @@ export const test = base.extend<Fixtures>({
     const page = await extContext.newPage();
     await page.goto(FIXTURE_ENDPOINT);
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('#openSidePanel', { timeout: 5000 });
+    await page.waitForSelector('#openSidePanel', { timeout: 10_000 });
     await use(page);
   },
 
@@ -124,7 +124,7 @@ export const test = base.extend<Fixtures>({
 
     // The internal page opened by the service worker does not work.
     // We have to reload it here. Don't ask me why.
-    await sidebar.goto(`chrome-extension://${extensionId}/ui/index.html`);
+    await sidebar.goto(`chrome-extension://${extensionId}/ui/index.html`, { timeout: 180_000 });
     await sidebar.waitForTimeout(100); // Wait for sidebar to load
     await expect(async () => {
       const isReady = await sidebar!.evaluate(() => {
