@@ -213,8 +213,9 @@ async function convertToPng(partialImage: Partial<Image>): Promise<Image> {
       }
     };
 
-    img.onerror = () => {
-      reject(new Error(`Failed to load image with MIME type: ${partialImage.mimeType}`));
+    img.onerror = (event: Event | string, source?: string, lineno?: number, colno?: number, error?: Error) => {
+      const errorMsg = error ? error.message : typeof event === 'string' ? event : `unknown error: ${event.toString()}`;
+      reject(new Error(`Failed to load image with MIME type ${partialImage.mimeType}: ${errorMsg}`));
     };
 
     img.src = dataUrl;

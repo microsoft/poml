@@ -2,7 +2,7 @@ import { notifyError, notifyInfo, notifyDebug, notifyDebugVerbose } from '@commo
 import { CardModel } from '@common/types';
 import { cardFromFile, readFile } from '@common/imports/file';
 import { cardFromText } from '@common/imports/text';
-import { cardFromHtml } from '@contentScript/registry';
+import { cardFromHtml } from '@common/imports/html';
 
 function parseUriList(data: string): string[] {
   // Spec prefers CRLF; accept LF as fallback. Ignore comment lines (#...).
@@ -17,22 +17,35 @@ function parseUriList(data: string): string[] {
  *
  * It reads options from settings on its own, and notify errors by itself.
  */
-export async function processDropEvent(event: DragEvent): Promise<CardModel[] | undefined> {
+export async function processDropEvent(event: DragEvent): Promise<CardModel[]> {
+  const result = await processDropEventAndThrow(event);
+  // Ignore errors here; they were already notified.
+  return result.cards;
+}
+
+/**
+ * This one is for debugging and testing, as it returns both cards and errors.
+ */
+export async function processDropEventAndThrow(event: DragEvent): Promise<{ cards: CardModel[]; errors: string[] }> {
   const cards: CardModel[] = [];
   const errors: string[] = [];
 
   notifyDebugVerbose('Processing drop event:', event);
 
+  const postError = (msg: string, object?: any) => {
+    errors.push(msg);
+    if (object !== undefined) {
+      notifyError(msg, object);
+    } else {
+      notifyError(msg);
+    }
+  };
+
   const dt = event.dataTransfer;
   if (!dt) {
-    notifyError('Fatal error when processing drop event: no dataTransfer found', event);
-    return undefined;
+    postError('Fatal error when processing drop event: no dataTransfer found', event);
+    return { cards, errors };
   }
-
-  const postError = (msg: string) => {
-    errors.push(msg);
-    notifyError(msg);
-  };
 
   const types = Array.from(dt.types ?? []);
 
@@ -48,7 +61,7 @@ export async function processDropEvent(event: DragEvent): Promise<CardModel[] | 
         const card = await cardFromFile(file, { source: 'drop' });
         cards.push(card);
       } catch (error) {
-        postError(`Failed to process file ${file.name} from drop: ${String(error)}`);
+        postError(`Failed to process file ${file.name} from drop, caused by ${String(error)}`);
       }
     }
   }
@@ -94,14 +107,10 @@ export async function processDropEvent(event: DragEvent): Promise<CardModel[] | 
   // Process URL contents (remote or local—your readFile handles both)
   for (const url of urlsToProcess) {
     try {
-      const content = await readFile(url, { encoding: 'utf-8' });
-      // If it looks like HTML, prefer HTML; otherwise treat as text.
-      const body = content?.content ?? '';
-      const isHtml = /<[^>]+>/.test(body); // tiny heuristic; simple on purpose
-      const card = isHtml ? await cardFromHtml(body, { source: 'drop' }) : cardFromText(body, { source: 'drop' });
+      const card = await cardFromFile(url, { source: 'drop' });
       cards.push(card);
     } catch (error) {
-      postError(`Failed to process URL ${url} from drop: ${String(error)}`);
+      postError(`Failed to process URL ${url} from drop, caused by ${String(error)}`);
     }
   }
 
@@ -120,12 +129,15 @@ export async function processDropEvent(event: DragEvent): Promise<CardModel[] | 
           const textCard = cardFromText(textData, { source: 'drop' });
           cards.push(textCard);
         } catch (error) {
-          postError(`Failed to process text content from drop: ${String(error)}`);
+          postError(`Failed to process text content from drop, caused by ${String(error)}`);
         }
       }
     }
   }
 
   notifyInfo(`Drop processing completed: ${cards.length} card(s) created; ${errors.length} error(s)`);
-  return cards;
+  return {
+    cards: cards,
+    errors: errors,
+  };
 }
