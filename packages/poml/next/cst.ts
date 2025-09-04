@@ -91,6 +91,18 @@ export class ExtendedPomlParser extends CstParser {
       ALT: () => (label ? this.CONSUME(tt, { LABEL: label }) : this.CONSUME(tt)),
     }));
 
+  // Lookahead helper: Check if next is whitespace but next non-whitespace token is not of given type
+  private isSafeWhitespace = (tokenType: TokenType) => {
+    if (this.LA(1).tokenType !== Whitespace) {
+      return false;
+    }
+    let k = 2;
+    while (this.LA(k).tokenType === Whitespace) {
+      k++;
+    }
+    return this.LA(k).tokenType !== tokenType;
+  };
+
   private isNextPragma = () => {
     if (this.LA(1).tokenType !== CommentOpen) {
       return false;
@@ -208,9 +220,9 @@ export class ExtendedPomlParser extends CstParser {
 
       this.AT_LEAST_ONE(() => {
         this.OR([
-          // mid-content whitespace: only if NOT followed by TemplateClose
           {
-            GATE: () => this.LA(1).tokenType === Whitespace && this.LA(2).tokenType !== TemplateClose,
+            // mid-content whitespace: only if NOT followed by TemplateClose
+            GATE: () => this.isSafeWhitespace(TemplateClose),
             ALT: () => this.CONSUME1(Whitespace, { LABEL: 'Content' }),
           },
           // everything else in TokensExpression except Whitespace (handled above)
@@ -323,25 +335,46 @@ export class ExtendedPomlParser extends CstParser {
             this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' }));
             this.CONSUME2(Identifier, { LABEL: 'InKeyword' });
             this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' }));
-            this.AT_LEAST_ONE(() => {
-              this.OR(this.anyOf(TokensDoubleQuotedExpression, 'Collection'));
-            });
-            this.OPTION4(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterCollection' }));
+            // It's written as a double quoted expression without {{ }} here
+            // but it will be treated as an expression in the semantic analysis stage.
+            (this.AT_LEAST_ONE(() => {
+              this.OR([
+                {
+                  GATE: () => this.isSafeWhitespace(DoubleQuote),
+                  ALT: () => this.CONSUME4(Whitespace, { LABEL: 'Collection' }),
+                },
+                ...this.anyOf(
+                  TokensDoubleQuoted.filter((t) => t !== Whitespace),
+                  'Collection',
+                ),
+              ]);
+            }),
+              this.OPTION4(() => this.CONSUME5(Whitespace, { LABEL: 'WsAfterCollection' })));
             this.CONSUME2(DoubleQuote, { LABEL: 'CloseQuote' });
           },
         },
         {
           ALT: () => {
             this.CONSUME(SingleQuote, { LABEL: 'OpenQuote' });
-            this.OPTION5(() => this.CONSUME5(Whitespace, { LABEL: 'WsAfterOpen' }));
+            this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
             this.CONSUME3(Identifier, { LABEL: 'Iterator' });
-            this.OPTION6(() => this.CONSUME6(Whitespace, { LABEL: 'WsAfterIterator' }));
+            this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' }));
             this.CONSUME4(Identifier, { LABEL: 'InKeyword' });
-            this.OPTION7(() => this.CONSUME7(Whitespace, { LABEL: 'WsAfterIn' }));
-            this.AT_LEAST_ONE2(() => {
-              this.OR(this.anyOf(TokensSingleQuotedExpression, 'Collection'));
-            });
-            this.OPTION8(() => this.CONSUME8(Whitespace, { LABEL: 'WsAfterCollection' }));
+            this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' }));
+            // Similar for single quoted expression
+            (this.AT_LEAST_ONE(() => {
+              this.OR([
+                {
+                  GATE: () => this.isSafeWhitespace(SingleQuote),
+                  ALT: () => this.CONSUME4(Whitespace, { LABEL: 'Collection' }),
+                },
+                ...this.anyOf(
+                  TokensSingleQuoted.filter((t) => t !== Whitespace),
+                  'Collection',
+                ),
+              ]);
+            }),
+              this.OPTION4(() => this.CONSUME5(Whitespace, { LABEL: 'WsAfterCollection' })));
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
           },
         },
@@ -374,19 +407,21 @@ export class ExtendedPomlParser extends CstParser {
 
     this.openTagPartial = this.RULE('openTagPartial', () => {
       this.CONSUME(OpenBracket);
-      this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterBracket' }));
+      this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
       this.CONSUME(Identifier, { LABEL: 'TagName' });
       this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterName' }));
       this.MANY(() => {
+        this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsBeforeEachAttribute' }));
         this.SUBRULE(this.attribute, { LABEL: 'Attribute' });
-        this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterAttribute' }));
       });
+      this.OPTION4(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterAll' }));
     });
 
     this.closeTag = this.RULE('closeTag', () => {
       this.CONSUME(ClosingOpenBracket);
-      this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterBracket' }));
+      this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
       this.CONSUME(Identifier, { LABEL: 'TagName' });
+      this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsBeforeClose' }));
       this.CONSUME(CloseBracket);
     });
 

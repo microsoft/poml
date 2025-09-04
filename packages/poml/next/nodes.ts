@@ -271,7 +271,7 @@ export interface OpenTagNode extends AstNode {
 export interface CstOpenTagPartialNode extends CstNode {
   children: {
     OpenBracket?: IToken[];
-    WsAfterBracket?: IToken[];
+    WsAfterOpen?: IToken[];
     TagName?: IToken[];
     WsBeforeEachAttribute?: IToken[];
     Attribute?: CstAttributeNode[];
@@ -306,8 +306,9 @@ export interface CloseTagNode extends AstNode {
 export interface CstCloseTagNode extends CstNode {
   children: {
     ClosingOpenBracket?: IToken[];
-    WsAfterBracket?: IToken[];
+    WsAfterOpen?: IToken[];
     TagName?: IToken[];
+    WsBeforeClose?: IToken[];
     CloseBracket?: IToken[];
   };
 }
