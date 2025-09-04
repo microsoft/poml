@@ -344,22 +344,38 @@ export interface SelfCloseElementNode extends AstNode {
  * open tag), and may have child content including other elements, text,
  * or values.
  *
+ * It should also support literal elements, which are:
+ *
+ * - Special POML elements that treat their content as literal text
+ * - Prevents template variable interpolation
+ * - Content is preserved exactly as written, useful for code samples or pre-formatted text
+ * - When `<text>` is used, the parser eats everything including tags and comments,
+ *   including nested `<text>` itself, until a matching `</text>` is found
+ * - The tagName can only be "text" and "template" for literal elements
+ * - If you need `<text>` in your POML content, use `&lt;text&gt;` outside of literal elements
+ *
  * Cases that apply:
  * - Any elements: `<document parser="txt">...content...</document>`
  * - Output schemas with templates: `<output-schema>{{ schemaDefinition }}</output-schema>`
  * - Nested elements: `<section><paragraph>Text</paragraph></section>`
+ * - Literal text elements: `<text>Literal {{ not_interpolated }}</text>` (literal elements)
  *
  * Cases that do not apply:
  * - Self-closing elements: `<image />` (use SelfCloseTagNode)
  * - Literal text content: plain text (use LiteralNode)
  * - Template variables: `{{ var }}` (use TemplateNode)
  * - Meta elements: `<meta>` tags (use MetaNode)
+ *
+ * Note:
+ * - Literal element node is different from elements which do not support nested tags
+ *   (e.g., <let>). Literal element node is handled on the CST parsing stage.
  */
 export interface ElementNode extends AstNode {
   kind: 'ELEMENT';
   open: OpenTagNode;
   close: CloseTagNode;
-  children: (ElementNode | LiteralElementNode | CommentNode | PragmaNode | TextElementNode)[];
+  children: (ElementNode | CommentNode | PragmaNode | TextElementNode)[];
+  // isLiteral?: boolean; // True for <text> and <template> tags
 }
 
 /**
@@ -369,7 +385,7 @@ export interface ElementNode extends AstNode {
  * - Text content between tags: `>  some text  <` (including whitespace)
  *
  * Cases that do not apply:
- * - Text inside <text> or other literal elements (use LiteralElementNode)
+ * - Text inside <text> or other literal elements (use ElementNode with literal)
  */
 export interface TextElementNode extends AstNode {
   kind: 'TEXT';
@@ -384,6 +400,7 @@ export interface CstElementNode extends CstNode {
     OpenTagPartial?: CstOpenTagPartialNode[];
     OpenTagCloseBracket?: IToken[];
     Content?: CstElementContentNode[];
+    TextContent?: IToken[]; // For literal elements like <text>
     CloseTag?: CstCloseTagNode[];
     // Alternative, it can also be a self-closing tag.
     SelfCloseBracket?: IToken[];
@@ -393,7 +410,6 @@ export interface CstElementNode extends CstNode {
 export interface CstElementContentNode extends CstNode {
   children: {
     Element?: CstElementNode[];
-    LiteralElement?: CstLiteralElementNode[];
     Comment?: CstCommentNode[];
     Pragma?: CstPragmaNode[];
     Template?: CstTemplateNode[];
@@ -476,54 +492,6 @@ export interface CstPragmaNode extends CstNode {
 }
 
 /**
- * Represents an element that preserves literal content.
- *
- * Literal element nodes are special POML elements that treat their content as literal
- * text, preventing template variable interpolation. They ensure content is
- * preserved exactly as written, useful for code samples or pre-formatted text.
- * For example, when `<text>` is used, the parser eats everything including tags and comments,
- * including `<text>` itself, until a matching `</text>` is found.
- *
- * Cases that apply:
- * - Explicit text elements: `<text>Literal {{ not_interpolated }}</text>`
- *
- * Cases that do not apply:
- * - Regular text content with interpolation (use TextElementNode or ValueNode)
- * - Plain text outside elements (use TextElementNode)
- * - Elements allowing template processing (use ElementNode)
- * - Text with attributes enabling processing (future feature)
- *
- * Note:
- * 1. The tagName (value) can only be "text" and "template" as I can think of.
- *    There should be a dynamic list of components that should be parsed as literal elements.
- * 2. Literal element node is different from elements which do not support nested tags,
- *    e.g., <let>. Literal element node is handled on the CST parsing stage.
- * 3. If you really need `<text>` in your POML. Recommended to use `&lt;text&gt;`
- *    outside of literal element.
- */
-export interface LiteralElementNode extends AstNode {
-  kind: 'LITERAL';
-  open: OpenTagNode;
-  close: CloseTagNode;
-  children: LiteralNode;
-}
-
-/**
- * Related CST node interfaces for parsing stage.
- */
-export interface CstLiteralElementNode extends CstNode {
-  children: {
-    OpenTagPartial?: CstOpenTagPartialNode[];
-    OpenTagCloseBracket?: IToken[];
-    // All content between open and close tags is treated as literal text
-    // including other tags, comments, pragmas, etc. except for `</text>`.
-    TextContent?: IToken[];
-    CloseTag?: CstCloseTagNode[];
-    // Literal element cannot be self-closing.
-  };
-}
-
-/**
  * Represents the root node of a POML document tree.
  *
  * Root nodes serve as the top-level container for all document content when
@@ -540,7 +508,7 @@ export interface CstLiteralElementNode extends CstNode {
  */
 export interface RootNode extends AstNode {
   kind: 'ROOT';
-  children: (ElementNode | LiteralElementNode | CommentNode | PragmaNode | ValueNode)[];
+  children: (ElementNode | CommentNode | PragmaNode | ValueNode)[];
 }
 
 /**
@@ -582,7 +550,6 @@ export type StrictNode =
   | CloseTagNode
   | SelfCloseElementNode
   | ElementNode
-  | LiteralElementNode
   | TextElementNode
   | CommentNode
   | PragmaNode
