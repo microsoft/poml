@@ -12,6 +12,8 @@ export default defineConfig({
     port: 8023,
     reuseExistingServer: !process.env.CI,
   },
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'list',
   projects: [
     {
       name: 'Chrome Extension',
