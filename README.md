@@ -107,6 +107,7 @@ If you find POML useful or related to your research, please cite the following p
 
 - [mini-poml-rs](https://github.com/linmx0130/mini-poml-rs) – Experimental Rust-based POML renderer for environments without JavaScript or Python interpreters.
 - [poml-ruby](https://github.com/GhennadiiMir/poml) – Ruby gem implementation of POML for Ruby applications.
+- [ai-chatbot-with-python-and-angular](https://github.com/hereandnowai/ai-chatbot-with-python-and-angular) – A chatbot built with Python and Angular (version 20), utilizing POML for prompting and the Langchain framework. Developed by HERE AND NOW AI.
 
 ## Contributing
 
