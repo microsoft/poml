@@ -277,6 +277,9 @@ export interface CstOpenTagPartialNode extends CstNode {
     Attribute?: CstAttributeNode[];
     WsAfterAll?: IToken[];
   };
+  // Auxiliary info
+  isLiteral?: boolean;
+  tagName?: string;
 }
 
 /**

@@ -109,7 +109,7 @@ export class ExtendedPomlParser extends CstParser {
     return this.LA(k).tokenType === PragmaKeyword;
   };
 
-  private isAtLiteralClose = (expectedTagName: string) => {
+  private isAtLiteralClose = (expectedTagName: string | undefined) => {
     if (this.LA(1).tokenType !== ClosingOpenBracket) {
       return false;
     }
@@ -123,7 +123,7 @@ export class ExtendedPomlParser extends CstParser {
     }
     const name = (t.image || '').toLowerCase();
 
-    return name === expectedTagName.toLowerCase();
+    return name === expectedTagName?.toLowerCase();
   };
 
   private isValidOpenTag = (tagName: string) => {
@@ -136,7 +136,6 @@ export class ExtendedPomlParser extends CstParser {
 
   constructor() {
     super(AllTokens, {
-      outputCst: true,
       recoveryEnabled: true,
     });
     this.validComponentNames = new Set(listComponentAliases());
@@ -386,11 +385,13 @@ export class ExtendedPomlParser extends CstParser {
     });
 
     this.element = this.RULE('element', () => {
-      const { tagName, isLiteral } = this.SUBRULE(this.openTagPartial, { LABEL: 'OpenTagPartial' });
+      const { tagName, isLiteral } = this.SUBRULE(this.openTagPartial, {
+        LABEL: 'OpenTagPartial',
+      }) as CstOpenTagPartialNode;
 
       this.OR([
         {
-          GATE: this.ACTION(() => isLiteral),
+          GATE: () => Boolean(isLiteral),
           ALT: () => {
             // Literal element logic - must have closing tag, no self-close
             this.CONSUME(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
@@ -399,8 +400,8 @@ export class ExtendedPomlParser extends CstParser {
             this.MANY(() => {
               this.OR([
                 {
-                  GATE: this.ACTION(() => !this.isAtLiteralClose(tagName)),
-                  DEF: () => this.OR(this.anyOf(AllTokens, 'TextContent')),
+                  GATE: () => !this.isAtLiteralClose(tagName),
+                  ALT: () => this.OR(this.anyOf(AllTokens, 'TextContent')),
                 },
               ]);
             });
@@ -435,7 +436,7 @@ export const extendedPomlParser = new ExtendedPomlParser();
 export function parsePomlToCst(input: string): {
   cst: CstNode | undefined;
   lexErrors: ReturnType<typeof extendedPomlLexer.tokenize>['errors'];
-  parseErrors: ReturnType<ExtendedPomlParser['getErrors']>;
+  parseErrors: typeof extendedPomlParser.errors;
 } {
   const lex = extendedPomlLexer.tokenize(input);
   extendedPomlParser.input = lex.tokens;
