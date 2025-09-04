@@ -104,11 +104,11 @@ export function dumpTrace(
   result?: any,
   sourcePath?: string,
   prettyResult?: string,
-) {
+): string | undefined {
   if (!isTracing()) {
-    return;
+    return undefined;
   }
-  const [_idx, prefix, fd] = nextIndex(sourcePath);
+  const [idx, prefix, fd] = nextIndex(sourcePath);
   try {
     writeSync(fd, markup);
   } finally {
@@ -135,6 +135,30 @@ export function dumpTrace(
     if (prettyResult !== undefined) {
       writeFileSync(`${prefix}.result.txt`, prettyResult);
     }
+  }
+
+  const basePrefix = path.join(traceDir!, idx.toString().padStart(4, '0'));
+  return basePrefix;
+}
+
+export function dumpTraceInclude(basePrefix: string, markup: string, context?: any, sourcePath?: string) {
+  if (!isTracing()) {
+    return;
+  }
+  const fileName = sourcePath ? path.basename(sourcePath, '.poml') : 'include';
+  const prefix = `${basePrefix}.${fileName}`;
+  writeFileSync(`${prefix}.poml`, markup);
+  if (sourcePath) {
+    writeFileSync(`${prefix}.env`, `SOURCE_PATH=${sourcePath}\n`);
+    const linkPath = `${prefix}.source.poml`;
+    try {
+      symlinkSync(sourcePath, linkPath);
+    } catch {
+      console.warn(`Failed to create symlink for source path: ${sourcePath}`);
+    }
+  }
+  if (context && Object.keys(context).length > 0) {
+    writeFileSync(`${prefix}.context.json`, JSON.stringify(replaceBuffers(context), null, 2));
   }
 }
 

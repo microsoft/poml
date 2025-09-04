@@ -66,6 +66,34 @@ describe('trace dumps', () => {
     fs.rmSync(origDir, { recursive: true, force: true });
   });
 
+  test('included files are traced and used when original missing', async () => {
+    const origDir = fs.mkdtempSync(path.join(os.tmpdir(), 'orig-'));
+    const mainPath = path.join(origDir, 'main.poml');
+    const childPath = path.join(origDir, 'includeChild.poml');
+    fs.copyFileSync(path.join(__dirname, 'assets', 'includeChild.poml'), childPath);
+    fs.writeFileSync(mainPath, '<poml><include src="includeChild.poml"/></poml>');
+
+    await commandLine({ file: mainPath, speakerMode: false, context: ['name=world'] });
+
+    const childEnvPath = path.join(traceDir, '0001.includeChild.env');
+    expect(fs.existsSync(childEnvPath)).toBe(true);
+    const envContent = fs.readFileSync(childEnvPath, 'utf8').trim();
+    expect(envContent).toBe(`SOURCE_PATH=${childPath}`);
+    const childMarkup = fs.readFileSync(path.join(traceDir, '0001.includeChild.poml'), 'utf8').trim();
+    expect(childMarkup).toBe('<p>hello {{name}}</p>');
+    const childContext = JSON.parse(fs.readFileSync(path.join(traceDir, '0001.includeChild.context.json'), 'utf8'));
+    expect(childContext).toEqual({ name: 'world' });
+    expect(fs.existsSync(path.join(traceDir, '0001.includeChild.result.json'))).toBe(false);
+
+    fs.rmSync(origDir, { recursive: true, force: true });
+
+    const tracedMainPath = path.join(traceDir, '0001.main.poml');
+    const tracedMarkup = fs.readFileSync(tracedMainPath, 'utf8');
+    const rerenderIr = await read(tracedMarkup, undefined, { name: 'world' }, undefined, tracedMainPath);
+    const rerender = write(rerenderIr);
+    expect(rerender).toBe('hello world');
+  });
+
   test('nextIndex skips index when any file with that index exists', async () => {
     // Create a file with index 0001 but different name to test case 1 logic
     fs.writeFileSync(path.join(traceDir, '0001.different.poml'), 'existing file');
