@@ -27,17 +27,7 @@ import {
 } from './lexer';
 
 import {
-  CstCommentTokens,
-  CstExpressionTokens,
-  CstCommentIdentifierTokens,
-  CstDoubleQuotedTokens,
-  CstDoubleQuotedTrimmedTokens,
-  CstSingleQuotedTokens,
-  CstSingleQuotedTrimmedTokens,
-  CstDoubleQuotedExpressionTokens,
-  CstSingleQuotedExpressionTokens,
-  CstBetweenTagsTokens,
-  CstLiteralTagTokens,
+  CstTokens,
   CstTemplateNode,
   CstQuotedNode,
   CstQuotedTemplateNode,
@@ -66,16 +56,16 @@ export class ExtendedPomlParser extends CstParser {
   public root!: (idxInOriginalText?: number) => CstRootNode;
   public elementContent!: (idxInOriginalText?: number) => CstElementContentNode;
   // token-sequence helper rules
-  public commentTokens!: (idxInOriginalText?: number) => CstCommentTokens;
-  public expressionTokens!: (idxInOriginalText?: number) => CstExpressionTokens;
-  public commentIdentifierTokens!: (idxInOriginalText?: number) => CstCommentIdentifierTokens;
-  public doubleQuotedTokens!: (idxInOriginalText?: number) => CstDoubleQuotedTokens;
-  public singleQuotedTokens!: (idxInOriginalText?: number) => CstSingleQuotedTokens;
-  public doubleQuotedTrimmedTokens!: (idxInOriginalText?: number) => CstDoubleQuotedTrimmedTokens;
-  public singleQuotedTrimmedTokens!: (idxInOriginalText?: number) => CstSingleQuotedTrimmedTokens;
-  public doubleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstDoubleQuotedExpressionTokens;
-  public singleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstSingleQuotedExpressionTokens;
-  public betweenTagsTokens!: (idxInOriginalText?: number) => CstBetweenTagsTokens;
+  public commentTokens!: (idxInOriginalText?: number) => CstTokens;
+  public expressionTokens!: (idxInOriginalText?: number) => CstTokens;
+  public commentIdentifierTokens!: (idxInOriginalText?: number) => CstTokens;
+  public doubleQuotedTokens!: (idxInOriginalText?: number) => CstTokens;
+  public singleQuotedTokens!: (idxInOriginalText?: number) => CstTokens;
+  public doubleQuotedTrimmedTokens!: (idxInOriginalText?: number) => CstTokens;
+  public singleQuotedTrimmedTokens!: (idxInOriginalText?: number) => CstTokens;
+  public doubleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstTokens;
+  public singleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstTokens;
+  public betweenTagsTokens!: (idxInOriginalText?: number) => CstTokens;
   // Accepting expectedTagName as argument to validate matching close tag
   public literalTagTokens!: (idxInOriginalText?: number, args?: [string]) => CstLiteralTagTokens;
   // regular rules
@@ -227,18 +217,22 @@ export class ExtendedPomlParser extends CstParser {
 
     // ----- Token sequence helper rules -----
     this.commentTokens = this.RULE('commentTokens', () => {
+      // Can be empty
       this.MANY(() => {
         this.OR(this.anyOf(TokensComment, 'Content'));
       });
     });
 
     this.commentIdentifierTokens = this.RULE('commentIdentifierTokens', () => {
+      // Used in @pragma options without quotes.
       this.AT_LEAST_ONE(() => {
         this.OR(this.anyOf(TokensCommentIdentifiers, 'Content'));
       });
     });
 
     this.expressionTokens = this.RULE('expressionTokens', () => {
+      // Always trim the ws around the expression {{ expr }}.
+      // Must be non-empty.
       this.AT_LEAST_ONE({
         GATE: () => !this.atAlmostClose(TemplateClose),
         DEF: () => {
@@ -248,18 +242,22 @@ export class ExtendedPomlParser extends CstParser {
     });
 
     this.doubleQuotedTokens = this.RULE('doubleQuotedTokens', () => {
+      // The untrimmed content within "...", can be empty.
       this.MANY(() => {
         this.OR(this.anyOf(TokensDoubleQuoted, 'Content'));
       });
     });
 
     this.singleQuotedTokens = this.RULE('singleQuotedTokens', () => {
+      // The untrimmed content in '...', can be empty.
       this.MANY(() => {
         this.OR(this.anyOf(TokensSingleQuoted, 'Content'));
       });
     });
 
     this.doubleQuotedTrimmedTokens = this.RULE('doubleQuotedTrimmedTokens', () => {
+      // Trimmed content in "..." without leading/trailing whitespace
+      // Must be non-empty.
       // Greedily match until the next double quote (allow inner whitespace)
       this.AT_LEAST_ONE({
         GATE: () => !this.atAlmostClose(DoubleQuote),
@@ -280,24 +278,31 @@ export class ExtendedPomlParser extends CstParser {
     });
 
     this.doubleQuotedExpressionTokens = this.RULE('doubleQuotedExpressionTokens', () => {
+      // Contents in "...{{ ... }}..." but outside the {{ }}
+      // Must be non-empty. Can have leading/trailing whitespace.
       this.AT_LEAST_ONE(() => {
         this.OR(this.anyOf(TokensDoubleQuotedExpression, 'Content'));
       });
     });
 
     this.singleQuotedExpressionTokens = this.RULE('singleQuotedExpressionTokens', () => {
+      // Contents in '...{{ ... }}...' but outside the {{ }}
+      // Must be non-empty. Can have leading/trailing whitespace.
       this.AT_LEAST_ONE(() => {
         this.OR(this.anyOf(TokensSingleQuotedExpression, 'Content'));
       });
     });
 
     this.betweenTagsTokens = this.RULE('betweenTagsTokens', () => {
+      // Plain texts within tags but outside nested tags. Must be non-empty.
       this.AT_LEAST_ONE(() => {
         this.OR(this.anyOf(TokensTextContent, 'Content'));
       });
     });
 
     this.literalTagTokens = this.RULE('literalTagTokens', (expectedTagName?: string) => {
+      // Plain texts within literal tags like <text>...</text>.
+      // Match greedily. Can be empty.
       this.AT_LEAST_ONE({
         GATE: () => !this.isAtLiteralClose(expectedTagName),
         DEF: () => {

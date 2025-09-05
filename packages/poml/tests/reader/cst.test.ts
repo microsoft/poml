@@ -218,6 +218,25 @@ describe('CST Parser Rules', () => {
   });
 });
 
+describe('Special Tokens', () => {
+  test('root document with no root tags', () => {
+    const input = `Hello {{ user }}!
+<!-- A comment -->  <text>Some text arbi&rary; symbols\\etc/></</text>
+
+done`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
+    console.dir(images(node), { depth: null });
+  });
+
+  // All kinds of whitespaces
+
+  // Single quotes, double quotes, and corner cases
+
+  // Matched <text></text> and <text></template></text> or <template></text></template>
+
+  // Unmatched tags should not error in cst stage
+});
+
 describe('Helper function sanity', () => {
   test('images() on template: token lists -> string[], node lists -> nested[]', () => {
     const { node } = withParser('{{ name }}', (p) => p.template()) as { node: CstTemplateNode };
@@ -392,10 +411,10 @@ function mapChildrenBimorphic<T extends CstNode, TokOut, NodeOut>(
     if (Array.isArray(arr)) {
       for (const v of arr) {
         if (isToken(v)) {
-out.push(mapToken(v));
-} else if (isCstNode(v)) {
-out.push(mapNode(v));
-}
+          out.push(mapToken(v));
+        } else if (isCstNode(v)) {
+          out.push(mapNode(v));
+        }
         // else ignore silently
       }
     }
