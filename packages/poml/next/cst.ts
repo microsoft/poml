@@ -152,6 +152,21 @@ export class ExtendedPomlParser extends CstParser {
     return name === expectedTagName?.toLowerCase();
   };
 
+  private peekTagName = (): string | undefined => {
+    if (this.LA(1).tokenType !== OpenBracket) {
+      return undefined;
+    }
+    let k = 2;
+    while (this.LA(k).tokenType === Whitespace) {
+      k++;
+    }
+    const token = this.LA(k);
+    if (token.tokenType !== Identifier) {
+      return undefined;
+    }
+    return token.image;
+  };
+
   private isValidOpenTag = (tagName: string) => {
     // When pragma strict is enabled, only known component names are allowed as tags.
     // Other component names will show as errors in the semantic analysis stage.
@@ -456,12 +471,6 @@ export class ExtendedPomlParser extends CstParser {
         this.SUBRULE(this.attribute, { LABEL: 'Attribute' });
       });
       this.OPTION2(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterAll' }));
-
-      // Compute & return semantic info (to discriminate literal tags and text tags)
-      return this.ACTION(() => ({
-        tagName: tagTok.image,
-        isLiteral: this.literalTagNames.has(tagTok.image.toLowerCase()),
-      }));
     });
 
     this.closeTag = this.RULE('closeTag', () => {
@@ -473,14 +482,12 @@ export class ExtendedPomlParser extends CstParser {
     });
 
     this.element = this.RULE('element', () => {
-      const { tagName, isLiteral } = this.SUBRULE(this.openTagPartial, {
-        LABEL: 'OpenTagPartial',
-      }) as CstOpenTagPartialNode;
-
+      const tagName = this.peekTagName();
       this.OR([
         {
-          GATE: () => Boolean(isLiteral),
+          GATE: () => this.literalTagNames.has(tagName?.toLowerCase() || ''),
           ALT: () => {
+            this.SUBRULE(this.openTagPartial, { LABEL: 'OpenTagPartial' });
             // Literal element logic - must have closing tag, no self-close
             this.CONSUME(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
 
@@ -491,18 +498,26 @@ export class ExtendedPomlParser extends CstParser {
           },
         },
         {
+          GATE: () => tagName === undefined || !this.literalTagNames.has(tagName?.toLowerCase()),
           ALT: () => {
-            this.CONSUME2(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
-            this.MANY(() => {
-              this.SUBRULE(this.elementContent, { LABEL: 'Content' });
-            });
-            this.SUBRULE2(this.closeTag);
-          },
-        },
-        {
-          ALT: () => {
-            // Self-closing tag - no content, no closing tag
-            this.CONSUME(SelfCloseBracket);
+            this.SUBRULE2(this.openTagPartial, { LABEL: 'OpenTagPartial' });
+            this.OR2([
+              {
+                ALT: () => {
+                  this.CONSUME2(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
+                  this.MANY(() => {
+                    this.SUBRULE(this.elementContent, { LABEL: 'Content' });
+                  });
+                  this.SUBRULE2(this.closeTag);
+                },
+              },
+              {
+                ALT: () => {
+                  // Self-closing tag - no content, no closing tag
+                  this.CONSUME(SelfCloseBracket, { LABEL: 'SelfCloseBracket' });
+                },
+              },
+            ]);
           },
         },
       ]);

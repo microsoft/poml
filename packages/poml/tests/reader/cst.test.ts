@@ -133,9 +133,6 @@ describe('CST Parser Rules', () => {
       node: CstOpenTagPartialNode;
     };
     expect(node.name).toBe('openTagPartial');
-    // Extra fields defined in nodes.ts
-    expect(typeof node.isLiteral).toBe('boolean');
-    expect(node.tagName?.toLowerCase()).toBe('text');
     // Children
     expect(node.children.OpenBracket?.[0].image).toBe('<');
     expect(node.children.TagName?.[0].image.toLowerCase()).toBe('text');
