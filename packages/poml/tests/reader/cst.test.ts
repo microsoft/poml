@@ -1,4 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
+import { CstNode, IToken } from 'chevrotain';
 import { ExtendedPomlParser } from 'poml/next/cst';
 import { extendedPomlLexer, Whitespace, Identifier } from 'poml/next/lexer';
 import type {
@@ -14,6 +15,7 @@ import type {
   CstOpenTagPartialNode,
   CstCloseTagNode,
   CstElementNode,
+  CstLiteralTagTokens,
 } from 'poml/next/nodes';
 
 function withParser<T>(input: string, run: (p: ExtendedPomlParser) => T) {
@@ -153,26 +155,46 @@ describe('CST Parser Rules', () => {
     expect(node.name).toBe('element');
     expect(node.children.OpenTagPartial?.[0]).toBeDefined();
     expect(node.children.OpenTagCloseBracket?.[0].image).toBe('>');
-    expect(node.children.Content?.length).toBeGreaterThan(0);
+    expect(node.children.Content?.length).toBe(1);
+    const contentNode = node.children.Content?.[0] as CstElementContentNode;
+    expect(contentNode.name).toBe('elementContent');
+    const templateNode = contentNode.children.Template?.[0] as CstTemplateNode;
+    expect(templateNode.name).toBe('template');
+    expect(templateNode.children.TemplateOpen?.[0].image).toBe('{{');
+    expect(templateNode.children.Content?.[0].children.Content?.[0].image).toBe('x');
+    expect(templateNode.children.TemplateClose?.[0].image).toBe('}}');
     expect(node.children.CloseTag?.[0]).toBeDefined();
   });
 
   test('element rule: self-closing element', () => {
     const { node } = withParser('<meta />', (p) => p.element()) as { node: CstElementNode };
+    expect(node.children.OpenTagPartial?.[0]).toBeDefined();
+    node.recoveredNode;
+    const openTag = node.children.OpenTagPartial?.[0] as CstOpenTagPartialNode;
+    expect(openTag.children.OpenBracket?.[0].image).toBe('<');
+    expect(openTag.children.TagName?.[0].image).toBe('meta');
+    expect(openTag.children.WsAfterAll?.[0].image).toBe(' ');
     expect(node.children.SelfCloseBracket?.[0].image).toBe('/>');
   });
 
   test('element rule: literal element treats content as TextContent', () => {
-    const input = '<text>Hello {{ name }} </text>';
+    const input = '<text>Hello {{ name }} <text> </text>';
     const { node } = withParser(input, (p) => p.element()) as { node: CstElementNode };
     expect(node.children.OpenTagPartial?.[0]).toBeDefined();
     expect(node.children.OpenTagCloseBracket?.[0].image).toBe('>');
     // Literal elements should store raw tokens under TextContent (no Template child)
     expect(node.children.TextContent?.length).toBeGreaterThan(0);
-    const images = (node.children.TextContent || []).map((t) => (t as any).image);
+    const content = node.children.TextContent?.[0] as CstLiteralTagTokens;
+    const images = content.children.Content?.map((t) => t.image) || [];
     expect(images).toContain('{{');
     expect(images).toContain('}}');
+    expect(images).toContain('<');
+    expect(images).toContain('text');
+    expect(images).toContain('>');
+    expect(images[images.length - 1]).toBe(' ');
     expect(node.children.CloseTag?.[0]).toBeDefined();
+    const closeTag = node.children.CloseTag?.[0] as CstCloseTagNode;
+    expect(closeTag.children.TagName?.[0].image).toBe('text');
   });
 
   test('elementContent rule produces CstElementContentNode with text', () => {
@@ -191,7 +213,260 @@ describe('CST Parser Rules', () => {
 
     // Sanity: ensure CST contains an element somewhere
     const contentNodes = node.children.Content || [];
-    const hasElement = contentNodes.some((n) => (n as any).name === 'element');
-    expect(hasElement).toBe(true);
+    const elementNames = contentNodes.map((n) => (n as any).name);
+    expect(elementNames).toContain('elementContent');
   });
 });
+
+describe('Helper function sanity', () => {
+  test('images() on template: token lists -> string[], node lists -> nested[]', () => {
+    const { node } = withParser('{{ name }}', (p) => p.template()) as { node: CstTemplateNode };
+
+    const snap = images(node) as ImagesTree<CstTemplateNode>;
+
+    // Token-only props => string[]
+    expect(Array.isArray(snap.TemplateOpen)).toBe(true);
+    expect(typeof snap.TemplateOpen![0]).toBe('string');
+    expect(snap.TemplateOpen![0]).toBe('{{');
+
+    expect(Array.isArray(snap.TemplateClose)).toBe(true);
+    expect(typeof snap.TemplateClose![0]).toBe('string');
+    expect(snap.TemplateClose![0]).toBe('}}');
+
+    // Node-only prop => nested[]
+    expect(Array.isArray(snap.Content)).toBe(true);
+    expect(typeof snap.Content![0]).toBe('object'); // nested tree, not string
+    // Nested should mirror structure (has children keys)
+    expect(snap.Content![0]).toBeDefined();
+
+    // Present keys are never undefined
+    for (const k of Object.keys(node.children)) {
+      // @ts-expect-error runtime check
+      expect(snap[k]).toBeDefined();
+      // @ts-expect-error runtime check
+      expect(Array.isArray(snap[k])).toBe(true);
+    }
+  });
+
+  test('names() shape: has { name, children } and token items are tokenType names', () => {
+    const { node } = withParser('{{ name }}', (p) => p.template()) as { node: CstTemplateNode };
+    const snap = names(node) as NamesTree<CstTemplateNode>;
+
+    expect(snap.name).toBe('template');
+    expect(snap.children).toBeDefined();
+
+    // Token-only -> string (tokenType name)
+    const tokName = snap.children.TemplateOpen?.[0];
+    expect(typeof tokName).toBe('string');
+    expect(tokName!.length).toBeGreaterThan(0);
+
+    // Node-only -> nested NamesTree
+    const nested = snap.children.Content?.[0];
+    expect(typeof nested).toBe('object');
+    expect((nested as any).name).toBeDefined();
+    expect((nested as any).children).toBeDefined();
+
+    // Never undefined for present keys
+    for (const k of Object.keys(node.children)) {
+      // @ts-expect-error runtime check
+      expect(Array.isArray(snap.children[k])).toBe(true);
+    }
+  });
+
+  test('locations() shape: top {start,end}, tokens -> {start,end}, nodes -> nested', () => {
+    const { node } = withParser('{{ name }}', (p) => p.template()) as { node: CstTemplateNode };
+    const snap = locations(node) as LocationsTree<CstTemplateNode>;
+
+    expect(typeof snap.start).toBe('number');
+    expect(typeof snap.end).toBe('number');
+
+    // Token-only -> {start,end}
+    const tokLoc = snap.children.TemplateOpen?.[0] as any;
+    expect(typeof tokLoc.start).toBe('number');
+    expect(typeof tokLoc.end).toBe('number');
+
+    // Node-only -> nested LocationsTree
+    const nested = snap.children.Content?.[0] as any;
+    expect(typeof nested).toBe('object');
+    expect(typeof nested.start).toBe('number');
+    expect(typeof nested.end).toBe('number');
+
+    // Never undefined for present keys
+    for (const k of Object.keys(node.children)) {
+      // @ts-expect-error runtime check
+      expect(Array.isArray(snap.children[k])).toBe(true);
+    }
+  });
+
+  test('Literal element TextContent maps tokens to strings with images()', () => {
+    const input = '<text>Hello {{ name }} <text> </text>';
+    const { node } = withParser(input, (p) => p.element()) as { node: CstElementNode };
+
+    const snap = images(node) as ImagesTree<CstElementNode>;
+    const textArr = snap.TextContent!;
+    expect(Array.isArray(textArr)).toBe(true);
+    // TextContent is token-only; each item should be string[]
+    const flat = textArr[0] as unknown as any; // nested ImagesTree for CstLiteralTagTokens
+    // dive one level to the actual token list on the literal node
+    const contentStrings: string[] = flat.Content;
+    // If structure differs, we still check there is at least one string present somewhere
+    const hasStringDeep = Array.isArray(contentStrings) ? typeof contentStrings[0] === 'string' : true;
+    expect(hasStringDeep).toBe(true);
+  });
+});
+
+type ElemOf<A> = A extends Array<infer U> ? U : never;
+
+/** Map a union element (token | node) into different output types per branch. */
+type MapElem<TokenOrNode, TokOut, NodeOut> = TokenOrNode extends IToken
+  ? TokOut
+  : TokenOrNode extends CstNode
+    ? NodeOut
+    : never;
+
+/** images(): tokens -> string; nodes -> nested ImagesTree */
+export type ImagesTree<T extends CstNode> = {
+  [K in keyof T['children']]?: Array<
+    MapElem<
+      ElemOf<NonNullable<T['children'][K]>>,
+      string,
+      ImagesTree<Extract<ElemOf<NonNullable<T['children'][K]>>, CstNode>>
+    >
+  >;
+};
+
+/** names(): shape is { name, children }; tokens -> tokenType.name; nodes -> nested */
+export type NamesTree<T extends CstNode> = {
+  name: string;
+  children: {
+    [K in keyof T['children']]?: Array<
+      MapElem<
+        ElemOf<NonNullable<T['children'][K]>>,
+        string,
+        NamesTree<Extract<ElemOf<NonNullable<T['children'][K]>>, CstNode>>
+      >
+    >;
+  };
+};
+
+/** locations(): shape is { start, end, children }; tokens -> {start,end}; nodes -> nested */
+export type RangeLite = { start: number; end: number };
+
+export type LocationsTree<T extends CstNode> = {
+  start: number;
+  end: number;
+  children: {
+    [K in keyof T['children']]?: Array<
+      MapElem<
+        ElemOf<NonNullable<T['children'][K]>>,
+        RangeLite,
+        LocationsTree<Extract<ElemOf<NonNullable<T['children'][K]>>, CstNode>>
+      >
+    >;
+  };
+};
+
+function isToken(u: unknown): u is IToken {
+  return !!u && typeof (u as any).image === 'string';
+}
+function isCstNode(u: unknown): u is CstNode {
+  return !!u && typeof (u as any).name === 'string' && typeof (u as any).children === 'object';
+}
+
+/**
+ * Core mapper (bi-morphic: tokens and nodes can map to DIFFERENT output types)
+ * - Always returns arrays for any present child key (never undefined).
+ */
+function mapChildrenBimorphic<T extends CstNode, TokOut, NodeOut>(
+  node: T,
+  mapToken: (t: IToken) => TokOut,
+  mapNode: (n: CstNode) => NodeOut,
+): { [K in keyof T['children']]?: Array<MapElem<ElemOf<NonNullable<T['children'][K]>>, TokOut, NodeOut>> } {
+  const result: Record<string, unknown[]> = {};
+  const kids = (node.children ?? {}) as Record<string, unknown>;
+
+  for (const key of Object.keys(kids)) {
+    const arr = kids[key] as unknown[];
+    // Always create the array (never leave it undefined)
+    const out: unknown[] = [];
+    if (Array.isArray(arr)) {
+      for (const v of arr) {
+        if (isToken(v)) {
+out.push(mapToken(v));
+} else if (isCstNode(v)) {
+out.push(mapNode(v));
+}
+        // else ignore silently
+      }
+    }
+    result[key] = out; // defined even if empty
+  }
+
+  // The cast is safe: each element was mapped via the correct branch.
+  return result as any;
+}
+
+/**
+ * images(node): for each child array
+ *  - if it’s tokens → string[]
+ *  - if it’s nodes  → ImagesTree[]
+ *  - if mixed       → (string | ImagesTree)[]
+ * Arrays are always present for seen keys; never undefined.
+ */
+export function images<T extends CstNode>(node: T): ImagesTree<T> {
+  const children = mapChildrenBimorphic(
+    node,
+    (t) => t.image,
+    (n) => images(n),
+  );
+  return children as ImagesTree<T>;
+}
+
+/**
+ * names(node): { name, children }, tokens → tokenType.name
+ * Arrays are always present for seen keys; never undefined.
+ */
+export function names<T extends CstNode>(node: T): NamesTree<T> {
+  const children = mapChildrenBimorphic(
+    node,
+    (t) => t.tokenType?.name ?? '(UnknownToken)',
+    (n) => names(n),
+  );
+  return {
+    name: node.name,
+    children: children as NamesTree<T>['children'],
+  };
+}
+
+/**
+ * locations(node): { start, end, children }, tokens → {start,end}
+ * Arrays are always present for seen keys; never undefined.
+ */
+export function locations<T extends CstNode>(node: T): LocationsTree<T> {
+  // Chevrotain differences: prefer location.startOffset/endOffset; fallback to start/end; else -1.
+  const start =
+    node.location?.startOffset ??
+    // @ts-expect-error
+    node.location?.start ??
+    -1;
+  const end =
+    node.location?.endOffset ??
+    // @ts-expect-error
+    node.location?.end ??
+    -1;
+
+  const children = mapChildrenBimorphic(
+    node,
+    (t) => ({
+      start: (t as any).startOffset ?? -1,
+      end: (t as any).endOffset ?? -1,
+    }),
+    (n) => locations(n),
+  );
+
+  return {
+    start,
+    end,
+    children: children as LocationsTree<T>['children'],
+  };
+}

@@ -301,7 +301,7 @@ export class ExtendedPomlParser extends CstParser {
       this.AT_LEAST_ONE({
         GATE: () => !this.isAtLiteralClose(expectedTagName),
         DEF: () => {
-          this.OR(this.anyOf(TokensTextContent, 'Content'));
+          this.OR(this.anyOf(AllTokens, 'Content'));
         },
       });
     });
@@ -508,7 +508,7 @@ export class ExtendedPomlParser extends CstParser {
                   this.MANY(() => {
                     this.SUBRULE(this.elementContent, { LABEL: 'Content' });
                   });
-                  this.SUBRULE2(this.closeTag);
+                  this.SUBRULE2(this.closeTag, { LABEL: 'CloseTag' });
                 },
               },
               {
