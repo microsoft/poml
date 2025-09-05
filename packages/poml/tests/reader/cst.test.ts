@@ -224,9 +224,36 @@ describe('Special Tokens', () => {
 
 done`;
     const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
-    console.dir(images(node), { depth: null });
-    console.dir(names(node), { depth: null });
-    console.dir(locations(node), { depth: null });
+    expect(images(node)).toStrictEqual([
+      { TextContent: 'Hello ' },
+      {
+        Template: {
+          TemplateOpen: '{{',
+          WsAfterOpen: ' ',
+          Content: 'user',
+          WsAfterContent: ' ',
+          TemplateClose: '}}',
+        },
+      },
+      { TextContent: '!\n' },
+      {
+        Comment: {
+          CommentOpen: '<!--',
+          Content: ' A comment ',
+          CommentClose: '-->',
+        },
+      },
+      { TextContent: '  ' },
+      {
+        Element: {
+          OpenTagPartial: { OpenBracket: '<', TagName: 'text' },
+          OpenTagCloseBracket: '>',
+          TextContent: 'Some text arbi&rary; symbols\\etc/></',
+          CloseTag: { ClosingOpenBracket: '</', TagName: 'text', CloseBracket: '>' },
+        },
+      },
+      { TextContent: '\n\ndone' },
+    ]);
   });
 
   // All kinds of whitespaces
@@ -255,15 +282,15 @@ function* walkTokens(value: unknown): Generator<IToken> {
   }
   if (Array.isArray(value)) {
     for (const v of value) {
-yield* walkTokens(v);
-}
+      yield* walkTokens(v);
+    }
     return;
   }
   if (isCstNode(value)) {
     const ch = (value as any).children as Record<string, unknown>;
     for (const k of Object.keys(ch)) {
-yield* walkTokens(ch[k]);
-}
+      yield* walkTokens(ch[k]);
+    }
   }
 }
 
@@ -275,8 +302,8 @@ function nodeRange(node: CstNode): { start: number; end: number } {
     end = Math.max(end, tokEnd(t));
   }
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
-return { start: 0, end: 0 };
-}
+    return { start: 0, end: 0 };
+  }
   return { start, end };
 }
 
@@ -289,17 +316,17 @@ return { start: 0, end: 0 };
  */
 function normalizeAny(v: unknown): unknown {
   if (v == null) {
-return undefined;
-}
+    return undefined;
+  }
   if (Array.isArray(v)) {
-return normalizeArray(v);
-}
+    return normalizeArray(v);
+  }
   if (isToken(v) || isCstNode(v)) {
-return v;
-}
+    return v;
+  }
   if (typeof v === 'object') {
-return normalizeObject(v as Record<string, unknown>);
-}
+    return normalizeObject(v as Record<string, unknown>);
+  }
   return v;
 }
 
@@ -307,15 +334,15 @@ function normalizeArray(arr: unknown[]): unknown {
   const mapped = arr.map(normalizeAny).filter((v) => v !== undefined);
 
   if (mapped.length === 0) {
-return undefined;
-}
+    return undefined;
+  }
   if (mapped.every((x) => typeof x === 'string')) {
     // concatenate pure string arrays
     return (mapped as string[]).join('');
   }
   if (mapped.length === 1) {
-return mapped[0];
-}
+    return mapped[0];
+  }
   return mapped;
 }
 
@@ -324,16 +351,16 @@ function normalizeObject(obj: Record<string, unknown>): unknown {
   for (const [k, v] of Object.entries(obj)) {
     const nv = normalizeAny(v);
     if (nv !== undefined) {
-out[k] = nv;
-}
+      out[k] = nv;
+    }
   }
   const keys = Object.keys(out);
   if (keys.length === 0) {
-return undefined;
-}
+    return undefined;
+  }
   if (keys.length === 1 && keys[0] === 'Content') {
-return out.Content;
-}
+    return out.Content;
+  }
   return out;
 }
 
@@ -352,8 +379,8 @@ type Strategies = {
 
 function transformValue(val: unknown, S: Strategies): unknown {
   if (val == null) {
-return undefined;
-}
+    return undefined;
+  }
 
   if (isToken(val)) {
     return S.onToken(val);
@@ -362,14 +389,14 @@ return undefined;
   if (Array.isArray(val)) {
     const mapped = val.map((x) => transformValue(x, S)).filter((x) => x !== undefined);
     if (mapped.length === 0) {
-return undefined;
-}
+      return undefined;
+    }
     if (mapped.every((x) => typeof x === 'string')) {
-return (mapped as string[]).join('');
-}
+      return (mapped as string[]).join('');
+    }
     if (mapped.length === 1) {
-return mapped[0];
-}
+      return mapped[0];
+    }
     return mapped;
   }
 
@@ -384,16 +411,16 @@ return mapped[0];
     for (const [k, v] of Object.entries(val)) {
       const mv = transformValue(v, S);
       if (mv !== undefined && S.keepChildKey(k, mv)) {
-out[k] = mv;
-}
+        out[k] = mv;
+      }
     }
     const keys = Object.keys(out);
     if (keys.length === 0) {
-return undefined;
-}
+      return undefined;
+    }
     if (keys.length === 1 && keys[0] === 'Content') {
-return out.Content;
-}
+      return out.Content;
+    }
     return out;
   }
 
@@ -414,37 +441,48 @@ export function images(node: CstNode): unknown {
   return transformValue(normalizeChildren(node), S);
 }
 
-// names(): only node names; omit token leaves entirely.
+// names(): only node names; omit token leaves entirely, but KEEP the full node tree.
+// If children collapse to an array/primitive, tuck under { Content: ... } so we don't lose the branch.
 export function names(node: CstNode): { name: string; children?: Record<string, unknown> } {
   const S: Strategies = {
     onToken: (_t) => undefined, // drop token leaves
     onNodeWrap: (n, children) => {
-      const out: { name: string; children?: Record<string, unknown> } = { name: n.name };
-      if (children && typeof children === 'object' && !Array.isArray(children)) {
-        const keys = Object.keys(children as Record<string, unknown>);
-        if (keys.length) {
+      const out: { name: string; children?: Record<string, unknown> | unknown[] } = { name: n.name };
+      if (children !== undefined) {
+        if (typeof children === 'object' && !Array.isArray(children)) {
+          // plain object: use as-is
+          const keys = Object.keys(children as Record<string, unknown>);
+          if (keys.length) {
 out.children = children as Record<string, unknown>;
 }
+        } else {
+          // array or primitive: wrap under Content
+          out.children = children as unknown[];
+        }
       }
       return out;
     },
-    // prune keys that are purely token-derived (which would be undefined)
     keepChildKey: (_k, v) => v !== undefined,
   };
   return transformValue(node, S) as any;
 }
 
 // locations(): node-level { start,end } only; omit token-level ranges.
+// Same "wrap under Content if not a plain object" rule to preserve shape.
 export function locations(node: CstNode): { start: number; end: number; children?: Record<string, unknown> } {
   const S: Strategies = {
     onToken: (_t) => undefined, // drop token ranges
     onNodeWrap: (n, children) => {
-      const base: { start: number; end: number; children?: Record<string, unknown> } = nodeRange(n);
-      if (children && typeof children === 'object' && !Array.isArray(children)) {
-        const keys = Object.keys(children as Record<string, unknown>);
-        if (keys.length) {
+      const base: { start: number; end: number; children?: Record<string, unknown> | unknown[] } = nodeRange(n);
+      if (children !== undefined) {
+        if (typeof children === 'object' && !Array.isArray(children)) {
+          const keys = Object.keys(children as Record<string, unknown>);
+          if (keys.length) {
 base.children = children as Record<string, unknown>;
 }
+        } else {
+          base.children = children as unknown[];
+        }
       }
       return base;
     },
