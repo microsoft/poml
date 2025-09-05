@@ -73,7 +73,8 @@ export class ExtendedPomlParser extends CstParser {
   public doubleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstDoubleQuotedExpressionTokens;
   public singleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstSingleQuotedExpressionTokens;
   public betweenTagsTokens!: (idxInOriginalText?: number) => CstBetweenTagsTokens;
-  public literalTagTokens!: (idxInOriginalText?: number, expectedTagName?: string) => CstLiteralTagTokens;
+  // Accepting expectedTagName as argument to validate matching close tag
+  public literalTagTokens!: (idxInOriginalText?: number, args?: [string]) => CstLiteralTagTokens;
   // regular rules
   public template!: (idxInOriginalText?: number) => CstTemplateNode;
   public comment!: (idxInOriginalText?: number) => CstCommentNode;
@@ -272,6 +273,15 @@ export class ExtendedPomlParser extends CstParser {
       });
     });
 
+    this.literalTagTokens = this.RULE('literalTagTokens', (expectedTagName?: string) => {
+      this.AT_LEAST_ONE({
+        GATE: () => !this.isAtLiteralClose(expectedTagName),
+        DEF: () => {
+          this.OR(this.anyOf(TokensTextContent, 'Content'));
+        },
+      });
+    });
+
     // ----- Main rules -----
 
     this.template = this.RULE('template', () => {
@@ -341,10 +351,10 @@ export class ExtendedPomlParser extends CstParser {
           ALT: () => {
             this.CONSUME(DoubleQuote, { LABEL: 'OpenQuote' });
             this.MANY(() => {
-              this.OR([
+              this.OR2([
                 { ALT: () => this.SUBRULE(this.template, { LABEL: 'Content' }) },
                 {
-                  ALT: () => this.SUBRULE(this.doubleQuotedExpressionTokens, { LABEL: 'Content' }),
+                  ALT: () => this.SUBRULE2(this.doubleQuotedExpressionTokens, { LABEL: 'Content' }),
                 },
               ]);
             });
@@ -354,11 +364,11 @@ export class ExtendedPomlParser extends CstParser {
         {
           ALT: () => {
             this.CONSUME(SingleQuote, { LABEL: 'OpenQuote' });
-            this.MANY(() => {
-              this.OR([
-                { ALT: () => this.SUBRULE(this.template, { LABEL: 'Content' }) },
+            this.MANY2(() => {
+              this.OR3([
+                { ALT: () => this.SUBRULE3(this.template, { LABEL: 'Content' }) },
                 {
-                  ALT: () => this.SUBRULE(this.singleQuotedExpressionTokens, { LABEL: 'Content' }),
+                  ALT: () => this.SUBRULE4(this.singleQuotedExpressionTokens, { LABEL: 'Content' }),
                 },
               ]);
             });
@@ -387,14 +397,14 @@ export class ExtendedPomlParser extends CstParser {
         {
           ALT: () => {
             this.CONSUME(SingleQuote, { LABEL: 'OpenQuote' });
-            this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
-            this.CONSUME(Identifier, { LABEL: 'Iterator' });
-            this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' });
-            this.CONSUME2(Identifier, { LABEL: 'InKeyword' });
-            this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' });
+            this.OPTION3(() => this.CONSUME5(Whitespace, { LABEL: 'WsAfterOpen' }));
+            this.CONSUME3(Identifier, { LABEL: 'Iterator' });
+            this.CONSUME6(Whitespace, { LABEL: 'WsAfterIterator' });
+            this.CONSUME4(Identifier, { LABEL: 'InKeyword' });
+            this.CONSUME7(Whitespace, { LABEL: 'WsAfterIn' });
             // Greedily match until the next unescaped quote
             this.SUBRULE(this.singleQuotedTrimmedTokens, { LABEL: 'Collection' });
-            this.OPTION2(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterCollection' }));
+            this.OPTION4(() => this.CONSUME8(Whitespace, { LABEL: 'WsAfterCollection' }));
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
           },
         },
@@ -463,14 +473,14 @@ export class ExtendedPomlParser extends CstParser {
             this.CONSUME(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
 
             // Everything until the matching close tag is treated as raw text
-            this.MANY(() => this.SUBRULE(this.literalTagTokens, { ARGS: [tagName], LABEL: 'TextContent' }));
+            this.SUBRULE(this.literalTagTokens, { ARGS: [tagName], LABEL: 'TextContent' });
 
             this.SUBRULE(this.closeTag, { LABEL: 'CloseTag' });
           },
         },
         {
           ALT: () => {
-            this.CONSUME(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
+            this.CONSUME2(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
             this.MANY(() => {
               this.SUBRULE(this.elementContent, { LABEL: 'Content' });
             });
