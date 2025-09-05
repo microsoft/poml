@@ -26,6 +26,16 @@ import {
 } from './lexer';
 
 import {
+  CstCommentTokens,
+  CstExpressionTokens,
+  CstDoubleQuotedTokens,
+  CstDoubleQuotedTrimmedTokens,
+  CstSingleQuotedTokens,
+  CstSingleQuotedTrimmedTokens,
+  CstDoubleQuotedExpressionTokens,
+  CstSingleQuotedExpressionTokens,
+  CstBetweenTagsTokens,
+  CstLiteralTagTokens,
   CstTemplateNode,
   CstQuotedNode,
   CstQuotedTemplateNode,
@@ -53,6 +63,18 @@ export class ExtendedPomlParser extends CstParser {
   // ---- Rule property declarations (so TS knows they exist) ----
   public root!: (idxInOriginalText?: number) => CstRootNode;
   public elementContent!: (idxInOriginalText?: number) => CstElementContentNode;
+  // token-sequence helper rules
+  public commentTokens!: (idxInOriginalText?: number) => CstCommentTokens;
+  public expressionTokens!: (idxInOriginalText?: number) => CstExpressionTokens;
+  public doubleQuotedTokens!: (idxInOriginalText?: number) => CstDoubleQuotedTokens;
+  public singleQuotedTokens!: (idxInOriginalText?: number) => CstSingleQuotedTokens;
+  public doubleQuotedTrimmedTokens!: (idxInOriginalText?: number) => CstDoubleQuotedTrimmedTokens;
+  public singleQuotedTrimmedTokens!: (idxInOriginalText?: number) => CstSingleQuotedTrimmedTokens;
+  public doubleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstDoubleQuotedExpressionTokens;
+  public singleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstSingleQuotedExpressionTokens;
+  public betweenTagsTokens!: (idxInOriginalText?: number) => CstBetweenTagsTokens;
+  public literalTagTokens!: (idxInOriginalText?: number, expectedTagName?: string) => CstLiteralTagTokens;
+  // regular rules
   public template!: (idxInOriginalText?: number) => CstTemplateNode;
   public comment!: (idxInOriginalText?: number) => CstCommentNode;
   public pragma!: (idxInOriginalText?: number) => CstPragmaNode;
@@ -90,7 +112,7 @@ export class ExtendedPomlParser extends CstParser {
     }));
 
   // Lookahead helper: Check if next is whitespace but next non-whitespace token is not of given type
-  private isAlmostClose = (tokenType: TokenType) => {
+  private atAlmostClose = (tokenType: TokenType) => {
     let k = 1;
     if (this.LA(k).tokenType === Whitespace) {
       k++;
@@ -177,40 +199,93 @@ export class ExtendedPomlParser extends CstParser {
         // raw text content
         {
           ALT: () => {
-            this.AT_LEAST_ONE(() => {
-              this.OR(this.anyOf(TokensTextContent, 'TextContent'));
-            });
+            // Group text between tags under CstBetweenTagsTokens
+            this.SUBRULE(this.betweenTagsTokens, { LABEL: 'TextContent' });
           },
         },
       ]);
     });
 
+    // ----- Token sequence helper rules -----
+    this.commentTokens = this.RULE('commentTokens', () => {
+      this.MANY(() => {
+        this.OR(this.anyOf(TokensComment, 'Content'));
+      });
+    });
+
+    this.expressionTokens = this.RULE('expressionTokens', () => {
+      this.AT_LEAST_ONE({
+        GATE: () => !this.atAlmostClose(TemplateClose),
+        DEF: () => {
+          this.OR(this.anyOf(TokensExpression, 'Content'));
+        },
+      });
+    });
+
+    this.doubleQuotedTokens = this.RULE('doubleQuotedTokens', () => {
+      this.MANY(() => {
+        this.OR(this.anyOf(TokensDoubleQuoted, 'Content'));
+      });
+    });
+
+    this.singleQuotedTokens = this.RULE('singleQuotedTokens', () => {
+      this.MANY(() => {
+        this.OR(this.anyOf(TokensSingleQuoted, 'Content'));
+      });
+    });
+
+    this.doubleQuotedTrimmedTokens = this.RULE('doubleQuotedTrimmedTokens', () => {
+      // Greedily match until the next double quote (allow inner whitespace)
+      this.AT_LEAST_ONE({
+        GATE: () => !this.atAlmostClose(DoubleQuote),
+        DEF: () => {
+          this.OR(this.anyOf(TokensDoubleQuoted, 'Content'));
+        },
+      });
+    });
+
+    this.singleQuotedTrimmedTokens = this.RULE('singleQuotedTrimmedTokens', () => {
+      // Greedily match until the next single quote (allow inner whitespace)
+      this.AT_LEAST_ONE({
+        GATE: () => !this.atAlmostClose(SingleQuote),
+        DEF: () => {
+          this.OR(this.anyOf(TokensSingleQuoted, 'Content'));
+        },
+      });
+    });
+
+    this.doubleQuotedExpressionTokens = this.RULE('doubleQuotedExpressionTokens', () => {
+      this.AT_LEAST_ONE(() => {
+        this.OR(this.anyOf(TokensDoubleQuotedExpression, 'Content'));
+      });
+    });
+
+    this.singleQuotedExpressionTokens = this.RULE('singleQuotedExpressionTokens', () => {
+      this.AT_LEAST_ONE(() => {
+        this.OR(this.anyOf(TokensSingleQuotedExpression, 'Content'));
+      });
+    });
+
+    this.betweenTagsTokens = this.RULE('betweenTagsTokens', () => {
+      this.AT_LEAST_ONE(() => {
+        this.OR(this.anyOf(TokensTextContent, 'Content'));
+      });
+    });
+
+    // ----- Main rules -----
+
     this.template = this.RULE('template', () => {
       this.CONSUME(TemplateOpen);
       this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
-
-      this.AT_LEAST_ONE({
-        GATE: () => !this.isAlmostClose(TemplateClose),
-        DEF: () => {
-          this.OR(
-            this.anyOf(
-              TokensExpression.filter((t) => t !== Whitespace),
-              'Content',
-            ),
-          );
-        },
-      });
-
-      this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsBeforeClose' }));
+      this.SUBRULE(this.expressionTokens, { LABEL: 'Content' });
+      this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterContent' }));
       this.CONSUME2(TemplateClose);
     });
 
     this.comment = this.RULE('comment', () => {
       this.CONSUME(CommentOpen);
-      this.MANY(() => {
-        // anything until -->
-        this.OR(this.anyOf(TokensComment, 'Content'));
-      });
+      // anything until -->
+      this.SUBRULE(this.commentTokens, { LABEL: 'Content' });
       this.CONSUME(CommentClose);
     });
 
@@ -246,18 +321,14 @@ export class ExtendedPomlParser extends CstParser {
         {
           ALT: () => {
             this.CONSUME(DoubleQuote, { LABEL: 'OpenQuote' });
-            this.MANY(() => {
-              this.OR(this.anyOf(TokensDoubleQuoted, 'Content'));
-            });
+            this.SUBRULE(this.doubleQuotedTokens, { LABEL: 'Content' });
             this.CONSUME2(DoubleQuote, { LABEL: 'CloseQuote' });
           },
         },
         {
           ALT: () => {
             this.CONSUME(SingleQuote, { LABEL: 'OpenQuote' });
-            this.MANY(() => {
-              this.OR(this.anyOf(TokensSingleQuoted, 'Content'));
-            });
+            this.SUBRULE(this.singleQuotedTokens, { LABEL: 'Content' });
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
           },
         },
@@ -272,7 +343,9 @@ export class ExtendedPomlParser extends CstParser {
             this.MANY(() => {
               this.OR([
                 { ALT: () => this.SUBRULE(this.template, { LABEL: 'Content' }) },
-                { ALT: () => this.OR(this.anyOf(TokensDoubleQuotedExpression, 'Content')) },
+                {
+                  ALT: () => this.SUBRULE(this.doubleQuotedExpressionTokens, { LABEL: 'Content' }),
+                },
               ]);
             });
             this.CONSUME2(DoubleQuote, { LABEL: 'CloseQuote' });
@@ -284,7 +357,9 @@ export class ExtendedPomlParser extends CstParser {
             this.MANY(() => {
               this.OR([
                 { ALT: () => this.SUBRULE(this.template, { LABEL: 'Content' }) },
-                { ALT: () => this.OR(this.anyOf(TokensSingleQuotedExpression, 'Content')) },
+                {
+                  ALT: () => this.SUBRULE(this.singleQuotedExpressionTokens, { LABEL: 'Content' }),
+                },
               ]);
             });
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
@@ -303,14 +378,8 @@ export class ExtendedPomlParser extends CstParser {
             this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' });
             this.CONSUME2(Identifier, { LABEL: 'InKeyword' });
             this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' });
-            // It's written as a double quoted expression without {{ }} here
-            // but it will be treated as an expression in the semantic analysis stage.
-            this.AT_LEAST_ONE({
-              GATE: () => !this.isAlmostClose(DoubleQuote),
-              DEF: () => {
-                this.OR(this.anyOf(TokensDoubleQuoted, 'Content'));
-              },
-            });
+            // Greedily match until the next unescaped quote
+            this.SUBRULE(this.doubleQuotedTrimmedTokens, { LABEL: 'Collection' });
             this.OPTION2(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterCollection' }));
             this.CONSUME2(DoubleQuote, { LABEL: 'CloseQuote' });
           },
@@ -323,13 +392,8 @@ export class ExtendedPomlParser extends CstParser {
             this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' });
             this.CONSUME2(Identifier, { LABEL: 'InKeyword' });
             this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' });
-            // Similar for single quoted expression
-            this.AT_LEAST_ONE({
-              GATE: () => !this.isAlmostClose(DoubleQuote),
-              DEF: () => {
-                this.OR(this.anyOf(TokensSingleQuoted, 'Content'));
-              },
-            });
+            // Greedily match until the next unescaped quote
+            this.SUBRULE(this.singleQuotedTrimmedTokens, { LABEL: 'Collection' });
             this.OPTION2(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterCollection' }));
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
           },
@@ -399,14 +463,7 @@ export class ExtendedPomlParser extends CstParser {
             this.CONSUME(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
 
             // Everything until the matching close tag is treated as raw text
-            this.MANY(() => {
-              this.OR([
-                {
-                  GATE: () => !this.isAtLiteralClose(tagName),
-                  ALT: () => this.OR(this.anyOf(AllTokens, 'TextContent')),
-                },
-              ]);
-            });
+            this.MANY(() => this.SUBRULE(this.literalTagTokens, { ARGS: [tagName], LABEL: 'TextContent' }));
 
             this.SUBRULE(this.closeTag, { LABEL: 'CloseTag' });
           },

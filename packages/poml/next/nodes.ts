@@ -12,7 +12,7 @@ export interface AstNode {
 export interface CstCommentTokens extends CstNode {
   // Can be empty.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
@@ -20,14 +20,14 @@ export interface CstExpressionTokens extends CstNode {
   // Always trim the ws around the expression {{ expr }}.
   // Must be non-empty.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
 export interface CstDoubleQuotedTokens extends CstNode {
   // The untrimmed content within "...", can be empty.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
@@ -35,14 +35,14 @@ export interface CstDoubleQuotedTrimmedTokens extends CstNode {
   // Trimmed content in "..." without leading/trailing whitespace
   // Must be non-empty.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
 export interface CstSingleQuotedTokens extends CstNode {
   // The untrimmed content in '...', can be empty.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
@@ -50,30 +50,30 @@ export interface CstSingleQuotedTrimmedTokens extends CstNode {
   // Trimmed content without leading/trailing whitespace
   // Must be non-empty.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
 export interface CstDoubleQuotedExpressionTokens extends CstNode {
   // Contents in "...{{ ... }}..." but outside the {{ }}
-  // Must be non-empty.
+  // Must be non-empty. Can have leading/trailing whitespace.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
 export interface CstSingleQuotedExpressionTokens extends CstNode {
   // Contents in '...{{ ... }}...' but outside the {{ }}
-  // Must be non-empty.
+  // Must be non-empty. Can have leading/trailing whitespace.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
 export interface CstBetweenTagsTokens extends CstNode {
   // Plain texts within tags but outside nested tags. Must be non-empty.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
@@ -81,7 +81,7 @@ export interface CstLiteralTagTokens extends CstNode {
   // Plain texts within literal tags like <text>...</text>.
   // Match greedily. Can be empty.
   children: {
-    Content: IToken[];
+    Content?: IToken[];
   };
 }
 
