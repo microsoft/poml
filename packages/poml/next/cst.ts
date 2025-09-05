@@ -168,6 +168,7 @@ export class ExtendedPomlParser extends CstParser {
   constructor() {
     super(AllTokens, {
       recoveryEnabled: true,
+      nodeLocationTracking: 'full',
     });
     this.validComponentNames = new Set(listComponentAliases());
 

@@ -2,7 +2,7 @@ import { describe, expect, test } from '@jest/globals';
 import { CstNode, IToken } from 'chevrotain';
 import { ExtendedPomlParser } from 'poml/next/cst';
 import { extendedPomlLexer, Whitespace, Identifier } from 'poml/next/lexer';
-import type {
+import {
   CstRootNode,
   CstElementContentNode,
   CstTemplateNode,
@@ -225,6 +225,8 @@ describe('Special Tokens', () => {
 done`;
     const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
     console.dir(images(node), { depth: null });
+    console.dir(names(node), { depth: null });
+    console.dir(locations(node), { depth: null });
   });
 
   // All kinds of whitespaces
@@ -236,255 +238,217 @@ done`;
   // Unmatched tags should not error in cst stage
 });
 
-describe('Helper function sanity', () => {
-  test('images() on template: token lists -> string[], node lists -> nested[]', () => {
-    const { node } = withParser('{{ name }}', (p) => p.template()) as { node: CstTemplateNode };
+/* -------------------- tiny guards -------------------- */
+const isToken = (x: unknown): x is IToken => !!x && typeof (x as IToken).image === 'string';
 
-    const snap = images(node) as ImagesTree<CstTemplateNode>;
+const isCstNode = (x: unknown): x is CstNode =>
+  !!x && typeof (x as any).name === 'string' && typeof (x as any).children === 'object';
 
-    // Token-only props => string[]
-    expect(Array.isArray(snap.TemplateOpen)).toBe(true);
-    expect(typeof snap.TemplateOpen![0]).toBe('string');
-    expect(snap.TemplateOpen![0]).toBe('{{');
+/* -------------------- ranges -------------------- */
+const tokStart = (t: IToken) => (typeof t.startOffset === 'number' ? t.startOffset : 0);
+const tokEnd = (t: IToken) => (typeof t.endOffset === 'number' ? t.endOffset : tokStart(t) + (t.image?.length ?? 0));
 
-    expect(Array.isArray(snap.TemplateClose)).toBe(true);
-    expect(typeof snap.TemplateClose![0]).toBe('string');
-    expect(snap.TemplateClose![0]).toBe('}}');
-
-    // Node-only prop => nested[]
-    expect(Array.isArray(snap.Content)).toBe(true);
-    expect(typeof snap.Content![0]).toBe('object'); // nested tree, not string
-    // Nested should mirror structure (has children keys)
-    expect(snap.Content![0]).toBeDefined();
-
-    // Present keys are never undefined
-    for (const k of Object.keys(node.children)) {
-      // @ts-expect-error runtime check
-      expect(snap[k]).toBeDefined();
-      // @ts-expect-error runtime check
-      expect(Array.isArray(snap[k])).toBe(true);
-    }
-  });
-
-  test('names() shape: has { name, children } and token items are tokenType names', () => {
-    const { node } = withParser('{{ name }}', (p) => p.template()) as { node: CstTemplateNode };
-    const snap = names(node) as NamesTree<CstTemplateNode>;
-
-    expect(snap.name).toBe('template');
-    expect(snap.children).toBeDefined();
-
-    // Token-only -> string (tokenType name)
-    const tokName = snap.children.TemplateOpen?.[0];
-    expect(typeof tokName).toBe('string');
-    expect(tokName!.length).toBeGreaterThan(0);
-
-    // Node-only -> nested NamesTree
-    const nested = snap.children.Content?.[0];
-    expect(typeof nested).toBe('object');
-    expect((nested as any).name).toBeDefined();
-    expect((nested as any).children).toBeDefined();
-
-    // Never undefined for present keys
-    for (const k of Object.keys(node.children)) {
-      // @ts-expect-error runtime check
-      expect(Array.isArray(snap.children[k])).toBe(true);
-    }
-  });
-
-  test('locations() shape: top {start,end}, tokens -> {start,end}, nodes -> nested', () => {
-    const { node } = withParser('{{ name }}', (p) => p.template()) as { node: CstTemplateNode };
-    const snap = locations(node) as LocationsTree<CstTemplateNode>;
-
-    expect(typeof snap.start).toBe('number');
-    expect(typeof snap.end).toBe('number');
-
-    // Token-only -> {start,end}
-    const tokLoc = snap.children.TemplateOpen?.[0] as any;
-    expect(typeof tokLoc.start).toBe('number');
-    expect(typeof tokLoc.end).toBe('number');
-
-    // Node-only -> nested LocationsTree
-    const nested = snap.children.Content?.[0] as any;
-    expect(typeof nested).toBe('object');
-    expect(typeof nested.start).toBe('number');
-    expect(typeof nested.end).toBe('number');
-
-    // Never undefined for present keys
-    for (const k of Object.keys(node.children)) {
-      // @ts-expect-error runtime check
-      expect(Array.isArray(snap.children[k])).toBe(true);
-    }
-  });
-
-  test('Literal element TextContent maps tokens to strings with images()', () => {
-    const input = '<text>Hello {{ name }} <text> </text>';
-    const { node } = withParser(input, (p) => p.element()) as { node: CstElementNode };
-
-    const snap = images(node) as ImagesTree<CstElementNode>;
-    const textArr = snap.TextContent!;
-    expect(Array.isArray(textArr)).toBe(true);
-    // TextContent is token-only; each item should be string[]
-    const flat = textArr[0] as unknown as any; // nested ImagesTree for CstLiteralTagTokens
-    // dive one level to the actual token list on the literal node
-    const contentStrings: string[] = flat.Content;
-    // If structure differs, we still check there is at least one string present somewhere
-    const hasStringDeep = Array.isArray(contentStrings) ? typeof contentStrings[0] === 'string' : true;
-    expect(hasStringDeep).toBe(true);
-  });
-});
-
-type ElemOf<A> = A extends Array<infer U> ? U : never;
-
-/** Map a union element (token | node) into different output types per branch. */
-type MapElem<TokenOrNode, TokOut, NodeOut> = TokenOrNode extends IToken
-  ? TokOut
-  : TokenOrNode extends CstNode
-    ? NodeOut
-    : never;
-
-/** images(): tokens -> string; nodes -> nested ImagesTree */
-export type ImagesTree<T extends CstNode> = {
-  [K in keyof T['children']]?: Array<
-    MapElem<
-      ElemOf<NonNullable<T['children'][K]>>,
-      string,
-      ImagesTree<Extract<ElemOf<NonNullable<T['children'][K]>>, CstNode>>
-    >
-  >;
-};
-
-/** names(): shape is { name, children }; tokens -> tokenType.name; nodes -> nested */
-export type NamesTree<T extends CstNode> = {
-  name: string;
-  children: {
-    [K in keyof T['children']]?: Array<
-      MapElem<
-        ElemOf<NonNullable<T['children'][K]>>,
-        string,
-        NamesTree<Extract<ElemOf<NonNullable<T['children'][K]>>, CstNode>>
-      >
-    >;
-  };
-};
-
-/** locations(): shape is { start, end, children }; tokens -> {start,end}; nodes -> nested */
-export type RangeLite = { start: number; end: number };
-
-export type LocationsTree<T extends CstNode> = {
-  start: number;
-  end: number;
-  children: {
-    [K in keyof T['children']]?: Array<
-      MapElem<
-        ElemOf<NonNullable<T['children'][K]>>,
-        RangeLite,
-        LocationsTree<Extract<ElemOf<NonNullable<T['children'][K]>>, CstNode>>
-      >
-    >;
-  };
-};
-
-function isToken(u: unknown): u is IToken {
-  return !!u && typeof (u as any).image === 'string';
+function* walkTokens(value: unknown): Generator<IToken> {
+  if (isToken(value)) {
+    yield value;
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const v of value) {
+yield* walkTokens(v);
 }
-function isCstNode(u: unknown): u is CstNode {
-  return !!u && typeof (u as any).name === 'string' && typeof (u as any).children === 'object';
+    return;
+  }
+  if (isCstNode(value)) {
+    const ch = (value as any).children as Record<string, unknown>;
+    for (const k of Object.keys(ch)) {
+yield* walkTokens(ch[k]);
+}
+  }
 }
 
+function nodeRange(node: CstNode): { start: number; end: number } {
+  let start = Infinity,
+    end = -Infinity;
+  for (const t of walkTokens(node)) {
+    start = Math.min(start, tokStart(t));
+    end = Math.max(end, tokEnd(t));
+  }
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+return { start: 0, end: 0 };
+}
+  return { start, end };
+}
+
+/* -------------------- core normalize -------------------- */
 /**
- * Core mapper (bi-morphic: tokens and nodes can map to DIFFERENT output types)
- * - Always returns arrays for any present child key (never undefined).
+ * Rules:
+ * - drop undefined
+ * - arrays: [] -> undefined; [x] -> x; [strings...] -> joined string; otherwise keep (with inner normalize)
+ * - objects: normalize recursively; if only key is "Content" -> unwrap value
  */
-function mapChildrenBimorphic<T extends CstNode, TokOut, NodeOut>(
-  node: T,
-  mapToken: (t: IToken) => TokOut,
-  mapNode: (n: CstNode) => NodeOut,
-): { [K in keyof T['children']]?: Array<MapElem<ElemOf<NonNullable<T['children'][K]>>, TokOut, NodeOut>> } {
-  const result: Record<string, unknown[]> = {};
-  const kids = (node.children ?? {}) as Record<string, unknown>;
+function normalizeAny(v: unknown): unknown {
+  if (v == null) {
+return undefined;
+}
+  if (Array.isArray(v)) {
+return normalizeArray(v);
+}
+  if (isToken(v) || isCstNode(v)) {
+return v;
+}
+  if (typeof v === 'object') {
+return normalizeObject(v as Record<string, unknown>);
+}
+  return v;
+}
 
-  for (const key of Object.keys(kids)) {
-    const arr = kids[key] as unknown[];
-    // Always create the array (never leave it undefined)
-    const out: unknown[] = [];
-    if (Array.isArray(arr)) {
-      for (const v of arr) {
-        if (isToken(v)) {
-          out.push(mapToken(v));
-        } else if (isCstNode(v)) {
-          out.push(mapNode(v));
-        }
-        // else ignore silently
-      }
-    }
-    result[key] = out; // defined even if empty
+function normalizeArray(arr: unknown[]): unknown {
+  const mapped = arr.map(normalizeAny).filter((v) => v !== undefined);
+
+  if (mapped.length === 0) {
+return undefined;
+}
+  if (mapped.every((x) => typeof x === 'string')) {
+    // concatenate pure string arrays
+    return (mapped as string[]).join('');
+  }
+  if (mapped.length === 1) {
+return mapped[0];
+}
+  return mapped;
+}
+
+function normalizeObject(obj: Record<string, unknown>): unknown {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const nv = normalizeAny(v);
+    if (nv !== undefined) {
+out[k] = nv;
+}
+  }
+  const keys = Object.keys(out);
+  if (keys.length === 0) {
+return undefined;
+}
+  if (keys.length === 1 && keys[0] === 'Content') {
+return out.Content;
+}
+  return out;
+}
+
+function normalizeChildren(node: CstNode): unknown {
+  return normalizeObject(node.children as Record<string, unknown>);
+}
+
+/* -------------------- generic transformer -------------------- */
+type Mode = 'images' | 'names' | 'locations';
+
+type Strategies = {
+  onToken(v: IToken): unknown; // what to emit for a token
+  onNodeWrap(n: CstNode, children: unknown): unknown; // how to wrap a CST node around its transformed children
+  keepChildKey(k: string, v: unknown): boolean; // allow pruning of token-only branches
+};
+
+function transformValue(val: unknown, S: Strategies): unknown {
+  if (val == null) {
+return undefined;
+}
+
+  if (isToken(val)) {
+    return S.onToken(val);
   }
 
-  // The cast is safe: each element was mapped via the correct branch.
-  return result as any;
+  if (Array.isArray(val)) {
+    const mapped = val.map((x) => transformValue(x, S)).filter((x) => x !== undefined);
+    if (mapped.length === 0) {
+return undefined;
+}
+    if (mapped.every((x) => typeof x === 'string')) {
+return (mapped as string[]).join('');
+}
+    if (mapped.length === 1) {
+return mapped[0];
+}
+    return mapped;
+  }
+
+  if (isCstNode(val)) {
+    const norm = normalizeChildren(val);
+    const inner = transformValue(norm, S);
+    return S.onNodeWrap(val, inner);
+  }
+
+  if (typeof val === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(val)) {
+      const mv = transformValue(v, S);
+      if (mv !== undefined && S.keepChildKey(k, mv)) {
+out[k] = mv;
+}
+    }
+    const keys = Object.keys(out);
+    if (keys.length === 0) {
+return undefined;
+}
+    if (keys.length === 1 && keys[0] === 'Content') {
+return out.Content;
+}
+    return out;
+  }
+
+  // primitive fallback: pass through (lets string concatenation work if present)
+  return val;
 }
 
-/**
- * images(node): for each child array
- *  - if it’s tokens → string[]
- *  - if it’s nodes  → ImagesTree[]
- *  - if mixed       → (string | ImagesTree)[]
- * Arrays are always present for seen keys; never undefined.
- */
-export function images<T extends CstNode>(node: T): ImagesTree<T> {
-  const children = mapChildrenBimorphic(
-    node,
-    (t) => t.image,
-    (n) => images(n),
-  );
-  return children as ImagesTree<T>;
-}
+/* -------------------- concrete modes -------------------- */
 
-/**
- * names(node): { name, children }, tokens → tokenType.name
- * Arrays are always present for seen keys; never undefined.
- */
-export function names<T extends CstNode>(node: T): NamesTree<T> {
-  const children = mapChildrenBimorphic(
-    node,
-    (t) => t.tokenType?.name ?? '(UnknownToken)',
-    (n) => names(n),
-  );
-  return {
-    name: node.name,
-    children: children as NamesTree<T>['children'],
+// images(): leaves become strings; nested objects keyed by child names.
+// Token arrays get concatenated (via normalize/transform).
+export function images(node: CstNode): unknown {
+  const S: Strategies = {
+    onToken: (t) => t.image, // keep token text
+    onNodeWrap: (_n, children) => children, // node name not included; just the nested children map
+    keepChildKey: (_k, _v) => true, // keep everything
   };
+  return transformValue(normalizeChildren(node), S);
 }
 
-/**
- * locations(node): { start, end, children }, tokens → {start,end}
- * Arrays are always present for seen keys; never undefined.
- */
-export function locations<T extends CstNode>(node: T): LocationsTree<T> {
-  // Chevrotain differences: prefer location.startOffset/endOffset; fallback to start/end; else -1.
-  const start =
-    node.location?.startOffset ??
-    // @ts-expect-error
-    node.location?.start ??
-    -1;
-  const end =
-    node.location?.endOffset ??
-    // @ts-expect-error
-    node.location?.end ??
-    -1;
-
-  const children = mapChildrenBimorphic(
-    node,
-    (t) => ({
-      start: (t as any).startOffset ?? -1,
-      end: (t as any).endOffset ?? -1,
-    }),
-    (n) => locations(n),
-  );
-
-  return {
-    start,
-    end,
-    children: children as LocationsTree<T>['children'],
+// names(): only node names; omit token leaves entirely.
+export function names(node: CstNode): { name: string; children?: Record<string, unknown> } {
+  const S: Strategies = {
+    onToken: (_t) => undefined, // drop token leaves
+    onNodeWrap: (n, children) => {
+      const out: { name: string; children?: Record<string, unknown> } = { name: n.name };
+      if (children && typeof children === 'object' && !Array.isArray(children)) {
+        const keys = Object.keys(children as Record<string, unknown>);
+        if (keys.length) {
+out.children = children as Record<string, unknown>;
+}
+      }
+      return out;
+    },
+    // prune keys that are purely token-derived (which would be undefined)
+    keepChildKey: (_k, v) => v !== undefined,
   };
+  return transformValue(node, S) as any;
+}
+
+// locations(): node-level { start,end } only; omit token-level ranges.
+export function locations(node: CstNode): { start: number; end: number; children?: Record<string, unknown> } {
+  const S: Strategies = {
+    onToken: (_t) => undefined, // drop token ranges
+    onNodeWrap: (n, children) => {
+      const base: { start: number; end: number; children?: Record<string, unknown> } = nodeRange(n);
+      if (children && typeof children === 'object' && !Array.isArray(children)) {
+        const keys = Object.keys(children as Record<string, unknown>);
+        if (keys.length) {
+base.children = children as Record<string, unknown>;
+}
+      }
+      return base;
+    },
+    keepChildKey: (_k, v) => v !== undefined,
+  };
+  return transformValue(node, S) as any;
 }
