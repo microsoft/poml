@@ -469,7 +469,7 @@
     "lodash.throttle": "^4.1.1",
     "mammoth": "^1.9.0",
     "pdf-parse": "^1.1.1",
-    "pdfjs-dist": "^3.11.174",
+    "pdfjs-dist": "^4.2.67",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-is": "^19.0.0",
