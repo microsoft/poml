@@ -1,9 +1,15 @@
 import * as pdfjsLib from 'pdfjs-dist';
-import type { PDFDocumentProxy, PDFPageProxy, TextItem as PDFTextItem } from 'pdfjs-dist/types/src/display/api';
+import type {
+  PDFDocumentProxy,
+  PDFPageProxy,
+  TextItem as PDFTextItem,
+  PDFDocumentLoadingTask,
+} from 'pdfjs-dist/types/src/display/api';
 import { base64ToBinary } from '@common/utils/base64';
 import { notifyDebug, notifyError, notifyInfo } from '@common/notification';
-import { CardModel, CardContent, CardFromPdfOptions, CardFromPdfResult } from '@common/types';
+import { CardModel, CardContent, CardFromPdfOptions, CardFromPdfResult, Image } from '@common/types';
 import { everywhere } from '@common/rpc';
+import { readFile } from './file';
 
 /**
  * Main extraction function for PDF documents
@@ -64,12 +70,6 @@ interface GraphicBlock {
   height: number;
 }
 
-export interface PageVisualization {
-  pageNumber: number;
-  base64: string;
-  mimeType: string;
-}
-
 type ContentBlock = TextBlock | GraphicBlock;
 
 /**
@@ -80,182 +80,129 @@ export async function _cardFromPdfImpl(
   file: string | File | Blob | ArrayBuffer,
   options?: CardFromPdfOptions,
 ): Promise<CardFromPdfResult> {
-  try {
-    // Determine source URL and setup loading task
-    let targetUrl: string;
-    let loadingTask: any;
+  // Determine source URL and setup loading task
+  let url: string | undefined = undefined;
+  let loadingTask: PDFDocumentLoadingTask | undefined = undefined;
 
-    notifyDebug('Starting PDF structured extraction', { source: typeof file, options });
+  notifyDebug('Starting PDF structured extraction', { file, options });
+  initializePdfJs();
 
-    // Set worker source
-    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('external/pdf.worker.min.mjs');
+  // Load PDF based on file type
+  if (typeof file === 'string') {
+    if (file.startsWith('http://') || file.startsWith('https://')) {
+      url = file;
+      loadingTask = pdfjsLib.getDocument({ url: file });
     } else {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.54/pdf.worker.min.mjs';
+      url = file;
+      const buffer = await readFile(file, { encoding: 'binary' });
+      loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer.content) });
     }
+  } else if (file instanceof File || file instanceof Blob) {
+    if (file instanceof File) {
+      url = file.name;
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+  } else if (file instanceof ArrayBuffer) {
+    loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(file) });
+  }
+  if (!loadingTask) {
+    throw new Error(`Invalid file input for PDF extraction: ${file}`);
+  }
 
-    // Load PDF based on file type
-    if (typeof file === 'string') {
-      targetUrl = file;
-      if (file.startsWith('file://')) {
-        const response = (await chrome.runtime.sendMessage({
-          action: 'readFile',
-          filePath: file,
-          binary: true,
-        })) as { success: boolean; base64Data?: string; error?: string };
+  const pdf = await loadingTask.promise;
+  const pageCount = pdf.numPages;
+  notifyDebug(`PDF loaded successfully`, { pages: pageCount });
 
-        if (!response.success || !response.base64Data) {
-          throw new Error(`Failed to read PDF file: ${response.error || 'Unknown error'}`);
-        }
+  // Apply options defaults
+  const maxPages = options?.maxPages ?? 100;
+  const maxImages = options?.maxImages ?? 10;
+  const visualizePages = options?.visualizePages ?? false;
+  const actualPageCount = Math.min(pageCount, maxPages);
 
-        const uint8Array = base64ToBinary(response.base64Data);
-        loadingTask = pdfjsLib.getDocument({ data: uint8Array });
-      } else {
-        loadingTask = pdfjsLib.getDocument(file);
+  // Process all pages and collect content as CardContent array
+  const allContent: CardContent[] = [];
+  let imageCount = 0;
+
+  for (let pageNum = 1; pageNum <= actualPageCount; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 1.0 });
+
+    // Extract all content blocks with positions
+    const contentBlocks = await extractPageContent(page, viewport);
+
+    // Sort blocks by position (top to bottom, left to right)
+    contentBlocks.sort((a, b) => {
+      // First sort by Y position (with some tolerance for same line)
+      const yDiff = b.y - a.y; // Note: PDF Y coordinates are bottom-up
+      if (Math.abs(yDiff) > 5) {
+        return yDiff;
       }
-    } else if (file instanceof File) {
-      targetUrl = file.name;
-      const arrayBuffer = await file.arrayBuffer();
-      loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
-    } else if (file instanceof Blob) {
-      targetUrl = 'blob-document';
-      const arrayBuffer = await file.arrayBuffer();
-      loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
-    } else if (file instanceof ArrayBuffer) {
-      targetUrl = 'arraybuffer-document';
-      loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(file) });
-    } else {
-      throw new Error('Invalid file type for PDF processing');
-    }
-
-    const pdf = (await loadingTask.promise) as PDFDocumentProxy;
-    const pageCount = pdf.numPages;
-    notifyInfo(`PDF loaded successfully`, { pages: pageCount });
-
-    // Apply options defaults
-    const maxPages = options?.maxPages ?? 100;
-    const maxImages = options?.maxImages ?? 10;
-    const visualizePages = options?.visualizePages ?? false;
-    const actualPageCount = Math.min(pageCount, maxPages);
-
-    // Process all pages and collect content as CardContent array
-    const allContent: CardContent[] = [];
-    let imageCount = 0;
-
-    for (let pageNum = 1; pageNum <= actualPageCount; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 1.0 });
-
-      // Extract all content blocks with positions
-      const contentBlocks = await extractPageContent(page, viewport);
-
-      // Sort blocks by position (top to bottom, left to right)
-      contentBlocks.sort((a, b) => {
-        // First sort by Y position (with some tolerance for same line)
-        const yDiff = b.y - a.y; // Note: PDF Y coordinates are bottom-up
-        if (Math.abs(yDiff) > 5) {
-          return yDiff;
-        }
-        // Then by X position for items on same line
-        return a.x - b.x;
-      });
-
-      // Convert blocks to CardContent
-      for (const block of contentBlocks) {
-        if (block.type === 'text') {
-          if (block.text.trim()) {
-            allContent.push({
-              type: 'text',
-              text: block.text,
-              container: block.isHeading ? 'CaptionedParagraph' : 'Paragraph',
-            });
-          }
-        } else if (block.type === 'image' && imageCount < maxImages) {
-          allContent.push({
-            type: 'image',
-            base64: block.base64,
-            caption: `Image from page ${pageNum}`,
-          });
-          imageCount++;
-        }
-      }
-
-      notifyDebug(`Processed page ${pageNum}/${actualPageCount}`, {
-        contentBlocks: contentBlocks.length,
-      });
-    }
-
-    notifyInfo('PDF extraction completed', {
-      contentCount: allContent.length,
-      pages: actualPageCount,
-      imagesExtracted: imageCount,
+      // Then by X position for items on same line
+      return a.x - b.x;
     });
 
-    // Create the main card
-    let cardContent: CardContent;
-    if (allContent.length === 0) {
-      cardContent = {
-        type: 'text',
-        text: 'No content found in PDF',
-      };
-    } else if (allContent.length === 1) {
-      cardContent = allContent[0];
-    } else {
-      cardContent = {
-        type: 'nested',
-        cards: allContent,
-      };
-    }
+    notifyDebug(`Processed page ${pageNum}/${actualPageCount}, found ${contentBlocks} blocks.`);
 
-    const card: CardModel = {
-      content: cardContent,
-      source: options?.source || 'file',
-      url: targetUrl,
-      tags: ['pdf'],
-      timestamp: new Date(),
-    };
-
-    // Generate visualizations if requested
-    const visualized: import('@common/types').Image[] = [];
-    if (visualizePages) {
-      for (let pageNum = 1; pageNum <= actualPageCount; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const pageViz = await generatePageVisualization(page, pageNum);
-        if (pageViz) {
-          visualized.push({
-            base64: pageViz.base64,
-            mimeType: pageViz.mimeType,
-            width: 0, // TODO: Get actual dimensions
-            height: 0, // TODO: Get actual dimensions
+    // Convert blocks to CardContent
+    for (const block of contentBlocks) {
+      if (block.type === 'text') {
+        if (block.text.trim()) {
+          allContent.push({
+            type: 'text',
+            text: block.text,
+            container: block.isHeading ? 'CaptionedParagraph' : 'Paragraph',
           });
         }
+      } else if (block.type === 'image' && imageCount < maxImages) {
+        allContent.push({
+          type: 'image',
+          base64: block.base64,
+          caption: `Image from page ${pageNum}`,
+        });
+        imageCount++;
       }
     }
+  }
 
-    return {
-      card,
-      visualized: visualized.length > 0 ? visualized : undefined,
-    };
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    notifyError('PDF extraction failed', error);
+  notifyInfo(
+    `PDF extraction completed. Found ${allContent.length} content blocks, ${imageCount} images, ` +
+      `on ${actualPageCount} pages.`,
+  );
 
-    const errorCard: CardModel = {
-      content: {
-        type: 'text',
-        text: `Failed to extract PDF: ${errorMsg}`,
-      },
-      source: options?.source || 'file',
-      url: typeof file === 'string' ? file : 'unknown',
-      tags: ['error', 'pdf'],
-      timestamp: new Date(),
-    };
-
-    return {
-      card: errorCard,
+  // Create the main card
+  let cardContent: CardContent;
+  if (allContent.length === 0) {
+    throw new Error('No extractable content found in PDF document');
+  } else if (allContent.length === 1) {
+    cardContent = allContent[0];
+  } else {
+    cardContent = {
+      type: 'nested',
+      cards: allContent,
     };
   }
+
+  const card: CardModel = {
+    content: cardContent,
+    source: options?.source || 'file',
+    url,
+    timestamp: new Date(),
+  };
+
+  // Generate visualizations if requested
+  const visualized: Image[] = [];
+  if (visualizePages) {
+    for (let pageNum = 1; pageNum <= actualPageCount; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const pageVis = await generatePageVisualization(page, pageNum);
+      if (pageVis) {
+        visualized.push(pageVis);
+      }
+    }
+  }
+
+  return { card, visualized };
 }
 
 const _cardFromPdf = everywhere('_cardFromPdf', _cardFromPdfImpl, ['sidebar', 'content']);
@@ -1032,58 +979,56 @@ function isRegionTooSimple(ctx: CanvasRenderingContext2D, region: BoundingBox, t
   return variance < 30;
 }
 
+// ---- Visualization for Debugging ----
+
 /**
  * Generate visualization for a page showing detected regions
  */
-async function generatePageVisualization(page: PDFPageProxy, pageNumber: number): Promise<PageVisualization | null> {
-  try {
-    const scale = 2; // Higher scale for better quality
-    const viewport = page.getViewport({ scale });
+async function generatePageVisualization(page: PDFPageProxy, pageNumber: number): Promise<Image | null> {
+  const scale = 1.0;
+  const viewport = page.getViewport({ scale });
 
-    // Create canvas for base rendering
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d')!;
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+  // Create canvas for base rendering
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d')!;
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
 
-    // Render the page
-    await page.render({
-      canvasContext: context,
-      canvas: canvas,
-      viewport: viewport,
-    }).promise;
+  // Render the page
+  await page.render({
+    canvasContext: context,
+    canvas: canvas,
+    viewport: viewport,
+  }).promise;
 
-    // Get text bounds for visualization
-    const textContent = await page.getTextContent();
-    const textBounds = getTextBoundingBoxes(textContent as any, viewport);
+  // Get text bounds for visualization
+  const textContent = await page.getTextContent();
+  const textBounds = getTextBoundingBoxes(textContent as any, viewport);
 
-    // Detect graphics regions
-    const graphicBlocks = await detectGraphicsRegions(page);
+  // Detect graphics regions
+  const graphicBlocks = await detectGraphicsRegions(page);
 
-    // Find inked regions for visualization
-    const inkedRegions = await findInkedRegionsForVisualization(context, canvas.width, canvas.height);
+  // Find inked regions for visualization
+  const inkedRegions = await findInkedRegionsForVisualization(context, canvas.width, canvas.height);
 
-    // Draw visualizations on top of the rendered page
-    drawVisualizationOverlays(context, {
-      textBounds,
-      graphicBlocks,
-      inkedRegions,
-      scale,
-    });
+  // Draw visualizations on top of the rendered page
+  drawVisualizationOverlays(context, {
+    textBounds,
+    graphicBlocks,
+    inkedRegions,
+    scale,
+  });
 
-    // Convert to base64
-    const dataUrl = canvas.toDataURL('image/png');
-    const base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
+  // Convert to base64
+  const dataUrl = canvas.toDataURL('image/png');
+  const base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
 
-    return {
-      pageNumber,
-      base64,
-      mimeType: 'image/png',
-    };
-  } catch (error) {
-    notifyDebug(`Failed to generate visualization for page ${pageNumber}`, error);
-    return null;
-  }
+  return {
+    base64,
+    mimeType: 'image/png',
+    width: canvas.width,
+    height: canvas.height,
+  };
 }
 
 /**
@@ -1223,4 +1168,15 @@ function drawLegend(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHe
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     ctx.fillText(item.label, legendX + padding + boxSize + 10, y);
   });
+}
+
+// ---- PDF.JS helpers ----
+
+function initializePdfJs() {
+  // Set worker source
+  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('external/pdf.worker.min.mjs');
+  } else {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.4.54/pdf.worker.min.mjs';
+  }
 }
