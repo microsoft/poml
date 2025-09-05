@@ -15,7 +15,6 @@ import type {
   CstOpenTagPartialNode,
   CstCloseTagNode,
   CstElementNode,
-  CstLiteralTagTokens,
 } from 'poml/next/nodes';
 
 function withParser<T>(input: string, run: (p: ExtendedPomlParser) => T) {
