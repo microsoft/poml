@@ -6,6 +6,86 @@ export interface AstNode {
 }
 
 /**
+ * Plain token sequences helpers from the lexer.
+ */
+
+export interface CstCommentTokens extends CstNode {
+  // Can be empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstExpressionTokens extends CstNode {
+  // Always trim the ws around the expression {{ expr }}.
+  // Must be non-empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstDoubleQuotedTokens extends CstNode {
+  // The untrimmed content within "...", can be empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstDoubleQuotedTrimmedTokens extends CstNode {
+  // Trimmed content in "..." without leading/trailing whitespace
+  // Must be non-empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstSingleQuotedTokens extends CstNode {
+  // The untrimmed content in '...', can be empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstSingleQuotedTrimmedTokens extends CstNode {
+  // Trimmed content without leading/trailing whitespace
+  // Must be non-empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstDoubleQuotedExpressionTokens extends CstNode {
+  // Contents in "...{{ ... }}..." but outside the {{ }}
+  // Must be non-empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstSingleQuotedExpressionTokens extends CstNode {
+  // Contents in '...{{ ... }}...' but outside the {{ }}
+  // Must be non-empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstBetweenTagsTokens extends CstNode {
+  // Plain texts within tags but outside nested tags. Must be non-empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+export interface CstLiteralTagTokens extends CstNode {
+  // Plain texts within literal tags like <text>...</text>.
+  // Match greedily. Can be empty.
+  children: {
+    Content: IToken[];
+  };
+}
+
+/**
  * Represents a JavaScript expression as a string.
  *
  * This node stores raw expression text that will be evaluated at runtime.
@@ -64,7 +144,7 @@ export interface CstTemplateNode extends CstNode {
     // Content inside {{ and }} is treated as a single expression token.
     // Eats everything until the next }} (or the whitespace before it).
     // Handles \{{ and \}} escapes. We won't escape other chars here.
-    Content?: IToken[];
+    Content?: CstExpressionTokens[];
     // If it's close to the ending }}, try to eat whitespace before it.
     WsAfterContent?: IToken[];
     TemplateClose?: IToken[];
@@ -130,7 +210,7 @@ export interface CstQuotedNode extends CstNode {
   children: {
     OpenQuote?: IToken[];
     // This is a normal quoted string without templates inside.
-    Content?: IToken[];
+    Content?: (CstDoubleQuotedTokens | CstSingleQuotedTokens)[];
     CloseQuote?: IToken[];
   };
 }
@@ -139,7 +219,7 @@ export interface CstQuotedTemplateNode extends CstNode {
   children: {
     OpenQuote?: IToken[];
     // Allows "Hello {{ friend["abc"] }}!" - mix of text and templates (with quotes).
-    Content?: (IToken | CstTemplateNode)[];
+    Content?: (CstDoubleQuotedExpressionTokens | CstSingleQuotedExpressionTokens | CstTemplateNode)[];
     CloseQuote?: IToken[];
   };
 }
@@ -186,7 +266,7 @@ export interface CstForIteratorNode extends CstNode {
     // But as we are in a quoted string, we need to handle
     // backslash escapes like \" and \'.
     // Greedily match until the next unescaped quote or ws before it.
-    Collection?: IToken[];
+    Collection?: (CstDoubleQuotedTrimmedTokens | CstSingleQuotedTrimmedTokens)[];
     WsAfterCollection?: IToken[];
     CloseQuote?: IToken[];
   };
@@ -403,7 +483,7 @@ export interface CstElementNode extends CstNode {
     OpenTagPartial?: CstOpenTagPartialNode[];
     OpenTagCloseBracket?: IToken[];
     Content?: CstElementContentNode[];
-    TextContent?: IToken[]; // For literal elements like <text>
+    TextContent?: CstLiteralTagTokens[]; // For literal elements like <text>
     CloseTag?: CstCloseTagNode[];
     // Alternative, it can also be a self-closing tag.
     SelfCloseBracket?: IToken[];
@@ -416,7 +496,7 @@ export interface CstElementContentNode extends CstNode {
     Comment?: CstCommentNode[];
     Pragma?: CstPragmaNode[];
     Template?: CstTemplateNode[];
-    TextContent?: IToken[];
+    TextContent?: CstBetweenTagsTokens[];
   };
 }
 
@@ -441,7 +521,7 @@ export interface CommentNode extends AstNode {
 export interface CstCommentNode extends CstNode {
   children: {
     CommentOpen?: IToken[];
-    Content?: IToken[];
+    Content?: CstCommentTokens[];
     CommentClose?: IToken[];
   };
 }
