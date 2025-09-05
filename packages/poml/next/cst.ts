@@ -200,6 +200,9 @@ export class ExtendedPomlParser extends CstParser {
           );
         },
       });
+
+      this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsBeforeClose' }));
+      this.CONSUME2(TemplateClose);
     });
 
     this.comment = this.RULE('comment', () => {
@@ -297,9 +300,9 @@ export class ExtendedPomlParser extends CstParser {
             this.CONSUME(DoubleQuote, { LABEL: 'OpenQuote' });
             this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
             this.CONSUME(Identifier, { LABEL: 'Iterator' });
-            this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' }));
+            this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' });
             this.CONSUME2(Identifier, { LABEL: 'InKeyword' });
-            this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' }));
+            this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' });
             // It's written as a double quoted expression without {{ }} here
             // but it will be treated as an expression in the semantic analysis stage.
             this.AT_LEAST_ONE({
@@ -308,7 +311,7 @@ export class ExtendedPomlParser extends CstParser {
                 this.OR(this.anyOf(TokensDoubleQuoted, 'Content'));
               },
             });
-            this.OPTION4(() => this.CONSUME5(Whitespace, { LABEL: 'WsAfterCollection' }));
+            this.OPTION2(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterCollection' }));
             this.CONSUME2(DoubleQuote, { LABEL: 'CloseQuote' });
           },
         },
@@ -316,10 +319,10 @@ export class ExtendedPomlParser extends CstParser {
           ALT: () => {
             this.CONSUME(SingleQuote, { LABEL: 'OpenQuote' });
             this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
-            this.CONSUME3(Identifier, { LABEL: 'Iterator' });
-            this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' }));
-            this.CONSUME4(Identifier, { LABEL: 'InKeyword' });
-            this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' }));
+            this.CONSUME(Identifier, { LABEL: 'Iterator' });
+            this.CONSUME2(Whitespace, { LABEL: 'WsAfterIterator' });
+            this.CONSUME2(Identifier, { LABEL: 'InKeyword' });
+            this.CONSUME3(Whitespace, { LABEL: 'WsAfterIn' });
             // Similar for single quoted expression
             this.AT_LEAST_ONE({
               GATE: () => !this.isAlmostClose(DoubleQuote),
@@ -327,7 +330,7 @@ export class ExtendedPomlParser extends CstParser {
                 this.OR(this.anyOf(TokensSingleQuoted, 'Content'));
               },
             });
-            this.OPTION4(() => this.CONSUME5(Whitespace, { LABEL: 'WsAfterCollection' }));
+            this.OPTION2(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterCollection' }));
             this.CONSUME2(SingleQuote, { LABEL: 'CloseQuote' });
           },
         },
@@ -362,12 +365,11 @@ export class ExtendedPomlParser extends CstParser {
       this.CONSUME(OpenBracket);
       this.OPTION(() => this.CONSUME(Whitespace, { LABEL: 'WsAfterOpen' }));
       const tagTok = this.CONSUME(Identifier, { LABEL: 'TagName' });
-      this.OPTION2(() => this.CONSUME2(Whitespace, { LABEL: 'WsAfterName' }));
       this.MANY(() => {
-        this.OPTION3(() => this.CONSUME3(Whitespace, { LABEL: 'WsBeforeEachAttribute' }));
+        this.CONSUME2(Whitespace, { LABEL: 'WsBeforeEachAttribute' });
         this.SUBRULE(this.attribute, { LABEL: 'Attribute' });
       });
-      this.OPTION4(() => this.CONSUME4(Whitespace, { LABEL: 'WsAfterAll' }));
+      this.OPTION2(() => this.CONSUME3(Whitespace, { LABEL: 'WsAfterAll' }));
 
       // Compute & return semantic info (to discriminate literal tags and text tags)
       return this.ACTION(() => ({
@@ -411,11 +413,17 @@ export class ExtendedPomlParser extends CstParser {
         },
         {
           ALT: () => {
-            this.OPTION(() => this.CONSUME(CloseBracket, { LABEL: 'OpenTagCloseBracket' }));
+            this.CONSUME(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
             this.MANY(() => {
               this.SUBRULE(this.elementContent, { LABEL: 'Content' });
             });
             this.SUBRULE2(this.closeTag);
+          },
+        },
+        {
+          ALT: () => {
+            // Self-closing tag - no content, no closing tag
+            this.CONSUME(SelfCloseBracket);
           },
         },
       ]);
