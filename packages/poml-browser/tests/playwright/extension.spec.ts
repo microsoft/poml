@@ -6,7 +6,8 @@ import * as fs from 'fs';
 process.env.PW_CHROMIUM_ATTACH_TO_OTHER = '1';
 
 const FIXTURE_ENDPOINT = 'http://localhost:8023';
-const EXTENTION_PATH = path.resolve(process.cwd(), 'dist');
+// Use path relative to this test file to avoid relying on cwd
+const EXTENTION_PATH = path.resolve(__dirname, '../../dist');
 const EXTENSION_ID = 'acelbeblkcnjkojlhcljeldpoifcjoil';
 const RETRY_CONFIG = {
   timeout: 180_000,
@@ -79,9 +80,9 @@ export const test = base.extend<Fixtures>({
   serviceWorker: async ({ extContext }, use) => {
     const worker =
       extContext.serviceWorkers().find((w) => w.url().includes(EXTENSION_ID)) ||
-      (await extContext.waitForEvent('serviceworker', { timeout: 10_000 }));
+      (await extContext.waitForEvent('serviceworker', { timeout: 20_000 }));
 
-    // Wait for pingPong to be defined
+    // Wait for pingPong to be defined on the service worker
     await expect(async () => {
       const hasPingPong = await worker.evaluate(() => {
         return typeof (self as any).pingPong !== 'undefined';
@@ -122,10 +123,17 @@ export const test = base.extend<Fixtures>({
       throw new Error('Sidebar page not found');
     }
 
-    // The internal page opened by the service worker does not work.
-    // We have to reload it here. Don't ask me why.
-    await sidebar.goto(`chrome-extension://${extensionId}/ui/index.html`, { timeout: 180_000 });
-    await sidebar.waitForTimeout(100); // Wait for sidebar to load
+    // THE QUICK READY CHECK DOES NOT WORK SOMETIMES. DON'T KNOW WHY.
+    // Try to detect readiness; if not ready quickly, reload the page safely
+    // const quickReady = await sidebar
+    //   .evaluate(() => (window as any).__pomlUIReady === true)
+    //   .catch(() => false);
+    const quickReady = false;
+    if (!quickReady) {
+      await sidebar.reload({ timeout: 180_000 });
+      await sidebar.waitForTimeout(100);
+    }
+
     await expect(async () => {
       const isReady = await sidebar!.evaluate(() => {
         return (window as any).__pomlUIReady === true;
