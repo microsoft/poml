@@ -166,6 +166,40 @@ export interface CardFromHtmlOptions extends CreateCardOptions {
   source?: CardSource;
 }
 
+/**
+ * Options for cardFromPdf function
+ */
+export interface CardFromPdfOptions extends CreateCardOptions {
+  /**
+   * Maximum number of pages to extract from the PDF.
+   * @default 100
+   */
+  maxPages?: number;
+
+  /**
+   * Maximum number of images to extract from the PDF.
+   * @default 10
+   */
+  maxImages?: number;
+
+  /**
+   * Whether to exclude page numbers from the extracted content.
+   * @default true
+   */
+  excludePageNumbers?: boolean;
+
+  /**
+   * Whether to generate page visualizations for debug.
+   * @default false
+   */
+  visualizePages?: boolean;
+}
+
+export interface CardFromPdfResult {
+  card: CardModel;
+  visualized?: Image[]; // Optional array of page visualization for debug
+}
+
 // Global registry type that will be extended by users
 export interface GlobalFunctions extends FunctionRegistry {
   // Please put the signatures of global functions here
@@ -183,6 +217,7 @@ export interface GlobalFunctions extends FunctionRegistry {
     filePath: string,
     options?: { encoding?: 'utf-8' | 'utf8' | 'base64' | 'binary' },
   ) => Promise<TextFile | BinaryFile>;
+  _cardFromPdf: (file: string | File | Blob | ArrayBuffer, options?: CardFromPdfOptions) => Promise<CardFromPdfResult>;
 
   // Functions for testing purposes
   pingPongContent: (message: any, delay: number) => Promise<any>;
