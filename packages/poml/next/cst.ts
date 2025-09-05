@@ -268,6 +268,8 @@ export class ExtendedPomlParser extends CstParser {
     });
 
     this.singleQuotedTrimmedTokens = this.RULE('singleQuotedTrimmedTokens', () => {
+      // Trimmed content without leading/trailing whitespace
+      // Must be non-empty.
       // Greedily match until the next single quote (allow inner whitespace)
       this.AT_LEAST_ONE({
         GATE: () => !this.atAlmostClose(SingleQuote),
