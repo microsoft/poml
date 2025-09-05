@@ -43,7 +43,10 @@ describe('CST Parser Rules', () => {
     const { node } = withParser('<!-- hello -->', (p) => p.comment()) as { node: CstCommentNode };
     expect(node.name).toBe('comment');
     expect(node.children.CommentOpen?.[0].image).toBe('<!--');
-    expect(node.children.Content?.map((t) => t.image).join('')).toContain('hello');
+    // Content is a CstCommentTokens node, not raw tokens
+    const contentNode = node.children.Content?.[0];
+    const contentText = contentNode?.children.Content?.map((t) => t.image).join('') || '';
+    expect(contentText).toContain('hello');
     expect(node.children.CommentClose?.[0].image).toBe('-->');
   });
 
@@ -66,7 +69,10 @@ describe('CST Parser Rules', () => {
     const { node: node1 } = withParser('"hello"', (p) => p.quoted()) as { node: CstQuotedNode };
     expect(node1.name).toBe('quoted');
     expect(node1.children.OpenQuote?.[0].image).toBe('"');
-    expect(node1.children.Content?.map((t) => t.image).join('')).toBe('hello');
+    // Content is a CstDoubleQuotedTokens node
+    const contentNode = node1.children.Content?.[0];
+    const contentText = contentNode?.children.Content?.map((t) => t.image).join('') || '';
+    expect(contentText).toBe('hello');
     expect(node1.children.CloseQuote?.[0].image).toBe('"');
 
     const { node: node2 } = withParser("'world'", (p) => p.quoted()) as { node: CstQuotedNode };

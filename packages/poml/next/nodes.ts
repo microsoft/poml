@@ -70,6 +70,14 @@ export interface CstSingleQuotedExpressionTokens extends CstNode {
   };
 }
 
+export interface CstCommentIdentifierTokens extends CstNode {
+  // Non-whitespace tokens in comments used as identifiers in pragmas.
+  // Supports special chars like +, -, etc. Must be non-empty.
+  children: {
+    Content?: IToken[];
+  };
+}
+
 export interface CstBetweenTagsTokens extends CstNode {
   // Plain texts within tags but outside nested tags. Must be non-empty.
   children: {

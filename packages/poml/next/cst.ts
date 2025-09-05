@@ -5,6 +5,7 @@ import {
   TokensExpression,
   TokensDoubleQuoted,
   TokensSingleQuoted,
+  TokensCommentIdentifiers,
   TokensDoubleQuotedExpression,
   TokensSingleQuotedExpression,
   TokensTextContent,
@@ -28,6 +29,7 @@ import {
 import {
   CstCommentTokens,
   CstExpressionTokens,
+  CstCommentIdentifierTokens,
   CstDoubleQuotedTokens,
   CstDoubleQuotedTrimmedTokens,
   CstSingleQuotedTokens,
@@ -66,6 +68,7 @@ export class ExtendedPomlParser extends CstParser {
   // token-sequence helper rules
   public commentTokens!: (idxInOriginalText?: number) => CstCommentTokens;
   public expressionTokens!: (idxInOriginalText?: number) => CstExpressionTokens;
+  public commentIdentifierTokens!: (idxInOriginalText?: number) => CstCommentIdentifierTokens;
   public doubleQuotedTokens!: (idxInOriginalText?: number) => CstDoubleQuotedTokens;
   public singleQuotedTokens!: (idxInOriginalText?: number) => CstSingleQuotedTokens;
   public doubleQuotedTrimmedTokens!: (idxInOriginalText?: number) => CstDoubleQuotedTrimmedTokens;
@@ -214,6 +217,12 @@ export class ExtendedPomlParser extends CstParser {
       });
     });
 
+    this.commentIdentifierTokens = this.RULE('commentIdentifierTokens', () => {
+      this.AT_LEAST_ONE(() => {
+        this.OR(this.anyOf(TokensCommentIdentifiers, 'Content'));
+      });
+    });
+
     this.expressionTokens = this.RULE('expressionTokens', () => {
       this.AT_LEAST_ONE({
         GATE: () => !this.atAlmostClose(TemplateClose),
@@ -313,10 +322,13 @@ export class ExtendedPomlParser extends CstParser {
         this.CONSUME3(Whitespace, { LABEL: 'WsBeforeEachOption' });
         this.OR([
           {
+            // Try quoted options first
             ALT: () => this.SUBRULE(this.quoted, { LABEL: 'PragmaOption' }),
           },
           {
-            ALT: () => this.CONSUME2(Identifier, { LABEL: 'PragmaOption' }),
+            // Then try identifier tokens (can include +, -, etc.)
+            GATE: () => this.LA(1).tokenType !== SingleQuote && this.LA(1).tokenType !== DoubleQuote,
+            ALT: () => this.SUBRULE2(this.commentIdentifierTokens, { LABEL: 'PragmaOption' }),
           },
         ]);
       });

@@ -109,6 +109,8 @@ export const XmlBracketTokens = [
 ];
 
 export const TokensComment = AllTokens.filter((tokenType) => tokenType !== CommentClose);
+// Tokens used in comment, but disallow whitespace, used in @pragma as "identifiers".
+export const TokensCommentIdentifiers = TokensComment.filter((tokenType) => tokenType !== Whitespace);
 
 // Tokens used in expressions (inside {{ and }}), excluding the closing braces.
 // Opening braces {{ should work, but they should be generally properly escaped inside to avoid confusion.
