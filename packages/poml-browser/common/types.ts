@@ -13,6 +13,13 @@ export interface CardModel {
 
 export type CardSource = 'manual' | 'clipboard' | 'drop' | 'file' | 'webpage' | 'generated';
 
+export interface TabInfo {
+  url: string;
+  title: string;
+  contentType: string;
+  isReady: boolean;
+}
+
 export interface CreateCardOptions {
   source?: CardSource;
 }
@@ -211,6 +218,23 @@ export interface CardFromGdocOptions extends CreateCardOptions {
   maxElements?: number;
 }
 
+/**
+ * Options for cardFromMsword function
+ */
+export interface CardFromMswordOptions extends CreateCardOptions {
+  /**
+   * Maximum number of elements to process
+   * @default 1000
+   */
+  maxElements?: number;
+
+  /**
+   * Whether to include images from the document
+   * @default false
+   */
+  includeImages?: boolean;
+}
+
 // Global registry type that will be extended by users
 export interface GlobalFunctions extends FunctionRegistry {
   // Please put the signatures of global functions here
@@ -230,6 +254,8 @@ export interface GlobalFunctions extends FunctionRegistry {
   ) => Promise<TextFile | BinaryFile>;
   _cardFromPdf: (file: string | File | Blob | ArrayBuffer, options?: CardFromPdfOptions) => Promise<CardFromPdfResult>;
   cardFromGdoc: (url: string, options?: CardFromGdocOptions) => Promise<CardModel>;
+  cardFromMsword: (options?: CardFromMswordOptions) => Promise<CardModel>;
+  getTabInfo: () => Promise<TabInfo>;
 
   // Functions for testing purposes
   pingPongContent: (message: any, delay: number) => Promise<any>;

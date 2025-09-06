@@ -32,22 +32,6 @@ class GoogleDocsManager {
   private accessToken: string | null = null;
 
   /**
-   * Check if the current tab is a Google Docs document
-   */
-  async checkGoogleDocsTab(): Promise<boolean> {
-    try {
-      if (!chrome.tabs) {
-        return false;
-      }
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      return (tab && tab.url && tab.url.includes('docs.google.com/document')) || false;
-    } catch (error) {
-      notifyDebug('Error checking Google Docs tab', error);
-      return false;
-    }
-  }
-
-  /**
    * Authenticate with Google and get access token
    */
   private async authenticateGoogle(): Promise<string> {
@@ -85,6 +69,8 @@ class GoogleDocsManager {
    * Note: This runs in the extension context, not as a content script
    */
   async fetchGoogleDocsContent(isRetry: boolean = false, options: Required<CardFromGdocOptions>): Promise<CardModel> {
+    const { maxElements, source } = options;
+
     if (!chrome.tabs) {
       throw new Error('Chrome extension APIs not available');
     }
@@ -127,7 +113,7 @@ class GoogleDocsManager {
 
     const document = await response.json();
     notifyDebugVerbose('Google Docs API response', document);
-    const { maxElements } = options;
+
     let elementCount = 0;
     let skippedTables = 0;
     let skippedOtherElements = 0;
@@ -240,9 +226,8 @@ class GoogleDocsManager {
 
     const parentCard: CardModel = {
       content: mainContent,
-      source: 'webpage',
+      source: source,
       url: tab.url,
-      tags: ['google-docs', 'document'],
       timestamp: new Date(),
     };
 
