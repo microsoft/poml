@@ -3,3 +3,4 @@
 export { getSettings, setSettings } from '../common/settings';
 export { pingPong } from '../common/rpc';
 export { cardFromHtml } from '@common/imports/html';
+export { cardFromPdf } from '@common/imports/pdf';

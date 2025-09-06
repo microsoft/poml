@@ -6,7 +6,7 @@ import type {
   PDFDocumentLoadingTask,
 } from 'pdfjs-dist/types/src/display/api';
 import { base64ToBinary } from '@common/utils/base64';
-import { notifyDebug, notifyError, notifyInfo } from '@common/notification';
+import { notifyDebug, notifyDebugMoreVerbose, notifyError, notifyInfo } from '@common/notification';
 import { CardModel, CardContent, CardFromPdfOptions, CardFromPdfResult, Image } from '@common/types';
 import { everywhere } from '@common/rpc';
 import { readFile } from './file';
@@ -90,20 +90,24 @@ export async function _cardFromPdfImpl(
   // Load PDF based on file type
   if (typeof file === 'string') {
     if (file.startsWith('http://') || file.startsWith('https://')) {
+      notifyDebugMoreVerbose('Loading PDF from URL', { url: file });
       url = file;
       loadingTask = pdfjsLib.getDocument({ url: file });
     } else {
+      notifyDebugMoreVerbose('Loading PDF from local file path', { path: file });
       url = file;
       const buffer = await readFile(file, { encoding: 'binary' });
       loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer.content) });
     }
   } else if (file instanceof File || file instanceof Blob) {
+    notifyDebugMoreVerbose('Loading PDF from File/Blob', { file });
     if (file instanceof File) {
       url = file.name;
     }
     const arrayBuffer = await file.arrayBuffer();
     loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
   } else if (file instanceof ArrayBuffer) {
+    notifyDebugMoreVerbose('Loading PDF from ArrayBuffer', { file });
     loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(file) });
   }
   if (!loadingTask) {
@@ -142,7 +146,7 @@ export async function _cardFromPdfImpl(
       return a.x - b.x;
     });
 
-    notifyDebug(`Processed page ${pageNum}/${actualPageCount}, found ${contentBlocks} blocks.`);
+    notifyDebug(`Processed page ${pageNum}/${actualPageCount}, found ${contentBlocks.length} blocks.`);
 
     // Convert blocks to CardContent
     for (const block of contentBlocks) {
@@ -205,7 +209,8 @@ export async function _cardFromPdfImpl(
   return { card, visualized };
 }
 
-const _cardFromPdf = everywhere('_cardFromPdf', _cardFromPdfImpl, ['sidebar', 'content']);
+// Can't use cardFromPdf in sidebar because pdfjs is stubbed there.
+export const _cardFromPdf = everywhere('_cardFromPdf', _cardFromPdfImpl, ['content']);
 
 /**
  * Extract page content with enhanced graphics region extraction
