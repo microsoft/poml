@@ -1,6 +1,15 @@
-import { notifyDebug, notifyError, notifyInfo, notifyDebugVerbose, notifyWarning } from '@common/notification';
-import { CardModel, TextCardContent, CardFromGdocOptions } from '@common/types';
+import { notifyDebug, notifyInfo, notifyDebugVerbose, notifyWarning, notifyError } from '@common/notification';
+import {
+  CardModel,
+  TextCardContent,
+  CardFromGdocOptions,
+  HeaderCardContent,
+  CardContentWithHeader,
+  NestedCardContent,
+  CardContent,
+} from '@common/types';
 import { everywhere } from '@common/rpc';
+import { eliminateHeaderCards } from '@common/utils/card';
 
 /**
  * Main function to convert Google Docs to CardModel
@@ -120,8 +129,10 @@ class GoogleDocsManager {
     notifyDebugVerbose('Google Docs API response', document);
     const { maxElements } = options;
     let elementCount = 0;
+    let skippedTables = 0;
+    let skippedOtherElements = 0;
 
-    const textContent: string[] = [];
+    const allCards: CardContentWithHeader[] = [];
 
     // Process document body and extract structured content
     const processContent = (content: any): void => {
@@ -136,6 +147,17 @@ class GoogleDocsManager {
 
         if (element.paragraph) {
           let paragraphText = '';
+          let isHeading = false;
+          let headingLevel = 0;
+
+          // Check for heading style
+          if (element.paragraph.paragraphStyle?.namedStyleType) {
+            const styleType = element.paragraph.paragraphStyle.namedStyleType;
+            if (styleType.startsWith('HEADING_')) {
+              isHeading = true;
+              headingLevel = parseInt(styleType.replace('HEADING_', ''), 10);
+            }
+          }
 
           // Extract text from paragraph elements
           for (const paragraphElement of element.paragraph.elements || []) {
@@ -146,34 +168,74 @@ class GoogleDocsManager {
 
           // Only add non-empty paragraphs
           if (paragraphText.trim()) {
-            textContent.push(paragraphText.trim());
+            if (isHeading) {
+              // Create header card
+              const headerCard: HeaderCardContent = {
+                type: 'header',
+                text: paragraphText.trim(),
+                level: headingLevel,
+              };
+              allCards.push(headerCard);
+            } else {
+              // Create text card
+              const textCard: TextCardContent = {
+                type: 'text',
+                text: paragraphText.trim(),
+              };
+              allCards.push(textCard);
+            }
             elementCount++;
           }
+        } else if (element.table) {
+          // Count but skip table processing - not supported
+          skippedTables++;
+        } else {
+          // Count other unprocessed elements
+          skippedOtherElements++;
         }
-        // Skip table processing - not supported
       }
     };
 
     processContent(document.body);
 
+    // Notify about unprocessed elements
+    if (skippedTables > 0) {
+      notifyInfo(`Skipped ${skippedTables} table(s) - table processing is not currently supported`);
+    }
+    if (skippedOtherElements > 0) {
+      notifyInfo(`Skipped ${skippedOtherElements} other element(s) (images, drawings, etc.)`);
+    }
+
     // Create the main card content
     const documentTitle = document.title && document.title.trim() ? document.title : 'Google Docs Document';
-    let mainContent: TextCardContent;
+    let mainContent: CardContent | undefined = undefined;
 
-    if (textContent.length > 0) {
-      // Text content
-      mainContent = {
-        type: 'text',
-        text: textContent.join('\n\n'),
-        caption: documentTitle,
-      };
-    } else {
-      // No content found
-      mainContent = {
-        type: 'text',
-        text: 'No content could be extracted from this Google Docs document.',
-        caption: documentTitle,
-      };
+    if (allCards.length > 0) {
+      // Use eliminateHeaderCards to merge headers with content
+      const processedCards = eliminateHeaderCards(allCards);
+
+      if (processedCards.length === 1) {
+        // Single card - add document title as caption if not already set
+        mainContent = processedCards[0];
+        if (!mainContent.caption) {
+          mainContent.caption = documentTitle;
+        }
+      } else if (processedCards.length > 1) {
+        // Multiple cards - create nested structure
+        mainContent = {
+          type: 'nested',
+          cards: processedCards,
+          caption: documentTitle,
+        };
+      } else {
+        // No processed cards (shouldn't happen but handle gracefully)
+        notifyError('No content could be extracted after processing the Google Docs document.');
+      }
+    }
+
+    if (!mainContent) {
+      // No processed cards (shouldn't happen but handle gracefully)
+      throw new Error('No content could be extracted after processing the Google Docs document.');
     }
 
     const parentCard: CardModel = {
@@ -184,8 +246,11 @@ class GoogleDocsManager {
       timestamp: new Date(),
     };
 
+    const headerCount = allCards.filter((card) => card.type === 'header').length;
+    const textCount = allCards.filter((card) => card.type === 'text').length;
+
     notifyInfo(
-      `Google Docs content extracted successfully. Found ${textContent.length} text paragraphs` +
+      `Google Docs content extracted successfully. Found ${headerCount} header(s), ${textCount} text paragraph(s)` +
         ` and ${elementCount} total elements.`,
     );
 
