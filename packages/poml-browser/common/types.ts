@@ -200,6 +200,17 @@ export interface CardFromPdfResult {
   visualized?: Image[]; // Optional array of page visualization for debug
 }
 
+/**
+ * Options for cardFromGdoc function
+ */
+export interface CardFromGdocOptions extends CreateCardOptions {
+  /**
+   * Maximum number of elements to process
+   * @default 1000
+   */
+  maxElements?: number;
+}
+
 // Global registry type that will be extended by users
 export interface GlobalFunctions extends FunctionRegistry {
   // Please put the signatures of global functions here
@@ -218,6 +229,7 @@ export interface GlobalFunctions extends FunctionRegistry {
     options?: { encoding?: 'utf-8' | 'utf8' | 'base64' | 'binary' },
   ) => Promise<TextFile | BinaryFile>;
   _cardFromPdf: (file: string | File | Blob | ArrayBuffer, options?: CardFromPdfOptions) => Promise<CardFromPdfResult>;
+  cardFromGdoc: (url: string, options?: CardFromGdocOptions) => Promise<CardModel>;
 
   // Functions for testing purposes
   pingPongContent: (message: any, delay: number) => Promise<any>;
