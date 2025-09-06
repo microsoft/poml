@@ -1134,13 +1134,13 @@ function drawLegend(ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHe
     { color: 'rgba(255, 0, 100, 0.4)', label: 'Text Bounds' },
   ];
 
-  const padding = 20;
+  const padding = 10;
   const boxSize = 15;
   const lineHeight = 25;
   const fontSize = 14;
 
   // Calculate legend dimensions
-  const legendWidth = 150;
+  const legendWidth = 130;
   const legendHeight = padding * 2 + legendItems.length * lineHeight;
 
   // Position legend in top-right corner
