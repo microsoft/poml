@@ -26,8 +26,8 @@ export interface CreateCardOptions {
 
 export type PomlContainerType =
   // Formatting
-  | 'CaptionedParagraph' // Default container for text cards with a caption
-  | 'Paragraph' // Default container for text cards without a caption
+  | 'Text' // Default container for text cards
+  | 'Paragraph' // Default container for text cards with markups
   | 'Code' // Opt-in to show text cards in a code block
   // Intentions, mainly useful for categorization. Rendering may be similar, except perhaps with a different title
   | 'Example'
@@ -49,7 +49,7 @@ export type PomlContainerType =
 export interface TextCardContent {
   type: 'text';
   text: string;
-  caption?: string;
+  caption?: string; // Set caption will wrap the card again with a CaptionedParagraph component
   container?: PomlContainerType;
 }
 
@@ -57,7 +57,7 @@ export interface ListCardContent {
   type: 'list';
   items: string[];
   ordered?: boolean; // default: unordered
-  caption?: string; // Caption is for UI display only; no effect in POML conversion
+  caption?: string; // Caption for a CaptionedParagraph component
   container?: PomlContainerType; // Container has no effect for List cards
 }
 
@@ -65,7 +65,7 @@ export interface ImageCardContent {
   type: 'image';
   base64: string; // must be base64-encoded PNG
   alt?: string;
-  caption?: string; // Caption is for UI display only; no effect in POML conversion
+  caption?: string; // Caption for a CaptionedParagraph component
   container?: PomlContainerType; // Container has no effect for Image cards
 }
 
@@ -73,14 +73,14 @@ export interface TableCardContent {
   type: 'table';
   records: { [key: string]: any }[]; // array of records
   columns?: ColumnDefinition[]; // optional column definitions
-  caption?: string;
+  caption?: string; // Caption for a CaptionedParagraph component
   container?: PomlContainerType; // e.g., ExampleInput
 }
 
 export interface NestedCardContent {
   type: 'nested';
   cards: CardContent[];
-  caption?: string;
+  caption?: string; // Caption for a CaptionedParagraph component
   container?: PomlContainerType; // e.g., ExampleSet
 }
 
