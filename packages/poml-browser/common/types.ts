@@ -26,21 +26,22 @@ export interface CreateCardOptions {
 
 export type PomlContainerType =
   // Formatting
-  | 'Text' // Default container for text cards
-  | 'Paragraph' // Default container for text cards with markups
+  | 'Paragraph' // The default container if not set
+  // 'CaptionedParagraph' is auto-added when caption is set
+  | 'Text' // Opt-out of showing any format.
   | 'Code' // Opt-in to show text cards in a code block
   // Intentions, mainly useful for categorization. Rendering may be similar, except perhaps with a different title
+  | 'Task'
+  | 'Question'
+  | 'Hint'
+  | 'Role'
+  | 'OutputFormat'
+  | 'StepwiseInstructions'
   | 'Example'
   | 'ExampleInput'
   | 'ExampleOutput'
   | 'ExampleSet'
-  | 'Hint'
-  | 'Introducer'
-  | 'OutputFormat'
-  | 'Question'
-  | 'Role'
-  | 'StepwiseInstructions'
-  | 'Task';
+  | 'Introducer';
 
 // Categorization is mainly for UI rendering purposes.
 // For example, text cards should render differently from table cards.
@@ -58,7 +59,7 @@ export interface ListCardContent {
   items: string[];
   ordered?: boolean; // default: unordered
   caption?: string; // Caption for a CaptionedParagraph component
-  container?: PomlContainerType; // Container has no effect for List cards
+  container?: PomlContainerType; // Container has no effect for List cards, because it must be a List component
 }
 
 export interface ImageCardContent {
