@@ -5,10 +5,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { registerDirectUIHandler } from '@common/notification';
-import { NotificationOptions } from '@common/types';
-
-export type NotificationType = 'success' | 'error' | 'warning' | 'info';
-export type NotificationPosition = 'top' | 'bottom';
+import { NotificationOptions, NotificationType, NotificationPosition } from '@common/types';
 
 export interface Notification {
   id: string;
@@ -28,11 +25,6 @@ export interface NotificationContextType {
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => string;
   removeNotification: (id: string) => void;
   clearAllNotifications: (position?: NotificationPosition) => void;
-  // Convenience methods with positioning
-  showSuccess: (message: string, title?: string, duration?: number, position?: NotificationPosition) => string;
-  showError: (message: string, title?: string, duration?: number, position?: NotificationPosition) => string;
-  showWarning: (message: string, title?: string, duration?: number, position?: NotificationPosition) => string;
-  showInfo: (message: string, title?: string, duration?: number, position?: NotificationPosition) => string;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -84,59 +76,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const topNotifications = notifications.filter((n) => n.position === 'top');
   const bottomNotifications = notifications.filter((n) => n.position === 'bottom');
 
-  // Convenience methods
-  const showSuccess = useCallback(
-    (message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
-      return addNotification({
-        type: 'success',
-        message,
-        title,
-        duration,
-        position,
-      });
-    },
-    [addNotification],
-  );
-
-  const showError = useCallback(
-    (message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
-      return addNotification({
-        type: 'error',
-        message,
-        title,
-        duration: duration ?? 0, // Errors don't auto-hide by default
-        position,
-      });
-    },
-    [addNotification],
-  );
-
-  const showWarning = useCallback(
-    (message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
-      return addNotification({
-        type: 'warning',
-        message,
-        title,
-        duration,
-        position,
-      });
-    },
-    [addNotification],
-  );
-
-  const showInfo = useCallback(
-    (message: string, title?: string, duration?: number, position: NotificationPosition = 'top') => {
-      return addNotification({
-        type: 'info',
-        message,
-        title,
-        duration,
-        position,
-      });
-    },
-    [addNotification],
-  );
-
   // Register the direct UI handler when provider mounts
   useEffect(() => {
     const serviceHandler = (
@@ -172,10 +111,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     addNotification,
     removeNotification,
     clearAllNotifications,
-    showSuccess,
-    showError,
-    showWarning,
-    showInfo,
   };
 
   return <NotificationContext.Provider value={contextValue}>{children}</NotificationContext.Provider>;

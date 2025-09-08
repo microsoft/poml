@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Stack, Text, Select, Paper, Group, ActionIcon } from '@mantine/core';
 import { IconArrowLeft, IconPalette, IconBell } from '@tabler/icons-react';
-import { useTheme, ThemeMode } from '../contexts/ThemeContext';
+import { useTheme, ThemeMode } from '../contexts/theme-context';
 import { NotificationLevel, SettingsBundle } from '@common/types';
 import { getSettings, setSettings } from '@common/settings';
 

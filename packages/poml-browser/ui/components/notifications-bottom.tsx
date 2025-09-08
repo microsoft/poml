@@ -6,7 +6,7 @@
 import React from 'react';
 import { Box, Text, Group, ActionIcon, Stack, Alert, Transition, useMantineColorScheme } from '@mantine/core';
 import { IconX, IconCheck, IconExclamationCircle, IconAlertCircle, IconInfoCircle } from '@tabler/icons-react';
-import { useNotifications, Notification, NotificationType } from '../contexts/NotificationContext';
+import { useNotifications, Notification, NotificationType } from '../contexts/notification-context';
 
 // Icon and color mapping using Mantine theme colors
 const getNotificationConfig = (type: NotificationType) => {

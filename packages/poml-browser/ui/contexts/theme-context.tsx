@@ -1,4 +1,3 @@
-/// <reference types="chrome-types" />
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useMantineColorScheme } from '@mantine/core';
 import { getSettings, setSettings } from '@common/settings';

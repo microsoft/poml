@@ -7,9 +7,9 @@ import React, { useState } from 'react';
 import { Box, Paper, Text, useMantineTheme, useMantineColorScheme } from '@mantine/core';
 import { px } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
-import { handleDropEvent } from '@common/clipboard';
-import { CardModel, createCard } from '@common/cardModel';
-import { useNotifications } from '../contexts/NotificationContext';
+import { processDropEvent } from '@common/events/drop';
+import { CardModel } from '@common/types';
+import { notifySuccess } from '@common/notification';
 
 interface DroppableDividerProps {
   index: number;
@@ -138,7 +138,6 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
-  const { showError, showSuccess } = useNotifications();
   const theme = useMantineTheme();
 
   return (
@@ -175,61 +174,10 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
         setIsDragActive(false);
         onDragOver?.(false);
 
-        try {
-          const dropData = await handleDropEvent(e.nativeEvent as DragEvent);
-          const newCards: CardModel[] = [];
-
-          // Create cards for dropped files
-          for (const file of dropData.files) {
-            const card = createCard({
-              content:
-                file.content instanceof ArrayBuffer
-                  ? {
-                      type: 'binary',
-                      value: file.content,
-                      mimeType: file.type,
-                      encoding: 'binary',
-                    }
-                  : {
-                      type: 'text',
-                      value: file.content as string,
-                    },
-              title: file.name,
-              metadata: {
-                source: 'file',
-              },
-            });
-            newCards.push(card);
-          }
-
-          // Create card for text content if no files
-          if (dropData.files.length === 0 && dropData.plainText) {
-            const card = createCard({
-              content: {
-                type: 'text',
-                value: dropData.plainText,
-              },
-              metadata: {
-                source: 'clipboard',
-              },
-            });
-            newCards.push(card);
-          }
-
-          if (newCards.length > 0) {
-            onDrop(newCards, index);
-            showSuccess(
-              `Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`,
-              'Content Added',
-              undefined,
-              'top',
-            );
-          }
-        } catch (error) {
-          console.error('Failed to handle drop:', error);
-          showError('Failed to process dropped content', 'Drop Error');
-          // Fall back to regular add card
-          onClick(index);
+        const cards = await processDropEvent(e.nativeEvent);
+        if (cards && cards.length > 0) {
+          onDrop(cards, index);
+          notifySuccess(`Added ${cards.length} card${cards.length > 1 ? 's' : ''} from drop`, 'Content Added');
         }
       }}>
       {/* Single line when not active, double line with plus when active, hidden when drop area is visible */}

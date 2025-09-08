@@ -3,9 +3,9 @@ import React, { useState, useEffect, use } from 'react';
 import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme, px } from '@mantine/core';
 import { useListState } from '@mantine/hooks';
 import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
-import EditableCardList from './components/EditableCardList';
+import EditableCardList from './components/card-list';
 import CardModal from './components/CardModal';
-import Settings from './components/Settings';
+import Settings from './components/settings';
 import { CardModel, createCard } from '@common/cardModel';
 import { shadcnCssVariableResolver } from './themes/cssVariableResolver';
 import { shadcnTheme } from './themes/zinc';
@@ -18,10 +18,10 @@ import {
   handleDropEvent,
 } from '@common/clipboard';
 import { contentManager } from '@common/html';
-import { NotificationProvider, useNotifications } from './contexts/NotificationContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import TopNotifications from './components/TopNotifications';
-import BottomNotifications from './components/BottomNotifications';
+import { NotificationProvider, useNotifications } from './contexts/notification-context';
+import { ThemeProvider } from './contexts/theme-context';
+import TopNotifications from './components/notifications-top';
+import BottomNotifications from './components/notifications-bottom';
 import pomlHelper from '@common/pomlHelper';
 
 import { readFile } from '../common/imports/file';

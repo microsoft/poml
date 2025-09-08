@@ -40,7 +40,7 @@ export interface CardItemProps {
   onCardClick?: (card: CardModel) => void;
   editable: boolean;
   // Forward declaration for EditableCardList component
-  EditableCardListComponent?: React.ComponentType<any>;
+  EditableCardListComponent: React.ComponentType<any>;
 }
 
 // Icon map for component types
@@ -245,7 +245,7 @@ export const CardItem: React.FC<CardItemProps> = ({
                 </>
               )}
 
-              {isNestedContent(card.content) && isExpanded && EditableCardListComponent && (
+              {isNestedContent(card.content) && isExpanded && (
                 <Box mt='xs'>
                   <EditableCardListComponent
                     cards={card.content.children}
