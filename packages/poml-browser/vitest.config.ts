@@ -13,6 +13,7 @@ export default defineConfig({
       '@ui': path.resolve(__dirname, './ui'),
       '@background': path.resolve(__dirname, './background'),
       '@content': path.resolve(__dirname, './content'),
+      'poml': path.resolve(__dirname, '../poml'),
     },
   },
 });

@@ -1,5 +1,4 @@
 import React from 'react';
-import { renderToReadableStream } from 'react-dom/server';
 import { RichContent, write } from 'poml';
 import { ErrorCollection } from 'poml/base';
 import { CardModel, CardContent } from './types';
@@ -23,6 +22,7 @@ import {
   CaptionedParagraph,
 } from 'poml/components';
 import { PomlContainerType } from './types';
+import { renderElementToString } from './utils/react';
 
 // Map component type strings to actual React components
 const ComponentMap: Record<PomlContainerType, React.FC<any>> = {
@@ -123,44 +123,6 @@ export function cardsToPomlDocument(cards: CardModel[]): React.ReactElement {
   return <Text syntax='markdown'>{cards.map((card) => cardToPomlReact(card.content))}</Text>;
 }
 
-/**
- * Render a React element to string using renderToReadableStream
- */
-async function renderElementToString(element: React.ReactElement): Promise<string> {
-  ErrorCollection.clear(); // Clear any previous errors
-  let renderError: any = null;
-  const stream = await renderToReadableStream(element, {
-    onError: (error) => {
-      notifyError('Error during POML rendering', error);
-      renderError = error;
-    },
-  });
-  await stream.allReady;
-  const reader = stream.getReader();
-
-  if (renderError) {
-    notifyWarning(`POML rendering encountered an error`, renderError);
-  }
-
-  let result = '';
-  const decoder = new TextDecoder();
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    result += decoder.decode(value, { stream: true });
-  }
-  if (!ErrorCollection.empty()) {
-    throw ErrorCollection.first();
-  }
-
-  // Final decode with stream: false to flush any remaining bytes
-  result += decoder.decode();
-  return result;
-}
-
 export const richContentToString = (content: RichContent): string => {
   // This is temporary and should be replaced with a proper display function
   if (typeof content === 'string') {
@@ -213,6 +175,7 @@ export async function renderCardsByPoml(cards: CardModel[]): Promise<RichContent
         notifyWarning('Error converting POML IR to output', error);
       }
     }
+    return written;
   } catch (error: any) {
     notifyError('Error converting POML IR to output', error);
     return undefined;
