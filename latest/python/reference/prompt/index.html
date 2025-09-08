@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../../media/logo-16-purple.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.18">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.19">
     
     
       
@@ -6898,7 +6898,7 @@ In serializer syntaxes, it's ignored.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Object (<code>&lt;obj&gt;</code>, <code>&lt;dataObj&gt;</code>) displays external data or object content.
+        <p>DataObject (<code>&lt;obj&gt;</code>, <code>&lt;object&gt;</code>, <code>&lt;dataObj&gt;</code>) displays external data or object content.
 When in serialize mode, it's serialized according to the given serializer.</p>
 
 
@@ -6951,7 +6951,7 @@ When in serialize mode, it's serialized according to the given serializer.</p>
 
 <details class="example" open>
   <summary>Example</summary>
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">&lt;Object</span><span class="w"> </span><span class="na">syntax=</span><span class="s">&quot;json&quot;</span><span class="w"> </span><span class="na">data=</span><span class="s">&quot;{ key: &#39;value&#39; }&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">&lt;DataObject</span><span class="w"> </span><span class="na">syntax=</span><span class="s">&quot;json&quot;</span><span class="w"> </span><span class="na">data=</span><span class="s">&quot;{ key: &#39;value&#39; }&quot;</span><span class="w"> </span><span class="nt">/&gt;</span>
 </code></pre></div>
 </details>
 
@@ -6986,7 +6986,7 @@ When in serialize mode, it's serialized according to the given serializer.</p>
 <a id="__codelineno-0-1205" name="__codelineno-0-1205"></a>    <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <a id="__codelineno-0-1206" name="__codelineno-0-1206"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 <a id="__codelineno-0-1207" name="__codelineno-0-1207"></a><span class="p">):</span>
-<a id="__codelineno-0-1208" name="__codelineno-0-1208"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Object (`&lt;obj&gt;`, `&lt;dataObj&gt;`) displays external data or object content.</span>
+<a id="__codelineno-0-1208" name="__codelineno-0-1208"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;DataObject (`&lt;obj&gt;`, `&lt;object&gt;`, `&lt;dataObj&gt;`) displays external data or object content.</span>
 <a id="__codelineno-0-1209" name="__codelineno-0-1209"></a><span class="sd">    When in serialize mode, it&#39;s serialized according to the given serializer.</span>
 <a id="__codelineno-0-1210" name="__codelineno-0-1210"></a>
 <a id="__codelineno-0-1211" name="__codelineno-0-1211"></a><span class="sd">    Args:</span>
@@ -6995,7 +6995,7 @@ When in serialize mode, it's serialized according to the given serializer.</p>
 <a id="__codelineno-0-1214" name="__codelineno-0-1214"></a>
 <a id="__codelineno-0-1215" name="__codelineno-0-1215"></a><span class="sd">    Example:</span>
 <a id="__codelineno-0-1216" name="__codelineno-0-1216"></a><span class="sd">        ```xml</span>
-<a id="__codelineno-0-1217" name="__codelineno-0-1217"></a><span class="sd">        &lt;Object syntax=&quot;json&quot; data=&quot;{ key: &#39;value&#39; }&quot; /&gt;</span>
+<a id="__codelineno-0-1217" name="__codelineno-0-1217"></a><span class="sd">        &lt;DataObject syntax=&quot;json&quot; data=&quot;{ key: &#39;value&#39; }&quot; /&gt;</span>
 <a id="__codelineno-0-1218" name="__codelineno-0-1218"></a><span class="sd">        ```</span>
 <a id="__codelineno-0-1219" name="__codelineno-0-1219"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-1220" name="__codelineno-0-1220"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">(</span>
