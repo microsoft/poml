@@ -10,7 +10,7 @@ import {
   Header,
   Code,
   SubContent,
-  Object,
+  DataObject,
 } from 'poml/essentials';
 import { component, expandRelative } from 'poml/base';
 
@@ -205,7 +205,7 @@ export const Tree = component('Tree')((props: TreeProps) => {
   const { items, showContent, ...others } = props;
   if (presentation === 'serialize') {
     const object = treeItemsToObject(items, showContent);
-    return <Object data={object} {...others} />;
+    return <DataObject data={object} {...others} />;
   } else if (presentation === 'free') {
     if (showContent) {
       const pureText = treeToPureTextContents(items);

@@ -52,16 +52,28 @@ jobs:
         run: |
           cd packages/poml-browser
           npm run test:vitest -- --run
-      - name: Run playwright tests
-        run: |
-          cd packages/poml-browser
-          npm run test:playwright
-        if: matrix.os != 'ubuntu-latest'
+
+      - uses: nick-invision/retry@v3
+        if: matrix.os == 'macos-latest'
+        with:
+          max_attempts: 3
+          timeout_minutes: 20
+          command: |
+            cd packages/poml-browser
+            npm run test:playwright
+        name: Run playwright tests (macOS)
+
       - name: Run playwright tests (Linux)
         run: |
           cd packages/poml-browser
           xvfb-run -a npm run test:playwright
         if: matrix.os == 'ubuntu-latest'
+
+      - name: Run playwright tests (other OS)
+        run: |
+          cd packages/poml-browser
+          npm run test:playwright
+        if: matrix.os != 'ubuntu-latest' && matrix.os != 'macos-latest'
 
   build:
     strategy:

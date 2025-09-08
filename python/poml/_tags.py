@@ -1205,7 +1205,7 @@ class _TagLib:
         data: Optional[Any] = None,
         **kwargs: Any,
     ):
-        """Object (`<obj>`, `<dataObj>`) displays external data or object content.
+        """DataObject (`<obj>`, `<object>`, `<dataObj>`) displays external data or object content.
         When in serialize mode, it's serialized according to the given serializer.
 
         Args:
@@ -1214,7 +1214,7 @@ class _TagLib:
 
         Example:
             ```xml
-            <Object syntax="json" data="{ key: 'value' }" />
+            <DataObject syntax="json" data="{ key: 'value' }" />
             ```
         """
         return self.tag(
