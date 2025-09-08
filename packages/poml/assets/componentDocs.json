@@ -1460,7 +1460,7 @@
   },
   {
     "name": "Object",
-    "description": "Object (`<obj>`, `<dataObj>`) displays external data or object content.\nWhen in serialize mode, it's serialized according to the given serializer.",
+    "description": "DataObject (`<obj>`, `<object>`, `<dataObj>`) displays external data or object content.\nWhen in serialize mode, it's serialized according to the given serializer.",
     "params": [
       {
         "name": "syntax",
@@ -1484,7 +1484,7 @@
         "required": false
       }
     ],
-    "example": "```xml\n<Object syntax=\"json\" data=\"{ key: 'value' }\" />\n```",
+    "example": "```xml\n<DataObject syntax=\"json\" data=\"{ key: 'value' }\" />\n```",
     "baseComponents": [
       "Inline"
     ]

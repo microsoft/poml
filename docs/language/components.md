@@ -1011,13 +1011,13 @@ Note that syntax must be specified as `multimedia` to show the image.
 
 ### Object
 
-Object (`<obj>`, `<dataObj>`) displays external data or object content.
+DataObject (`<obj>`, `<object>`, `<dataObj>`) displays external data or object content.
 When in serialize mode, it's serialized according to the given serializer.
 
 #### Usages
 
 ```xml
-<Object syntax="json" data="{ key: 'value' }" />
+<DataObject syntax="json" data="{ key: 'value' }" />
 ```
 
 #### Parameters
