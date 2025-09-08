@@ -34,13 +34,13 @@ test.describe('processDropEvent function tests', () => {
       type: 'text',
       text: 'Hello World',
       caption: 'test.txt',
-      container: 'CaptionedParagraph',
+      container: 'Text',
     });
     expect(result.cards[1].content).toEqual({
       type: 'text',
       text: 'Hello World Again',
       caption: 'test2.txt',
-      container: 'CaptionedParagraph',
+      container: 'Text',
     });
     expect(result.cards[0].url).toBe('test.txt');
     expect(result.cards[0].source).toBe('drop');
@@ -232,7 +232,7 @@ ${endpoint}/image/wikipedia-example.svg`;
       type: 'text',
       text: 'File content',
       caption: 'test.txt',
-      container: 'CaptionedParagraph',
+      container: 'Text',
     });
     expect(result.cards[1].content).toEqual({ type: 'text', text: '', caption: 'HTML' });
   });

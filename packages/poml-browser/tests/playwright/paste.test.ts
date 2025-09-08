@@ -35,7 +35,7 @@ test.describe('processPasteEvent function tests', () => {
       type: 'text',
       text: 'Sample content',
       caption: 'document.txt',
-      container: 'CaptionedParagraph',
+      container: 'Text',
     });
     expect(result.cards[1].content).toEqual({
       type: 'text',

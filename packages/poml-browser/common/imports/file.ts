@@ -180,7 +180,7 @@ async function createTextCard(
       type: 'text',
       text: fileData.content,
       caption: metadata.name === 'blob' ? undefined : metadata.name,
-      container: typeCategory === 'code' ? 'Code' : metadata.name === 'blob' ? 'Paragraph' : 'CaptionedParagraph',
+      container: typeCategory === 'code' ? 'Code' : 'Text',
     },
     url: metadata.url,
     source: source,

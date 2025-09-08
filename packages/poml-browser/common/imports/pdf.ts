@@ -155,7 +155,7 @@ export async function _cardFromPdfImpl(
           allContent.push({
             type: 'text',
             text: block.text,
-            container: block.isHeading ? 'CaptionedParagraph' : 'Paragraph',
+            container: 'Text',
           });
         }
       } else if (block.type === 'image' && imageCount < maxImages) {
