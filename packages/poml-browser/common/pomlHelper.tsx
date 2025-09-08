@@ -26,7 +26,7 @@ import {
   SubContent,
   Inline,
   Newline,
-  Object as POMLObject,
+  DataObject,
   Image,
   Audio,
 } from 'poml/essentials';
@@ -75,7 +75,7 @@ const ComponentMap: Record<string, React.FC<any>> = {
   SubContent,
   Inline,
   Newline,
-  Object: POMLObject,
+  DataObject,
   Audio,
 
   // Intentions

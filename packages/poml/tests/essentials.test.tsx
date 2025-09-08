@@ -18,7 +18,7 @@ describe('essentials', () => {
   });
 
   test('data-obj', async () => {
-    const markup = <essentials.Object data={{ name: 'world' }} />;
+    const markup = <essentials.DataObject data={{ name: 'world' }} />;
     const result = await poml(markup);
     expect(result).toBe('{\n  "name": "world"\n}');
   });

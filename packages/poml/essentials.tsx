@@ -587,7 +587,7 @@ export const ListItem = component('ListItem', ['item'])((
 });
 
 /**
- * Object (`<obj>`, `<dataObj>`) displays external data or object content.
+ * DataObject (`<obj>`, `<object>`, `<dataObj>`) displays external data or object content.
  * When in serialize mode, it's serialized according to the given serializer.
  *
  * @param {'markdown'|'html'|'json'|'yaml'|'xml'} syntax - The syntax or serializer of the content. Default is `json`.
@@ -597,10 +597,10 @@ export const ListItem = component('ListItem', ['item'])((
  *
  * @example
  * ```xml
- * <Object syntax="json" data="{ key: 'value' }" />
+ * <DataObject syntax="json" data="{ key: 'value' }" />
  * ```
  */
-export const Object = component('Object', ['obj', 'dataObj'])((
+export const DataObject = component('Object', ['obj', 'object', 'dataObj'])((
   props: React.PropsWithChildren<PropsSyntaxBase & Serialize.ObjectProps>,
 ) => {
   const { syntax, children, ...others } = props;
@@ -776,7 +776,7 @@ export const ToolRequest = component('ToolRequest', { aliases: ['toolRequest'] }
       />
     );
   } else {
-    return <Object syntax={syntax} speaker={speaker ?? 'ai'} data={{ id, name, parameters }} {...others} />;
+    return <DataObject syntax={syntax} speaker={speaker ?? 'ai'} data={{ id, name, parameters }} {...others} />;
   }
 });
 
