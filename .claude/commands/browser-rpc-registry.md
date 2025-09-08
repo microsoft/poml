@@ -7,7 +7,7 @@ allowed-tools: ide - getDiagnostics
 The POML browser extension uses an RPC system with `everywhere()` functions that need to be properly registered in:
 
 - `GlobalFunctions` interface in `common/types.ts`
-- Worker-specific registry files (`background/registry.ts`, `contentScript/registry.ts`, `ui/registry.ts`)
+- Worker-specific registry files (`background/registry.ts`, `content-script/registry.ts`, `ui/registry.ts`)
 - Test helpers for proper testing
 
 ## Stepwise Instructions
@@ -30,7 +30,7 @@ grep -rn "everywhere(" packages/poml-browser --include="*.ts" | grep -v node_mod
 
 Consider the following registry files:
 
-1. `contentScript/registry.ts`
+1. `content-script/registry.ts`
 2. `ui/registry.ts`
 3. `background/registry.ts`
 

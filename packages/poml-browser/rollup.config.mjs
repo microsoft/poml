@@ -34,7 +34,7 @@ const aliasEntries = [
   { find: '@common', replacement: path.resolve(__dirname, 'common') },
   { find: '@ui', replacement: path.resolve(__dirname, 'ui') },
   { find: '@background', replacement: path.resolve(__dirname, 'background') },
-  { find: '@contentScript', replacement: path.resolve(__dirname, 'contentScript') },
+  { find: '@content-script', replacement: path.resolve(__dirname, 'content-script') },
 ];
 
 const pomlAliasEntries = [
@@ -197,14 +197,14 @@ export default [
     ],
   },
   {
-    input: 'contentScript/index.ts',
+    input: 'content-script/index.ts',
     output: {
-      file: 'dist/contentScript.js',
+      file: 'dist/content-script.js',
       format: 'iife',
       sourcemap: true,
     },
     watch: {
-      include: ['contentScript/**', 'common/**'],
+      include: ['content-script/**', 'common/**'],
       exclude: 'node_modules/**',
     },
     plugins: [
@@ -217,7 +217,7 @@ export default [
       }),
       typescript({
         tsconfig: './tsconfig.json',
-        include: ['poml-browser/contentScript/**/*', 'poml-browser/common/**/*'],
+        include: ['poml-browser/content-script/**/*', 'poml-browser/common/**/*'],
       }),
       json(),
       nodeResolve({

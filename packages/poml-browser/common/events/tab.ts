@@ -4,7 +4,7 @@ import { cardFromHtml } from '@common/imports/html';
 import { cardFromGdoc } from '@common/imports/gdoc';
 import { cardFromMsword } from '@common/imports/msword';
 import { notifyError, notifyInfo, notifyDebug, notifyDebugVerbose } from '@common/notification';
-import { cardFromPdf } from '@contentScript/registry';
+import { cardFromPdf } from '@content-script/registry';
 
 /**
  * When user hit the button to extract the current tab content

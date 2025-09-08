@@ -88,7 +88,7 @@ The core POML processor is built with TypeScript and React:
 ### Browser Extension (`packages/poml-browser/`)
 
 - **Background Script** (`background/`): Extension lifecycle management. Some privileged operations must be here.
-- **Content Script** (`contentScript`): Webpage interaction scripts. Must be injected into the current opening tab to execute.
+- **Content Script** (`content-script`): Webpage interaction scripts. Must be injected into the current opening tab to execute.
 - **UI Components** (`ui`): React-based UI with Mantine components for sidebar panel.
 - **Functions** (`functions`): Common utilities and functions. Clipboard, Google Docs, HTML, MS Word document handling.
 

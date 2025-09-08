@@ -11,7 +11,7 @@ The POML Browser Extension (`packages/poml-browser/`) provides POML support in w
 ### Core Components
 
 - **Background Script** (`background/`): Extension lifecycle management and privileged operations
-- **Content Script** (`contentScript/`): Webpage interaction and content extraction
+- **Content Script** (`content-script/`): Webpage interaction and content extraction
 - **UI Components** (`ui/`): React-based extension popup with Mantine components
 - **Common** (`common/`): Common utilities for clipboard, document handling, and POML processing (see below)
 
@@ -67,7 +67,7 @@ Browser-incompatible Node.js modules are stubbed. Including but not limited to:
 
 - **UI Bundle** (`dist/ui/`): Extension side panel interface
 - **Background Script** (`dist/background.js`): Service worker
-- **Content Script** (`dist/contentScript.js`): Page injection script
+- **Content Script** (`dist/content-script.js`): Page injection script
 
 ## Development Guidelines
 
@@ -80,7 +80,7 @@ Use TypeScript path aliases for clean imports:
 import { something } from '@common/*'; // Common utilities
 import { component } from '@ui/*'; // UI components
 import { service } from '@background/*'; // Background services
-import { helper } from '@contentScript/*'; // Content script helpers
+import { helper } from '@content-script/*'; // Content script helpers
 ```
 
 ### Styling with Mantine

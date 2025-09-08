@@ -258,7 +258,7 @@ class EverywhereManager {
       try {
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          files: ['contentScript.js'],
+          files: ['content-script.js'],
         });
 
         // Wait a moment for the script to initialize

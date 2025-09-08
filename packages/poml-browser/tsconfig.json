@@ -18,7 +18,7 @@
       "@common/*": ["poml-browser/common/*"],
       "@ui/*": ["poml-browser/ui/*"],
       "@background/*": ["poml-browser/background/*"],
-      "@contentScript/*": ["poml-browser/contentScript/*"]
+      "@content-script/*": ["poml-browser/content-script/*"]
     },
     "resolveJsonModule": true
   },
