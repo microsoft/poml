@@ -74,7 +74,7 @@ function getInnerComponent(card: CardContent): React.ReactElement {
       );
     }
     case 'image': {
-      return <Image base64={card.base64} alt={card.alt} />;
+      return <Image base64={card.base64} alt={card.alt} syntax='multimedia' />;
     }
     case 'table': {
       return <Table records={card.records} columns={card.columns} />;

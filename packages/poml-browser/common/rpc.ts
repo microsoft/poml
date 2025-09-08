@@ -403,8 +403,14 @@ class EverywhereManager {
   }
 }
 
-// Create singleton instance
-const everywhereManager = new EverywhereManager();
+let everywhereManager: EverywhereManager | undefined = undefined;
+
+export function getEverywhereManager(): EverywhereManager {
+  if (!everywhereManager) {
+    everywhereManager = new EverywhereManager();
+  }
+  return everywhereManager;
+}
 
 /**
  * Creates or calls a cross-context RPC function.
@@ -447,14 +453,14 @@ export function everywhere<K extends keyof GlobalFunctions>(
 ): EverywhereFn<K> {
   if (typeof handlerOrRole === 'string' || Array.isArray(handlerOrRole)) {
     // First overload: everywhere(functionName, role)
-    return everywhereManager.createFunction(functionName, handlerOrRole as Role | Role[]);
+    return getEverywhereManager().createFunction(functionName, handlerOrRole as Role | Role[]);
   } else {
     // Second overload: everywhere(functionName, handler, role)
     if (!role) {
       throw new Error('Role is required when registering a handler');
     }
-    everywhereManager.register(functionName, handlerOrRole as GlobalFunctions[K], role);
-    return everywhereManager.createFunction(functionName, role);
+    getEverywhereManager().register(functionName, handlerOrRole as GlobalFunctions[K], role);
+    return getEverywhereManager().createFunction(functionName, role);
   }
 }
 
@@ -468,7 +474,7 @@ export function registerHandlers<K extends keyof GlobalFunctions>(handlers: {
   for (const [functionName, config] of Object.entries(handlers) as Array<
     [K, { handler: GlobalFunctions[K]; role: Role | Role[] }]
   >) {
-    everywhereManager.register(functionName, config.handler, config.role);
+    getEverywhereManager().register(functionName, config.handler, config.role);
   }
 }
 
