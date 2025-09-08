@@ -15,15 +15,18 @@ import {
   CstOpenTagPartialNode,
   CstCloseTagNode,
   CstElementNode,
+  CstTokens,
 } from 'poml/next/nodes';
 
-function withParser<T>(input: string, run: (p: ExtendedPomlParser) => T) {
+function withParser<T>(input: string, run: (p: ExtendedPomlParser) => T, raiseOnError?: boolean) {
   const lex = extendedPomlLexer.tokenize(input);
   const parser = new ExtendedPomlParser();
   parser.input = lex.tokens;
   const node = run(parser);
-  expect(parser.errors).toHaveLength(0);
-  return { node, parser, tokens: lex.tokens };
+  if (raiseOnError || raiseOnError === undefined) {
+    expect(parser.errors).toHaveLength(0);
+  }
+  return { node, parser, tokens: lex.tokens, errors: parser.errors };
 }
 
 describe('CST Parser Rules', () => {
@@ -183,7 +186,7 @@ describe('CST Parser Rules', () => {
     expect(node.children.OpenTagCloseBracket?.[0].image).toBe('>');
     // Literal elements should store raw tokens under TextContent (no Template child)
     expect(node.children.TextContent?.length).toBeGreaterThan(0);
-    const content = node.children.TextContent?.[0] as CstLiteralTagTokens;
+    const content = node.children.TextContent?.[0] as CstTokens;
     const images = content.children.Content?.map((t) => t.image) || [];
     expect(images).toContain('{{');
     expect(images).toContain('}}');
@@ -359,13 +362,358 @@ done`;
     });
   });
 
-  // All kinds of whitespaces
+  test('all kinds of whitespaces', () => {
+    const input = `\t\n\r <\tdocument\t  >\n\t 　 {{  　 name   }}\r\n\t</document> 　 \t\n`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
 
-  // Single quotes, double quotes, and corner cases
+    expect(images(node)).toStrictEqual([
+      { TextContent: '\t\n\r ' },
+      {
+        Element: {
+          OpenTagPartial: {
+            OpenBracket: '<',
+            WsAfterOpen: '\t',
+            TagName: 'document',
+            WsAfterAll: '\t  ',
+          },
+          OpenTagCloseBracket: '>',
+          Content: [
+            { TextContent: '\n\t 　 ' },
+            {
+              Template: {
+                TemplateOpen: '{{',
+                WsAfterOpen: '  ',
+                Content: '　 name',
+                WsAfterContent: '   ',
+                TemplateClose: '}}',
+              },
+            },
+            { TextContent: '\r\n\t' },
+          ],
+          CloseTag: {
+            ClosingOpenBracket: '</',
+            TagName: 'document',
+            CloseBracket: '>',
+          },
+        },
+      },
+      { TextContent: ' 　 \t\n' },
+    ]);
+  });
 
-  // Matched <text></text> and <text></template></text> or <template></text></template>
+  test('single quotes vs double quotes edge cases', () => {
+    const input = `<  div id='single' class="double"  > {{ 'nested "quote"' }} </ div   >`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
 
-  // Unmatched tags should not error in cst stage
+    expect(images(node)).toStrictEqual({
+      Element: {
+        OpenTagPartial: {
+          OpenBracket: '<',
+          TagName: 'div',
+          Attribute: [
+            { AttributeKey: 'id', Equals: '=', quotedValue: { OpenQuote: "'", Content: 'single', CloseQuote: "'" } },
+            { AttributeKey: 'class', Equals: '=', quotedValue: { OpenQuote: '"', Content: 'double', CloseQuote: '"' } },
+          ],
+          WsBeforeEachAttribute: '  ',
+          WsAfterOpen: '  ',
+          WsAfterAll: '  ',
+        },
+        OpenTagCloseBracket: '>',
+        Content: [
+          { TextContent: ' ' },
+          {
+            Template: {
+              TemplateOpen: '{{',
+              WsAfterOpen: ' ',
+              Content: '\'nested "quote"\'',
+              WsAfterContent: ' ',
+              TemplateClose: '}}',
+            },
+          },
+          { TextContent: ' ' },
+        ],
+        CloseTag: {
+          ClosingOpenBracket: '</',
+          TagName: 'div',
+          CloseBracket: '>',
+          WsAfterOpen: ' ',
+          WsBeforeClose: '   ',
+        },
+      },
+    });
+  });
+
+  test('empty quotes edge cases', () => {
+    const input = `<tag attr1="" attr2=''></tag>`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
+
+    expect(images(node)).toStrictEqual({
+      Element: {
+        OpenTagPartial: {
+          OpenBracket: '<',
+          TagName: 'tag',
+          Attribute: [
+            { AttributeKey: 'attr1', Equals: '=', quotedValue: { OpenQuote: '"', CloseQuote: '"' } },
+            { AttributeKey: 'attr2', Equals: '=', quotedValue: { OpenQuote: "'", CloseQuote: "'" } },
+          ],
+          WsBeforeEachAttribute: '  ',
+        },
+        OpenTagCloseBracket: '>',
+        CloseTag: { ClosingOpenBracket: '</', TagName: 'tag', CloseBracket: '>' },
+      },
+    });
+  });
+
+  test('matched text element with literal content', () => {
+    const input = `<text>Hello {{ world }} and <other>nested</other></text>`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
+
+    expect(images(node)).toStrictEqual({
+      Element: {
+        OpenTagPartial: { OpenBracket: '<', TagName: 'text' },
+        OpenTagCloseBracket: '>',
+        TextContent: 'Hello {{ world }} and <other>nested</other>',
+        CloseTag: { ClosingOpenBracket: '</', TagName: 'text', CloseBracket: '>' },
+      },
+    });
+  });
+
+  test('mismatched tags - text opening with template closing', () => {
+    const input = `<text>Content here</template></text>`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
+
+    expect(images(node)).toStrictEqual({
+      Element: {
+        CloseTag: { CloseBracket: '>', ClosingOpenBracket: '</', TagName: 'text' },
+        OpenTagCloseBracket: '>',
+        OpenTagPartial: { OpenBracket: '<', TagName: 'text' },
+        TextContent: 'Content here</template>',
+      },
+    });
+  });
+
+  test('completely unmatched tags should not error', () => {
+    const input = `<document>content</div><span>more</p>`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
+
+    expect(images(node)).toStrictEqual([
+      {
+        Element: {
+          OpenTagPartial: { OpenBracket: '<', TagName: 'document' },
+          OpenTagCloseBracket: '>',
+          Content: { TextContent: 'content' },
+          CloseTag: { ClosingOpenBracket: '</', TagName: 'div', CloseBracket: '>' },
+        },
+      },
+      {
+        Element: {
+          OpenTagPartial: { OpenBracket: '<', TagName: 'span' },
+          OpenTagCloseBracket: '>',
+          Content: { TextContent: 'more' },
+          CloseTag: { ClosingOpenBracket: '</', TagName: 'p', CloseBracket: '>' },
+        },
+      },
+    ]);
+  });
+
+  test('nested quoted templates with mixed quotes', () => {
+    const input = `<div title="Hello {{ 'user' }}"  meta  = '{if{{nothing''  }}123'>'World'</div>`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
+
+    expect(images(node)).toStrictEqual({
+      Element: {
+        OpenTagPartial: {
+          OpenBracket: '<',
+          TagName: 'div',
+          WsBeforeEachAttribute: '   ',
+          Attribute: [
+            {
+              AttributeKey: 'title',
+              Equals: '=',
+              quotedValue: {
+                OpenQuote: '"',
+                Content: [
+                  'Hello ',
+                  {
+                    TemplateOpen: '{{',
+                    WsAfterOpen: ' ',
+                    Content: "'user'",
+                    WsAfterContent: ' ',
+                    TemplateClose: '}}',
+                  },
+                ],
+                CloseQuote: '"',
+              },
+            },
+            {
+              AttributeKey: 'meta',
+              Equals: '=',
+              WsAfterEquals: ' ',
+              WsAfterKey: '  ',
+              quotedValue: {
+                CloseQuote: "'",
+                Content: [
+                  '{if',
+                  {
+                    Content: "nothing''",
+                    TemplateClose: '}}',
+                    TemplateOpen: '{{',
+                    WsAfterContent: '  ',
+                  },
+                  '123',
+                ],
+                OpenQuote: "'",
+              },
+            },
+          ],
+        },
+        OpenTagCloseBracket: '>',
+        Content: {
+          TextContent: "'World'",
+        },
+        CloseTag: { ClosingOpenBracket: '</', TagName: 'div', CloseBracket: '>' },
+      },
+    });
+  });
+
+  test('special characters and symbols in content', () => {
+    const input = `<text>@#$%^&*(){}[]|\\:";'<>?/.,~\`</text>`;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
+
+    expect(images(node)).toStrictEqual({
+      Element: {
+        OpenTagPartial: { OpenBracket: '<', TagName: 'text' },
+        OpenTagCloseBracket: '>',
+        TextContent: '@#$%^&*(){}[]|\\:";\'<>?/.,~`',
+        CloseTag: { ClosingOpenBracket: '</', TagName: 'text', CloseBracket: '>' },
+      },
+    });
+  });
+
+  test('multiple templates and elements mixed with whitespace', () => {
+    const input = `  {{ a }}  <div>{{ b }}</div>  {{ c }}  `;
+    const { node } = withParser(input, (p) => p.root()) as { node: CstRootNode };
+
+    expect(images(node)).toStrictEqual([
+      { TextContent: '  ' },
+      {
+        Template: {
+          TemplateOpen: '{{',
+          WsAfterOpen: ' ',
+          Content: 'a',
+          WsAfterContent: ' ',
+          TemplateClose: '}}',
+        },
+      },
+      { TextContent: '  ' },
+      {
+        Element: {
+          OpenTagPartial: { OpenBracket: '<', TagName: 'div' },
+          OpenTagCloseBracket: '>',
+          Content: {
+            Template: {
+              TemplateOpen: '{{',
+              WsAfterOpen: ' ',
+              Content: 'b',
+              WsAfterContent: ' ',
+              TemplateClose: '}}',
+            },
+          },
+          CloseTag: { ClosingOpenBracket: '</', TagName: 'div', CloseBracket: '>' },
+        },
+      },
+      { TextContent: '  ' },
+      {
+        Template: {
+          TemplateOpen: '{{',
+          WsAfterOpen: ' ',
+          Content: 'c',
+          WsAfterContent: ' ',
+          TemplateClose: '}}',
+        },
+      },
+      { TextContent: '  ' },
+    ]);
+  });
+});
+
+describe('Error', () => {
+  test('orphan closing tags should error', () => {
+    const input = `Some text</orphan>{{ template }}</unknown>`;
+    const { node, errors } = withParser(input, (p) => p.root(), false) as { node: CstRootNode; errors: any[] };
+    expect(errors.length).toBe(4);
+
+    expect(images(node)).toStrictEqual([
+      { TextContent: 'Some text' },
+      { TextContent: 'orphan' },
+      {
+        Template: {
+          TemplateOpen: '{{',
+          WsAfterOpen: ' ',
+          Content: 'template',
+          WsAfterContent: ' ',
+          TemplateClose: '}}',
+        },
+      },
+      { TextContent: 'unknown' },
+    ]);
+  });
+
+  test('mismatched tags - template opening with text closing', () => {
+    const input = `<template>Some content</text>`;
+    const { node, errors } = withParser(input, (p) => p.root(), false) as { node: CstRootNode; errors: any[] };
+    expect(errors.length).toBe(1);
+
+    expect(images(node)).toStrictEqual({
+      Element: {
+        OpenTagPartial: { OpenBracket: '<', TagName: 'template' },
+        OpenTagCloseBracket: '>',
+        TextContent: 'Some content</text>',
+      },
+    });
+
+    expect(names(node)).toStrictEqual({
+      name: 'root',
+      children: {
+        name: 'elementContent',
+        children: {
+          Element: {
+            name: 'element',
+            children: {
+              OpenTagPartial: { name: 'openTagPartial' },
+              TextContent: { name: 'literalTagTokens' },
+              CloseTag: { name: 'closeTag' },
+            },
+          },
+        },
+      },
+    });
+  });
+
+  test('empty template', () => {
+    const input = `<any foo={{}}>{{ }}</any>`;
+    const { node, errors } = withParser(input, (p) => p.root(), false) as { node: CstRootNode; errors: any[] };
+    expect(errors.length).toBe(2);
+    expect(images(node)).toStrictEqual({
+      Element: {
+        OpenTagPartial: {
+          OpenBracket: '<',
+          TagName: 'any',
+          WsBeforeEachAttribute: ' ',
+          Attribute: {
+            AttributeKey: 'foo',
+            Equals: '=',
+            templatedValue: { TemplateOpen: '{{', TemplateClose: '}}' },
+          },
+        },
+        OpenTagCloseBracket: '>',
+        Content: {
+          Template: { TemplateOpen: '{{', WsAfterOpen: ' ', TemplateClose: '}}' },
+        },
+        CloseTag: { ClosingOpenBracket: '</', TagName: 'any', CloseBracket: '>' },
+      },
+    });
+  });
 });
 
 /* -------------------- tiny guards -------------------- */

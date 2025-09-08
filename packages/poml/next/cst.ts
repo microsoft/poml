@@ -67,7 +67,7 @@ export class ExtendedPomlParser extends CstParser {
   public singleQuotedExpressionTokens!: (idxInOriginalText?: number) => CstTokens;
   public betweenTagsTokens!: (idxInOriginalText?: number) => CstTokens;
   // Accepting expectedTagName as argument to validate matching close tag
-  public literalTagTokens!: (idxInOriginalText?: number, args?: [string]) => CstLiteralTagTokens;
+  public literalTagTokens!: (idxInOriginalText?: number, args?: [string]) => CstTokens;
   // regular rules
   public template!: (idxInOriginalText?: number) => CstTemplateNode;
   public comment!: (idxInOriginalText?: number) => CstCommentNode;
