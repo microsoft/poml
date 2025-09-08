@@ -254,6 +254,109 @@ done`;
       },
       { TextContent: '\n\ndone' },
     ]);
+
+    expect(names(node)).toStrictEqual({
+      name: 'root',
+      children: [
+        {
+          name: 'elementContent',
+          children: { TextContent: { name: 'betweenTagsTokens' } },
+        },
+        {
+          name: 'elementContent',
+          children: {
+            Template: { name: 'template', children: { name: 'expressionTokens' } },
+          },
+        },
+        {
+          name: 'elementContent',
+          children: { TextContent: { name: 'betweenTagsTokens' } },
+        },
+        {
+          name: 'elementContent',
+          children: {
+            Comment: { name: 'comment', children: { name: 'commentTokens' } },
+          },
+        },
+        {
+          name: 'elementContent',
+          children: { TextContent: { name: 'betweenTagsTokens' } },
+        },
+        {
+          name: 'elementContent',
+          children: {
+            Element: {
+              name: 'element',
+              children: {
+                OpenTagPartial: { name: 'openTagPartial' },
+                TextContent: { name: 'literalTagTokens' },
+                CloseTag: { name: 'closeTag' },
+              },
+            },
+          },
+        },
+        {
+          name: 'elementContent',
+          children: { TextContent: { name: 'betweenTagsTokens' } },
+        },
+      ],
+    });
+
+    expect(locations(node)).toStrictEqual({
+      start: 0,
+      end: 92,
+      children: [
+        {
+          start: 0,
+          end: 5,
+          children: { TextContent: { start: 0, end: 5 } },
+        },
+        {
+          start: 6,
+          end: 15,
+          children: {
+            Template: { start: 6, end: 15, children: { start: 9, end: 12 } },
+          },
+        },
+        {
+          start: 16,
+          end: 17,
+          children: { TextContent: { start: 16, end: 17 } },
+        },
+        {
+          start: 18,
+          end: 35,
+          children: {
+            Comment: { start: 18, end: 35, children: { start: 22, end: 32 } },
+          },
+        },
+        {
+          start: 36,
+          end: 37,
+          children: { TextContent: { start: 36, end: 37 } },
+        },
+        {
+          start: 38,
+          end: 86,
+          children: {
+            Element: {
+              start: 38,
+              end: 86,
+              children: {
+                OpenTagPartial: { start: 38, end: 42 },
+                TextContent: { start: 44, end: 79 },
+                CloseTag: { start: 80, end: 86 },
+              },
+            },
+          },
+        },
+        {
+          start: 87,
+          end: 92,
+          children: { TextContent: { start: 87, end: 92 } },
+        },
+      ],
+    });
   });
 
   // All kinds of whitespaces
@@ -453,8 +556,8 @@ export function names(node: CstNode): { name: string; children?: Record<string, 
           // plain object: use as-is
           const keys = Object.keys(children as Record<string, unknown>);
           if (keys.length) {
-out.children = children as Record<string, unknown>;
-}
+            out.children = children as Record<string, unknown>;
+          }
         } else {
           // array or primitive: wrap under Content
           out.children = children as unknown[];
@@ -478,8 +581,8 @@ export function locations(node: CstNode): { start: number; end: number; children
         if (typeof children === 'object' && !Array.isArray(children)) {
           const keys = Object.keys(children as Record<string, unknown>);
           if (keys.length) {
-base.children = children as Record<string, unknown>;
-}
+            base.children = children as Record<string, unknown>;
+          }
         } else {
           base.children = children as unknown[];
         }
