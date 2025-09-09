@@ -227,35 +227,18 @@ export interface CstAttributeNode extends CstNode {
 }
 
 /**
- * Represents an opening tag in POML markup.
+ * Represents a prefix partial of opening tag in POML markup.
  *
  * Open tags mark the beginning of an element that expects a corresponding
  * closing tag. They may contain attributes that configure the element's
  * behavior and appearance.
  *
- * Cases that apply:
- * - Standard opening tags: `<document>`, `<message role="user">`
- * - Tags with attributes: `<div class="container" id="main">`
- * - Tags with for-loops: `<task for="item in items">`
- * - Nested structure beginnings: `<section>` before content
- *
- * Cases that do not apply:
- * - Self-closing tags: `<image src="..." />` (use SelfCloseTagNode)
- * - Closing tags: `</document>` (use CloseTagNode)
- * - Complete elements: opening + content + closing (use ElementNode)
- * - Invalid or malformed tags (treated as text)
- */
-export interface OpenTagNode extends AstNode {
-  kind: 'OPEN';
-  value: LiteralNode; // tag name
-  attributes: AttributeNode[];
-}
-
-/**
- * Related CST node interfaces for parsing stage.
- *
- * Opening tag without the ending close bracket.
+ * This is an opening tag without the ending close bracket.
  * Allow prefix sharing with SelfCloseElementNode.
+ *
+ * Examples:
+ * - `<document`
+ * - `<message role="user"`
  */
 export interface CstOpenTagPartialNode extends CstNode {
   children: {
@@ -274,23 +257,10 @@ export interface CstOpenTagPartialNode extends CstNode {
  * Close tags mark the end of an element, matching a previously opened tag.
  * They contain only the tag name and no attributes.
  *
- * Cases that apply:
+ * Examples:
  * - Standard closing tags: `</document>`, `</message>`
  * - Nested structure endings: `</section>`, `</div>`
  * - Any valid POML element closure
- *
- * Cases that do not apply:
- * - Opening tags: `<document>` (use OpenTagNode)
- * - Self-closing tags: `<br/>` (use SelfCloseTagNode)
- * - Tags with attributes (closing tags never have attributes)
- */
-export interface CloseTagNode extends AstNode {
-  kind: 'CLOSE';
-  value: LiteralNode; // tag name
-}
-
-/**
- * Related CST node interfaces for parsing stage.
  */
 export interface CstCloseTagNode extends CstNode {
   children: {
@@ -300,29 +270,6 @@ export interface CstCloseTagNode extends CstNode {
     WsBeforeClose?: IToken[];
     CloseBracket?: IToken[];
   };
-}
-
-/**
- * Represents a self-closing tag in POML markup.
- *
- * Self-closing elements represent complete elements that have no children or
- * content. They combine opening and closing in a single tag and may have
- * attributes.
- *
- * Cases that apply:
- * - Image elements: `<image src="photo.jpg" />`
- * - Runtime configurations: `<runtime model="gpt-5" temperature="0.7" />`
- *
- * Cases that do not apply:
- * - Meta elements: `<meta name="author" content="John" />`
- * - Elements with content: `<div>content</div>` (use ElementNode)
- * - Separate open/close tags: `<div></div>` (use ElementNode)
- * - Tags without the self-closing slash: `<img>` (use OpenTagNode)
- */
-export interface SelfCloseElementNode extends AstNode {
-  kind: 'SELFCLOSE';
-  value: LiteralNode; // tag name
-  attributes: AttributeNode[];
 }
 
 /**
@@ -336,15 +283,16 @@ export interface SelfCloseElementNode extends AstNode {
  * that treat their content as literal text without any template variable interpolation.
  * Content is preserved exactly as written, useful for code samples or pre-formatted text.
  *
+ * Alternatively, it also supports self-closing elements.
  *
  * Cases that apply:
  * - Any elements: `<document parser="txt">...content...</document>`
  * - Output schemas with templates: `<output-schema>{{ schemaDefinition }}</output-schema>`
- * - Nested elements: `<section><paragraph>Text</paragraph></section>`
  * - Literal text elements: `<text>Literal {{ not_interpolated }}</text>` (literal elements)
+ * - Self-closing elements: `<image src="photo.jpg" />`
+ * - Runtime configurations: `<runtime model="gpt-5" temperature="0.7" />`
  *
  * Cases that do not apply:
- * - Self-closing elements: `<image />` (use SelfCloseTagNode)
  * - Literal text content: plain text (use LiteralNode)
  * - Template variables: `{{ var }}` (use TemplateNode)
  * - Meta elements: `<meta>` tags (use MetaNode)
@@ -355,10 +303,11 @@ export interface SelfCloseElementNode extends AstNode {
  */
 export interface ElementNode extends AstNode {
   kind: 'ELEMENT';
-  open: OpenTagNode;
-  close: CloseTagNode;
-  children: ElementContentNode[];
-  // isLiteral?: boolean; // True for <text> and <template> tags
+  tagName: string;
+  attributes: AttributeNode[];
+  // Children is undefined for self-closing tags.
+  // If it's not self-closing, children is at least an empty array.
+  children?: ElementContentNode[];
 }
 
 export type ElementContentNode = ElementNode | CommentNode | PragmaNode | LiteralNode | TemplateNode;
@@ -516,15 +465,11 @@ type Draft<T extends { kind: string }> = DeepPartialExcept<T, 'kind'>;
 
 // Union of your strict nodes
 export type StrictNode =
-  | ExpressionNode
   | TemplateNode
   | LiteralNode
   | ValueNode
   | ForIteratorNode
   | AttributeNode
-  | OpenTagNode
-  | CloseTagNode
-  | SelfCloseElementNode
   | ElementNode
   | CommentNode
   | PragmaNode

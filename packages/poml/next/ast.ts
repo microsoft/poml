@@ -35,9 +35,6 @@ import {
 import {
   ElementNode,
   ElementContentNode,
-  OpenTagNode,
-  CloseTagNode,
-  SelfCloseElementNode,
   ValueNode,
   TemplateNode,
   LiteralNode,
@@ -50,26 +47,12 @@ import {
 import { Range } from './types';
 import { extendedPomlParser } from './cst';
 import { BackslashEscape, CharacterEntity } from './lexer';
+import * as error from './error';
 
 /** Error produced while building the AST (beyond lex/parse errors). */
 export interface AstBuildError {
   message: string;
   range?: Range;
-}
-
-/** Utility: build a range from two offsets (inclusive start, exclusive end). */
-function rangeFrom(start: number, end: number): Range {
-  return { start, end };
-}
-
-/** Utility: range that spans a list of tokens (or is empty if none). */
-function rangeFromTokens(tokens: IToken[]): Range {
-  if (!tokens.length) {
-return { start: 0, end: 0 };
-}
-  const first = tokens[0];
-  const last = tokens[tokens.length - 1];
-  return rangeFrom(first.startOffset ?? 0, (last.endOffset ?? first.startOffset ?? 0) + 1);
 }
 
 /** Utility: create a LiteralNode from raw text and token range. */
@@ -111,6 +94,34 @@ function decodeEscape(seq: string): string {
   }
 }
 
+/**
+ * Range utilities.
+ * Build a range from two offsets (inclusive start, inclusive end).
+ */
+function rangeFrom(start: number, end: number): Range {
+  return { start, end };
+}
+
+/**
+ * Range that spans a list of tokens (or is [0, 0] if none).
+ */
+function rangeFromTokens(tokens: IToken[]): Range {
+  if (!tokens.length) {
+    return { start: 0, end: 0 };
+  }
+  const first = tokens[0];
+  const last = tokens[tokens.length - 1];
+  return rangeFrom(first.startOffset ?? 0, (last.endOffset ?? first.startOffset ?? 0) + 1);
+}
+
+/**
+ * Range that spans a list of CstTokens (or is [0, 0] if none).
+ */
+function rangeFromCstTokens(groups: CstTokens[]): Range {
+  const allTokens = groups.flatMap((g) => g.children.Content ?? []);
+  return rangeFromTokens(allTokens);
+}
+
 /** Gather raw text from a list of tokens without any decoding. */
 function textFromRaw(tokens: IToken[]): string {
   return tokens.map((t) => t.image ?? '').join('');
@@ -135,27 +146,11 @@ function textFromQuoted(tokens: IToken[]): string {
 }
 
 /**
- * Gather text from tokens INSIDE TEMPLATE EXPRESSION ({{ ... }}).
- * We simply join raw images because evaluation is a later phase.
+ * Gather text from CstTokens groups.
+ * Each group is expected to be a list of ITokens.
  */
-function textFromExpressionTokens(groups: CstTokens[]): string {
-  const pieces: string[] = [];
-  for (const g of groups) {
-    const toks = g.children.Content ?? [];
-    pieces.push(textFromRaw(toks));
-  }
-  return pieces.join('');
-}
-
-/** Build a range from a CST token group sequence. */
-function rangeFromTokenGroups(groups: CstTokens[], fallback: Range): Range {
-  const firstTok = groups[0]?.children.Content?.[0];
-  const lastGroup = groups[groups.length - 1];
-  const lastTok = lastGroup?.children.Content?.[lastGroup.children.Content.length - 1];
-  if (firstTok && lastTok) {
-    return rangeFrom(firstTok.startOffset ?? 0, (lastTok.endOffset ?? 0) + 1);
-  }
-  return fallback;
+function textFromCstTokens(groups: CstTokens[], fromIToken: (tokens: IToken[]) => string): string {
+  return groups.map((g) => fromIToken(g.children.Content ?? [])).join('');
 }
 
 const BaseVisitor = extendedPomlParser.getBaseCstVisitorConstructorWithDefaults();
@@ -195,25 +190,22 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
    * - Character entities are decoded
    * - Backslash escapes are NOT interpreted (shown as-is)
    */
-  //   private textFromBetweenTags(tokens: IToken[]): string {
-  //     return tokens
-  //       .map((t) => {
-  //         if (t.tokenType === CharacterEntity) {
-  //           try {
-  //             return he.decode(t.image ?? '', { strict: true });
-  //           } catch (e) {
-  //             this.errors.push({
-  //               message: `Failed to decode HTML entity: ${t.image}`,
-  //               range: rangeFromTokens([t])
-  //             })
-  //           }
-  //         }
-  //       }
-  //         if (name === 'CharacterEntity') return decodeEntity(t.image ?? '')
-  //     return t.image ?? ''
-  //   })
-  //       .join('')
-  // }
+  private textFromBetweenTags(tokens: IToken[]): string {
+    return tokens
+      .map((t) => {
+        if (t.tokenType === CharacterEntity) {
+          try {
+            return he.decode(t.image ?? '', { strict: true });
+          } catch (e) {
+            this.errors.push({
+              message: `Failed to decode HTML entity: ${t.image}`,
+              range: rangeFromTokens([t]),
+            });
+          }
+        }
+      })
+      .join('');
+  }
 
   // ---- Rule implementations ----
 
@@ -222,8 +214,8 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
     for (const ec of ctx.children.Content ?? []) {
       const node = this.visit(ec) as ElementContentNode;
       if (node) {
-children.push(node);
-}
+        children.push(node);
+      }
     }
 
     const start = children[0]?.range.start ?? 0;
@@ -233,17 +225,17 @@ children.push(node);
 
   elementContent(ctx: CstElementContentNode): ElementContentNode {
     if (ctx.Pragma?.length) {
-return this.visit(ctx.Pragma[0]) as PragmaNode;
-}
+      return this.visit(ctx.Pragma[0]) as PragmaNode;
+    }
     if (ctx.Comment?.length) {
-return this.visit(ctx.Comment[0]) as CommentNode;
-}
+      return this.visit(ctx.Comment[0]) as CommentNode;
+    }
     if (ctx.Template?.length) {
-return this.visit(ctx.Template[0]) as TemplateNode;
-}
+      return this.visit(ctx.Template[0]) as TemplateNode;
+    }
     if (ctx.Element?.length) {
-return this.visit(ctx.Element[0]) as ElementNode;
-}
+      return this.visit(ctx.Element[0]) as ElementNode;
+    }
 
     // Text content between tags → LiteralNode
     const toks = ctx.TextContent?.[0]?.children.Content ?? [];
@@ -256,23 +248,15 @@ return this.visit(ctx.Element[0]) as ElementNode;
     const open = ctx.children.TemplateOpen?.[0];
     const close = ctx.children.TemplateClose?.[0];
 
-    const exprText = textFromExpressionTokens(ctx.children.Content ?? []);
+    const exprText = textFromCstTokens(ctx.children.Content ?? [], textFromRaw);
+    const exprRange = rangeFromCstTokens(ctx.children.Content ?? []);
 
-    // Expression node range: inner content without braces/outer ws if present
-    const innerStart =
-      ctx.children.WsAfterOpen?.[0]?.endOffset != null
-        ? ctx.children.WsAfterOpen[0].endOffset + 1
-        : (open?.endOffset ?? 0) + 1;
-    const innerEnd =
-      ctx.children.WsAfterContent?.[0]?.startOffset != null
-        ? ctx.children.WsAfterContent[0].startOffset
-        : (close?.startOffset ?? innerStart);
-
-    const exprNode: ExpressionNode = {
-      kind: 'EXPRESSION',
+    const exprNode: LiteralNode = {
+      kind: 'STRING',
       value: exprText,
-      range: rangeFrom(innerStart, innerEnd),
+      range: exprRange,
     };
+    ctx.startOffset = open?.startOffset ?? exprRange.start;
 
     const outerStart = open?.startOffset ?? innerStart;
     const outerEnd = (close?.endOffset ?? outerStart - 1) + 1;
@@ -365,8 +349,8 @@ return this.visit(ctx.Element[0]) as ElementNode;
         const text = textFromQuoted(toks);
         const r = rangeFromTokens(toks);
         if (text.length > 0) {
-children.push(literal(text, r.start, r.end));
-}
+          children.push(literal(text, r.start, r.end));
+        }
       }
     }
 

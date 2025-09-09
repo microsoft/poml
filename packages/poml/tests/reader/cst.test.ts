@@ -171,7 +171,6 @@ describe('CST Parser Rules', () => {
   test('element rule: self-closing element', () => {
     const { node } = withParser('<meta />', (p) => p.element()) as { node: CstElementNode };
     expect(node.children.OpenTagPartial?.[0]).toBeDefined();
-    node.recoveredNode;
     const openTag = node.children.OpenTagPartial?.[0] as CstOpenTagPartialNode;
     expect(openTag.children.OpenBracket?.[0].image).toBe('<');
     expect(openTag.children.TagName?.[0].image).toBe('meta');
@@ -217,6 +216,15 @@ describe('CST Parser Rules', () => {
     const contentNodes = node.children.Content || [];
     const elementNames = contentNodes.map((n) => (n as any).name);
     expect(elementNames).toContain('elementContent');
+
+    expect(node.location).toEqual({
+      startOffset: 0,
+      startLine: 1,
+      startColumn: 1,
+      endOffset: 70,
+      endLine: 1,
+      endColumn: 71,
+    });
   });
 });
 
@@ -722,42 +730,6 @@ const isToken = (x: unknown): x is IToken => !!x && typeof (x as IToken).image =
 const isCstNode = (x: unknown): x is CstNode =>
   !!x && typeof (x as any).name === 'string' && typeof (x as any).children === 'object';
 
-/* -------------------- ranges -------------------- */
-const tokStart = (t: IToken) => (typeof t.startOffset === 'number' ? t.startOffset : 0);
-const tokEnd = (t: IToken) => (typeof t.endOffset === 'number' ? t.endOffset : tokStart(t) + (t.image?.length ?? 0));
-
-function* walkTokens(value: unknown): Generator<IToken> {
-  if (isToken(value)) {
-    yield value;
-    return;
-  }
-  if (Array.isArray(value)) {
-    for (const v of value) {
-      yield* walkTokens(v);
-    }
-    return;
-  }
-  if (isCstNode(value)) {
-    const ch = (value as any).children as Record<string, unknown>;
-    for (const k of Object.keys(ch)) {
-      yield* walkTokens(ch[k]);
-    }
-  }
-}
-
-function nodeRange(node: CstNode): { start: number; end: number } {
-  let start = Infinity,
-    end = -Infinity;
-  for (const t of walkTokens(node)) {
-    start = Math.min(start, tokStart(t));
-    end = Math.max(end, tokEnd(t));
-  }
-  if (!Number.isFinite(start) || !Number.isFinite(end)) {
-    return { start: 0, end: 0 };
-  }
-  return { start, end };
-}
-
 /* -------------------- core normalize -------------------- */
 /**
  * Rules:
@@ -924,7 +896,10 @@ export function locations(node: CstNode): { start: number; end: number; children
   const S: Strategies = {
     onToken: (_t) => undefined, // drop token ranges
     onNodeWrap: (n, children) => {
-      const base: { start: number; end: number; children?: Record<string, unknown> | unknown[] } = nodeRange(n);
+      const base: { start: number; end: number; children?: Record<string, unknown> | unknown[] } = {
+        start: n.location?.startOffset ?? 0,
+        end: n.location?.endOffset ?? 0,
+      };
       if (children !== undefined) {
         if (typeof children === 'object' && !Array.isArray(children)) {
           const keys = Object.keys(children as Record<string, unknown>);

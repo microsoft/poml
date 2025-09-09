@@ -3,6 +3,12 @@ import chalk from 'chalk';
 import { Diagnostic, Range, Severity } from './types';
 import sourceManager from './source';
 
+interface FormatOptions {
+  showWarnings?: boolean;
+  showInfo?: boolean;
+  groupByFile?: boolean;
+}
+
 /**
  * Global Error Collector.
  *
@@ -309,19 +315,19 @@ export class ErrorCollector {
   /**
    * Format all diagnostics for CLI output
    */
-  public format(
-    options: {
-      showWarnings?: boolean;
-      showInfo?: boolean;
-      groupByFile?: boolean;
-    } = {},
-  ): string {
-    const { showWarnings = true, showInfo = false, groupByFile = true } = options;
+  public format(options?: FormatOptions): string {
+    const { showWarnings = true, showInfo = false, groupByFile = true } = options ?? {};
 
     const filtered = this.diagnostics.filter((d) => {
-      if (d.severity === Severity.ERROR) return true;
-      if (d.severity === Severity.WARNING) return showWarnings;
-      if (d.severity === Severity.INFO) return showInfo;
+      if (d.severity === Severity.ERROR) {
+return true;
+}
+      if (d.severity === Severity.WARNING) {
+return showWarnings;
+}
+      if (d.severity === Severity.INFO) {
+return showInfo;
+}
       return false;
     });
 
@@ -355,7 +361,9 @@ export class ErrorCollector {
         output.push('');
 
         const diagnostics = byFile.get(file)!.sort((a, b) => {
-          if (!a.range || !b.range) return 0;
+          if (!a.range || !b.range) {
+return 0;
+}
           return a.range.start - b.range.start;
         });
 
@@ -404,7 +412,7 @@ export class ErrorCollector {
   /**
    * Print formatted errors to console
    */
-  public print(options?: Parameters<typeof this.format>[0]): void {
+  public print(options?: FormatOptions): void {
     console.log(this.format(options));
   }
 
@@ -417,6 +425,33 @@ export class ErrorCollector {
 }
 
 // Create singleton instance
-const errorCollector = new ErrorCollector();
+let errorCollector: ErrorCollector | undefined = undefined;
 
-export default errorCollector;
+export function getErrorCollector(): ErrorCollector {
+  if (!errorCollector) {
+    errorCollector = new ErrorCollector();
+  }
+  return errorCollector;
+}
+
+// Convenience export
+
+export const clear = () => getErrorCollector().clear();
+export const error = (message: string, range?: Range, options: Partial<Diagnostic> = {}) =>
+  getErrorCollector().error(message, range, options);
+export const warning = (message: string, range?: Range, options: Partial<Diagnostic> = {}) =>
+  getErrorCollector().warning(message, range, options);
+export const info = (message: string, range?: Range, options: Partial<Diagnostic> = {}) =>
+  getErrorCollector().info(message, range, options);
+export const jsonError = (originalError: Error, jsonRange: Range) =>
+  getErrorCollector().jsonError(originalError, jsonRange);
+export const expressionError = (originalError: Error, expressionRange: Range, evalHeaderLength: number = 0) =>
+  getErrorCollector().expressionError(originalError, expressionRange, evalHeaderLength);
+export const suppressCode = (code: string) => getErrorCollector().suppressCode(code);
+export const hasErrors = () => getErrorCollector().hasErrors();
+export const getErrors = () => getErrorCollector().getErrors();
+export const getWarnings = () => getErrorCollector().getWarnings();
+export const getCounts = () => getErrorCollector().getCounts();
+export const format = (options?: FormatOptions) => getErrorCollector().format(options);
+export const print = (options?: FormatOptions) => getErrorCollector().print(options);
+export const getDiagnostics = () => getErrorCollector().getDiagnostics();
