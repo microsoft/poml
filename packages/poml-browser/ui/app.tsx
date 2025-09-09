@@ -1,19 +1,17 @@
 import '@mantine/core/styles.css';
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme, px } from '@mantine/core';
 import { useListState, UseListStateHandlers } from '@mantine/hooks';
 import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
 import EditableCardList from './components/card-list';
-import CardModal from './components/CardModal';
 import Settings from './components/settings';
-import { CardModel, createCard } from '@common/cardModel';
+import { CardModel } from '@common/types';
 import { shadcnCssVariableResolver } from './themes/cssVariableResolver';
 import { shadcnTheme } from './themes/zinc';
-import { NotificationProvider, useNotifications } from './contexts/notification-context';
+import { NotificationProvider } from './contexts/notification-context';
 import { ThemeProvider } from './contexts/theme-context';
 import TopNotifications from './components/notifications-top';
 import BottomNotifications from './components/notifications-bottom';
-import pomlHelper from '@common/pomlHelper';
 
 import './themes/style.css';
 import { notifyError, notifySuccess } from '@common/notification';
@@ -127,8 +125,6 @@ function useGlobalEventListeners(
 const AppContent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [cards, cardsHandlers] = useListState<CardModel>([]);
-  const [selectedCard, setSelectedCard] = useState<CardModel | null>(null);
-  const [modalOpened, setModalOpened] = useState(false);
   // Is dragging over the document
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   // Is dragging over an inner divider, should escalate the event to the divider
@@ -179,77 +175,6 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleSaveCard = (id: string, newContent: string) => {
-    const index = cards.findIndex((card) => card.id === id);
-    if (index !== -1) {
-      const updatedCard: CardModel = {
-        ...cards[index],
-        content: { type: 'text', value: newContent },
-      };
-      cardsHandlers.setItem(index, updatedCard);
-    }
-  };
-
-  const handlePastedContent = async (textContent: string, files: File[]) => {
-    try {
-      if (!textContent && (!files || files.length === 0)) {
-        return;
-      }
-
-      const createCardHelper = (title: string, content: string, metadata: any = {}): CardModel =>
-        createCard({
-          title,
-          content: { type: 'text', value: content },
-          metadata: {
-            source: 'clipboard',
-            excerpt: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
-            ...metadata,
-          },
-        });
-
-      // Handle text content
-      if (textContent) {
-        const lines = textContent.split('\n').filter((line) => line.trim());
-        const title = lines[0]?.substring(0, 100) || 'Pasted Content';
-        cardsHandlers.append(createCardHelper(title, textContent));
-      }
-
-      // Handle files
-      if (files && files.length > 0) {
-        for (const file of files) {
-          try {
-            if (file.type.startsWith('image/')) {
-              const dataUrl = await arrayBufferToDataUrl(await file.arrayBuffer(), file.type);
-              const card = createCard({
-                title: file.name,
-                content: {
-                  type: 'binary',
-                  value: dataUrl.split(',')[1], // Remove data:image/...;base64, prefix
-                  mimeType: file.type,
-                  encoding: 'base64',
-                },
-                metadata: {
-                  source: 'clipboard',
-                },
-              });
-              cardsHandlers.append(card);
-            } else {
-              const content = await readFileContent(file);
-              const title = file.name || 'Pasted File';
-              cardsHandlers.append(createCardHelper(title, content, { fileName: file.name }));
-            }
-          } catch (error) {
-            console.error('Failed to process file:', error);
-            showError(`Failed to process file: ${file.name}`, 'File Processing Error');
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Failed to handle pasted content:', error);
-      showError('Failed to process pasted content', 'Paste Error');
-    }
-  };
-
   // Show settings page if requested
   if (showSettings) {
     return <Settings onBack={() => setShowSettings(false)} />;
@@ -287,7 +212,7 @@ const AppContent: React.FC = () => {
             color: theme.colors.purple[8],
             fontWeight: 600,
           }}>
-          Drop files here to add them as cards
+          Drop Files to Add them as Cards
         </div>
       )}
 
@@ -310,7 +235,6 @@ const AppContent: React.FC = () => {
       <EditableCardList
         cards={cards}
         onChange={handleCardsChange}
-        onCardClick={handleCardClick}
         editable={true}
         onDragOverDivider={(isOver: boolean) => {
           setIsDraggingOverDivider(isOver);
@@ -321,7 +245,7 @@ const AppContent: React.FC = () => {
       />
 
       <Group>
-        <Button fullWidth variant='outline' fz='md' loading={loading} onClick={handleExtractContent}>
+        <Button fullWidth variant='outline' fz='md' loading={loading} onClick={handleExtractTab}>
           Extract Page Content
         </Button>
         <Button
@@ -334,14 +258,6 @@ const AppContent: React.FC = () => {
           Export to Clipboard
         </Button>
       </Group>
-
-      {/* Card Modal */}
-      <CardModal
-        opened={modalOpened}
-        onClose={() => setModalOpened(false)}
-        content={selectedCard}
-        onSave={handleSaveCard}
-      />
 
       {/* Bottom notifications appended to content */}
       <BottomNotifications />
