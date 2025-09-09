@@ -259,7 +259,7 @@ describe('AST Visitor - Individual Rules', () => {
         children: [
           {
             kind: 'TEMPLATE',
-            value: { kind: 'STRING', value: 'first', range: { start: 3, end: 7 } },
+            value: { kind: 'STRING', value: 'first', range: { start: 4, end: 8 } },
             range: { start: 1, end: 11 },
           },
           { kind: 'STRING', value: ' and ', range: { start: 12, end: 16 } },
@@ -269,7 +269,7 @@ describe('AST Visitor - Individual Rules', () => {
             range: { start: 17, end: 28 },
           },
         ],
-        range: { start: 0, end: 30 },
+        range: { start: 0, end: 29 },
       });
     });
   });
