@@ -1,7 +1,7 @@
 import '@mantine/core/styles.css';
 import React, { useState, useEffect, use } from 'react';
 import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme, px } from '@mantine/core';
-import { useListState } from '@mantine/hooks';
+import { useListState, UseListStateHandlers } from '@mantine/hooks';
 import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
 import EditableCardList from './components/card-list';
 import CardModal from './components/CardModal';
@@ -9,24 +9,119 @@ import Settings from './components/settings';
 import { CardModel, createCard } from '@common/cardModel';
 import { shadcnCssVariableResolver } from './themes/cssVariableResolver';
 import { shadcnTheme } from './themes/zinc';
-import { googleDocsManager } from '@common/gdoc';
-import {
-  readFileContent,
-  useGlobalPasteListener,
-  arrayBufferToDataUrl,
-  writeRichContentToClipboard,
-  handleDropEvent,
-} from '@common/clipboard';
-import { contentManager } from '@common/html';
 import { NotificationProvider, useNotifications } from './contexts/notification-context';
 import { ThemeProvider } from './contexts/theme-context';
 import TopNotifications from './components/notifications-top';
 import BottomNotifications from './components/notifications-bottom';
 import pomlHelper from '@common/pomlHelper';
 
-import { readFile } from '../common/imports/file';
-
 import './themes/style.css';
+import { notifyError, notifySuccess } from '@common/notification';
+import { processDropEvent } from '@common/events/drop';
+import { processPasteEvent } from '@common/events/paste';
+import { processTabEvent } from '@common/events/tab';
+import { renderCardsByPoml } from '@common/poml-helper';
+import { writeRichContentToClipboard } from '@common/events/copy';
+
+function useGlobalEventListeners(
+  cardsHandlers: UseListStateHandlers<CardModel>,
+  isDraggingOverDivider: boolean,
+  setIsDraggingOver: (isDraggingOver: boolean) => void,
+  setIsDraggingOverDivider: (isDraggingOverDivider: boolean) => void,
+) {
+  // The paste handler for a global paste event
+  const handlePaste = async (e: ClipboardEvent) => {
+    // Only trigger if not focused on an input/textarea
+    const activeElement = document.activeElement;
+    if (
+      activeElement &&
+      (activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        (activeElement as HTMLElement).contentEditable === 'true')
+    ) {
+      return; // Let browser handle normal paste
+    }
+
+    e.preventDefault();
+
+    const newCards = await processPasteEvent(e);
+    if (newCards && newCards.length > 0) {
+      cardsHandlers.append(...newCards);
+      notifySuccess(`Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from paste`);
+    }
+  };
+
+  // Add a keydown listener to ensure the document can receive paste events
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !e.shiftKey && !e.altKey) {
+      const activeElement = document.activeElement;
+      if (
+        activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          (activeElement as HTMLElement).contentEditable === 'true')
+      ) {
+        return;
+      }
+
+      // Make sure document.body has focus to receive paste events
+      if (document.activeElement !== document.body) {
+        document.body.focus();
+      }
+    }
+  };
+
+  // Add document-level drag and drop handlers
+  const handleDocumentDragOver = (e: DragEvent) => {
+    // Prevent default to allow drop
+    e.preventDefault();
+    // Only show the document drop indicator if not over a divider
+    if (!isDraggingOverDivider) {
+      setIsDraggingOver(true);
+    }
+  };
+
+  const handleDocumentDragLeave = (e: DragEvent) => {
+    // Check if we're actually leaving the document
+    if (e.clientX === 0 && e.clientY === 0) {
+      setIsDraggingOver(false);
+    }
+  };
+
+  const handleDocumentDrop = async (e: DragEvent) => {
+    // Always reset the drag state on drop
+    setIsDraggingOver(false);
+    setIsDraggingOverDivider(false);
+
+    // Only handle drops if not over a divider (dividers handle their own drops)
+    if (!isDraggingOverDivider) {
+      e.preventDefault();
+      e.stopPropagation();
+      const newCards = await processDropEvent(e);
+      if (newCards && newCards.length > 0) {
+        // Add all new cards at the end
+        cardsHandlers.append(...newCards);
+        notifySuccess(`Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`);
+      }
+    }
+  };
+
+  // Add event listeners to document
+  document.addEventListener('dragover', handleDocumentDragOver);
+  document.addEventListener('dragleave', handleDocumentDragLeave);
+  document.addEventListener('drop', handleDocumentDrop);
+  document.addEventListener('paste', handlePaste);
+  document.addEventListener('keydown', handleKeyDown);
+
+  // Cleanup
+  return () => {
+    document.removeEventListener('dragover', handleDocumentDragOver);
+    document.removeEventListener('dragleave', handleDocumentDragLeave);
+    document.removeEventListener('drop', handleDocumentDrop);
+    document.removeEventListener('paste', handlePaste);
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}
 
 // Inner component that uses the notification system
 const AppContent: React.FC = () => {
@@ -34,116 +129,15 @@ const AppContent: React.FC = () => {
   const [cards, cardsHandlers] = useListState<CardModel>([]);
   const [selectedCard, setSelectedCard] = useState<CardModel | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
+  // Is dragging over the document
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  // Is dragging over an inner divider, should escalate the event to the divider
   const [isDraggingOverDivider, setIsDraggingOverDivider] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Use the notification system
-  const { showError, showSuccess, showWarning } = useNotifications();
-
-  // Add global paste listener
-  useGlobalPasteListener((textContent, files) => {
-    handlePastedContent(textContent, files);
-  });
-
-  // Add document-level drag and drop handlers
   useEffect(() => {
-    const handleDocumentDragOver = (e: DragEvent) => {
-      // Prevent default to allow drop
-      e.preventDefault();
-      // Only show the document drop indicator if not over a divider
-      if (!isDraggingOverDivider) {
-        setIsDraggingOver(true);
-      }
-    };
-
-    const handleDocumentDragLeave = (e: DragEvent) => {
-      // Check if we're actually leaving the document
-      if (e.clientX === 0 && e.clientY === 0) {
-        setIsDraggingOver(false);
-      }
-    };
-
-    const handleDocumentDrop = async (e: DragEvent) => {
-      // Always reset the drag state on drop
-      setIsDraggingOver(false);
-      setIsDraggingOverDivider(false);
-
-      // Only handle drops if not over a divider (dividers handle their own drops)
-      if (!isDraggingOverDivider) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        try {
-          const dropData = await handleDropEvent(e);
-          const newCards: CardModel[] = [];
-
-          // Create cards for dropped files
-          for (const file of dropData.files) {
-            const card = createCard({
-              content:
-                file.content instanceof ArrayBuffer
-                  ? {
-                      type: 'binary',
-                      value: file.content,
-                      mimeType: file.type,
-                      encoding: 'binary',
-                    }
-                  : {
-                      type: 'text',
-                      value: file.content as string,
-                    },
-              title: file.name,
-              metadata: {
-                source: 'file',
-              },
-            });
-            newCards.push(card);
-          }
-
-          // Create card for text content if no files
-          if (dropData.files.length === 0 && dropData.plainText) {
-            const card = createCard({
-              content: {
-                type: 'text',
-                value: dropData.plainText,
-              },
-              metadata: {
-                source: 'clipboard',
-              },
-            });
-            newCards.push(card);
-          }
-
-          if (newCards.length > 0) {
-            // Add all new cards at the end
-            cardsHandlers.append(...newCards);
-            showSuccess(
-              `Added ${newCards.length} card${newCards.length > 1 ? 's' : ''} from drop`,
-              'Content Added',
-              undefined,
-              'top',
-            );
-          }
-        } catch (error) {
-          console.error('Failed to handle drop:', error);
-          showError('Failed to process dropped content', 'Drop Error');
-        }
-      }
-    };
-
-    // Add event listeners to document
-    document.addEventListener('dragover', handleDocumentDragOver);
-    document.addEventListener('dragleave', handleDocumentDragLeave);
-    document.addEventListener('drop', handleDocumentDrop);
-
-    // Cleanup
-    return () => {
-      document.removeEventListener('dragover', handleDocumentDragOver);
-      document.removeEventListener('dragleave', handleDocumentDragLeave);
-      document.removeEventListener('drop', handleDocumentDrop);
-    };
-  }, [cards, cardsHandlers, showError, showSuccess, isDraggingOverDivider]);
+    useGlobalEventListeners(cardsHandlers, isDraggingOverDivider, setIsDraggingOver, setIsDraggingOverDivider);
+  }, [cards, isDraggingOverDivider]);
 
   const showLoading = () => {
     setLoading(true);
@@ -153,30 +147,13 @@ const AppContent: React.FC = () => {
     setLoading(false);
   };
 
-  const handleExtractContent = async () => {
-    try {
-      showLoading();
-      let extractedCards: CardModel[];
-      if (await googleDocsManager.checkGoogleDocsTab()) {
-        extractedCards = await googleDocsManager.fetchGoogleDocsContent();
-      } else {
-        extractedCards = await contentManager.fetchContent();
-      }
-
-      if (extractedCards && extractedCards.length > 0) {
-        // Add the extracted cards to the cards state
-        extractedCards.forEach((card) => {
-          cardsHandlers.append(card);
-        });
-
-        hideLoading();
-        showSuccess(`Extracted ${extractedCards.length} content cards successfully`);
-      } else {
-        throw new Error('No readable content found');
-      }
-    } catch (error) {
+  const handleExtractTab = async () => {
+    showLoading();
+    const newCards = await processTabEvent();
+    if (newCards && newCards.length > 0) {
+      cardsHandlers.append(...newCards);
+      notifySuccess(`Extracted ${newCards.length} card${newCards.length > 1 ? 's' : ''} from active tab`);
       hideLoading();
-      showError((error as Error).message, 'Extract Content Failed');
     }
   };
 
@@ -185,32 +162,21 @@ const AppContent: React.FC = () => {
   };
 
   const handleCopyAllCards = async () => {
-    try {
-      if (cards.length === 0) {
-        showWarning('No cards to copy');
-        return;
-      }
-
-      // Use pomlHelper to convert cards to POML format
-      const pomlContent = await pomlHelper(cards);
-      console.log('POML content:', pomlContent);
-
-      if (!pomlContent) {
-        showError('Failed to generate POML content', 'Copy Failed');
-        return;
-      }
-
-      // Copy to clipboard with support for images and text
-      await writeRichContentToClipboard(pomlContent);
-      showSuccess(`Copied ${cards.length} cards to clipboard`, 'POML Content Copied', undefined, 'bottom');
-    } catch (error) {
-      showError(`Failed to copy cards: ${(error as Error).message}`, 'Copy Failed');
+    if (cards.length === 0) {
+      notifyError('No active cards to copy');
+      return;
     }
-  };
 
-  const handleCardClick = (card: CardModel) => {
-    setSelectedCard(card);
-    setModalOpened(true);
+    // Use pomlHelper to convert cards to POML format
+    const pomlContent = await renderCardsByPoml(cards);
+
+    if (pomlContent) {
+      const success = await writeRichContentToClipboard(pomlContent);
+      if (success) {
+        notifySuccess(`Copied ${cards.length} cards to clipboard`);
+      }
+      // Error has already been notified
+    }
   };
 
   const handleSaveCard = (id: string, newContent: string) => {

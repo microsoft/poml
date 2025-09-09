@@ -8,8 +8,8 @@ import { Stack, Box, Button, Group } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { CardModel, createCard } from '@common/cardModel';
-import { CardItem } from './CardItem';
-import { DroppableDivider } from './DroppableDivider';
+import { CardItem } from './card-item';
+import { DroppableDivider } from './droppable-divider';
 
 interface EditableCardListProps {
   cards: CardModel[];
