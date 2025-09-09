@@ -107,33 +107,27 @@ export class ExtendedPomlParser extends CstParser {
 
   // Lookahead helper: Check if next is whitespace but next non-whitespace token is not of given type
   private atAlmostClose = (tokenType: TokenType) => {
-    let k = 1;
-    if (this.LA(k).tokenType === Whitespace) {
-      k++;
+    if (this.LA(1).tokenType === Whitespace) {
+      return this.LA(2).tokenType === tokenType;
     }
-    return this.LA(k).tokenType === tokenType;
+    return this.LA(1).tokenType === tokenType;
   };
 
   private isNextPragma = () => {
     if (this.LA(1).tokenType !== CommentOpen) {
       return false;
     }
-    let k = 2;
-    while (this.LA(k).tokenType === Whitespace) {
-      k++;
+    if (this.LA(2).tokenType === Whitespace) {
+      return this.LA(3).tokenType === PragmaKeyword;
     }
-    return this.LA(k).tokenType === PragmaKeyword;
+    return this.LA(2).tokenType === PragmaKeyword;
   };
 
   private isAtLiteralClose = (expectedTagName: string | undefined) => {
     if (this.LA(1).tokenType !== ClosingOpenBracket) {
       return false;
     }
-    let k = 2;
-    while (this.LA(k).tokenType === Whitespace) {
-      k++;
-    }
-    const t = this.LA(k);
+    const t = this.LA(2).tokenType === Whitespace ? this.LA(3) : this.LA(2);
     if (t.tokenType !== Identifier) {
       return false;
     }
@@ -146,11 +140,7 @@ export class ExtendedPomlParser extends CstParser {
     if (this.LA(1).tokenType !== OpenBracket) {
       return undefined;
     }
-    let k = 2;
-    while (this.LA(k).tokenType === Whitespace) {
-      k++;
-    }
-    const token = this.LA(k);
+    const token = this.LA(2).tokenType === Whitespace ? this.LA(3) : this.LA(2);
     if (token.tokenType !== Identifier) {
       return undefined;
     }
@@ -169,6 +159,7 @@ export class ExtendedPomlParser extends CstParser {
     super(AllTokens, {
       recoveryEnabled: true,
       nodeLocationTracking: 'full',
+      maxLookahead: 3,
     });
     this.validComponentNames = new Set(listComponentAliases());
 
