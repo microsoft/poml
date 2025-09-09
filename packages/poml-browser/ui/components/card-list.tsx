@@ -7,25 +7,25 @@ import React, { useCallback } from 'react';
 import { Stack, Box, Button, Group } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
-import { CardModel, createCard } from '@common/cardModel';
+import { CardModel } from '@common/types';
 import { CardItem } from './card-item';
 import { DroppableDivider } from './droppable-divider';
 
 interface EditableCardListProps {
   cards: CardModel[];
   onChange: (cards: CardModel[]) => void;
-  onCardClick?: (card: CardModel) => void;
+  // Edit mode is on
   editable?: boolean;
+  // Notify the parent when the divider has intercepted a drag event
   onDragOverDivider?: (isOver: boolean) => void;
 }
 
 export const EditableCardList: React.FC<EditableCardListProps> = ({
   cards,
   onChange,
-  onCardClick,
   editable = true,
   onDragOverDivider,
-}) => {
+}: EditableCardListProps) => {
   const handleDragEnd = useCallback(
     (result: DropResult) => {
       if (!result.destination) {
