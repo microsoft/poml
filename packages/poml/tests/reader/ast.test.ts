@@ -86,19 +86,22 @@ describe('AST Visitor - Individual Rules', () => {
       expect(result.kind).toBe('ROOT');
       expect(result.children).toHaveLength(3);
 
-      expect(result.children[0]).toMatchObject({
+      expect(result.children[0]).toStrictEqual({
         kind: 'STRING',
         value: 'Hello ',
+        range: { start: 0, end: 5 },
       });
 
-      expect(result.children[1]).toMatchObject({
+      expect(result.children[1]).toStrictEqual({
         kind: 'TEMPLATE',
-        value: { kind: 'STRING', value: ' name ' },
+        value: { kind: 'STRING', value: 'name', range: expect.any(Object) },
+        range: expect.any(Object),
       });
 
-      expect(result.children[2]).toMatchObject({
+      expect(result.children[2]).toStrictEqual({
         kind: 'STRING',
         value: '!',
+        range: { start: 16, end: 16 },
       });
     });
   });
@@ -110,7 +113,7 @@ describe('AST Visitor - Individual Rules', () => {
         kind: 'TEMPLATE',
         value: {
           kind: 'STRING',
-          value: ' var ',
+          value: 'var',
           range: expect.any(Object),
         },
         range: expect.any(Object),
@@ -119,7 +122,7 @@ describe('AST Visitor - Individual Rules', () => {
 
     test('complex expression template', () => {
       const result = parseRule<TemplateNode>('{{ user.name.toUpperCase() }}', (p) => p.template());
-      expect(result.value.value).toBe(' user.name.toUpperCase() ');
+      expect(result.value.value).toBe('user.name.toUpperCase()');
     });
 
     test('template without spaces', () => {
@@ -152,40 +155,46 @@ describe('AST Visitor - Individual Rules', () => {
   describe('pragma rule', () => {
     test('pragma with identifier only', () => {
       const result = parseRule<PragmaNode>('<!-- @pragma version -->', (p) => p.pragma());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'PRAGMA',
         identifier: {
           kind: 'STRING',
           value: 'version',
+          range: { start: 13, end: 19 },
         },
         options: [],
+        range: { start: 0, end: 24 },
       });
     });
 
     test('pragma with unquoted options', () => {
       const result = parseRule<PragmaNode>('<!-- @pragma components +reference -table -->', (p) => p.pragma());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'PRAGMA',
         identifier: {
           kind: 'STRING',
           value: 'components',
+          range: { start: 13, end: 22 },
         },
         options: [
-          { kind: 'STRING', value: '+reference' },
-          { kind: 'STRING', value: '-table' },
+          { kind: 'STRING', value: '+reference', range: { start: 24, end: 33 } },
+          { kind: 'STRING', value: '-table', range: { start: 35, end: 40 } },
         ],
+        range: { start: 0, end: 44 },
       });
     });
 
     test('pragma with quoted options', () => {
       const result = parseRule<PragmaNode>('<!-- @pragma whitespace "pre formatted" -->', (p) => p.pragma());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'PRAGMA',
         identifier: {
           kind: 'STRING',
           value: 'whitespace',
+          range: { start: 13, end: 22 },
         },
-        options: [{ kind: 'STRING', value: 'pre formatted' }],
+        options: [{ kind: 'STRING', value: 'pre formatted', range: { start: 24, end: 38 } }],
+        range: { start: 0, end: 42 },
       });
     });
   });
@@ -213,39 +222,55 @@ describe('AST Visitor - Individual Rules', () => {
   describe('quotedTemplate rule', () => {
     test('quoted string with template', () => {
       const result = parseRule<ValueNode>('"Hello {{ name }}!"', (p) => p.quotedTemplate());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'VALUE',
         children: [
-          { kind: 'STRING', value: 'Hello ' },
+          { kind: 'STRING', value: 'Hello ', range: { start: 1, end: 6 } },
           {
             kind: 'TEMPLATE',
-            value: { kind: 'STRING', value: ' name ' },
+            value: { kind: 'STRING', value: 'name', range: { start: 10, end: 13 } },
+            range: { start: 8, end: 15 },
           },
-          { kind: 'STRING', value: '!' },
+          { kind: 'STRING', value: '!', range: { start: 16, end: 16 } },
         ],
+        range: { start: 0, end: 18 },
       });
     });
 
     test('quoted template with only template', () => {
       const result = parseRule<ValueNode>('"{{ expression }}"', (p) => p.quotedTemplate());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'VALUE',
         children: [
           {
             kind: 'TEMPLATE',
-            value: { kind: 'STRING', value: 'expression' },
+            value: { kind: 'STRING', value: 'expression', range: { start: 3, end: 12 } },
+            range: { start: 1, end: 16 },
           },
         ],
+        range: { start: 0, end: 17 },
       });
     });
 
     test('multiple templates in quoted string', () => {
       const result = parseRule<ValueNode>('"{{ first }} and {{ second }}"', (p) => p.quotedTemplate());
-      expect(result.children).toHaveLength(4);
-      expect(result.children[0]).toMatchObject({ kind: 'TEMPLATE' });
-      expect(result.children[1]).toMatchObject({ kind: 'STRING', value: ' and ' });
-      expect(result.children[2]).toMatchObject({ kind: 'TEMPLATE' });
-      expect(result.children[3]).toMatchObject({ kind: 'STRING', value: '' });
+      expect(result).toStrictEqual({
+        kind: 'VALUE',
+        children: [
+          {
+            kind: 'TEMPLATE',
+            value: { kind: 'STRING', value: 'first', range: { start: 3, end: 7 } },
+            range: { start: 1, end: 11 },
+          },
+          { kind: 'STRING', value: ' and ', range: { start: 12, end: 16 } },
+          {
+            kind: 'TEMPLATE',
+            value: { kind: 'STRING', value: 'second', range: { start: 20, end: 25 } },
+            range: { start: 17, end: 28 },
+          },
+        ],
+        range: { start: 0, end: 30 },
+      });
     });
   });
 
@@ -257,23 +282,24 @@ describe('AST Visitor - Individual Rules', () => {
         iterator: {
           kind: 'STRING',
           value: 'item',
-          range: expect.any(Object),
+          range: { start: 1, end: 4 },
         },
         collection: {
           kind: 'STRING',
           value: 'items',
-          range: expect.any(Object),
+          range: { start: 9, end: 13 },
         },
-        range: expect.any(Object),
+        range: { start: 0, end: 14 },
       });
     });
 
     test('for iterator with property access', () => {
       const result = parseRule<ForIteratorNode>('"user in data.users"', (p) => p.forIteratorValue());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'FORITERATOR',
-        iterator: { kind: 'STRING', value: 'user' },
-        collection: { kind: 'STRING', value: 'data.users' },
+        iterator: { kind: 'STRING', value: 'user', range: { start: 1, end: 4 } },
+        collection: { kind: 'STRING', value: 'data.users', range: { start: 9, end: 18 } },
+        range: { start: 0, end: 19 },
       });
     });
 
@@ -288,47 +314,72 @@ describe('AST Visitor - Individual Rules', () => {
   describe('attribute rule', () => {
     test('attribute with quoted value', () => {
       const result = parseRule<AttributeNode>('class="container"', (p) => p.attribute());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'ATTRIBUTE',
-        key: { kind: 'STRING', value: 'class' },
-        value: { kind: 'STRING', value: 'container' },
+        key: { kind: 'STRING', value: 'class', range: { start: 0, end: 4 } },
+        value: {
+          kind: 'VALUE',
+          children: [{ kind: 'STRING', value: 'container', range: { start: 6, end: 16 } }],
+          range: { start: 6, end: 16 },
+        },
+        range: { start: 0, end: 17 },
       });
     });
 
     test('attribute with template value', () => {
       const result = parseRule<AttributeNode>('title={{ pageTitle }}', (p) => p.attribute());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'ATTRIBUTE',
-        key: { kind: 'STRING', value: 'title' },
+        key: { kind: 'STRING', value: 'title', range: { start: 0, end: 4 } },
         value: {
           kind: 'VALUE',
-          children: [{ kind: 'TEMPLATE' }],
+          children: [
+            {
+              kind: 'TEMPLATE',
+              value: { kind: 'STRING', value: 'pageTitle', range: { start: 9, end: 17 } },
+              range: { start: 6, end: 20 },
+            },
+          ],
+          range: { start: 6, end: 20 },
         },
+        range: { start: 0, end: 20 },
       });
     });
 
     test('attribute with for iterator', () => {
       const result = parseRule<AttributeNode>('for="item in items"', (p) => p.attribute());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'ATTRIBUTE',
-        key: { kind: 'STRING', value: 'for' },
+        key: { kind: 'STRING', value: 'for', range: { start: 0, end: 2 } },
         value: {
           kind: 'FORITERATOR',
-          iterator: { kind: 'STRING', value: 'item' },
-          collection: { kind: 'STRING', value: 'items' },
+          iterator: { kind: 'STRING', value: 'item', range: { start: 5, end: 8 } },
+          collection: { kind: 'STRING', value: 'items', range: { start: 13, end: 17 } },
+          range: { start: 4, end: 18 },
         },
+        range: { start: 0, end: 18 },
       });
     });
 
     test('attribute with quoted template value', () => {
       const result = parseRule<AttributeNode>('message="Hello {{ name }}!"', (p) => p.attribute());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'ATTRIBUTE',
-        key: { kind: 'STRING', value: 'message' },
+        key: { kind: 'STRING', value: 'message', range: { start: 0, end: 6 } },
         value: {
           kind: 'VALUE',
-          children: [{ kind: 'STRING', value: 'Hello ' }, { kind: 'TEMPLATE' }, { kind: 'STRING', value: '!' }],
+          children: [
+            { kind: 'STRING', value: 'Hello ', range: { start: 9, end: 14 } },
+            {
+              kind: 'TEMPLATE',
+              value: { kind: 'STRING', value: 'name', range: { start: 18, end: 21 } },
+              range: { start: 15, end: 24 },
+            },
+            { kind: 'STRING', value: '!', range: { start: 25, end: 25 } },
+          ],
+          range: { start: 8, end: 26 },
         },
+        range: { start: 0, end: 26 },
       });
     });
   });
@@ -336,66 +387,90 @@ describe('AST Visitor - Individual Rules', () => {
   describe('element rule', () => {
     test('simple element', () => {
       const result = parseRule<ElementNode>('<div>content</div>', (p) => p.element());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'ELEMENT',
         name: 'div',
         attributes: [],
-        children: [{ kind: 'STRING', value: 'content' }],
+        children: [{ kind: 'STRING', value: 'content', range: { start: 5, end: 11 } }],
+        range: { start: 0, end: 17 },
       });
     });
 
     test('element with attributes', () => {
       const result = parseRule<ElementNode>('<div class="container" id="main">text</div>', (p) => p.element());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'ELEMENT',
         name: 'div',
         attributes: [
           {
             kind: 'ATTRIBUTE',
-            key: { value: 'class' },
-            value: { kind: 'STRING', value: 'container' },
+            key: { kind: 'STRING', value: 'class', range: { start: 5, end: 9 } },
+            value: {
+              kind: 'VALUE',
+              children: [{ kind: 'STRING', value: 'container', range: { start: 12, end: 20 } }],
+              range: { start: 11, end: 21 },
+            },
+            range: { start: 5, end: 21 },
           },
           {
             kind: 'ATTRIBUTE',
-            key: { value: 'id' },
-            value: { kind: 'STRING', value: 'main' },
+            key: { kind: 'STRING', value: 'id', range: { start: 23, end: 24 } },
+            value: {
+              kind: 'VALUE',
+              children: [{ kind: 'STRING', value: 'main', range: { start: 27, end: 30 } }],
+              range: { start: 26, end: 31 },
+            },
+            range: { start: 23, end: 31 },
           },
         ],
-        children: [{ kind: 'STRING', value: 'text' }],
+        children: [{ kind: 'STRING', value: 'text', range: { start: 33, end: 36 } }],
+        range: { start: 0, end: 42 },
       });
     });
 
     test('self-closing element', () => {
       const result = parseRule<ElementNode>('<img src="photo.jpg" />', (p) => p.element());
-      expect(result).toMatchObject({
+      expect(result).toStrictEqual({
         kind: 'ELEMENT',
         name: 'img',
         attributes: [
           {
             kind: 'ATTRIBUTE',
-            key: { value: 'src' },
-            value: { kind: 'VALUE', value: 'photo.jpg' },
+            key: { kind: 'STRING', value: 'src', range: { start: 5, end: 7 } },
+            value: {
+              kind: 'VALUE',
+              children: [{ kind: 'STRING', value: 'photo.jpg', range: { start: 10, end: 18 } }],
+              range: { start: 9, end: 19 },
+            },
+            range: { start: 5, end: 19 },
           },
         ],
         children: [],
+        range: { start: 0, end: 22 },
       });
     });
 
     test('element with nested content', () => {
       const result = parseRule<ElementNode>('<task>Process {{ data }} carefully</task>', (p) => p.element());
       expect(result.children).toHaveLength(3);
-      expect(result.children[0]).toMatchObject({ kind: 'STRING', value: 'Process ' });
-      expect(result.children[1]).toMatchObject({ kind: 'TEMPLATE' });
-      expect(result.children[2]).toMatchObject({ kind: 'STRING', value: ' carefully' });
+      expect(result.children[0]).toStrictEqual({ kind: 'STRING', value: 'Process ', range: { start: 6, end: 13 } });
+      expect(result.children[1]).toStrictEqual({
+        kind: 'TEMPLATE',
+        value: { kind: 'STRING', value: 'data', range: { start: 17, end: 20 } },
+        range: { start: 14, end: 23 },
+      });
+      expect(result.children[2]).toStrictEqual({ kind: 'STRING', value: ' carefully', range: { start: 24, end: 33 } });
     });
 
     test('nested elements', () => {
       const result = parseRule<ElementNode>('<div><span>nested</span></div>', (p) => p.element());
       expect(result.children).toHaveLength(1);
-      expect(result.children[0]).toMatchObject({
+      expect(result.children[0]).toStrictEqual({
         kind: 'ELEMENT',
         name: 'span',
-        children: [{ kind: 'STRING', value: 'nested' }],
+        attributes: [],
+        children: [{ kind: 'STRING', value: 'nested', range: { start: 11, end: 16 } }],
+        range: { start: 5, end: 23 },
       });
     });
   });

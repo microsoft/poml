@@ -149,7 +149,7 @@ function rangeFromTokens(tokens: IToken[]): Range {
  */
 function rangeFromCstNode(node: CstNode): Range {
   const start = node.location?.startOffset ?? 0;
-  const end = node.location?.endOffset ?? start;
+  const end = node.location?.endOffset ?? node.location?.startOffset ?? start;
   return rangeFrom(start, end);
 }
 
