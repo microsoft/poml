@@ -21,8 +21,6 @@ import {
   CstRootNode,
   CstElementContentNode,
   CstElementNode,
-  CstOpenTagPartialNode,
-  CstCloseTagNode,
   CstTemplateNode,
   CstQuotedNode,
   CstQuotedTemplateNode,
@@ -47,13 +45,7 @@ import {
 import { Range } from './types';
 import { extendedPomlParser } from './cst';
 import { BackslashEscape, CharacterEntity } from './lexer';
-import * as error from './error';
-
-/** Error produced while building the AST (beyond lex/parse errors). */
-export interface AstBuildError {
-  message: string;
-  range?: Range;
-}
+import * as diagnostics from './diagnostics';
 
 /** Decode a single backslash escape sequence (for quoted strings). */
 function decodeEscape(seq: string): string {
@@ -99,16 +91,17 @@ function literal(value: string, range: Range): LiteralNode {
 /**
  * Create a LiteralNode from IToken list.
  */
-function literalFromTokens(tokens: IToken[]): LiteralNode {
-  return literal(textFromRaw(tokens), rangeFromTokens(tokens));
+function literalFromTokens(tokens: IToken[], fromIToken?: (tokens: IToken[]) => string): LiteralNode {
+  const text = fromIToken ? fromIToken(tokens) : textFromRaw(tokens);
+  return literal(text, rangeFromTokens(tokens));
 }
 
 /**
  * Convert CST token groups to a literal string.
  * String contents are kept as is, no escape decoding.
  */
-function literalFromCstTokens(groups: CstTokens[]): LiteralNode {
-  const text = textFromCstTokens(groups, textFromRaw);
+function literalFromCstTokens(groups: CstTokens[], fromIToken?: (tokens: IToken[]) => string): LiteralNode {
+  const text = textFromCstTokens(groups, fromIToken ?? textFromRaw);
   return literal(text, rangeFromCstTokens(groups));
 }
 
@@ -196,17 +189,9 @@ const BaseVisitor = extendedPomlParser.getBaseCstVisitorConstructorWithDefaults(
  * instead of throwing where possible so downstream phases can proceed.
  */
 export class ExtendedPomlAstVisitor extends BaseVisitor {
-  private errors: AstBuildError[] = [];
-
   constructor() {
     super();
     this.validateVisitor();
-  }
-
-  /** Entry point: visit a CstRootNode and return an AST RootNode & errors. */
-  build(cst: CstNode): { root: RootNode; errors: AstBuildError[] } {
-    const root = this.visit(cst) as RootNode;
-    return { root, errors: this.errors };
   }
 
   // ---- Rule implementations ----
@@ -237,7 +222,7 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
       return this.visit(ctx.children.TextContent[0]) as LiteralNode;
     }
     // This should not happen
-    this.errors.push({ message: 'Unknown element content', range: rangeFromCstNode(ctx) });
+    diagnostics.error('Unknown element content', rangeFromCstNode(ctx));
     return literal('', rangeFromCstNode(ctx));
   }
 
@@ -256,107 +241,64 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
   }
 
   pragma(ctx: CstPragmaNode): PragmaNode {
-    const open = ctx.children.CommentOpen?.[0];
-    const close = ctx.children.CommentClose?.[0];
-
-    const idTok = ctx.children.PragmaIdentifier?.[0];
-    const identifier: LiteralNode = literal(idTok?.image ?? '', idTok?.startOffset ?? 0, (idTok?.endOffset ?? -1) + 1);
-
+    const identifier = literalFromTokens(ctx.children.PragmaIdentifier ?? []);
     const options: LiteralNode[] = [];
-    for (const opt of ctx.children.PragmaOption ?? []) {
-      if ((opt as CstQuotedNode).children) {
-        // Quoted option
-        const q = opt as CstQuotedNode;
-        const bodyTokens = q.children.Content?.[0]?.children.Content ?? [];
-        const value = textFromQuoted(bodyTokens);
-        const start = q.children.OpenQuote?.[0]?.startOffset ?? 0;
-        const end = (q.children.CloseQuote?.[0]?.endOffset ?? start) + 1;
-        options.push(literal(value, start, end));
+
+    for (const option of ctx.children.PragmaOption ?? []) {
+      if ('tokenType' in option) {
+        // IToken
+        options.push(literal(option.image ?? '', rangeFromTokens([option])));
       } else {
-        // Unquoted identifier-ish tokens captured by commentIdentifierTokens
-        const toks = (opt as any).children?.Content ?? [];
-        const value = rawFrom(toks);
-        const r = rangeFromTokens(toks);
-        options.push(literal(value, r.start, r.end));
+        // CstQuotedNode
+        options.push(this.visit(option) as LiteralNode);
       }
     }
-
-    const start = open?.startOffset ?? identifier.range.start;
-    const end = (close?.endOffset ?? identifier.range.end - 1) + 1;
 
     return {
       kind: 'PRAGMA',
       identifier,
       options,
-      range: rangeFrom(start, end),
+      range: rangeFromCstNode(ctx),
     };
   }
 
-  quoted(ctx: CstQuotedNode): ValueNode {
-    const open = ctx.children.OpenQuote?.[0];
-    const close = ctx.children.CloseQuote?.[0];
-    const toks = ctx.children.Content?.[0]?.children.Content ?? [];
-    const text = textFromQuoted(toks);
-
-    const innerStart = (open?.endOffset ?? -1) + 1;
-    const innerEnd = close?.startOffset ?? innerStart;
-
-    const lit = literal(text, innerStart, innerEnd);
-    return {
-      kind: 'VALUE',
-      children: [lit],
-      range: rangeFrom(open?.startOffset ?? innerStart, (close?.endOffset ?? innerEnd - 1) + 1),
-    };
+  quoted(ctx: CstQuotedNode): LiteralNode {
+    // Ignore the special strings like templates, entities, ...
+    return literalFromCstTokens(ctx.children.Content ?? [], textFromQuoted);
   }
 
   quotedTemplate(ctx: CstQuotedTemplateNode): ValueNode {
-    const open = ctx.children.OpenQuote?.[0];
-    const close = ctx.children.CloseQuote?.[0];
-
     const children: (LiteralNode | TemplateNode)[] = [];
 
-    // Build mixed children maintaining order
-    for (const part of ctx.children.Content ?? []) {
-      const asTpl = part as unknown as CstTemplateNode;
-      if (asTpl.children && (asTpl.children.TemplateOpen || asTpl.children.TemplateClose)) {
-        children.push(this.visit(asTpl) as TemplateNode);
+    for (const content of ctx.children.Content ?? []) {
+      if (content.name === 'template') {
+        // CstTemplateNode
+        const templateNode = this.visit(content) as TemplateNode;
+        children.push(templateNode);
       } else {
-        // token run outside {{ }} inside quotes
-        const toks = (part as CstTokens).children.Content ?? [];
-        const text = textFromQuoted(toks);
-        const r = rangeFromTokens(toks);
-        if (text.length > 0) {
-          children.push(literal(text, r.start, r.end));
-        }
+        // CstTokens - regular text content
+        const lit = literalFromCstTokens([content as CstTokens], textFromQuoted);
+        children.push(lit);
       }
     }
 
-    const start = open?.startOffset ?? children[0]?.range.start ?? 0;
-    const end = (close?.endOffset ?? (children[children.length - 1]?.range.end ?? start) - 1) + 1;
-
-    return { kind: 'VALUE', children, range: rangeFrom(start, end) };
+    return {
+      kind: 'VALUE',
+      children,
+      range: rangeFromCstNode(ctx),
+    };
   }
 
   forIteratorValue(ctx: CstForIteratorNode): ForIteratorNode {
-    const open = ctx.children.OpenQuote?.[0];
-    const close = ctx.children.CloseQuote?.[0];
+    const iterator = literalFromTokens(ctx.children.Iterator ?? [], textFromQuoted);
+    const collection = literalFromCstTokens(ctx.children.Collection ?? [], textFromQuoted);
 
-    const itTok = ctx.children.Iterator?.[0];
-    const iterator = literal(itTok?.image ?? '', itTok?.startOffset ?? 0, (itTok?.endOffset ?? -1) + 1);
-
-    const collText = textFromExpressionTokens(ctx.children.Collection ?? []);
-    const collStart = ctx.children.Collection?.[0]?.children.Content?.[0]?.startOffset;
-    const collEnd = ctx.children.Collection?.[0]?.children.Content?.slice(-1)[0]?.endOffset;
-    const collection: ExpressionNode = {
-      kind: 'EXPRESSION',
-      value: collText,
-      range: rangeFrom(collStart ?? iterator.range.end, (collEnd ?? iterator.range.end - 1) + 1),
+    return {
+      kind: 'FORITERATOR',
+      iterator,
+      collection,
+      range: rangeFromCstNode(ctx),
     };
-
-    const start = open?.startOffset ?? iterator.range.start;
-    const end = (close?.endOffset ?? collection.range.end - 1) + 1;
-
-    return { kind: 'FORITERATOR', iterator, collection, range: rangeFrom(start, end) };
   }
 
   attribute(ctx: CstAttributeNode): AttributeNode {
@@ -375,10 +317,7 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
       value = { kind: 'VALUE', children: [tpl], range: tpl.range };
     } else {
       // Fallback empty value
-      this.errors.push({
-        message: `Attribute "${key.value}" is missing a value`,
-        range,
-      });
+      diagnostics.error(`Attribute "${key.value}" is missing a value`, range);
       value = { kind: 'VALUE', children: [], range: key.range };
     }
 
@@ -399,16 +338,15 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
           try {
             return he.decode(t.image ?? '', { strict: true });
           } catch (e) {
-            this.errors.push({
-              message: `Failed to decode HTML entity: ${t.image}`,
-              range: rangeFromTokens([t]),
-            });
+            diagnostics.error(`Failed to decode HTML entity: ${t.image}`, rangeFromTokens([t]));
           }
         }
       })
       .join('');
     return literal(text, rangeFromTokens(tokens));
   }
+
+  // openTagPartial and closeTag is skipped. They are handled implicitly in element()
 
   element(ctx: CstElementNode): ElementNode {
     const openTagPartial = ctx.children.OpenTagPartial?.[0];
@@ -430,10 +368,10 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
     const closeTag = ctx.children.CloseTag?.[0];
     const closeTagName = textFromRaw(closeTag?.children.TagName ?? []);
     if (closeTag && name.toLowerCase() !== closeTagName.toLowerCase()) {
-      this.errors.push({
-        message: `Mismatched closing tag: expected </${name}> but found </${closeTagName}>`,
-        range: rangeFromCstNode(closeTag),
-      });
+      diagnostics.error(
+        `Mismatched closing tag: expected </${name}> but found </${closeTagName}>`,
+        rangeFromCstNode(closeTag),
+      );
     }
 
     return { kind: 'ELEMENT', name, attributes, children, range: rangeFromCstNode(ctx) };

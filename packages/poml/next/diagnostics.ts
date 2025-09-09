@@ -320,14 +320,14 @@ export class ErrorCollector {
 
     const filtered = this.diagnostics.filter((d) => {
       if (d.severity === Severity.ERROR) {
-return true;
-}
+        return true;
+      }
       if (d.severity === Severity.WARNING) {
-return showWarnings;
-}
+        return showWarnings;
+      }
       if (d.severity === Severity.INFO) {
-return showInfo;
-}
+        return showInfo;
+      }
       return false;
     });
 
@@ -362,8 +362,8 @@ return showInfo;
 
         const diagnostics = byFile.get(file)!.sort((a, b) => {
           if (!a.range || !b.range) {
-return 0;
-}
+            return 0;
+          }
           return a.range.start - b.range.start;
         });
 
