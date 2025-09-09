@@ -15,27 +15,6 @@ export interface CstTokens extends CstNode {
 }
 
 /**
- * Represents a JavaScript expression as a string.
- *
- * This node stores raw expression text that will be evaluated at runtime.
- * It serves as a wrapper for expressions used in various contexts like
- * conditions, loops, and template interpolations.
- *
- * Cases that apply:
- * - Conditional expressions: `i > 0`, `user.name === "admin"`
- * - Function calls: `formatDate(now)`, `items.filter(x => x.active)`
- *
- * Cases that do not apply:
- * - Template syntax including braces: `{{ expression }}` (use TemplateNode)
- * - String literals with quotes: `"hello"` (use ValueNode)
- * - POML markup: `<tag>` (use element nodes)
- */
-export interface ExpressionNode extends AstNode {
-  kind: 'EXPRESSION';
-  value: string;
-}
-
-/**
  * Represents a template interpolation with double curly braces,
  * or sometimes without braces in specific attributes.
  *
@@ -51,7 +30,7 @@ export interface ExpressionNode extends AstNode {
  * - Template usage in if attributes: `condition` in `if="condition"`
  *
  * Cases that do not apply:
- * - Full attribute expressions: `if="x > 0"` (use ExpressionNode)
+ * - Full attribute expressions: `if="x > 0"` (use AttributeNode)
  * - Plain text: `Hello World` (use LiteralNode)
  * - Single braces: `{ not a template }` (treated as plain text)
  * - Template elements: <template>{{ this is a jinja template }}</template> (use LiteralNode)
@@ -59,7 +38,7 @@ export interface ExpressionNode extends AstNode {
  */
 export interface TemplateNode extends AstNode {
   kind: 'TEMPLATE';
-  value: ExpressionNode;
+  value: LiteralNode;
 }
 
 /**
@@ -94,11 +73,11 @@ export interface CstTemplateNode extends CstNode {
  * - Tag names: the `div` in `<div>`
  * - Identifiers: variable names like `item` in for loops
  * - Whitespace and formatting text between elements
+ * - Expressions: `x > 0` (use ExpressionNode)
  *
  * Cases that do not apply:
  * - Text containing templates: `Hello {{ name }}` (use ValueNode with children)
  * - Quoted strings in attributes: `"value"` (use ValueNode)
- * - Expressions: `x > 0` (use ExpressionNode)
  * - Template variables: `{{ var }}` (use TemplateNode)
  */
 export interface LiteralNode extends AstNode {
@@ -178,7 +157,7 @@ export interface CstQuotedTemplateNode extends CstNode {
 export interface ForIteratorNode extends AstNode {
   kind: 'FORITERATOR';
   iterator: LiteralNode;
-  collection: ExpressionNode;
+  collection: LiteralNode;
 }
 
 /**
