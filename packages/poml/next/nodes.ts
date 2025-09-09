@@ -303,7 +303,7 @@ export interface CstCloseTagNode extends CstNode {
  */
 export interface ElementNode extends AstNode {
   kind: 'ELEMENT';
-  tagName: string;
+  name: string;
   attributes: AttributeNode[];
   // Children is undefined for self-closing tags.
   // If it's not self-closing, children is at least an empty array.
