@@ -29,6 +29,7 @@ import {
   CstCommentNode,
   CstPragmaNode,
   CstTokens,
+  AstNode,
 } from './nodes';
 import {
   ElementNode,
@@ -194,57 +195,66 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
     this.validateVisitor();
   }
 
+  /**
+   * A hack to let rule methods get a handle of the CstNode they are visiting.
+   */
+  visit(cstNode: CstNode | CstNode[], param?: any): AstNode {
+    return super.visit(cstNode, { ...param, node: cstNode });
+  }
+
   // ---- Rule implementations ----
 
-  root(ctx: CstRootNode): RootNode {
+  root(ctx: CstRootNode['children'], { node }: { node: CstRootNode }): RootNode {
     const children: ElementContentNode[] = [];
-    for (const ec of ctx.children.Content ?? []) {
+    for (const ec of ctx.Content ?? []) {
       const node = this.visit(ec) as ElementContentNode;
       if (node) {
         children.push(node);
       }
     }
 
-    return { kind: 'ROOT', children, range: rangeFromCstNode(ctx) };
+    return { kind: 'ROOT', children, range: rangeFromCstNode(node) };
   }
 
-  elementContent(ctx: CstElementContentNode): ElementContentNode {
-    if (ctx.children.Pragma?.length) {
-      return this.visit(ctx.children.Pragma[0]) as PragmaNode;
-    } else if (ctx.children.Comment?.length) {
-      return this.visit(ctx.children.Comment[0]) as CommentNode;
-    } else if (ctx.children.Template?.length) {
-      return this.visit(ctx.children.Template[0]) as TemplateNode;
-    } else if (ctx.children.Element?.length) {
-      return this.visit(ctx.children.Element[0]) as ElementNode;
-    } else if (ctx.children.TextContent?.length) {
+  elementContent(
+    ctx: CstElementContentNode['children'],
+    { node }: { node: CstElementContentNode },
+  ): ElementContentNode {
+    if (ctx.Pragma?.length) {
+      return this.visit(ctx.Pragma[0]) as PragmaNode;
+    } else if (ctx.Comment?.length) {
+      return this.visit(ctx.Comment[0]) as CommentNode;
+    } else if (ctx.Template?.length) {
+      return this.visit(ctx.Template[0]) as TemplateNode;
+    } else if (ctx.Element?.length) {
+      return this.visit(ctx.Element[0]) as ElementNode;
+    } else if (ctx.TextContent?.length) {
       // Text contents between tags
-      return this.visit(ctx.children.TextContent[0]) as LiteralNode;
+      return this.visit(ctx.TextContent[0]) as LiteralNode;
     }
     // This should not happen
-    diagnostics.error('Unknown element content', rangeFromCstNode(ctx));
-    return literal('', rangeFromCstNode(ctx));
+    diagnostics.error('Unknown element content', rangeFromCstNode(node));
+    return literal('', rangeFromCstNode(node));
   }
 
-  template(ctx: CstTemplateNode): TemplateNode {
-    const exprNode = literalFromCstTokens(ctx.children.Content ?? []);
-    return { kind: 'TEMPLATE', value: exprNode, range: rangeFromCstNode(ctx) };
+  template(ctx: CstTemplateNode['children'], { node }: { node: CstTemplateNode }): TemplateNode {
+    const exprNode = literalFromCstTokens(ctx.Content ?? []);
+    return { kind: 'TEMPLATE', value: exprNode, range: rangeFromCstNode(node) };
   }
 
-  comment(ctx: CstCommentNode): CommentNode {
-    const text = textFromCstTokens(ctx.children.Content ?? [], textFromRaw);
+  comment(ctx: CstCommentNode['children'], { node }: { node: CstCommentNode }): CommentNode {
     return {
       kind: 'COMMENT',
-      value: literalFromCstTokens(ctx.children.Content ?? []),
-      range: rangeFromCstNode(ctx),
+      value: literalFromCstTokens(ctx.Content ?? []),
+      range: rangeFromCstNode(node),
     };
   }
 
-  pragma(ctx: CstPragmaNode): PragmaNode {
-    const identifier = literalFromTokens(ctx.children.PragmaIdentifier ?? []);
+  pragma(ctx: CstPragmaNode['children'], { node }: { node: CstPragmaNode }): PragmaNode {
+    const identifier = literalFromTokens(ctx.PragmaIdentifier ?? []);
     const options: LiteralNode[] = [];
 
-    for (const option of ctx.children.PragmaOption ?? []) {
+    for (const option of ctx.PragmaOption ?? []) {
       if ('tokenType' in option) {
         // IToken
         options.push(literal(option.image ?? '', rangeFromTokens([option])));
@@ -258,19 +268,19 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
       kind: 'PRAGMA',
       identifier,
       options,
-      range: rangeFromCstNode(ctx),
+      range: rangeFromCstNode(node),
     };
   }
 
-  quoted(ctx: CstQuotedNode): LiteralNode {
+  quoted(ctx: CstQuotedNode['children'], { node }: { node: CstQuotedNode }): LiteralNode {
     // Ignore the special strings like templates, entities, ...
-    return literalFromCstTokens(ctx.children.Content ?? [], textFromQuoted);
+    return literalFromCstTokens(ctx.Content ?? [], textFromQuoted);
   }
 
-  quotedTemplate(ctx: CstQuotedTemplateNode): ValueNode {
+  quotedTemplate(ctx: CstQuotedTemplateNode['children'], { node }: { node: CstQuotedTemplateNode }): ValueNode {
     const children: (LiteralNode | TemplateNode)[] = [];
 
-    for (const content of ctx.children.Content ?? []) {
+    for (const content of ctx.Content ?? []) {
       if (content.name === 'template') {
         // CstTemplateNode
         const templateNode = this.visit(content) as TemplateNode;
@@ -285,35 +295,35 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
     return {
       kind: 'VALUE',
       children,
-      range: rangeFromCstNode(ctx),
+      range: rangeFromCstNode(node),
     };
   }
 
-  forIteratorValue(ctx: CstForIteratorNode): ForIteratorNode {
-    const iterator = literalFromTokens(ctx.children.Iterator ?? [], textFromQuoted);
-    const collection = literalFromCstTokens(ctx.children.Collection ?? [], textFromQuoted);
+  forIteratorValue(ctx: CstForIteratorNode['children'], { node }: { node: CstForIteratorNode }): ForIteratorNode {
+    const iterator = literalFromTokens(ctx.Iterator ?? [], textFromQuoted);
+    const collection = literalFromCstTokens(ctx.Collection ?? [], textFromQuoted);
 
     return {
       kind: 'FORITERATOR',
       iterator,
       collection,
-      range: rangeFromCstNode(ctx),
+      range: rangeFromCstNode(node),
     };
   }
 
-  attribute(ctx: CstAttributeNode): AttributeNode {
-    const key: LiteralNode = literalFromTokens(ctx.children.AttributeKey ?? []);
-    const range = rangeFromCstNode(ctx);
+  attribute(ctx: CstAttributeNode['children'], { node }: { node: CstAttributeNode }): AttributeNode {
+    const key: LiteralNode = literalFromTokens(ctx.AttributeKey ?? []);
+    const range = rangeFromCstNode(node);
 
     let value: ValueNode | ForIteratorNode;
 
-    if (ctx.children.forIteratorValue?.length) {
-      value = this.visit(ctx.children.forIteratorValue[0]) as ForIteratorNode;
-    } else if (ctx.children.quotedValue?.length) {
-      value = this.visit(ctx.children.quotedValue[0]) as ValueNode;
-    } else if (ctx.children.templatedValue?.length) {
+    if (ctx.forIteratorValue?.length) {
+      value = this.visit(ctx.forIteratorValue[0]) as ForIteratorNode;
+    } else if (ctx.quotedValue?.length) {
+      value = this.visit(ctx.quotedValue[0]) as ValueNode;
+    } else if (ctx.templatedValue?.length) {
       // Unquoted: key={{ expr }} -> wrap as ValueNode with a TemplateNode child
-      const tpl = this.visit(ctx.children.templatedValue[0]) as TemplateNode;
+      const tpl = this.visit(ctx.templatedValue[0]) as TemplateNode;
       value = { kind: 'VALUE', children: [tpl], range: tpl.range };
     } else {
       // Fallback empty value
@@ -330,8 +340,8 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
    * - Character entities are decoded
    * - Backslash escapes are NOT interpreted (shown as-is)
    */
-  betweenTagsTokens(ctx: CstTokens): LiteralNode {
-    const tokens = ctx.children.Content ?? [];
+  betweenTagsTokens(ctx: CstTokens['children'], { node }: { node: CstTokens }): LiteralNode {
+    const tokens = ctx.Content ?? [];
     const text = tokens
       .map((t) => {
         if (t.tokenType === CharacterEntity) {
@@ -341,6 +351,7 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
             diagnostics.error(`Failed to decode HTML entity: ${t.image}`, rangeFromTokens([t]));
           }
         }
+        return t.image ?? '';
       })
       .join('');
     return literal(text, rangeFromTokens(tokens));
@@ -348,25 +359,25 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
 
   // openTagPartial and closeTag is skipped. They are handled implicitly in element()
 
-  element(ctx: CstElementNode): ElementNode {
-    const openTagPartial = ctx.children.OpenTagPartial?.[0];
-    const name = textFromRaw(openTagPartial?.children.TagName ?? []);
+  element(ctx: CstElementNode['children'], { node }: { node: CstElementNode }): ElementNode {
+    const openTagPartial = ctx.OpenTagPartial?.[0];
+    const name = textFromRaw(openTagPartial?.children?.TagName ?? []);
 
-    const attributes = openTagPartial?.children.Attribute?.map((a) => this.visit(a) as AttributeNode) ?? [];
+    const attributes = openTagPartial?.children?.Attribute?.map((a) => this.visit(a) as AttributeNode) ?? [];
 
     let children: ElementContentNode[];
 
-    if (ctx.children.TextContent?.length) {
+    if (ctx.TextContent?.length) {
       // Literal element: everything inside is plain text (no template interpolation)
-      children = [literalFromCstTokens(ctx.children.TextContent ?? [])];
+      children = [literalFromCstTokens(ctx.TextContent)];
     } else {
       // Normal element: nested content parsed as usual
-      children = ctx.children.Content?.map((ec) => this.visit(ec) as ElementContentNode) ?? [];
+      children = ctx.Content?.map((ec) => this.visit(ec) as ElementContentNode) ?? [];
     }
 
     // Tag name matching check
-    const closeTag = ctx.children.CloseTag?.[0];
-    const closeTagName = textFromRaw(closeTag?.children.TagName ?? []);
+    const closeTag = ctx.CloseTag?.[0];
+    const closeTagName = textFromRaw(closeTag?.children?.TagName ?? []);
     if (closeTag && name.toLowerCase() !== closeTagName.toLowerCase()) {
       diagnostics.error(
         `Mismatched closing tag: expected </${name}> but found </${closeTagName}>`,
@@ -374,12 +385,12 @@ export class ExtendedPomlAstVisitor extends BaseVisitor {
       );
     }
 
-    return { kind: 'ELEMENT', name, attributes, children, range: rangeFromCstNode(ctx) };
+    return { kind: 'ELEMENT', name, attributes, children, range: rangeFromCstNode(node) };
   }
 }
 
-/** Build an AST RootNode (and errors) from a CST produced by the parser. */
-export function cstToAst(cst: CstNode): { root: RootNode; errors: AstBuildError[] } {
+/** Build an AST RootNode from a CST produced by the parser. */
+export function cstToAst(cst: CstNode): RootNode {
   const visitor = new ExtendedPomlAstVisitor();
-  return visitor.build(cst);
+  return visitor.visit(cst) as RootNode;
 }
