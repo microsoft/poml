@@ -107,7 +107,7 @@ export interface LiteralNode extends AstNode {
 }
 
 /**
- * Represents a composite value that may contain text.
+ * The value of an attribute, which may contain text and/or templates.
  * Used specifically for the "quotes" in attribute values.
  *
  * Value nodes are containers for mixed content, handling both pure text
@@ -117,12 +117,13 @@ export interface LiteralNode extends AstNode {
  * Cases that apply:
  * - Quoted attribute values: `"some text"`, `'single quoted'`
  * - Mixed content with templates: `"Hello, {{ userName }}!"`
- * - Unquoted template values in certain attribute contexts
+ * - Unquoted template values in certain attribute contexts (e.g., if="condition_expr")
  * - Multi-part content: `"Price: ${{amount}} USD"`
  *
  * Cases that do not apply:
  * - Attribute keys: `class=...` (the `class` part uses LiteralNode)
  * - Pure expressions without quotes: `if=condition` (illegal)
+ * - Mixture of template and non-templates in element contents (use LiteralNode and TemplateNode directly)
  *
  * Note: The range includes quotes if present, but children exclude them.
  */
@@ -349,19 +350,13 @@ export interface SelfCloseElementNode extends AstNode {
  * Represents a complete POML element with its content.
  *
  * Element nodes are high-level constructs that represent semantic POML
- * components. They contain a tag name, optional attributes (inherited from
- * open tag), and may have child content including other elements, text,
- * or values.
+ * components. They contain a tag name, which contains optional attributes,
+ * and may have child contents including other elements, text, or values.
  *
- * It should also support literal elements, which are:
+ * It should also support literal elements, which are special POML elements
+ * that treat their content as literal text without any template variable interpolation.
+ * Content is preserved exactly as written, useful for code samples or pre-formatted text.
  *
- * - Special POML elements that treat their content as literal text
- * - Prevents template variable interpolation
- * - Content is preserved exactly as written, useful for code samples or pre-formatted text
- * - When `<text>` is used, the parser eats everything including tags and comments,
- *   including nested `<text>` itself, until a matching `</text>` is found
- * - The tagName can only be "text" and "template" for literal elements
- * - If you need `<text>` in your POML content, use `&lt;text&gt;` outside of literal elements
  *
  * Cases that apply:
  * - Any elements: `<document parser="txt">...content...</document>`
@@ -383,23 +378,11 @@ export interface ElementNode extends AstNode {
   kind: 'ELEMENT';
   open: OpenTagNode;
   close: CloseTagNode;
-  children: (ElementNode | CommentNode | PragmaNode | TextElementNode)[];
+  children: ElementContentNode[];
   // isLiteral?: boolean; // True for <text> and <template> tags
 }
 
-/**
- * Very similar to ValueNode, but specifically for text content between tags.
- *
- * Cases that apply:
- * - Text content between tags: `>  some text  <` (including whitespace)
- *
- * Cases that do not apply:
- * - Text inside <text> or other literal elements (use ElementNode with literal)
- */
-export interface TextElementNode extends AstNode {
-  kind: 'TEXT';
-  value: string;
-}
+export type ElementContentNode = ElementNode | CommentNode | PragmaNode | LiteralNode | TemplateNode;
 
 /**
  * Related CST node interfaces for parsing stage.
@@ -409,6 +392,11 @@ export interface CstElementNode extends CstNode {
     OpenTagPartial?: CstOpenTagPartialNode[];
     OpenTagCloseBracket?: IToken[];
     Content?: CstElementContentNode[];
+    // For literal elements like <text>
+    // When `<text>` is used, the parser eats everything including tags and comments,
+    // including nested `<text>` itself, until a matching `</text>` is found
+    // The tagName can only be "text" and "template" for literal elements
+    // If you need `<text>` in your POML content, use `&lt;text&gt;` outside of literal elements
     TextContent?: CstTokens[]; // For literal elements like <text>
     CloseTag?: CstCloseTagNode[];
     // Alternative, it can also be a self-closing tag.
@@ -517,7 +505,7 @@ export interface CstPragmaNode extends CstNode {
  */
 export interface RootNode extends AstNode {
   kind: 'ROOT';
-  children: (ElementNode | CommentNode | PragmaNode | ValueNode)[];
+  children: ElementContentNode[];
 }
 
 /**
@@ -559,7 +547,6 @@ export type StrictNode =
   | CloseTagNode
   | SelfCloseElementNode
   | ElementNode
-  | TextElementNode
   | CommentNode
   | PragmaNode
   | RootNode;

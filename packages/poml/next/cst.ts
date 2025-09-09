@@ -491,6 +491,8 @@ export class ExtendedPomlParser extends CstParser {
             this.CONSUME(CloseBracket, { LABEL: 'OpenTagCloseBracket' });
 
             // Everything until the matching close tag is treated as raw text
+            // We impose a stricter check when enclosing a literal tag, and avoid false negative matches
+            // This will make some auto completion scenarios fail, but it will enhance the inclusiveness of literal elements
             this.SUBRULE(this.literalTagTokens, { ARGS: [tagName], LABEL: 'TextContent' });
 
             this.SUBRULE(this.closeTag, { LABEL: 'CloseTag' });
