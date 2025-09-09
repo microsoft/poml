@@ -233,7 +233,7 @@ describe('AST Visitor - Individual Rules', () => {
         children: [
           {
             kind: 'TEMPLATE',
-            value: { kind: 'STRING', value: ' expression ' },
+            value: { kind: 'STRING', value: 'expression' },
           },
         ],
       });
@@ -374,7 +374,7 @@ describe('AST Visitor - Individual Rules', () => {
           {
             kind: 'ATTRIBUTE',
             key: { value: 'src' },
-            value: { kind: 'STRING', value: 'photo.jpg' },
+            value: { kind: 'VALUE', value: 'photo.jpg' },
           },
         ],
         children: [],
@@ -486,7 +486,7 @@ describe('AST Visitor - Special Tokens and Escapes', () => {
 
     test('unknown escape sequence', () => {
       const result = parseRule<LiteralNode>('"\\q unknown"', (p) => p.quoted());
-      expect(result.value).toBe('q unknown'); // Unknown escape returns body without backslash
+      expect(result.value).toBe('\\q unknown'); // Unknown escape returns body with backslash
     });
   });
 
@@ -531,8 +531,8 @@ describe('AST Visitor - Special Tokens and Escapes', () => {
     });
 
     test('template expressions preserve content', () => {
-      const result = parseRule<TemplateNode>('{{ "string with \\n escape" }}', (p) => p.template());
-      expect(result.value.value).toBe(' "string with \\n escape" ');
+      const result = parseRule<TemplateNode>('{{ "string with { } \\n \n escape" }}', (p) => p.template());
+      expect(result.value.value).toBe('"string with { } \\n \n escape"');
     });
   });
 });

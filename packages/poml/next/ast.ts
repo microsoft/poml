@@ -52,33 +52,51 @@ import * as diagnostics from './diagnostics';
 function decodeEscape(seq: string): string {
   // seq includes the leading backslash (e.g. " , \n)
   const body = seq.slice(1);
-  switch (body) {
-    case 'n':
-      return '\n';
-    case 'r':
-      return '\r';
-    case 't':
-      return '\t';
-    case "'":
-      return "'";
-    case '"':
-      return '"';
-    case '{{': // \{{
-      return '{{';
-    case '}}': // \}}
-      return '}}';
-    case 'x':
-    case 'u':
-    case 'U': {
-      const hex = body.slice(1);
+  if (body === 'n') {
+    return '\n';
+  } else if (body === 'r') {
+    return '\r';
+  } else if (body === 't') {
+    return '\t';
+  } else if (body === "'") {
+    return "'";
+  } else if (body === '"') {
+    return '"';
+  } else if (body === '{{') {
+    // \{{
+    return '{{';
+  } else if (body === '}}') {
+    // \}}
+    return '}}';
+  } else if (body.startsWith('x')) {
+    // \xHH (2 hex digits)
+    const hex = body.slice(1);
+    if (hex.length === 2 && /^[0-9a-fA-F]{2}$/.test(hex)) {
       const n = parseInt(hex, 16);
       return String.fromCharCode(n);
     }
-    case '\\':
-      return '\\';
-    default:
-      // Unknown escape, return the sequence as-is minus the leading backslash (best effort)
-      return body;
+    return body; // Invalid hex escape
+  } else if (body.startsWith('u')) {
+    // \uHHHH (4 hex digits)
+    const hex = body.slice(1);
+    if (hex.length === 4 && /^[0-9a-fA-F]{4}$/.test(hex)) {
+      const n = parseInt(hex, 16);
+      return String.fromCharCode(n);
+    }
+    return body; // Invalid unicode escape
+  } else if (body.startsWith('U')) {
+    // \UHHHHHHHH (8 hex digits)
+    const hex = body.slice(1);
+    if (hex.length === 8 && /^[0-9a-fA-F]{8}$/.test(hex)) {
+      const n = parseInt(hex, 16);
+      return String.fromCodePoint(n);
+    }
+    return body; // Invalid unicode escape
+  } else if (body === '\\') {
+    return '\\';
+  } else {
+    // Unknown escape, return the sequence as-is minus the leading backslash (best effort)
+    return body;
   }
 }
 
@@ -130,7 +148,9 @@ function rangeFromTokens(tokens: IToken[]): Range {
  * Range from Any CstNode (or is [0, 0] if none).
  */
 function rangeFromCstNode(node: CstNode): Range {
-  return rangeFrom(node.location?.startOffset ?? 0, node.location?.endOffset ?? node.location?.startOffset ?? 0);
+  const start = node.location?.startOffset ?? 0;
+  const end = node.location?.endOffset ?? start;
+  return rangeFrom(start, end);
 }
 
 /**
