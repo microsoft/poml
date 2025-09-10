@@ -1,5 +1,5 @@
 import '@mantine/core/styles.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, RefObject } from 'react';
 import { MantineProvider, Stack, Button, Group, ActionIcon, Title, useMantineTheme, px } from '@mantine/core';
 import { useListState, UseListStateHandlers } from '@mantine/hooks';
 import { IconClipboard, IconSettings, IconHistory, IconBell } from '@tabler/icons-react';
@@ -23,7 +23,7 @@ import { writeRichContentToClipboard } from '@common/events/copy';
 
 function useGlobalEventListeners(
   cardsHandlers: UseListStateHandlers<CardModel>,
-  isDraggingOverDivider: boolean,
+  isDraggingOverDivider: RefObject<boolean>,
   setIsDraggingOver: (isDraggingOver: boolean) => void,
   setIsDraggingOverDivider: (isDraggingOverDivider: boolean) => void,
 ) {
@@ -74,7 +74,7 @@ function useGlobalEventListeners(
     // Prevent default to allow drop
     e.preventDefault();
     // Only show the document drop indicator if not over a divider
-    if (!isDraggingOverDivider) {
+    if (!isDraggingOverDivider.current) {
       setIsDraggingOver(true);
     }
   };
@@ -92,7 +92,7 @@ function useGlobalEventListeners(
     setIsDraggingOverDivider(false);
 
     // Only handle drops if not over a divider (dividers handle their own drops)
-    if (!isDraggingOverDivider) {
+    if (!isDraggingOverDivider.current) {
       e.preventDefault();
       e.stopPropagation();
       const newCards = await processDropEvent(e);
@@ -129,11 +129,17 @@ const AppContent: React.FC = () => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   // Is dragging over an inner divider, should escalate the event to the divider
   const [isDraggingOverDivider, setIsDraggingOverDivider] = useState(false);
+  const isDraggingOverDividerRef = useRef(isDraggingOverDivider);
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
-    return useGlobalEventListeners(cardsHandlers, isDraggingOverDivider, setIsDraggingOver, setIsDraggingOverDivider);
-  }, [cards, isDraggingOverDivider]);
+    return useGlobalEventListeners(
+      cardsHandlers,
+      isDraggingOverDividerRef,
+      setIsDraggingOver,
+      setIsDraggingOverDivider,
+    );
+  }, []);
 
   const showLoading = () => {
     setLoading(true);
