@@ -132,7 +132,7 @@ const AppContent: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
-    useGlobalEventListeners(cardsHandlers, isDraggingOverDivider, setIsDraggingOver, setIsDraggingOverDivider);
+    return useGlobalEventListeners(cardsHandlers, isDraggingOverDivider, setIsDraggingOver, setIsDraggingOverDivider);
   }, [cards, isDraggingOverDivider]);
 
   const showLoading = () => {
@@ -149,8 +149,8 @@ const AppContent: React.FC = () => {
     if (newCards && newCards.length > 0) {
       cardsHandlers.append(...newCards);
       notifySuccess(`Extracted ${newCards.length} card${newCards.length > 1 ? 's' : ''} from active tab`);
-      hideLoading();
     }
+    hideLoading();
   };
 
   const handleCardsChange = (newCards: CardModel[]) => {
