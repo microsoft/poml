@@ -18,7 +18,7 @@ import {
 } from '@common/types';
 import { Readability } from '@mozilla/readability';
 import { toPngBase64 } from './image';
-import { eliminateHeaderCards } from '@common/utils/card';
+import { createCard, eliminateHeaderCards } from '@common/utils/card';
 import { everywhere } from '@common/rpc';
 
 /**
@@ -116,14 +116,12 @@ async function _cardFromHtml(html: string | Document | null, options?: CardFromH
   }
 
   // Create the CardModel
-  return {
-    content: finalContent,
+  return createCard(finalContent, {
     source: source,
     mimeType: 'text/html',
     url,
     excerpt,
-    timestamp: new Date(),
-  };
+  });
 }
 
 export const cardFromHtml = everywhere('cardFromHtml', _cardFromHtml, ['content']);

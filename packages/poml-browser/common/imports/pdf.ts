@@ -10,6 +10,7 @@ import { notifyDebug, notifyDebugMoreVerbose, notifyError, notifyInfo } from '@c
 import { CardModel, CardContent, CardFromPdfOptions, CardFromPdfResult, Image } from '@common/types';
 import { everywhere } from '@common/rpc';
 import { readFile } from './file';
+import { createCard } from '@common/utils/card';
 
 /**
  * Main extraction function for PDF documents
@@ -187,12 +188,10 @@ export async function _cardFromPdfImpl(
     };
   }
 
-  const card: CardModel = {
-    content: cardContent,
+  const card = createCard(cardContent, {
     source: options?.source || 'file',
     url,
-    timestamp: new Date(),
-  };
+  });
 
   // Generate visualizations if requested
   const visualized: Image[] = [];

@@ -8,11 +8,20 @@
 
 import { notifyDebug, notifyDebugMoreVerbose, notifyDebugVerbose, notifyInfo } from '@common/notification';
 import { everywhere } from '@common/rpc';
-import { TextFile, BinaryFile, CardModel, CardFromHtmlOptions, CardSource, CreateCardOptions } from '@common/types';
+import {
+  TextFile,
+  BinaryFile,
+  CardModel,
+  CardFromHtmlOptions,
+  CardSource,
+  CreateCardOptions,
+  TextCardContent,
+} from '@common/types';
 import { category, lookup } from '@common/utils/mime-types';
 import { cardFromImage } from './image';
 import { cardFromHtml } from './html';
 import { pathInfo, mimeType } from '@common/utils/path';
+import { createCard } from '@common/utils/card';
 
 type TextEncoding = 'utf-8' | 'utf8';
 type Base64Encoding = 'base64';
@@ -175,18 +184,18 @@ async function createTextCard(
   );
   const typeCategory = category(fileData.mimeType);
 
-  return {
-    content: {
-      type: 'text',
-      text: fileData.content,
-      caption: metadata.name === 'blob' ? undefined : metadata.name,
-      container: typeCategory === 'code' ? 'Code' : 'Text',
-    },
+  const content: TextCardContent = {
+    type: 'text',
+    text: fileData.content,
+    caption: metadata.name === 'blob' ? undefined : metadata.name,
+    container: typeCategory === 'code' ? 'Code' : 'Text',
+  };
+
+  return createCard(content, {
     url: metadata.url,
     source: source,
     mimeType: fileData.mimeType,
-    timestamp: new Date(),
-  };
+  });
 }
 
 /**

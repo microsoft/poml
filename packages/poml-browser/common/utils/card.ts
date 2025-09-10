@@ -1,6 +1,74 @@
 /** Card utilities */
 
-import { CardContent, HeaderCardContent, NestedCardContent, TextCardContent } from '@common/types';
+import {
+  CardContent,
+  HeaderCardContent,
+  NestedCardContent,
+  TextCardContent,
+  CardModel,
+  CreateCardModelOptions,
+} from '@common/types';
+
+/**
+ * Creates a CardModel from CardContent with optional metadata.
+ *
+ * This function wraps CardContent in a CardModel structure that includes
+ * metadata like ID, timestamp, source information, and other options.
+ *
+ * @param content - The card content to wrap. Can be a single CardContent or an array of CardContent.
+ *   If an array is provided, it will be wrapped in a NestedCardContent structure.
+ * @param options - Optional metadata for the card including ID, source, URL, etc.
+ * @returns A complete CardModel with the provided content and metadata
+ *
+ * @example
+ * ```typescript
+ * // Create a simple text card
+ * const textCard = createCard({
+ *   type: 'text',
+ *   text: 'Hello world'
+ * });
+ *
+ * // Create a card with metadata
+ * const cardWithMeta = createCard({
+ *   type: 'text',
+ *   text: 'Hello world'
+ * }, {
+ *   id: 'custom-id',
+ *   source: 'manual',
+ *   url: 'https://example.com',
+ *   tags: ['important']
+ * });
+ *
+ * // Create a nested card from multiple content items
+ * const nestedCard = createCard([
+ *   { type: 'text', text: 'First item' },
+ *   { type: 'text', text: 'Second item' }
+ * ]);
+ * ```
+ */
+export function createCard(content: CardContent | CardContent[], options?: CreateCardModelOptions): CardModel {
+  // Generate a unique ID if not provided
+  const id = options?.id ?? `card-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+
+  // Set default timestamp
+  const timestamp = options?.timestamp ?? new Date();
+
+  // Handle array content by wrapping in NestedCardContent
+  const cardContent: CardContent = Array.isArray(content)
+    ? ({
+        type: 'nested',
+        cards: content,
+      } as NestedCardContent)
+    : content;
+
+  // Create and return the CardModel
+  return {
+    id,
+    content: cardContent,
+    timestamp,
+    ...options,
+  };
+}
 
 /**
  * Transforms an array containing HeaderCardContent and regular CardContent into a hierarchical structure

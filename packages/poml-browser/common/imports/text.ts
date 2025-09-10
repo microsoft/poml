@@ -1,4 +1,5 @@
 import { CardModel, TextCardContent, CardSource } from '@common/types';
+import { createCard } from '@common/utils/card';
 
 export function cardFromText(text: string, options: { source: CardSource }): CardModel {
   const content: TextCardContent = {
@@ -6,10 +7,8 @@ export function cardFromText(text: string, options: { source: CardSource }): Car
     text: text.trim(),
   };
 
-  return {
-    content,
+  return createCard(content, {
     source: options.source,
     mimeType: 'text/plain',
-    timestamp: new Date(),
-  };
+  });
 }

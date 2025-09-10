@@ -1,7 +1,7 @@
 // The main content to be displayed in the browser extension UI and stored in storage
 // We are moving away from the old CardModel to this new CardModel system.
-export interface CardModel {
-  content: CardContent;
+export interface CreateCardModelOptions {
+  id?: string;
   source?: CardSource;
   url?: string; // could be a webpage URL or a file path
   mimeType?: string; // MIME type of the source, e.g. text/markdown, image/png. Not critical for now.
@@ -10,6 +10,12 @@ export interface CardModel {
   debug?: string;
   timestamp?: Date;
 }
+
+export type CardModel = CreateCardModelOptions & {
+  id: string;
+  content: CardContent;
+  timestamp: Date;
+};
 
 export type CardSource = 'manual' | 'clipboard' | 'drop' | 'file' | 'webpage' | 'generated';
 

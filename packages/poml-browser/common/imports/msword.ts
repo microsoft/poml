@@ -8,7 +8,7 @@ import {
   CardContent,
 } from '@common/types';
 import { everywhere } from '@common/rpc';
-import { eliminateHeaderCards } from '@common/utils/card';
+import { createCard, eliminateHeaderCards } from '@common/utils/card';
 
 /**
  * Main function to convert MS Word document to CardModel
@@ -213,10 +213,8 @@ async function extractWordContent(options: Required<CardFromMswordOptions>): Pro
       ` and ${elementCount} total elements.`,
   );
 
-  return {
-    content: mainContent,
-    source: source,
+  return createCard(mainContent, {
     url: document.location.href,
-    timestamp: new Date(),
-  };
+    source: source,
+  });
 }

@@ -3,6 +3,7 @@ import { binaryToBase64, stringToBase64 } from '@common/utils/base64';
 import { pathInfo } from '@common/utils/path';
 import { CardModel, CreateCardOptions, Image, ImageCardContent } from '@common/types';
 import { notifyDebug, notifyDebugVerbose } from '@common/notification';
+import { createCard } from '@common/utils/card';
 
 /**
  * Options for the toPngBase64 function
@@ -261,11 +262,9 @@ export async function cardFromImage(filePath: string | File | Blob, options?: Cr
     // caption is not available now.
   } satisfies ImageCardContent;
 
-  return {
-    content,
+  return createCard(content, {
     url: metadata.url,
     source: source,
     mimeType: image.mimeType, // must be image/png I'm afraid
-    timestamp: new Date(),
-  };
+  });
 }

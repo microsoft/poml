@@ -9,7 +9,7 @@ import {
   CardContent,
 } from '@common/types';
 import { everywhere } from '@common/rpc';
-import { eliminateHeaderCards } from '@common/utils/card';
+import { createCard, eliminateHeaderCards } from '@common/utils/card';
 
 /**
  * Main function to convert Google Docs to CardModel
@@ -224,12 +224,10 @@ class GoogleDocsManager {
       throw new Error('No content could be extracted after processing the Google Docs document.');
     }
 
-    const parentCard: CardModel = {
-      content: mainContent,
+    const parentCard = createCard(mainContent, {
       source: source,
       url: tab.url,
-      timestamp: new Date(),
-    };
+    });
 
     const headerCount = allCards.filter((card) => card.type === 'header').length;
     const textCount = allCards.filter((card) => card.type === 'text').length;
