@@ -5,11 +5,11 @@
 
 import React, { useCallback } from 'react';
 import { Stack, Box, Button, Group } from '@mantine/core';
-import { IconPlus } from '@tabler/icons-react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { CardModel } from '@common/types';
 import { CardItem } from './card-item';
 import { DroppableDivider } from './droppable-divider';
+import { createEmptyTextCard } from '@common/utils/card';
 
 interface EditableCardListProps {
   cards: CardModel[];
@@ -62,27 +62,13 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
     [cards, onChange],
   );
 
-  const handleAddCard = useCallback(() => {
-    const newCard = createCard({
-      content: { type: 'text', value: '' },
-    });
-    onChange([...cards, newCard]);
-  }, [cards, onChange]);
-
   const handleAddCardAtIndex = useCallback(
     (index: number) => {
-      const newCard = createCard({
-        content: { type: 'text', value: '' },
-      });
+      // Copy and insert a new empty text card
       const newCards = [...cards];
-      newCards.splice(index, 0, newCard);
+      newCards.splice(index, 0, createEmptyTextCard());
 
-      // Update order property for all cards after insertion
-      const updatedCards = newCards.map((card, idx) => ({
-        ...card,
-      }));
-
-      onChange(updatedCards);
+      onChange(newCards);
     },
     [cards, onChange],
   );
@@ -132,7 +118,6 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                       index={index}
                       onUpdate={handleUpdateCard}
                       onDelete={handleDeleteCard}
-                      onCardClick={onCardClick}
                       editable={editable}
                       EditableCardListComponent={EditableCardList}
                     />

@@ -7,6 +7,7 @@ import {
   TextCardContent,
   CardModel,
   CreateCardModelOptions,
+  PomlContainerType,
 } from '@common/types';
 
 /**
@@ -68,6 +69,13 @@ export function createCard(content: CardContent | CardContent[], options?: Creat
     timestamp,
     ...options,
   };
+}
+
+/**
+ * Create an empty text card
+ */
+export function createEmptyTextCard(): CardModel {
+  return createCard({ type: 'text', text: '' });
 }
 
 /**
@@ -168,4 +176,28 @@ export function eliminateHeaderCards(cards: (CardContent | HeaderCardContent)[])
   }
 
   return result;
+}
+
+/**
+ * Returns all valid POML container types.
+ *
+ * @returns Array of all valid PomlContainerType values
+ */
+export function getValidComponentTypes(): PomlContainerType[] {
+  return [
+    'Paragraph',
+    'Text',
+    'Code',
+    'Task',
+    'Question',
+    'Hint',
+    'Role',
+    'OutputFormat',
+    'StepwiseInstructions',
+    'Example',
+    'ExampleInput',
+    'ExampleOutput',
+    'ExampleSet',
+    'Introducer',
+  ];
 }

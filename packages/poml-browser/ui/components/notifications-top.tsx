@@ -6,30 +6,46 @@
 import React from 'react';
 import { Box, Alert, Text, Group, ActionIcon, Stack, Portal, Transition } from '@mantine/core';
 import { IconX, IconCheck, IconExclamationCircle, IconAlertCircle, IconInfoCircle } from '@tabler/icons-react';
-import { useNotifications, Notification, NotificationType } from '../contexts/notification-context';
+import { useNotifications, Notification } from '../contexts/notification-context';
+import { NotificationType } from '@common/types';
 
 // Icon and color mapping using Mantine theme colors
-const getNotificationConfig = (type: NotificationType) => {
+export const getNotificationConfig = (type: NotificationType) => {
   const configs = {
-    success: {
+    'success': {
       icon: IconCheck,
       color: 'green',
-      variant: 'outline' as const,
+      variant: 'light' as const,
     },
-    error: {
+    'error': {
       icon: IconAlertCircle,
       color: 'red',
-      variant: 'outline' as const,
+      variant: 'light' as const,
     },
-    warning: {
+    'warning': {
       icon: IconExclamationCircle,
       color: 'yellow',
-      variant: 'outline' as const,
+      variant: 'light' as const,
     },
-    info: {
+    'info': {
       icon: IconInfoCircle,
       color: 'blue',
-      variant: 'outline' as const,
+      variant: 'light' as const,
+    },
+    'debug': {
+      icon: IconInfoCircle,
+      color: 'gray',
+      variant: 'light' as const,
+    },
+    'debug+': {
+      icon: IconInfoCircle,
+      color: 'gray',
+      variant: 'light' as const,
+    },
+    'debug++': {
+      icon: IconInfoCircle,
+      color: 'gray',
+      variant: 'light' as const,
     },
   };
 

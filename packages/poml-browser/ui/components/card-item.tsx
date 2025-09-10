@@ -4,7 +4,20 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { Card, Text, Group, Badge, Box, ActionIcon, TextInput, Image, Switch, Menu } from '@mantine/core';
+import {
+  Card,
+  Text,
+  Group,
+  Badge,
+  Box,
+  ActionIcon,
+  TextInput,
+  Image,
+  Switch,
+  Menu,
+  px,
+  useMantineTheme,
+} from '@mantine/core';
 import {
   IconTrash,
   IconEdit,
@@ -19,38 +32,33 @@ import {
   IconFolder,
 } from '@tabler/icons-react';
 import { Draggable } from '@hello-pangea/dnd';
-import {
-  CardModel,
-  POMLComponentType,
-  isTextContent,
-  isBinaryContent,
-  isFileContent,
-  isNestedContent,
-  getValidComponentTypes,
-  getDefaultComponentType,
-  isImageBinaryContent,
-  getBinaryContentDataUrl,
-} from '@common/cardModel';
+import { CardModel, PomlContainerType } from '@common/types';
+import { getValidComponentTypes } from '@common/utils/card';
 
 export interface CardItemProps {
   card: CardModel;
   index: number;
   onUpdate: (card: CardModel) => void;
   onDelete: (id: string) => void;
-  onCardClick?: (card: CardModel) => void;
   editable: boolean;
   // Forward declaration for EditableCardList component
   EditableCardListComponent: React.ComponentType<any>;
 }
 
-// Icon map for component types
-const ComponentIcons: Partial<Record<POMLComponentType, React.ReactNode>> = {
-  Image: <IconPhoto size={16} />,
-  Document: <IconFile size={16} />,
-  Table: <IconTable size={16} />,
-  Code: <IconCode size={16} />,
-  List: <IconList size={16} />,
-  Folder: <IconFolder size={16} />,
+const getCardIcon = (card: CardModel) => {
+  const theme = useMantineTheme();
+  const sz = px(theme.fontSizes.lg);
+  if (card.content.type === 'image') {
+    return <IconPhoto size={sz} />;
+  } else if (card.content.container === 'Code') {
+    return <IconCode size={sz} />;
+  } else if (card.content.type === 'list') {
+    return <IconList size={sz} />;
+  } else if (card.content.type === 'table') {
+    return <IconTable size={sz} />;
+  } else {
+    return <IconFile size={sz} />;
+  }
 };
 
 export const CardItem: React.FC<CardItemProps> = ({
@@ -58,39 +66,60 @@ export const CardItem: React.FC<CardItemProps> = ({
   index,
   onUpdate,
   onDelete,
-  onCardClick,
   editable,
   EditableCardListComponent,
-}) => {
+}: CardItemProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [titleEditValue, setTitleEditValue] = useState(card.title || '');
+  const [titleEditValue, setTitleEditValue] = useState(card.content.caption || '');
 
-  const validComponentTypes = useMemo(() => getValidComponentTypes(card.content), [card.content]);
+  const validComponentTypes = getValidComponentTypes();
+
+  // Component icons mapping
+  const ComponentIcons: Record<PomlContainerType, React.ReactElement> = {
+    Paragraph: <IconFile size={16} />,
+    Text: <IconFile size={16} />,
+    Code: <IconCode size={16} />,
+    Task: <IconList size={16} />,
+    Question: <IconList size={16} />,
+    Hint: <IconList size={16} />,
+    Role: <IconList size={16} />,
+    OutputFormat: <IconList size={16} />,
+    StepwiseInstructions: <IconList size={16} />,
+    Example: <IconList size={16} />,
+    ExampleInput: <IconList size={16} />,
+    ExampleOutput: <IconList size={16} />,
+    ExampleSet: <IconList size={16} />,
+    Introducer: <IconList size={16} />,
+  };
 
   const handleEditModeConfirm = useCallback(() => {
-    onUpdate({ ...card, title: titleEditValue });
+    const { content, ...rest } = card;
+    if (titleEditValue.trim() === '') {
+      onUpdate({ ...card, content: { ...card.content, caption: undefined } });
+    } else {
+      onUpdate({ ...card, content: { ...card.content, caption: titleEditValue } });
+    }
   }, [card, titleEditValue, onUpdate]);
 
   const contentPreview = useMemo(() => {
-    if (isTextContent(card.content)) {
-      return card.content.value.substring(0, 100) + (card.content.value.length > 100 ? '...' : '');
-    } else if (isBinaryContent(card.content)) {
-      if (isImageBinaryContent(card.content)) {
-        return `Image (${card.content.mimeType})`;
-      }
-      return `Binary data (${card.content.mimeType || 'unknown type'})`;
-    } else if (isFileContent(card.content)) {
-      return `File: ${card.content.name || card.content.path || card.content.url || 'unknown'}`;
-    } else if (isNestedContent(card.content)) {
-      return `${card.content.children.length} nested items`;
+    if (card.content.type === 'text') {
+      return card.content.text.substring(0, 100) + (card.content.text.length > 100 ? '...' : '');
+    } else if (card.content.type === 'list') {
+      return `List with ${card.content.items.length} items`;
+    } else if (card.content.type === 'image') {
+      return `Image (${card.content.alt || 'no alt text'})`;
+    } else if (card.content.type === 'table') {
+      return `Table with ${card.content.records.length} rows`;
+    } else if (card.content.type === 'nested') {
+      return `${card.content.cards.length} nested items`;
     }
     return 'Empty';
   }, [card.content]);
 
   const imageDataUrl = useMemo(() => {
-    if (isBinaryContent(card.content) && isImageBinaryContent(card.content)) {
-      return getBinaryContentDataUrl(card.content);
+    if (card.content.type === 'image') {
+      return `data:image/png;base64,${card.content.base64}`;
     }
     return null;
   }, [card.content]);
@@ -118,7 +147,7 @@ export const CardItem: React.FC<CardItemProps> = ({
             <>
               <Group justify='space-between' mb='xs'>
                 <Group gap='xs' style={{ flex: 1, minWidth: 0 }}>
-                  {isNestedContent(card.content) && (
+                  {card.content.type === 'nested' && (
                     <ActionIcon size='sm' variant='subtle' onClick={() => setIsExpanded(!isExpanded)}>
                       {isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
                     </ActionIcon>
@@ -146,9 +175,9 @@ export const CardItem: React.FC<CardItemProps> = ({
                       }}
                     />
                   ) : (
-                    card.title && (
+                    card.content.caption && (
                       <Text fw={600} size='sm'>
-                        {card.title}
+                        {card.content.caption}
                       </Text>
                     )
                   )}
@@ -159,10 +188,10 @@ export const CardItem: React.FC<CardItemProps> = ({
                         <Badge
                           size='sm'
                           variant='light'
-                          leftSection={ComponentIcons[card.componentType || getDefaultComponentType(card)]}
+                          leftSection={ComponentIcons[card.content.container || 'Paragraph']}
                           rightSection={<IconChevronDown size={12} />}
                           style={{ cursor: 'pointer' }}>
-                          {card.componentType || getDefaultComponentType(card)}
+                          {card.content.container || 'Paragraph'}
                         </Badge>
                       </Menu.Target>
                       <Menu.Dropdown>
@@ -173,7 +202,10 @@ export const CardItem: React.FC<CardItemProps> = ({
                             onClick={() =>
                               onUpdate({
                                 ...card,
-                                componentType: type as POMLComponentType,
+                                content: {
+                                  ...card.content,
+                                  container: type as PomlContainerType,
+                                },
                               })
                             }>
                             {type}
@@ -182,11 +214,8 @@ export const CardItem: React.FC<CardItemProps> = ({
                       </Menu.Dropdown>
                     </Menu>
                   ) : (
-                    <Badge
-                      size='sm'
-                      variant='light'
-                      leftSection={ComponentIcons[card.componentType || getDefaultComponentType(card)]}>
-                      {card.componentType || getDefaultComponentType(card)}
+                    <Badge size='sm' variant='light' leftSection={getCardIcon(card)}>
+                      {card.content.container || card.content.type.charAt(0).toUpperCase() + card.content.type.slice(1)}
                     </Badge>
                   )}
                 </Group>
@@ -215,46 +244,45 @@ export const CardItem: React.FC<CardItemProps> = ({
                 )}
               </Group>
 
-              {!isNestedContent(card.content) && (
+              {card.content.type !== 'nested' && (
                 <>
-                  {isBinaryContent(card.content) && isImageBinaryContent(card.content) ? (
+                  {card.content.type === 'image' ? (
                     <Box mt='xs'>
                       <Image
                         src={imageDataUrl}
-                        alt={card.title || 'Card image'}
+                        alt={card.content.alt || 'Card image'}
                         fit='contain'
                         h={200}
                         w='100%'
                         fallbackSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage%3C/text%3E%3C/svg%3E"
-                        style={{ cursor: onCardClick ? 'pointer' : 'default' }}
-                        onClick={() => onCardClick?.(card)}
                       />
                       <Text size='xs' c='dimmed' mt='xs'>
                         {contentPreview}
                       </Text>
                     </Box>
                   ) : (
-                    <Text
-                      size='sm'
-                      c='dimmed'
-                      style={{ cursor: onCardClick ? 'pointer' : 'default' }}
-                      onClick={() => onCardClick?.(card)}>
+                    <Text size='sm' c='dimmed'>
                       {contentPreview}
                     </Text>
                   )}
                 </>
               )}
 
-              {isNestedContent(card.content) && isExpanded && (
+              {/* Nested cards */}
+              {card.content.type === 'nested' && isExpanded && (
                 <Box mt='xs'>
                   <EditableCardListComponent
-                    cards={card.content.children}
-                    onChange={(children: CardModel[]) =>
+                    cards={card.content.cards.map((content, index) => ({
+                      id: `nested-${card.id}-${index}`,
+                      content,
+                      timestamp: new Date(),
+                    }))}
+                    onChange={(cardModels: CardModel[]) =>
                       onUpdate({
                         ...card,
                         content: {
                           type: 'nested',
-                          children,
+                          cards: cardModels.map((cardModel) => cardModel.content),
                         },
                       })
                     }
