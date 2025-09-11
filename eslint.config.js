@@ -17,6 +17,8 @@ export default [
       '*.context.json',
       '*.result.json',
       'python/poml/js/cli.js',
+      'packages/poml-build/dist/**',
+      'packages/poml-browser/dist/**',
     ],
   },
   {

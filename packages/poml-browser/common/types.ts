@@ -169,7 +169,7 @@ export interface CardFromHtmlOptions extends CreateCardOptions {
   /**
    * Minimum image size in pixels (width or height) to include.
    * Images smaller than this will be ignored.
-   * @default 64
+   * @default 65
    */
   minimumImageSize?: number;
 

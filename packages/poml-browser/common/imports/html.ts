@@ -25,7 +25,7 @@ import { everywhere } from '@common/rpc';
  * Main function to convert HTML to CardModel
  */
 async function _cardFromHtml(html: string | Document | null, options?: CardFromHtmlOptions): Promise<CardModel> {
-  const { parser = 'complex', minimumImageSize = 64, source = 'webpage' } = options || {};
+  const { parser = 'complex', minimumImageSize = 65, source = 'webpage' } = options || {};
   const optWithDefault = { parser, minimumImageSize, source };
 
   let doc: Document;
@@ -319,7 +319,7 @@ class DOMToCardsProcessor {
   private async imageElementToCard(img: HTMLImageElement): Promise<ImageCardContent | null> {
     try {
       const image = await toPngBase64(img);
-      if (image.width < this.options.minimumImageSize && image.height < this.options.minimumImageSize) {
+      if (image.width < this.options.minimumImageSize || image.height < this.options.minimumImageSize) {
         notifyDebug(
           `Ignoring small image (${image.width}x${image.height}) below minimum size ${this.options.minimumImageSize}px:`,
           img.src,
@@ -396,7 +396,7 @@ class DOMToCardsProcessor {
         } else if (tag === 'p') {
           // Independent paragraph - flush pending text first
           this.flushPending();
-          this.processRange(el.childNodes);
+          await this.processRange(el.childNodes);
           this.flushPending();
         } else if (tag === 'br') {
           // LINE BREAK - treat as newline in pending text
