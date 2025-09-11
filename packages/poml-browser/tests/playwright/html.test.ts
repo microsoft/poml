@@ -179,6 +179,103 @@ test.describe('cardFromHtml', () => {
     }
   });
 
+  test('handles horizontal rules and inline code', async ({ serviceWorker, sidebarPage }) => {
+    const html = `<div class="container">
+<p>Here is a short intro with <strong>bold text</strong> and some inline <code>code_example()</code>.</p>
+<hr>
+<h2>1) Section heading with <code>inline_code</code></h2>
+<p>A simple paragraph under a heading.</p>
+<!-- Example matching the original pre > div > p > code structure -->
+<pre>
+<div>
+<p>bash</p>
+<p><code>echo "hello"
+ls -la</code></p>
+</div>
+</pre>
+<p>Options you might toggle:</p>
+<ul>
+<li><p><code>--flag-one</code></p></li>
+<li><p><code>--flag-two</code></p></li>
+<li><p><code>--no-timestamp</code></p></li>
+</ul>
+<hr>
+<h2>2) Another section</h2>
+<p>Another small paragraph. Below is a tiny Python example.</p>
+<pre>
+<div>
+<p>python</p>
+<p><code>print("ok")
+print(1 + 2)</code></p>
+This is some extra text.
+</div>
+</pre>
+Some extra text for tests.
+<p>That’s it—minimal content, but it includes all the elements used.</p>
+</div>`;
+
+    const result = await serviceWorker.evaluate(
+      async ({ htmlContent, options }) => {
+        const { cardFromHtml } = self as any;
+        const cardModel = await cardFromHtml(htmlContent, options);
+        return { cardModel };
+      },
+      { htmlContent: html, options: {} },
+    );
+    expect(result.cardModel.content).toStrictEqual({
+      type: 'nested',
+      cards: [
+        {
+          type: 'text',
+          text: 'Here is a short intro with bold text and some inline code_example().',
+        },
+        { type: 'text', text: '----------------' },
+        {
+          type: 'nested',
+          cards: [
+            {
+              type: 'text',
+              text: 'A simple paragraph under a heading.',
+            },
+            {
+              type: 'text',
+              text: '\nbash\necho "hello"\nls -la\n\n',
+              container: 'Code',
+            },
+            { type: 'text', text: 'Options you might toggle:' },
+            {
+              type: 'list',
+              items: ['--flag-one', '--flag-two', '--no-timestamp'],
+              ordered: false,
+            },
+            { type: 'text', text: '----------------' },
+          ],
+          caption: '1) Section heading with inline_code',
+        },
+        {
+          type: 'nested',
+          cards: [
+            {
+              type: 'text',
+              text: 'Another small paragraph. Below is a tiny Python example.',
+            },
+            {
+              type: 'text',
+              text: '\npython\nprint("ok")\nprint(1 + 2)\nThis is some extra text.\n\n',
+              container: 'Code',
+            },
+            { type: 'text', text: 'Some extra text for tests.' },
+            {
+              type: 'text',
+              text: 'That’s it—minimal content, but it includes all the elements used.',
+            },
+          ],
+          caption: '2) Another section',
+        },
+      ],
+    });
+  });
+
   // Integration tests with real HTML pages
   const webpageTestCases = [
     {

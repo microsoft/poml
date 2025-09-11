@@ -152,6 +152,11 @@ function extractTextContent(el: Element, normalize: boolean): string {
   return normalize ? normalizeText(el.textContent) : (el.textContent ?? '');
 }
 
+interface ProcessingNode {
+  node: ChildNode;
+  inline: boolean;
+}
+
 class DOMToCardsProcessor {
   // The list of elements we want to keep intact for structure
   // The others are flattened at the beginning of processing
@@ -178,15 +183,37 @@ class DOMToCardsProcessor {
     'td',
     // Preformatted text
     'pre',
-    // Code blocks
-    'code',
+    // Code blocks or inline
+    // 'code',
     // Quotes
     'blockquote',
     // Paragraphs (keep for structure)
     'p',
     // Line breaks
     'br',
+    // Horizontal rules
+    'hr',
   ];
+
+  // Elements to always skip entirely
+  private skipElements = new Set<string>(['script', 'style', 'template', 'noscript']);
+
+  // Elements that we want to flatten first, which are always block elements
+  private blockElements = new Set<string>([
+    'div',
+    'section',
+    'article',
+    'aside',
+    'main',
+    'header',
+    'footer',
+    'nav',
+    'figure',
+    'figcaption',
+    // keep img as meaningful; figure wrapper is often decorative
+  ]);
+
+  // If true, the node is a block element
   private cards: CardContentWithHeader[] = [];
   private pendingText: string[] = [];
   private options: Required<CardFromHtmlOptions>;
@@ -205,27 +232,33 @@ class DOMToCardsProcessor {
   }
 
   /** Flatten the node tree to minimize nested levels */
-  private flattenNodes(nodes: ArrayLikeNodes): ChildNode[] {
-    const result: ChildNode[] = [];
-    const processNode = (node: ChildNode, normalize: boolean) => {
+  private flattenNodes(nodes: ArrayLikeNodes): ProcessingNode[] {
+    const result: ProcessingNode[] = [];
+    const processNode = (node: ChildNode, inline: boolean) => {
       if (isTextNode(node)) {
-        // Always preserve text nodes
-        result.push(node);
+        result.push({ node, inline });
       } else if (isElementNode(node)) {
         const el = node as Element;
         const tag = el.tagName.toLowerCase();
 
         if (this.meaningfulElements.includes(tag)) {
           // Keep these meaningful structural elements intact
-          result.push(node);
-        } else if (tag === 'script' || tag === 'style') {
+          // They are always block elements
+          result.push({ node, inline: false });
+        } else if (this.skipElements.has(tag)) {
           // Skip script and style elements entirely
           // Do nothing
-        } else {
+        } else if (this.blockElements.has(tag)) {
+          // For all other container elements (div, span, section, article, main, aside,
+          // nav, header, footer, etc.), flatten their children.
+          // The default semantics for root elements is to have each child as one block.
           for (const child of el.childNodes) {
-            // For all other container elements (div, span, section, article, main, aside,
-            // nav, header, footer, etc.), flatten their children
-            processNode(child, tag === 'pre' || tag === 'code' ? false : normalize);
+            processNode(child, inline);
+          }
+        } else {
+          // inline elements like a, span, code, etc.
+          for (const child of el.childNodes) {
+            processNode(child, true);
           }
         }
       } else {
@@ -235,7 +268,7 @@ class DOMToCardsProcessor {
     };
 
     for (let i = 0; i < nodes.length; i++) {
-      processNode(nodes[i] as ChildNode, true);
+      processNode(nodes[i] as ChildNode, false);
     }
     return result;
   }
@@ -253,9 +286,13 @@ class DOMToCardsProcessor {
     this.cards.push(card);
   }
 
-  private pushText(t: string | null | undefined) {
+  private pushText(t: string | null | undefined, inline: boolean) {
     if (t) {
-      this.pendingText.push(t);
+      if (inline && this.pendingText.length > 0) {
+        this.pendingText[this.pendingText.length - 1] += t;
+      } else {
+        this.pendingText.push(t);
+      }
     }
   }
 
@@ -305,11 +342,20 @@ class DOMToCardsProcessor {
 
   private async processRange(nodes: ArrayLikeNodes): Promise<void> {
     const flattened = this.flattenNodes(nodes);
-    notifyDebugMoreVerbose('Flattened nodes for processing:', flattened);
-    for (const node of flattened) {
+    if (flattened.length < 10) {
+      const names = (f: ProcessingNode) =>
+        f.node.nodeType === Node.ELEMENT_NODE ? (f.node as Element).tagName : f.node.nodeType;
+      notifyDebugMoreVerbose(`Flattened nodes for processing (${flattened.map(names).join(', ')}):`, flattened);
+    } else {
+      notifyDebugMoreVerbose('Flattened nodes for processing:', flattened);
+    }
+    let lastInline = false;
+    for (const processing of flattened) {
+      const node = processing.node;
       if (isTextNode(node)) {
         // TEXT
-        this.pushText(node.textContent);
+        // Inline the element if this element is inline or the last element was inline
+        this.pushText(node.textContent, processing.inline || lastInline);
       } else if (isElementNode(node)) {
         const el = node as Element;
         const tag = el.tagName.toLowerCase();
@@ -329,6 +375,8 @@ class DOMToCardsProcessor {
           const listCard = this.listToCard(el);
           if (listCard) {
             this.cards.push(listCard);
+          } else {
+            notifyWarning('Failed to process list element:', el);
           }
         } else if (tag === 'img') {
           // IMAGES
@@ -340,8 +388,8 @@ class DOMToCardsProcessor {
         } else if (['table', 'thead', 'tbody', 'tr', 'th', 'td'].includes(tag)) {
           // TABLES - flatten to text contents only
           // TODO: Future work - table cards
-          this.pushText(extractTextContent(el, true));
-        } else if (tag === 'code' || tag === 'pre' || tag === 'blockquote') {
+          this.pushText(extractTextContent(el, true), false);
+        } else if (tag === 'pre' || tag === 'blockquote') {
           // CODE - flatten to text contents only
           this.flushPending();
           this.cards.push({ type: 'text', text: extractTextContent(el, false), container: 'Code' });
@@ -352,11 +400,16 @@ class DOMToCardsProcessor {
           this.flushPending();
         } else if (tag === 'br') {
           // LINE BREAK - treat as newline in pending text
-          this.pushText('');
+          this.pushText('', false);
+        } else if (tag === 'hr') {
+          // TODO: waiting for POML to support horizontal rules
+          this.pushText('\n' + '----------------', false);
+          this.flushPending();
         } else {
           notifyDebug('Discarding unsupported element:', tag);
         }
       }
+      lastInline = processing.inline;
     }
   }
 }
