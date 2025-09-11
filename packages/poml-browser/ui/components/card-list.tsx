@@ -4,7 +4,7 @@
  */
 
 import React, { useCallback } from 'react';
-import { Stack, Box, Button, Group } from '@mantine/core';
+import { Stack, Box, Button, Group, Divider } from '@mantine/core';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
 import { CardModel } from '@common/types';
 import { CardItem } from './card-item';
@@ -100,7 +100,7 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
         <Droppable droppableId='cards'>
           {(provided) => (
             <div {...provided.droppableProps} ref={provided.innerRef}>
-              {editable && (
+              {editable ? (
                 <DroppableDivider
                   index={0}
                   alwaysHovered={cards.length === 0}
@@ -108,6 +108,8 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                   onDrop={handleDropContent}
                   onDragOver={onDragOverDivider}
                 />
+              ) : (
+                <Divider my='sm' />
               )}
 
               {cards.map((card, index) => (
@@ -118,7 +120,7 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                       index={index}
                       onUpdate={handleUpdateCard}
                       onDelete={handleDeleteCard}
-                      editable={editable}
+                      parentEditable={editable}
                       EditableCardListComponent={EditableCardList}
                     />
                   </Box>

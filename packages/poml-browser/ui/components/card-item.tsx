@@ -40,9 +40,11 @@ export interface CardItemProps {
   index: number;
   onUpdate: (card: CardModel) => void;
   onDelete: (id: string) => void;
-  editable: boolean;
   // Forward declaration for EditableCardList component
   EditableCardListComponent: React.ComponentType<any>;
+  // If the parent card list is editable.
+  // If not, this card must not be editable.
+  parentEditable?: boolean;
 }
 
 const getCardIcon = (card: CardModel) => {
@@ -61,17 +63,22 @@ const getCardIcon = (card: CardModel) => {
   }
 };
 
+// const CollapsiblePreview:
+
+/**
+ * The main UI component for one card item.
+ */
 export const CardItem: React.FC<CardItemProps> = ({
   card,
   index,
   onUpdate,
   onDelete,
-  editable,
+  parentEditable,
   EditableCardListComponent,
 }: CardItemProps) => {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [titleEditValue, setTitleEditValue] = useState(card.content.caption || '');
+  const [expanded, setExpanded] = useState(true);
+  const [editting, setEditting] = useState(false);
+  const [titleEditting, setTitleEditting] = useState(card.content.caption || '');
 
   const validComponentTypes = getValidComponentTypes();
 
@@ -95,12 +102,12 @@ export const CardItem: React.FC<CardItemProps> = ({
 
   const handleEditModeConfirm = useCallback(() => {
     const { content, ...rest } = card;
-    if (titleEditValue.trim() === '') {
+    if (titleEditting.trim() === '') {
       onUpdate({ ...card, content: { ...card.content, caption: undefined } });
     } else {
-      onUpdate({ ...card, content: { ...card.content, caption: titleEditValue } });
+      onUpdate({ ...card, content: { ...card.content, caption: titleEditting } });
     }
-  }, [card, titleEditValue, onUpdate]);
+  }, [card, titleEditting, onUpdate]);
 
   const contentPreview = useMemo(() => {
     if (card.content.type === 'text') {
@@ -125,15 +132,15 @@ export const CardItem: React.FC<CardItemProps> = ({
   }, [card.content]);
 
   return (
-    <Draggable draggableId={card.id} index={index} isDragDisabled={!editable}>
+    <Draggable draggableId={card.id} index={index} isDragDisabled={!parentEditable}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          {...(editable ? provided.dragHandleProps : {})}
+          {...(parentEditable ? provided.dragHandleProps : {})}
           style={{
             ...provided.draggableProps.style,
-            cursor: editable ? (snapshot.isDragging ? 'grabbing' : 'grab') : 'default',
+            cursor: parentEditable ? (snapshot.isDragging ? 'grabbing' : 'grab') : 'default',
           }}>
           <Card
             shadow={snapshot.isDragging ? 'lg' : 'sm'}
@@ -220,7 +227,7 @@ export const CardItem: React.FC<CardItemProps> = ({
                   )}
                 </Group>
 
-                {editable && (
+                {parentEditable && (
                   <Group gap='xs' style={{ flexShrink: 0 }}>
                     <Switch
                       size='sm'
@@ -286,7 +293,7 @@ export const CardItem: React.FC<CardItemProps> = ({
                         },
                       })
                     }
-                    editable={editable}
+                    editable={parentEditable}
                   />
                 </Box>
               )}
