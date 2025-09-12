@@ -10,6 +10,7 @@ import { IconPlus } from '@tabler/icons-react';
 import { processDropEvent } from '@common/events/drop';
 import { CardModel } from '@common/types';
 import { notifySuccess } from '@common/notification';
+import { computedThemeVariables } from '../themes/helper';
 
 interface DroppableDividerProps {
   index: number;
@@ -45,21 +46,15 @@ const DraggableOverlay: React.FC = () => {
         justifyContent: 'center',
       }}>
       <Text size='md' lh='lg' c='blue' fw={500}>
-        Drop to add card here
+        Drop to Add Contents
       </Text>
     </Paper>
   );
 };
 
 const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
+  const { colors } = computedThemeVariables();
   const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  // Adaptive colors for light and dark mode
-  const inactiveColor = isDark ? theme.colors.gray[7] : theme.colors.gray[3];
-  const hoveredColor = isDark ? theme.colors.gray[3] : theme.colors.gray[6];
-  const plusIconColor = isDark ? theme.colors.dark[9] : theme.white;
 
   // Border width for consistency
   const borderWidth = 1; // in pixels
@@ -74,8 +69,8 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
         right: 0,
         transform: 'translateY(-50%)',
         height: `${borderWidth}px`,
-        backgroundColor: inactiveColor,
-        opacity: isDark ? 0.6 : 0.3,
+        backgroundColor: colors.border.inactive,
+        opacity: colors.border.opacity,
       }}
     />
   ) : (
@@ -95,7 +90,7 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
         style={{
           flex: 1,
           height: `${borderWidth}px`,
-          backgroundColor: hoveredColor,
+          backgroundColor: colors.border.active,
           transition: 'background-color 0.2s ease',
         }}
       />
@@ -107,13 +102,13 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
           width: theme.lineHeights.lg,
           height: theme.lineHeights.lg,
           borderRadius: '50%',
-          backgroundColor: hoveredColor,
+          backgroundColor: colors.border.active,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           transition: 'all 0.2s ease',
         }}>
-        <IconPlus size={px(theme.fontSizes.lg)} color={plusIconColor} stroke={3} />
+        <IconPlus size={px(theme.fontSizes.lg)} color={theme.primaryColor} stroke={3} />
       </Box>
 
       {/* Second line */}
@@ -121,7 +116,7 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
         style={{
           flex: 1,
           height: `${borderWidth}px`,
-          backgroundColor: hoveredColor,
+          backgroundColor: colors.border.active,
           transition: 'background-color 0.2s ease',
         }}
       />

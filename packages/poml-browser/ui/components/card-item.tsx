@@ -5,7 +5,6 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-  Card,
   Text,
   Group,
   Badge,
@@ -29,11 +28,12 @@ import {
   IconTable,
   IconCode,
   IconList,
-  IconFolder,
+  IconCopy,
 } from '@tabler/icons-react';
 import { Draggable } from '@hello-pangea/dnd';
 import { CardModel, PomlContainerType } from '@common/types';
 import { getValidComponentTypes } from '@common/utils/card';
+import { computedThemeVariables } from '../themes/helper';
 
 export interface CardItemProps {
   card: CardModel;
@@ -63,7 +63,104 @@ const getCardIcon = (card: CardModel) => {
   }
 };
 
-// const CollapsiblePreview:
+export interface CardToolBarProps {
+  editting: boolean;
+  card: CardModel;
+  onEditModeEnter: () => void;
+  // Update the title and container type.
+  onEditModeExit: (title: string | undefined, pomlContainerType: PomlContainerType | undefined) => void;
+  onCopy: () => void;
+  onDelete: () => void;
+}
+
+/**
+ * You can basically edit two things in this toolbar:
+ * One is the card caption, the other is poml container type.
+ * You can also delete and copy the card via this toolbar.
+ * The toolbar is only visible after user clicked the editting button.
+ */
+export const CardEditToolbar = ({
+  editting,
+  card,
+  onEditModeEnter,
+  onEditModeExit,
+  onCopy,
+  onDelete,
+}: CardToolBarProps) => {
+  const theme = useMantineTheme();
+  const iconSizeSmall = px(theme.fontSizes.sm);
+  const iconSizeMedium = px(theme.fontSizes.md);
+  const validComponentTypes = useMemo(() => {
+    return getValidComponentTypes();
+  }, [card]);
+
+  const [container, setContainer] = useState(card.content.container);
+  const [title, setTitle] = useState(card.content.caption);
+  const { colors } = computedThemeVariables();
+
+  return (
+    <Group gap='xs' display='flex'>
+      <TextInput
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder='Caption'
+        size='md'
+        fw={500}
+        variant='unstyled'
+        styles={{
+          wrapper: {
+            flex: 1,
+            minWidth: 0,
+          },
+          input: {
+            'border': colors.border.active,
+            'borderRadius': theme.defaultRadius,
+            'padding': '4px 8px',
+            '&:focus': {
+              borderColor: colors.poml.primary,
+            },
+          },
+        }}
+      />
+      <Menu shadow='md' width='12em'>
+        <Menu.Target>
+          <Badge size='sm' rightSection={<IconChevronDown size={iconSizeSmall} />} style={{ cursor: 'pointer' }}>
+            {container || 'Paragraph'}
+          </Badge>
+        </Menu.Target>
+        <Menu.Dropdown>
+          {validComponentTypes.map((type) => (
+            <Menu.Item key={type} onClick={() => setContainer(type)}>
+              <Text size='sm' fw={600}>
+                {type}
+              </Text>
+            </Menu.Item>
+          ))}
+        </Menu.Dropdown>
+      </Menu>
+      <Switch
+        size='sm'
+        checked={editting}
+        onChange={(event) => {
+          const newEditMode = event.currentTarget.checked;
+          if (newEditMode) {
+            onEditModeEnter();
+          } else {
+            onEditModeExit(title, container); // Will be handled by parent
+          }
+        }}
+        onLabel={<IconEdit size={iconSizeSmall} stroke={2.5} />}
+        offLabel={<IconEditOff size={iconSizeSmall} stroke={2.5} />}
+      />
+      <ActionIcon size='sm' variant='subtle' color='primary' onClick={onCopy}>
+        <IconCopy size={iconSizeMedium} />
+      </ActionIcon>
+      <ActionIcon size='sm' variant='subtle' color='red' onClick={onDelete}>
+        <IconTrash size={iconSizeMedium} />
+      </ActionIcon>
+    </Group>
+  );
+};
 
 /**
  * The main UI component for one card item.
@@ -78,7 +175,8 @@ export const CardItem: React.FC<CardItemProps> = ({
 }: CardItemProps) => {
   const [expanded, setExpanded] = useState(true);
   const [editting, setEditting] = useState(false);
-  const [titleEditting, setTitleEditting] = useState(card.content.caption || '');
+  const [titleEditValue, setTitleEditValue] = useState(card.content.caption || '');
+  const [isHovered, setIsHovered] = useState(false);
 
   const validComponentTypes = getValidComponentTypes();
 
@@ -101,13 +199,12 @@ export const CardItem: React.FC<CardItemProps> = ({
   };
 
   const handleEditModeConfirm = useCallback(() => {
-    const { content, ...rest } = card;
-    if (titleEditting.trim() === '') {
+    if (titleEditValue.trim() === '') {
       onUpdate({ ...card, content: { ...card.content, caption: undefined } });
     } else {
-      onUpdate({ ...card, content: { ...card.content, caption: titleEditting } });
+      onUpdate({ ...card, content: { ...card.content, caption: titleEditValue } });
     }
-  }, [card, titleEditting, onUpdate]);
+  }, [card, titleEditValue, onUpdate]);
 
   const contentPreview = useMemo(() => {
     if (card.content.type === 'text') {
@@ -142,18 +239,22 @@ export const CardItem: React.FC<CardItemProps> = ({
             ...provided.draggableProps.style,
             cursor: parentEditable ? (snapshot.isDragging ? 'grabbing' : 'grab') : 'default',
           }}>
-          <Card
-            shadow={snapshot.isDragging ? 'lg' : 'sm'}
-            p='sm'
-            radius='md'
-            withBorder
+          <Box
             style={{
+              position: 'relative',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '12px',
+              backgroundColor: snapshot.isDragging ? '#f0f0f0' : '#fff',
               opacity: snapshot.isDragging ? 0.8 : 1,
-              backgroundColor: snapshot.isDragging ? '#f0f0f0' : undefined,
-            }}>
+              boxShadow: snapshot.isDragging ? '0 4px 12px rgba(0,0,0,0.15)' : '0 1px 3px rgba(0,0,0,0.1)',
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}>
             <>
-              <Group justify='space-between' mb='xs'>
-                <Group gap='xs' style={{ flex: 1, minWidth: 0 }}>
+              {/* Always show title in edit mode, or when it exists */}
+              {(isEditMode || card.content.caption) && (
+                <Group mb='xs' style={{ flex: 1, minWidth: 0 }}>
                   {card.content.type === 'nested' && (
                     <ActionIcon size='sm' variant='subtle' onClick={() => setIsExpanded(!isExpanded)}>
                       {isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
@@ -174,7 +275,7 @@ export const CardItem: React.FC<CardItemProps> = ({
                           'fontWeight': 600,
                           'border': '1px solid #e0e0e0',
                           'borderRadius': '4px',
-                          'padding': '2px 4px',
+                          'padding': '4px 8px',
                           '&:focus': {
                             borderColor: '#228be6',
                           },
@@ -182,11 +283,20 @@ export const CardItem: React.FC<CardItemProps> = ({
                       }}
                     />
                   ) : (
-                    card.content.caption && (
-                      <Text fw={600} size='sm'>
-                        {card.content.caption}
-                      </Text>
-                    )
+                    <Text fw={600} size='sm'>
+                      {card.content.caption}
+                    </Text>
+                  )}
+                </Group>
+              )}
+
+              {/* Content type badge and toolbar */}
+              <Group justify='space-between' mb='xs' style={{ position: 'relative' }}>
+                <Group gap='xs'>
+                  {!isEditMode && card.content.type === 'nested' && !card.content.caption && (
+                    <ActionIcon size='sm' variant='subtle' onClick={() => setIsExpanded(!isExpanded)}>
+                      {isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+                    </ActionIcon>
                   )}
 
                   {isEditMode ? (
@@ -227,27 +337,34 @@ export const CardItem: React.FC<CardItemProps> = ({
                   )}
                 </Group>
 
+                {/* CardToolbar - positioned absolutely within this Group */}
                 {parentEditable && (
-                  <Group gap='xs' style={{ flexShrink: 0 }}>
-                    <Switch
-                      size='sm'
-                      checked={isEditMode}
-                      onChange={(event) => {
-                        const newEditMode = event.currentTarget.checked;
-                        setIsEditMode(newEditMode);
-                        if (!newEditMode) {
-                          // Save title changes when exiting edit mode
-                          handleEditModeConfirm();
-                        }
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      right: '-4px',
+                      backgroundColor: 'white',
+                      borderRadius: '6px',
+                      padding: '4px',
+                      boxShadow: isEditMode || isHovered ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+                      opacity: isEditMode || isHovered ? 1 : 0,
+                      transition: 'all 0.2s ease',
+                      zIndex: 10,
+                    }}>
+                    <CardToolbar
+                      editting={isEditMode}
+                      onEditModeEnter={() => {
+                        setIsEditMode(true);
+                        setTitleEditValue(card.content.caption || '');
                       }}
-                      onLabel={<IconEdit size={12} stroke={2.5} />}
-                      offLabel={<IconEditOff size={12} stroke={2.5} />}
+                      onEditModeExit={() => {
+                        setIsEditMode(false);
+                        handleEditModeConfirm();
+                      }}
+                      onDelete={() => onDelete(card.id)}
                     />
-
-                    <ActionIcon size='sm' variant='subtle' color='red' onClick={() => onDelete(card.id)}>
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
+                  </div>
                 )}
               </Group>
 
@@ -298,7 +415,7 @@ export const CardItem: React.FC<CardItemProps> = ({
                 </Box>
               )}
             </>
-          </Card>
+          </Box>
         </div>
       )}
     </Draggable>
