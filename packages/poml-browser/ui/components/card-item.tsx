@@ -34,6 +34,7 @@ import { Draggable } from '@hello-pangea/dnd';
 import { CardModel, PomlContainerType } from '@common/types';
 import { getValidComponentTypes } from '@common/utils/card';
 import { computedThemeVariables } from '../themes/helper';
+import { notifyWarning } from '@common/notification';
 
 export interface CardItemProps {
   card: CardModel;
@@ -64,11 +65,12 @@ const getCardIcon = (card: CardModel) => {
 };
 
 export interface CardToolBarProps {
-  editting: boolean;
-  card: CardModel;
-  onEditModeEnter: () => void;
-  // Update the title and container type.
-  onEditModeExit: (title: string | undefined, pomlContainerType: PomlContainerType | undefined) => void;
+  editing: boolean;
+  title: string | undefined;
+  container: PomlContainerType | undefined;
+  onTitleChange: (title: string | undefined) => void;
+  onContainerChange: (container: PomlContainerType | undefined) => void;
+  onEditChange: (edit: boolean) => void;
   onCopy: () => void;
   onDelete: () => void;
 }
@@ -77,13 +79,15 @@ export interface CardToolBarProps {
  * You can basically edit two things in this toolbar:
  * One is the card caption, the other is poml container type.
  * You can also delete and copy the card via this toolbar.
- * The toolbar is only visible after user clicked the editting button.
+ * The toolbar is only visible after user clicked the editing button.
  */
 export const CardEditToolbar = ({
-  editting,
-  card,
-  onEditModeEnter,
-  onEditModeExit,
+  editing,
+  title,
+  container,
+  onTitleChange,
+  onContainerChange,
+  onEditChange,
   onCopy,
   onDelete,
 }: CardToolBarProps) => {
@@ -92,17 +96,30 @@ export const CardEditToolbar = ({
   const iconSizeMedium = px(theme.fontSizes.md);
   const validComponentTypes = useMemo(() => {
     return getValidComponentTypes();
-  }, [card]);
+  }, []);
 
-  const [container, setContainer] = useState(card.content.container);
-  const [title, setTitle] = useState(card.content.caption);
   const { colors } = computedThemeVariables();
+
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.trim();
+      onTitleChange(value.length > 0 ? value : undefined);
+    },
+    [onTitleChange],
+  );
+
+  const handleContainerChange = useCallback(
+    (newContainer: PomlContainerType) => {
+      onContainerChange(newContainer);
+    },
+    [onContainerChange],
+  );
 
   return (
     <Group gap='xs' display='flex'>
       <TextInput
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        value={title ?? ''}
+        onChange={handleTitleChange}
         placeholder='Caption'
         size='md'
         fw={500}
@@ -130,7 +147,7 @@ export const CardEditToolbar = ({
         </Menu.Target>
         <Menu.Dropdown>
           {validComponentTypes.map((type) => (
-            <Menu.Item key={type} onClick={() => setContainer(type)}>
+            <Menu.Item key={type} onClick={() => handleContainerChange(type)}>
               <Text size='sm' fw={600}>
                 {type}
               </Text>
@@ -140,14 +157,9 @@ export const CardEditToolbar = ({
       </Menu>
       <Switch
         size='sm'
-        checked={editting}
+        checked={editing}
         onChange={(event) => {
-          const newEditMode = event.currentTarget.checked;
-          if (newEditMode) {
-            onEditModeEnter();
-          } else {
-            onEditModeExit(title, container); // Will be handled by parent
-          }
+          onEditChange(event.currentTarget.checked);
         }}
         onLabel={<IconEdit size={iconSizeSmall} stroke={2.5} />}
         offLabel={<IconEditOff size={iconSizeSmall} stroke={2.5} />}
@@ -174,37 +186,59 @@ export const CardItem: React.FC<CardItemProps> = ({
   EditableCardListComponent,
 }: CardItemProps) => {
   const [expanded, setExpanded] = useState(true);
-  const [editting, setEditting] = useState(false);
-  const [titleEditValue, setTitleEditValue] = useState(card.content.caption || '');
-  const [isHovered, setIsHovered] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
-  const validComponentTypes = getValidComponentTypes();
+  // Editing states that has not commited
+  const [title, setTitle] = useState(card.content.caption);
+  const [container, setContainer] = useState(card.content.container);
+
+  const theme = useMantineTheme();
+  const { colors } = computedThemeVariables();
+
+  const iconSize = px(theme.fontSizes.md);
 
   // Component icons mapping
   const ComponentIcons: Record<PomlContainerType, React.ReactElement> = {
-    Paragraph: <IconFile size={16} />,
-    Text: <IconFile size={16} />,
-    Code: <IconCode size={16} />,
-    Task: <IconList size={16} />,
-    Question: <IconList size={16} />,
-    Hint: <IconList size={16} />,
-    Role: <IconList size={16} />,
-    OutputFormat: <IconList size={16} />,
-    StepwiseInstructions: <IconList size={16} />,
-    Example: <IconList size={16} />,
-    ExampleInput: <IconList size={16} />,
-    ExampleOutput: <IconList size={16} />,
-    ExampleSet: <IconList size={16} />,
-    Introducer: <IconList size={16} />,
+    Paragraph: <IconFile size={iconSize} />,
+    Text: <IconFile size={iconSize} />,
+    Code: <IconCode size={iconSize} />,
+    Task: <IconList size={iconSize} />,
+    Question: <IconList size={iconSize} />,
+    Hint: <IconList size={iconSize} />,
+    Role: <IconList size={iconSize} />,
+    OutputFormat: <IconList size={iconSize} />,
+    StepwiseInstructions: <IconList size={iconSize} />,
+    Example: <IconList size={iconSize} />,
+    ExampleInput: <IconList size={iconSize} />,
+    ExampleOutput: <IconList size={iconSize} />,
+    ExampleSet: <IconList size={iconSize} />,
+    Introducer: <IconList size={iconSize} />,
   };
 
-  const handleEditModeConfirm = useCallback(() => {
-    if (titleEditValue.trim() === '') {
-      onUpdate({ ...card, content: { ...card.content, caption: undefined } });
-    } else {
-      onUpdate({ ...card, content: { ...card.content, caption: titleEditValue } });
+  const handleToggleExpanded = useCallback(() => {
+    const newExpanded = !expanded;
+    setExpanded(newExpanded);
+    if (!newExpanded) {
+      // If not expanded any more, we should also close the edit mode.
+      setEditing(false);
     }
-  }, [card, titleEditValue, onUpdate]);
+  }, [setExpanded, setEditing, expanded]);
+
+  const handleEditModeChange = useCallback(
+    (edit: boolean) => {
+      setEditing(edit);
+      if (!edit) {
+        onUpdate({ ...card, content: { ...card.content, caption: title, container: container } });
+      }
+      // TODO: Gather data from textarea and other inputs, update them all.
+    },
+    [card, onUpdate],
+  );
+
+  const handleCopy = useCallback(() => {
+    notifyWarning('Copying single card is not implemented yet');
+  }, []);
 
   const contentPreview = useMemo(() => {
     if (card.content.type === 'text') {
@@ -230,143 +264,63 @@ export const CardItem: React.FC<CardItemProps> = ({
 
   return (
     <Draggable draggableId={card.id} index={index} isDragDisabled={!parentEditable}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...(parentEditable ? provided.dragHandleProps : {})}
-          style={{
-            ...provided.draggableProps.style,
-            cursor: parentEditable ? (snapshot.isDragging ? 'grabbing' : 'grab') : 'default',
-          }}>
-          <Box
-            style={{
-              position: 'relative',
-              border: '1px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '12px',
-              backgroundColor: snapshot.isDragging ? '#f0f0f0' : '#fff',
-              opacity: snapshot.isDragging ? 0.8 : 1,
-              boxShadow: snapshot.isDragging ? '0 4px 12px rgba(0,0,0,0.15)' : '0 1px 3px rgba(0,0,0,0.1)',
-            }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}>
-            <>
-              {/* Always show title in edit mode, or when it exists */}
-              {(isEditMode || card.content.caption) && (
-                <Group mb='xs' style={{ flex: 1, minWidth: 0 }}>
-                  {card.content.type === 'nested' && (
-                    <ActionIcon size='sm' variant='subtle' onClick={() => setIsExpanded(!isExpanded)}>
-                      {isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
-                    </ActionIcon>
-                  )}
+      {(provided, snapshot) => {
+        const boxStyle = snapshot.isDragging
+          ? {
+              backgroundColor: colors.scale[2],
+              opacity: 0.8,
+              boxShadow: theme.shadows.md,
+              border: `1.5px solid ${colors.border.active}`,
+              borderRadius: theme.defaultRadius,
+            }
+          : {};
 
-                  {isEditMode ? (
-                    <TextInput
-                      value={titleEditValue}
-                      onChange={(e) => setTitleEditValue(e.target.value)}
-                      placeholder='Card title'
-                      size='sm'
-                      fw={600}
-                      variant='unstyled'
-                      style={{ flex: 1, minWidth: 0 }}
-                      styles={{
-                        input: {
-                          'fontWeight': 600,
-                          'border': '1px solid #e0e0e0',
-                          'borderRadius': '4px',
-                          'padding': '4px 8px',
-                          '&:focus': {
-                            borderColor: '#228be6',
-                          },
-                        },
-                      }}
-                    />
-                  ) : (
+        return (
+          <div
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...(parentEditable ? provided.dragHandleProps : {})}
+            style={{
+              ...provided.draggableProps.style,
+              cursor: parentEditable ? (snapshot.isDragging ? 'grabbing' : 'grab') : 'default',
+            }}>
+            {/* The main card container */}
+            <Box
+              p='xs'
+              style={{
+                position: 'relative',
+                ...boxStyle,
+              }}
+              onMouseEnter={() => setHovered(true)}
+              onMouseLeave={() => setHovered(false)}>
+              <Group mb='xs' display='flex'>
+                <ActionIcon size='sm' variant='subtle' onClick={handleToggleExpanded} flex='0 0 auto'>
+                  {expanded ? <IconChevronDown size={iconSize} /> : <IconChevronRight size={iconSize} />}
+                </ActionIcon>
+                {/* Always show title in edit mode, or when it exists */}
+                {editing ? (
+                  <CardEditToolbar
+                    editing={editing}
+                    title={card.content.caption}
+                    container={card.content.container}
+                    onTitleChange={setTitle}
+                    onContainerChange={setContainer}
+                    onEditChange={setEditing}
+                    onCopy={handleCopy}
+                    onDelete={() => onDelete(card.id)}
+                  />
+                ) : (
+                  card.content.caption && (
                     <Text fw={600} size='sm'>
                       {card.content.caption}
                     </Text>
-                  )}
-                </Group>
-              )}
-
-              {/* Content type badge and toolbar */}
-              <Group justify='space-between' mb='xs' style={{ position: 'relative' }}>
-                <Group gap='xs'>
-                  {!isEditMode && card.content.type === 'nested' && !card.content.caption && (
-                    <ActionIcon size='sm' variant='subtle' onClick={() => setIsExpanded(!isExpanded)}>
-                      {isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
-                    </ActionIcon>
-                  )}
-
-                  {isEditMode ? (
-                    <Menu shadow='md' width={150}>
-                      <Menu.Target>
-                        <Badge
-                          size='sm'
-                          variant='light'
-                          leftSection={ComponentIcons[card.content.container || 'Paragraph']}
-                          rightSection={<IconChevronDown size={12} />}
-                          style={{ cursor: 'pointer' }}>
-                          {card.content.container || 'Paragraph'}
-                        </Badge>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        {validComponentTypes.map((type) => (
-                          <Menu.Item
-                            key={type}
-                            leftSection={ComponentIcons[type]}
-                            onClick={() =>
-                              onUpdate({
-                                ...card,
-                                content: {
-                                  ...card.content,
-                                  container: type as PomlContainerType,
-                                },
-                              })
-                            }>
-                            {type}
-                          </Menu.Item>
-                        ))}
-                      </Menu.Dropdown>
-                    </Menu>
-                  ) : (
-                    <Badge size='sm' variant='light' leftSection={getCardIcon(card)}>
-                      {card.content.container || card.content.type.charAt(0).toUpperCase() + card.content.type.slice(1)}
-                    </Badge>
-                  )}
-                </Group>
-
-                {/* CardToolbar - positioned absolutely within this Group */}
-                {parentEditable && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '-4px',
-                      right: '-4px',
-                      backgroundColor: 'white',
-                      borderRadius: '6px',
-                      padding: '4px',
-                      boxShadow: isEditMode || isHovered ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
-                      opacity: isEditMode || isHovered ? 1 : 0,
-                      transition: 'all 0.2s ease',
-                      zIndex: 10,
-                    }}>
-                    <CardToolbar
-                      editting={isEditMode}
-                      onEditModeEnter={() => {
-                        setIsEditMode(true);
-                        setTitleEditValue(card.content.caption || '');
-                      }}
-                      onEditModeExit={() => {
-                        setIsEditMode(false);
-                        handleEditModeConfirm();
-                      }}
-                      onDelete={() => onDelete(card.id)}
-                    />
-                  </div>
+                  )
                 )}
               </Group>
+
+              {/* TODO: If not editing add a hovered copy and edit button at the top right corner */}
+
+              {/* Contents */}
 
               {card.content.type !== 'nested' && (
                 <>
@@ -393,7 +347,7 @@ export const CardItem: React.FC<CardItemProps> = ({
               )}
 
               {/* Nested cards */}
-              {card.content.type === 'nested' && isExpanded && (
+              {card.content.type === 'nested' && expanded && (
                 <Box mt='xs'>
                   <EditableCardListComponent
                     cards={card.content.cards.map((content, index) => ({
@@ -414,10 +368,10 @@ export const CardItem: React.FC<CardItemProps> = ({
                   />
                 </Box>
               )}
-            </>
-          </Box>
-        </div>
-      )}
+            </Box>
+          </div>
+        );
+      }}
     </Draggable>
   );
 };
