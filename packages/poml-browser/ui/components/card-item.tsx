@@ -18,6 +18,8 @@ import {
   useMantineTheme,
   List,
   ListItem,
+  Stack,
+  Table,
 } from '@mantine/core';
 import {
   IconTrash,
@@ -33,7 +35,7 @@ import {
   IconCopy,
 } from '@tabler/icons-react';
 import { Draggable } from '@hello-pangea/dnd';
-import { CardModel, PomlContainerType } from '@common/types';
+import { CardContent, CardModel, PomlContainerType } from '@common/types';
 import { getValidComponentTypes } from '@common/utils/card';
 import { computedThemeVariables } from '../themes/helper';
 import { notifyWarning } from '@common/notification';
@@ -42,7 +44,6 @@ const IMAGE_FALLBACK_SRC =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage%3C/text%3E%3C/svg%3E";
 
 const TEXT_STYLE = { whiteSpace: 'pre-line' };
-const TRUNCATE_MARKER = '... (truncated)';
 
 export interface CardItemProps {
   card: CardModel;
@@ -50,17 +51,39 @@ export interface CardItemProps {
   onUpdate: (card: CardModel) => void;
   onDelete: (id: string) => void;
   // Forward declaration for EditableCardList component
-  EditableCardListComponent: React.ComponentType<any>;
+  onCreateCardList: (cards: CardModel[]) => void;
   // If the parent card list is editable.
   // If not, this card must not be editable.
   parentEditable?: boolean;
+}
+
+interface CardPreviewProps {
+  cardContent: CardContent;
+  showNested: boolean;
+}
+
+interface CardContentViewProps {
+  cardContent: CardContent;
+  editing: boolean;
+  EditableCardListComponent: React.ComponentType<any>;
+}
+
+export interface CardToolBarProps {
+  editing: boolean;
+  title: string | undefined;
+  container: PomlContainerType | undefined;
+  onTitleChange: (title: string | undefined) => void;
+  onContainerChange: (container: PomlContainerType | undefined) => void;
+  onEditChange: (edit: boolean) => void;
+  onCopy: () => void;
+  onDelete: () => void;
 }
 
 /**
  * A card should have a preview when its content is too long.
  * The preview does not take care of the title.
  */
-const showHavePreview = (card: CardModel) => {
+const shouldHavePreview = (card: CardModel) => {
   if (card.content.type === 'text') {
     return card.content.text.length > 300 || (card.content.text.match(/\n/g) || []).length > 10;
   } else if (card.content.type === 'list') {
@@ -68,47 +91,47 @@ const showHavePreview = (card: CardModel) => {
   } else if (card.content.type === 'table') {
     // not supported yet
     return false;
-  } else if (card.content.type === 'nested') {
-    // Nested content always have preview
+  } else if (card.content.type === 'image') {
+    // Images always have preview
     return true;
+  } else if (card.content.type === 'nested') {
+    // Nested content always have preview when having more than 3 nested card
+    return card.content.cards.length > 3;
   }
   return false;
 };
 
-const TruncateMarker = () => {
-  return <Text c='dimmed'>{TRUNCATE_MARKER}</Text>;
+const TruncateMarker = ({ marker }: { marker?: string }) => {
+  return <Text c='dimmed'>{marker || '... (truncated)'}</Text>;
 };
-
-interface CardPreviewProps {
-  card: CardModel;
-  showNested: boolean;
-}
 
 /**
  * Preview of an card content when the expanded button is not clicked.
  */
-const CardPreview = ({ card, showNested }: CardPreviewProps) => {
-  if (card.content.type === 'text') {
-    if (card.content.text.match(/\n/g)?.[9]) {
+const CardPreview = ({ cardContent, showNested }: CardPreviewProps) => {
+  if (cardContent.type === 'text') {
+    if (cardContent.text.match(/\n/g)?.[9]) {
       // Find the index of the 10th newline character
-      const match = [...card.content.text.matchAll(/\n/g)];
+      const match = [...cardContent.text.matchAll(/\n/g)];
       const index = match[9]?.index ?? 0;
-      const substr = card.content.text.substring(0, index);
+      const substr = cardContent.text.substring(0, index);
       return (
         <Text size='sm' style={TEXT_STYLE}>
           {substr} <TruncateMarker />
         </Text>
       );
     } else {
-      const substr = card.content.text.substring(0, 300);
+      const substr = cardContent.text.substring(0, 300);
       return (
         <Text size='sm' style={TEXT_STYLE}>
           {substr} <TruncateMarker />
         </Text>
       );
     }
-  } else if (card.content.type === 'list') {
-    const first8 = card.content.items.slice(0, 8);
+  } else if (cardContent.type === 'image') {
+    return <CardContentView cardContent={cardContent} editing={false} />;
+  } else if (cardContent.type === 'list') {
+    const first8 = cardContent.items.slice(0, 8);
     return (
       <List>
         {first8.map((item, index) => {
@@ -126,11 +149,107 @@ const CardPreview = ({ card, showNested }: CardPreviewProps) => {
         </ListItem>
       </List>
     );
-  } else if (card.content.type === 'table') {
-    return <Text size='sm'>Table with {card.content.records.length} rows</Text>;
-  } else if (card.content.type === 'nested') {
-    return <></>;
+  } else if (cardContent.type === 'table') {
+    return <Text size='sm'>Table with {cardContent.records.length} rows</Text>;
+  } else if (cardContent.type === 'nested') {
+    if (!showNested) {
+      return (
+        <Text size='sm' c='dimmed'>
+          {cardContent.cards.length} nested items
+        </Text>
+      );
+    }
+    const first3 = cardContent.cards.slice(0, 3).map((content, index) => {
+      // If we are already showing preview, we don't show the nested contents again.
+      return <CardPreview key={index} cardContent={content} showNested={false} />;
+    });
+    if (cardContent.cards.length > 3) {
+      return (
+        <Stack gap='xs'>
+          {first3}
+          <TruncateMarker marker={`... (${cardContent.cards.length - 3} more)`} />
+        </Stack>
+      );
+    } else {
+      return first3;
+    }
   }
+};
+
+/**
+ * The full content view of a card.
+ */
+const CardContentView = ({ cardContent, editing, EditableCardListComponent }: CardContentViewProps) => {
+  const imageDataUrl = useMemo(() => {
+    if (cardContent.type === 'image') {
+      return `data:image/png;base64,${cardContent.base64}`;
+    }
+    return null;
+  }, [cardContent]);
+
+  if (cardContent.type === 'text') {
+    return (
+      <Text size='sm' style={TEXT_STYLE}>
+        {cardContent.text}
+      </Text>
+    );
+  } else if (cardContent.type === 'list') {
+    return (
+      <List>
+        {cardContent.items.map((item, index) => (
+          <ListItem key={index}>{item}</ListItem>
+        ))}
+      </List>
+    );
+  } else if (cardContent.type === 'image') {
+    return (
+      <Box>
+        <Image
+          src={imageDataUrl}
+          alt={cardContent.alt}
+          fit='contain'
+          h='15em'
+          w='100%'
+          fallbackSrc={IMAGE_FALLBACK_SRC}
+        />
+        {cardContent.alt && (
+          <Text size='xs' c='dimmed' mt='xs'>
+            {cardContent.alt}
+          </Text>
+        )}
+      </Box>
+    );
+  } else if (cardContent.type === 'table') {
+    return (
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            {cardContent.columns?.map((column) => (
+              <Table.Td key={column.field}>{column.header}</Table.Td>
+            ))}
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {cardContent.records.map((record, index) => (
+            <Table.Tr key={index}>
+              {cardContent.columns?.map((column) => (
+                <Table.Td key={column.field}>{record[column.field] ?? ''}</Table.Td>
+              ))}
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    );
+  } else if (cardContent.type === 'nested') {
+    return (
+      <Stack gap='xs'>
+        {cardContent.cards.map((content, index) => (
+          <CardPreview key={index} cardContent={content} showNested={false} />
+        ))}
+      </Stack>
+    );
+  }
+  return null;
 };
 
 const getCardIcon = (card: CardModel) => {
@@ -148,17 +267,6 @@ const getCardIcon = (card: CardModel) => {
     return <IconFile size={sz} />;
   }
 };
-
-export interface CardToolBarProps {
-  editing: boolean;
-  title: string | undefined;
-  container: PomlContainerType | undefined;
-  onTitleChange: (title: string | undefined) => void;
-  onContainerChange: (container: PomlContainerType | undefined) => void;
-  onEditChange: (edit: boolean) => void;
-  onCopy: () => void;
-  onDelete: () => void;
-}
 
 /**
  * You can basically edit two things in this toolbar:
@@ -338,13 +446,6 @@ export const CardItem: React.FC<CardItemProps> = ({
       return `${card.content.cards.length} nested items`;
     }
     return 'Empty';
-  }, [card.content]);
-
-  const imageDataUrl = useMemo(() => {
-    if (card.content.type === 'image') {
-      return `data:image/png;base64,${card.content.base64}`;
-    }
-    return null;
   }, [card.content]);
 
   return (
