@@ -11,13 +11,13 @@ import { processDropEvent } from '@common/events/drop';
 import { CardModel } from '@common/types';
 import { notifySuccess } from '@common/notification';
 import { computedThemeVariables } from '../themes/helper';
+import { useDragPasteContext } from '../contexts/drag-context';
 
 interface DroppableDividerProps {
   index: number;
   alwaysHovered: boolean;
   onClick: (index: number) => void;
   onDrop: (cards: CardModel[], index: number) => void;
-  onDragOver?: (isOver: boolean) => void;
 }
 
 const DraggableOverlay: React.FC = () => {
@@ -124,16 +124,11 @@ const StyledDivider: React.FC<{ isHovered: boolean }> = ({ isHovered }) => {
   );
 };
 
-export const DroppableDivider: React.FC<DroppableDividerProps> = ({
-  index,
-  alwaysHovered,
-  onClick,
-  onDrop,
-  onDragOver,
-}) => {
+export const DroppableDivider: React.FC<DroppableDividerProps> = ({ index, alwaysHovered, onClick, onDrop }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const theme = useMantineTheme();
+  const { onDragOverDivider } = useDragPasteContext();
 
   return (
     <Box
@@ -152,12 +147,12 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
       onDragEnter={(e) => {
         e.preventDefault();
         setIsDragActive(true);
-        onDragOver?.(true);
+        onDragOverDivider(true);
       }}
       onDragLeave={(e) => {
         e.preventDefault();
         setIsDragActive(false);
-        onDragOver?.(false);
+        onDragOverDivider(false);
       }}
       onDragOver={(e) => {
         e.preventDefault();
@@ -167,7 +162,7 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({
         e.preventDefault();
         e.stopPropagation();
         setIsDragActive(false);
-        onDragOver?.(false);
+        onDragOverDivider(false);
 
         const cards = await processDropEvent(e.nativeEvent);
         if (cards && cards.length > 0) {

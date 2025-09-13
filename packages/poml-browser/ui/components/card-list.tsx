@@ -11,20 +11,17 @@ import { CardItem } from './card-item';
 import { DroppableDivider } from './droppable-divider';
 import { createEmptyTextCard } from '@common/utils/card';
 
-interface EditableCardListProps {
+export interface EditableCardListProps {
   cards: CardModel[];
   onChange: (cards: CardModel[]) => void;
-  // Edit mode is on
+  // Edit mode is on. Edit mode is not controlled by the current comp.
   editable?: boolean;
-  // Notify the parent when the divider has intercepted a drag event
-  onDragOverDivider?: (isOver: boolean) => void;
 }
 
 export const EditableCardList: React.FC<EditableCardListProps> = ({
   cards,
   onChange,
   editable = true,
-  onDragOverDivider,
 }: EditableCardListProps) => {
   const handleDragEnd = useCallback(
     (result: DropResult) => {
@@ -106,7 +103,6 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                   alwaysHovered={cards.length === 0}
                   onClick={handleAddCardAtIndex}
                   onDrop={handleDropContent}
-                  onDragOver={onDragOverDivider}
                 />
               ) : (
                 <Divider my='sm' />
@@ -131,7 +127,6 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                       alwaysHovered={false}
                       onClick={handleAddCardAtIndex}
                       onDrop={handleDropContent}
-                      onDragOver={onDragOverDivider}
                     />
                   )}
                 </React.Fragment>
