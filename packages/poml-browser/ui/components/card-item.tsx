@@ -40,6 +40,7 @@ import { getValidComponentTypes } from '@common/utils/card';
 import { computedThemeVariables } from '../themes/helper';
 import { notifyWarning } from '@common/notification';
 import { type EditableCardListProps } from './card-list';
+import { CardContentView, CardPreview } from './content-view';
 
 export interface CardItemProps {
   card: CardModel;
@@ -320,51 +321,15 @@ export const CardItem: React.FC<CardItemProps> = ({
 
               {/* Contents */}
 
-              {card.content.type !== 'nested' && (
-                <>
-                  {card.content.type === 'image' ? (
-                    <Box mt='xs'>
-                      <Image
-                        src={imageDataUrl}
-                        alt={card.content.alt || 'Card image'}
-                        fit='contain'
-                        h='15em'
-                        w='100%'
-                        fallbackSrc={IMAGE_FALLBACK_SRC}
-                      />
-                      <Text size='xs' c='dimmed' mt='xs'>
-                        {contentPreview}
-                      </Text>
-                    </Box>
-                  ) : (
-                    <Text size='sm' c='dimmed'>
-                      {contentPreview}
-                    </Text>
-                  )}
-                </>
-              )}
-
-              {/* Nested cards */}
-              {card.content.type === 'nested' && expanded && (
-                <Box mt='xs'>
-                  <EditableCardListComponent
-                    cards={card.content.cards.map((content, index) => ({
-                      id: `nested-${card.id}-${index}`,
-                      content,
-                      timestamp: new Date(),
-                    }))}
-                    onChange={(cardModels: CardModel[]) =>
-                      onUpdate({
-                        ...card,
-                        content: {
-                          type: 'nested',
-                          cards: cardModels.map((cardModel) => cardModel.content),
-                        },
-                      })
-                    }
-                    editable={parentEditable}
-                  />
-                </Box>
+              {expanded ? (
+                <CardContentView
+                  card={card}
+                  editing={editing}
+                  onUpdate={(cardContent) => onUpdate({ ...card, content: cardContent })}
+                  EditableCardListComponent={EditableCardListComponent}
+                />
+              ) : (
+                <CardPreview cardContent={card.content} showNested={true} />
               )}
             </Box>
           </div>

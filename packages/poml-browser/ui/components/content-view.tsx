@@ -31,7 +31,7 @@ import {
 } from '@tabler/icons-react';
 import { Draggable } from '@hello-pangea/dnd';
 import { CardContent, CardModel, PomlContainerType } from '@common/types';
-import { getValidComponentTypes } from '@common/utils/card';
+import { createCard, getValidComponentTypes } from '@common/utils/card';
 import { computedThemeVariables } from '../themes/helper';
 import { notifyWarning } from '@common/notification';
 import { type EditableCardListProps } from './card-list';
@@ -47,7 +47,7 @@ interface CardPreviewProps {
 }
 
 interface CardContentViewProps {
-  cardContent: CardContent;
+  card: CardModel;
   editing: boolean;
   onUpdate: (cardContent: CardContent) => void;
   EditableCardListComponent: React.ComponentType<EditableCardListProps>;
@@ -83,6 +83,13 @@ const TruncateMarker = ({ marker }: { marker?: string }) => {
  * Preview of an card content when the expanded button is not clicked.
  */
 export const CardPreview = ({ cardContent, showNested }: CardPreviewProps) => {
+  const imageDataUrl = useMemo(() => {
+    if (cardContent.type === 'image') {
+      return `data:image/png;base64,${cardContent.base64}`;
+    }
+    return null;
+  }, [cardContent]);
+
   if (cardContent.type === 'text') {
     if (cardContent.text.match(/\n/g)?.[9]) {
       // Find the index of the 10th newline character
@@ -103,7 +110,23 @@ export const CardPreview = ({ cardContent, showNested }: CardPreviewProps) => {
       );
     }
   } else if (cardContent.type === 'image') {
-    return <CardContentView cardContent={cardContent} editing={false} />;
+    return (
+      <Box>
+        <Image
+          src={imageDataUrl}
+          alt={cardContent.alt}
+          fit='contain'
+          h='15em'
+          w='100%'
+          fallbackSrc={IMAGE_FALLBACK_SRC}
+        />
+        {cardContent.alt && (
+          <Text size='xs' c='dimmed' mt='xs'>
+            {cardContent.alt}
+          </Text>
+        )}
+      </Box>
+    );
   } else if (cardContent.type === 'list') {
     const first8 = cardContent.items.slice(0, 8);
     return (
@@ -153,15 +176,19 @@ export const CardPreview = ({ cardContent, showNested }: CardPreviewProps) => {
 /**
  * The full content view of a card.
  */
-export const CardContentView = ({ cardContent, editing, EditableCardListComponent }: CardContentViewProps) => {
-  const imageDataUrl = useMemo(() => {
-    if (cardContent.type === 'image') {
-      return `data:image/png;base64,${cardContent.base64}`;
+export const CardContentView = ({ card, editing, onUpdate, EditableCardListComponent }: CardContentViewProps) => {
+  // We will create a list of (fake) card models from the card content
+  const nestedCardModels = useMemo(() => {
+    const { id, content, timestamp, ...rest } = card;
+    if (content.type !== 'nested') {
+      return [];
     }
-    return null;
-  }, [cardContent]);
+    return content.cards.map((content, index) => createCard(content, rest));
+  }, [card]);
+  const cardContent = card.content;
 
   if (cardContent.type === 'text') {
+    // TODO: support edit mode
     return (
       <Text size='sm' style={TEXT_STYLE}>
         {cardContent.text}
@@ -176,23 +203,7 @@ export const CardContentView = ({ cardContent, editing, EditableCardListComponen
       </List>
     );
   } else if (cardContent.type === 'image') {
-    return (
-      <Box>
-        <Image
-          src={imageDataUrl}
-          alt={cardContent.alt}
-          fit='contain'
-          h='15em'
-          w='100%'
-          fallbackSrc={IMAGE_FALLBACK_SRC}
-        />
-        {cardContent.alt && (
-          <Text size='xs' c='dimmed' mt='xs'>
-            {cardContent.alt}
-          </Text>
-        )}
-      </Box>
-    );
+    return <CardPreview cardContent={cardContent} showNested={false} />;
   } else if (cardContent.type === 'table') {
     return (
       <Table>
@@ -217,15 +228,12 @@ export const CardContentView = ({ cardContent, editing, EditableCardListComponen
   } else if (cardContent.type === 'nested') {
     return (
       <EditableCardListComponent
-        cards={cardContent.cards.map((content, index) => ({
-          id: `nested-${index}`,
-          content,
-          timestamp: new Date(),
-        }))}
+        cards={nestedCardModels}
         onChange={(cards) => {
           onUpdate({
             ...cardContent,
-            cards,
+            // Strip the faked card models when writing back
+            cards: cards.map((card) => card.content),
           });
         }}
         /* Inherit the editing state from the current card */
