@@ -30,7 +30,7 @@ import {
   IconCopy,
 } from '@tabler/icons-react';
 import { Draggable } from '@hello-pangea/dnd';
-import { CardContent, CardModel, PomlContainerType } from '@common/types';
+import { CardContent, CardModel, PomlContainerType, ColumnDefinition } from '@common/types';
 import { createCard, getValidComponentTypes } from '@common/utils/card';
 import { computedThemeVariables } from '../themes/helper';
 import { notifyWarning } from '@common/notification';
@@ -41,7 +41,7 @@ const TEXT_STYLE = { whiteSpace: 'pre-line' };
 const IMAGE_FALLBACK_SRC =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3EImage%3C/text%3E%3C/svg%3E";
 
-interface CardPreviewProps {
+interface CardContentPreviewProps {
   cardContent: CardContent;
   showNested: boolean;
 }
@@ -56,6 +56,9 @@ interface CardContentViewProps {
 /**
  * A card should have a preview when its content is too long.
  * The preview does not take care of the title.
+ *
+ * However, preview component is not necessarily called when shouldHavePreview is true;
+ * it's also not necessary to be not called when shouldHavePreview is false.
  */
 export const shouldHavePreview = (card: CardModel) => {
   if (card.content.type === 'text') {
@@ -82,14 +85,7 @@ const TruncateMarker = ({ marker }: { marker?: string }) => {
 /**
  * Preview of an card content when the expanded button is not clicked.
  */
-export const CardPreview = ({ cardContent, showNested }: CardPreviewProps) => {
-  const imageDataUrl = useMemo(() => {
-    if (cardContent.type === 'image') {
-      return `data:image/png;base64,${cardContent.base64}`;
-    }
-    return null;
-  }, [cardContent]);
-
+export const CardContentPreview = ({ cardContent, showNested }: CardContentPreviewProps) => {
   if (cardContent.type === 'text') {
     if (cardContent.text.match(/\n/g)?.[9]) {
       // Find the index of the 10th newline character
@@ -110,23 +106,9 @@ export const CardPreview = ({ cardContent, showNested }: CardPreviewProps) => {
       );
     }
   } else if (cardContent.type === 'image') {
-    return (
-      <Box>
-        <Image
-          src={imageDataUrl}
-          alt={cardContent.alt}
-          fit='contain'
-          h='15em'
-          w='100%'
-          fallbackSrc={IMAGE_FALLBACK_SRC}
-        />
-        {cardContent.alt && (
-          <Text size='xs' c='dimmed' mt='xs'>
-            {cardContent.alt}
-          </Text>
-        )}
-      </Box>
-    );
+    return <ImageView base64={cardContent.base64} alt={cardContent.alt} showAlt={false} />;
+  } else if (cardContent.type === 'table') {
+    return <TableView records={cardContent.records} columns={cardContent.columns} />;
   } else if (cardContent.type === 'list') {
     const first8 = cardContent.items.slice(0, 8);
     return (
@@ -146,8 +128,6 @@ export const CardPreview = ({ cardContent, showNested }: CardPreviewProps) => {
         </ListItem>
       </List>
     );
-  } else if (cardContent.type === 'table') {
-    return <Text size='sm'>Table with {cardContent.records.length} rows</Text>;
   } else if (cardContent.type === 'nested') {
     if (!showNested) {
       return (
@@ -158,7 +138,7 @@ export const CardPreview = ({ cardContent, showNested }: CardPreviewProps) => {
     }
     const first3 = cardContent.cards.slice(0, 3).map((content, index) => {
       // If we are already showing preview, we don't show the nested contents again.
-      return <CardPreview key={index} cardContent={content} showNested={false} />;
+      return <CardContentPreview key={index} cardContent={content} showNested={false} />;
     });
     if (cardContent.cards.length > 3) {
       return (
@@ -203,28 +183,9 @@ export const CardContentView = ({ card, editing, onUpdate, EditableCardListCompo
       </List>
     );
   } else if (cardContent.type === 'image') {
-    return <CardPreview cardContent={cardContent} showNested={false} />;
+    return <ImageView base64={cardContent.base64} alt={cardContent.alt} showAlt={true} />;
   } else if (cardContent.type === 'table') {
-    return (
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            {cardContent.columns?.map((column) => (
-              <Table.Td key={column.field}>{column.header}</Table.Td>
-            ))}
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {cardContent.records.map((record, index) => (
-            <Table.Tr key={index}>
-              {cardContent.columns?.map((column) => (
-                <Table.Td key={column.field}>{record[column.field] ?? ''}</Table.Td>
-              ))}
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-    );
+    return <TableView records={cardContent.records} columns={cardContent.columns} />;
   } else if (cardContent.type === 'nested') {
     return (
       <EditableCardListComponent
@@ -242,4 +203,43 @@ export const CardContentView = ({ card, editing, onUpdate, EditableCardListCompo
     );
   }
   return null;
+};
+
+const ImageView = ({ base64, alt, showAlt }: { base64: string; alt?: string; showAlt?: boolean }) => {
+  const imageDataUrl = useMemo(() => {
+    return `data:image/png;base64,${base64}`;
+  }, [base64]);
+  return (
+    <Box>
+      <Image src={imageDataUrl} alt={alt} fit='contain' h='15em' w='100%' fallbackSrc={IMAGE_FALLBACK_SRC} />
+      {(showAlt ?? true) && alt && (
+        <Text size='xs' c='dimmed' mt='xs'>
+          {alt}
+        </Text>
+      )}
+    </Box>
+  );
+};
+
+const TableView = ({ records, columns }: { records: { [key: string]: any }[]; columns?: ColumnDefinition[] }) => {
+  return (
+    <Table>
+      <Table.Thead>
+        <Table.Tr>
+          {columns?.map((column) => (
+            <Table.Td key={column.field}>{column.header}</Table.Td>
+          ))}
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {records.map((record, index) => (
+          <Table.Tr key={index}>
+            {columns?.map((column) => (
+              <Table.Td key={column.field}>{record[column.field] ?? ''}</Table.Td>
+            ))}
+          </Table.Tr>
+        ))}
+      </Table.Tbody>
+    </Table>
+  );
 };

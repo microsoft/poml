@@ -40,7 +40,7 @@ import { getValidComponentTypes } from '@common/utils/card';
 import { computedThemeVariables } from '../themes/helper';
 import { notifyWarning } from '@common/notification';
 import { type EditableCardListProps } from './card-list';
-import { CardContentView, CardPreview } from './content-view';
+import { CardContentPreview, CardContentView, CardPreview } from './content-view';
 
 export interface CardItemProps {
   card: CardModel;
@@ -63,6 +63,7 @@ export interface CardToolBarProps {
   onEditChange: (edit: boolean) => void;
   onCopy: () => void;
   onDelete: () => void;
+  style?: React.CSSProperties;
 }
 
 const getCardIcon = (card: CardModel) => {
@@ -96,6 +97,7 @@ export const CardEditToolbar = ({
   onEditChange,
   onCopy,
   onDelete,
+  style,
 }: CardToolBarProps) => {
   const theme = useMantineTheme();
   const iconSizeSmall = px(theme.fontSizes.sm);
@@ -122,7 +124,7 @@ export const CardEditToolbar = ({
   );
 
   return (
-    <Group gap='xs' display='flex'>
+    <Group gap='xs' display='flex' style={style}>
       <TextInput
         value={title ?? ''}
         onChange={handleTitleChange}
@@ -182,6 +184,17 @@ export const CardEditToolbar = ({
 
 /**
  * The main UI component for one card item.
+ *
+ * Title behavior:
+ *
+ * 1. If the card has the need for preview (long card / nested), show the expanding button.
+ *   1.a. If the expanding button exists, there must be a title bar.
+ *   1.b. In edit mode, there is a special title tool bar.
+ *   1.c. In other cases, the title bar show caption (if exists) and container plus edit button.
+ * 2. If the card does not have the need for preview (short card / not nested),
+ *   2.a. If the card has a title or configured container, show the title bar.
+ *   2.b. In edit mode, there is a special title tool bar.
+ *   2.c. In other cases, the edit button is only shown when the card is hovered.
  */
 export const CardItem: React.FC<CardItemProps> = ({
   card,
@@ -203,6 +216,7 @@ export const CardItem: React.FC<CardItemProps> = ({
   const { colors } = computedThemeVariables();
 
   const iconSize = px(theme.fontSizes.md);
+  const iconSizeSmall = px(theme.fontSizes.sm);
 
   // Component icons mapping
   const ComponentIcons: Record<PomlContainerType, React.ReactElement> = {
@@ -274,6 +288,44 @@ export const CardItem: React.FC<CardItemProps> = ({
             }
           : {};
 
+        const shouldShowTextContenInTitle =
+          !(card.content.caption || card.content.container) && card.content.type === 'text' && !expanded;
+
+        const titleElement = editing ? (
+          // Always show title in edit mode, or when it exists
+          <CardEditToolbar
+            editing={editing}
+            title={card.content.caption}
+            container={card.content.container}
+            onTitleChange={setTitle}
+            onContainerChange={setContainer}
+            onEditChange={setEditing}
+            onCopy={handleCopy}
+            onDelete={() => onDelete(card.id)}
+            style={{ flex: '1 1 auto' }}
+          />
+        ) : shouldShowTextContenInTitle ? (
+          // Display the preview if it's a pure text card
+          <CardContentPreview cardContent={card.content} showNested={false} />
+        ) : (
+          // In other cases, we always show the title because there's nothing else to show
+          <Group gap='xs' display='flex'>
+            <Text fw={600} size='sm' flex='1 1 auto'>
+              {card.content.caption || '(No title)'}
+            </Text>
+            <Badge size='sm'>{card.content.container || 'Paragraph'}</Badge>
+            <Switch
+              size='sm'
+              checked={editing}
+              onChange={(event) => {
+                setEditing(event.currentTarget.checked);
+              }}
+              onLabel={<IconEdit size={iconSizeSmall} stroke={2.5} />}
+              offLabel={<IconEditOff size={iconSizeSmall} stroke={2.5} />}
+            />
+          </Group>
+        );
+
         return (
           <div
             ref={provided.innerRef}
@@ -296,25 +348,7 @@ export const CardItem: React.FC<CardItemProps> = ({
                 <ActionIcon size='sm' variant='subtle' onClick={handleToggleExpanded} flex='0 0 auto'>
                   {expanded ? <IconChevronDown size={iconSize} /> : <IconChevronRight size={iconSize} />}
                 </ActionIcon>
-                {/* Always show title in edit mode, or when it exists */}
-                {editing ? (
-                  <CardEditToolbar
-                    editing={editing}
-                    title={card.content.caption}
-                    container={card.content.container}
-                    onTitleChange={setTitle}
-                    onContainerChange={setContainer}
-                    onEditChange={setEditing}
-                    onCopy={handleCopy}
-                    onDelete={() => onDelete(card.id)}
-                  />
-                ) : (
-                  card.content.caption && (
-                    <Text fw={600} size='sm'>
-                      {card.content.caption}
-                    </Text>
-                  )
-                )}
+                {titleElement}
               </Group>
 
               {/* TODO: If not editing add a hovered copy and edit button at the top right corner */}

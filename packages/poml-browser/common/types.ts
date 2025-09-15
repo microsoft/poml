@@ -102,7 +102,7 @@ export type CardContent = TextCardContent | ListCardContent | ImageCardContent |
 
 export type CardContentWithHeader = CardContent | HeaderCardContent;
 
-interface ColumnDefinition {
+export interface ColumnDefinition {
   field: string;
   header: string;
   description?: string;
