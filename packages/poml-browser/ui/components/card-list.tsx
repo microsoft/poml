@@ -97,15 +97,13 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
         <Droppable droppableId='cards'>
           {(provided) => (
             <div {...provided.droppableProps} ref={provided.innerRef}>
-              {editable ? (
+              {editable && (
                 <DroppableDivider
                   index={0}
                   alwaysHovered={cards.length === 0}
                   onClick={handleAddCardAtIndex}
                   onDrop={handleDropContent}
                 />
-              ) : (
-                <Divider my='sm' />
               )}
 
               {cards.map((card, index) => (
@@ -121,14 +119,16 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                     />
                   </Box>
 
-                  {editable && (
+                  {editable ? (
                     <DroppableDivider
                       index={index + 1}
                       alwaysHovered={false}
                       onClick={handleAddCardAtIndex}
                       onDrop={handleDropContent}
                     />
-                  )}
+                  ) : index + 1 !== cards.length ? (
+                    <Divider my='xs' />
+                  ) : null}
                 </React.Fragment>
               ))}
               {provided.placeholder}
