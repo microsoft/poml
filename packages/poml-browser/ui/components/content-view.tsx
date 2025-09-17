@@ -15,6 +15,7 @@ import {
   ListItem,
   Stack,
   Table,
+  Code,
 } from '@mantine/core';
 import {
   IconTrash,
@@ -87,20 +88,26 @@ const TruncateMarker = ({ marker }: { marker?: string }) => {
  */
 export const CardContentPreview = ({ cardContent, showNested }: CardContentPreviewProps) => {
   if (cardContent.type === 'text') {
+    let substr: string;
     if (cardContent.text.match(/\n/g)?.[9]) {
       // Find the index of the 10th newline character
       const match = [...cardContent.text.matchAll(/\n/g)];
       const index = match[9]?.index ?? 0;
-      const substr = cardContent.text.substring(0, index);
+      substr = cardContent.text.substring(0, index);
+    } else {
+      substr = cardContent.text.substring(0, 300);
+    }
+    if (cardContent.container === 'Code') {
       return (
-        <Text size='sm' style={TEXT_STYLE}>
-          {substr} <TruncateMarker />
-        </Text>
+        <Box component='div' size='md'>
+          <Code block>
+            {substr} <TruncateMarker />
+          </Code>
+        </Box>
       );
     } else {
-      const substr = cardContent.text.substring(0, 300);
       return (
-        <Text size='sm' style={TEXT_STYLE}>
+        <Text size='md' style={TEXT_STYLE}>
           {substr} <TruncateMarker />
         </Text>
       );
@@ -117,21 +124,21 @@ export const CardContentPreview = ({ cardContent, showNested }: CardContentPrevi
           const substr = item.length > 100 ? item.substring(0, 100) + '... (truncated)' : item;
           return (
             <ListItem key={index}>
-              <Text size='sm'>
+              <Text size='md'>
                 {substr} <TruncateMarker />
               </Text>
             </ListItem>
           );
         })}
         <ListItem>
-          <Text size='sm'>...</Text>
+          <Text size='md'>...</Text>
         </ListItem>
       </List>
     );
   } else if (cardContent.type === 'nested') {
     if (!showNested) {
       return (
-        <Text size='sm' c='dimmed'>
+        <Text size='md' c='dimmed'>
           {cardContent.cards.length} nested items
         </Text>
       );
@@ -169,16 +176,26 @@ export const CardContentView = ({ card, editing, onUpdate, EditableCardListCompo
 
   if (cardContent.type === 'text') {
     // TODO: support edit mode
-    return (
-      <Text size='sm' style={TEXT_STYLE}>
-        {cardContent.text}
-      </Text>
-    );
+    if (cardContent.container === 'Code') {
+      return (
+        <Box component='div' size='md'>
+          <Code block>{cardContent.text}</Code>
+        </Box>
+      );
+    } else {
+      return (
+        <Text size='md' style={TEXT_STYLE}>
+          {cardContent.text}
+        </Text>
+      );
+    }
   } else if (cardContent.type === 'list') {
     return (
       <List>
         {cardContent.items.map((item, index) => (
-          <ListItem key={index}>{item}</ListItem>
+          <ListItem key={index}>
+            <Text size='md'>{item}</Text>
+          </ListItem>
         ))}
       </List>
     );
@@ -188,18 +205,20 @@ export const CardContentView = ({ card, editing, onUpdate, EditableCardListCompo
     return <TableView records={cardContent.records} columns={cardContent.columns} />;
   } else if (cardContent.type === 'nested') {
     return (
-      <EditableCardListComponent
-        cards={nestedCardModels}
-        onChange={(cards) => {
-          onUpdate({
-            ...cardContent,
-            // Strip the faked card models when writing back
-            cards: cards.map((card) => card.content),
-          });
-        }}
-        /* Inherit the editing state from the current card */
-        editable={editing}
-      />
+      <Box pl='lg' pr={0} pt='xs' pb='xs' component='div'>
+        <EditableCardListComponent
+          cards={nestedCardModels}
+          onChange={(cards) => {
+            onUpdate({
+              ...cardContent,
+              // Strip the faked card models when writing back
+              cards: cards.map((card) => card.content),
+            });
+          }}
+          /* Inherit the editing state from the current card */
+          editable={editing}
+        />
+      </Box>
     );
   }
   return null;

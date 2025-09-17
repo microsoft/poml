@@ -21,5 +21,10 @@ export function computedThemeVariables() {
         secondary: theme.colors.pomlSecondary[theme.colors.pomlSecondary.length - 1],
       },
     },
+    gap: {
+      xxs: '0.5rem',
+      xxxs: '0.35rem',
+      xxxxs: '0.2rem',
+    },
   };
 }

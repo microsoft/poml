@@ -115,7 +115,7 @@ export const CardEditToolbar = ({
     return getValidComponentTypes();
   }, []);
 
-  const { colors } = computedThemeVariables();
+  const { colors, gap } = computedThemeVariables();
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,54 +139,59 @@ export const CardEditToolbar = ({
         onChange={handleTitleChange}
         placeholder='Caption'
         size='md'
-        fw={500}
+        color={colors.scale[8]}
+        fw={600}
         variant='unstyled'
+        style={{
+          flex: 1,
+          minWidth: 0,
+        }}
         styles={{
-          wrapper: {
-            flex: 1,
-            minWidth: 0,
-          },
           input: {
-            'border': colors.border.active,
-            'borderRadius': theme.defaultRadius,
             'padding': '4px 8px',
-            '&:focus': {
-              borderColor: colors.poml.primary,
+            'border': `1px solid ${colors.border.inactive}`,
+            'borderRadius': theme.radius.xs,
+            '&:focus, &[dataFocused]': {
+              borderColor: colors.border.active,
             },
           },
         }}
       />
-      <Menu shadow='md' width='12em'>
-        <Menu.Target>
-          <Badge size='sm' rightSection={<IconChevronDown size={iconSizeSmall} />} style={{ cursor: 'pointer' }}>
-            {container || 'Paragraph'}
-          </Badge>
-        </Menu.Target>
-        <Menu.Dropdown>
-          {validComponentTypes.map((type) => (
-            <Menu.Item key={type} onClick={() => handleContainerChange(type)}>
-              <Text size='sm' fw={600}>
-                {type}
-              </Text>
-            </Menu.Item>
-          ))}
-        </Menu.Dropdown>
-      </Menu>
-      <Switch
-        size='sm'
-        checked={editing}
-        onChange={(event) => {
-          onEditChange(event.currentTarget.checked);
-        }}
-        onLabel={<IconEdit size={iconSizeSmall} stroke={2.5} />}
-        offLabel={<IconEditOff size={iconSizeSmall} stroke={2.5} />}
-      />
-      <ActionIcon size='sm' variant='subtle' color='primary' onClick={onCopy}>
-        <IconCopy size={iconSizeMedium} />
-      </ActionIcon>
-      <ActionIcon size='sm' variant='subtle' color='red' onClick={onDelete}>
-        <IconTrash size={iconSizeMedium} />
-      </ActionIcon>
+      <Group gap={gap.xxxs} flex='0 0 auto' wrap='nowrap'>
+        <Menu shadow='md' width='12em'>
+          <Menu.Target>
+            <Badge size='sm' rightSection={<IconChevronDown size={iconSizeSmall} />} style={{ cursor: 'pointer' }}>
+              {container || 'Paragraph'}
+            </Badge>
+          </Menu.Target>
+          <Menu.Dropdown>
+            {validComponentTypes.map((type) => (
+              <Menu.Item key={type} onClick={() => handleContainerChange(type)}>
+                <Text size='sm' fw={600}>
+                  {type}
+                </Text>
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
+        <Switch
+          size='sm'
+          color='primary'
+          checked={editing}
+          onChange={(event) => {
+            onEditChange(event.currentTarget.checked);
+          }}
+          // When the switch is checked, the label should be in inverted color
+          onLabel={<IconEdit size={iconSizeSmall} stroke={2.5} color={colors.scale[8]} />}
+          offLabel={<IconEditOff size={iconSizeSmall} stroke={2.5} />}
+        />
+        <ActionIcon size='sm' variant='subtle' color='primary' onClick={onCopy}>
+          <IconCopy size={iconSizeMedium} />
+        </ActionIcon>
+        <ActionIcon size='sm' variant='subtle' color='red' onClick={onDelete}>
+          <IconTrash size={iconSizeMedium} />
+        </ActionIcon>
+      </Group>
     </Group>
   );
 };
@@ -201,22 +206,34 @@ export const CardNonEditToolbar = ({
 }: CardNonEditToolbarProps) => {
   const theme = useMantineTheme();
   const iconSizeSmall = px(theme.fontSizes.sm);
+  const { gap } = computedThemeVariables();
 
   return (
-    <Group gap='xs' display='flex' style={style}>
-      <Text fw={600} size='sm' flex='1 1 auto'>
+    <Group gap='xs' display='flex' wrap='nowrap' style={style}>
+      <Text
+        fw={600}
+        size='md'
+        flex='1 1 auto'
+        style={{
+          minWidth: 0,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
         {title || '(No title)'}
       </Text>
-      <Badge size='sm'>{container || 'Paragraph'}</Badge>
-      <Switch
-        size='sm'
-        checked={editing}
-        onChange={(event) => {
-          onEditChange(event.currentTarget.checked);
-        }}
-        onLabel={<IconEdit size={iconSizeSmall} stroke={2.5} />}
-        offLabel={<IconEditOff size={iconSizeSmall} stroke={2.5} />}
-      />
+      <Group gap={gap.xxxs} flex='0 0 auto' wrap='nowrap'>
+        <Badge size='sm'>{container || 'Paragraph'}</Badge>
+        <Switch
+          size='sm'
+          checked={editing}
+          onChange={(event) => {
+            onEditChange(event.currentTarget.checked);
+          }}
+          onLabel={<IconEdit size={iconSizeSmall} stroke={2.5} />}
+          offLabel={<IconEditOff size={iconSizeSmall} stroke={2.5} />}
+        />
+      </Group>
     </Group>
   );
 };
@@ -327,16 +344,17 @@ export const CardItem: React.FC<CardItemProps> = ({
             }}>
             {/* The main card container */}
             <Box
-              p='xs'
+              p={0}
               style={{
                 position: 'relative',
                 ...boxStyle,
               }}
+              component='div'
               onMouseEnter={() => setHovered(true)}
               onMouseLeave={() => setHovered(false)}>
               {/* Title bar - only show if needed according to docstring logic */}
               {(needsPreview || shouldShowTitleBar) && (
-                <Group mb='xs' display='flex'>
+                <Group mb='xs' gap='xs' display='flex' wrap='nowrap'>
                   {needsPreview && (
                     <ActionIcon size='sm' variant='subtle' onClick={handleToggleExpanded} flex='0 0 auto'>
                       {expanded ? <IconChevronDown size={iconSize} /> : <IconChevronRight size={iconSize} />}

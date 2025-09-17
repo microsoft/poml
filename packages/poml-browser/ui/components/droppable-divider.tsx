@@ -137,8 +137,8 @@ export const DroppableDivider: React.FC<DroppableDividerProps> = ({ index, alway
         position: 'relative',
         height: alwaysHovered || isHovered || isDragActive ? theme.lineHeights.md : theme.spacing.sm,
         transition: 'all 0.2s ease',
-        marginTop: theme.spacing.sm,
-        marginBottom: theme.spacing.sm,
+        marginTop: isHovered ? theme.spacing.lg : theme.spacing.sm,
+        marginBottom: isHovered ? theme.spacing.lg : theme.spacing.sm,
         cursor: 'pointer',
       }}
       onMouseEnter={() => setIsHovered(true)}

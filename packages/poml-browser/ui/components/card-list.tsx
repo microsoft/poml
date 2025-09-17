@@ -15,7 +15,7 @@ export interface EditableCardListProps {
   cards: CardModel[];
   onChange: (cards: CardModel[]) => void;
   // Edit mode is on. Edit mode is not controlled by the current comp.
-  editable?: boolean;
+  editable: boolean;
 }
 
 export const EditableCardList: React.FC<EditableCardListProps> = ({
@@ -108,7 +108,7 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
 
               {cards.map((card, index) => (
                 <React.Fragment key={card.id}>
-                  <Box mb='sm'>
+                  <Box mb='sm' component='div'>
                     <CardItem
                       card={card}
                       index={index}
@@ -127,7 +127,7 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                       onDrop={handleDropContent}
                     />
                   ) : index + 1 !== cards.length ? (
-                    <Divider my='xs' />
+                    <Divider my='md' />
                   ) : null}
                 </React.Fragment>
               ))}
