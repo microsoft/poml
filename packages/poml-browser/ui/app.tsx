@@ -15,7 +15,7 @@ import TopNotifications from './components/notifications-top';
 import BottomNotifications from './components/notifications-bottom';
 
 import './themes/style.css';
-import { notifyError, notifySuccess } from '@common/notification';
+import { notifyDebug, notifyError, notifySuccess } from '@common/notification';
 import { processTabEvent } from '@common/events/tab';
 import { renderCardsByPoml } from '@common/poml-helper';
 import { writeRichContentToClipboard } from '@common/events/copy';
@@ -59,6 +59,30 @@ const AppContent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [cards, cardsHandlers] = useListState<CardModel>([]);
   const [showSettings, setShowSettings] = useState(false);
+
+  // @ts-ignore
+  if (__TEST_BUILD__) {
+    // Load test data if available (for testing)
+    const loadTestData = async () => {
+      // Try up to 50 times to load the test data
+      for (let i = 0; i < 50; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const testData = (window as any).__testCardData;
+        if (testData && Array.isArray(testData) && testData.length > 0) {
+          notifySuccess(`Loaded ${testData.length} test cards`);
+          cardsHandlers.setState(testData);
+          // Clear the test data after loading to prevent re-loading on re-renders
+          delete (window as any).__testCardData;
+          return;
+        }
+      }
+      notifyDebug('Failed to load any test data in 5 seconds.');
+    };
+
+    useEffect(() => {
+      loadTestData();
+    }, [cardsHandlers]);
+  }
 
   const showLoading = () => {
     setLoading(true);

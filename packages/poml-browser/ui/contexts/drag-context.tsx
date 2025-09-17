@@ -11,7 +11,7 @@ import { notifySuccess } from '@common/notification';
  * **Purpose**: Prevents conflicts between divider drop zones and document-level drop handling.
  * When a divider is being dragged over, document handlers should ignore the drag event.
  */
-interface DragContextValue {
+interface DragPasteContextValue {
   /** Whether any divider is currently being dragged over */
   isDraggingOverDivider: boolean;
   /** Whether document-level drag is active */
@@ -20,7 +20,7 @@ interface DragContextValue {
   onDragOverDivider: (isOver: boolean) => void;
 }
 
-const DragContext = createContext<DragContextValue | undefined>(undefined);
+const DragPasteContext = createContext<DragPasteContextValue | undefined>(undefined);
 
 interface DragProviderProps {
   children: ReactNode;
@@ -140,20 +140,20 @@ export const DragPasteProvider: React.FC<DragProviderProps> = ({ children, cards
     };
   }, [isDraggingOverDivider, cardsHandlers]);
 
-  const value: DragContextValue = {
+  const value: DragPasteContextValue = {
     isDraggingOverDivider,
     isDraggingOver,
     onDragOverDivider: handleDragOverDivider,
   };
 
-  return <DragContext.Provider value={value}>{children}</DragContext.Provider>;
+  return <DragPasteContext.Provider value={value}>{children}</DragPasteContext.Provider>;
 };
 
 /**
  * Access drag/paste context state. Only use in components that need to coordinate with drag behavior.
  * @throws {Error} If used outside of DragProvider
  */
-export const useDragPasteContext = (): DragContextValue => {
+export const useDragPasteContext = (): DragPasteContextValue => {
   const context = useContext(DragPasteContext);
   if (!context) {
     throw new Error('useDragPasteContext must be used within a DragPasteProvider');
