@@ -127,7 +127,7 @@ export const EditableCardList: React.FC<EditableCardListProps> = ({
                       onDrop={handleDropContent}
                     />
                   ) : index + 1 !== cards.length ? (
-                    <Divider my='md' />
+                    <Divider my='lg' />
                   ) : null}
                 </React.Fragment>
               ))}
