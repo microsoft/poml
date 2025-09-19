@@ -31,6 +31,7 @@ Welcome to the Prompt Orchestration Markup Language (POML) documentation.
 - [mini-poml-rs](https://github.com/linmx0130/mini-poml-rs) – Experimental Rust-based POML renderer for environments without JavaScript or Python interpreters.
 - [poml-ruby](https://github.com/GhennadiiMir/poml) – Ruby gem implementation of POML for Ruby applications.
 - [ai-chatbot-with-python-and-angular](https://github.com/hereandnowai/ai-chatbot-with-python-and-angular) – A chatbot built with Python and Angular (version 20), utilizing POML for prompting and the Langchain framework. Developed by HERE AND NOW AI.
+- [PomlSDK.jl](https://github.com/imohag9/PomlSDK.jl) – Julia implementation of the POML specification.
 
 ## Community
 
