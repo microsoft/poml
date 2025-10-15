@@ -30,7 +30,7 @@
     "chrome-types": "^0.1.367",
     "cross-env": "^10.0.0",
     "dompurify": "3.2.4",
-    "happy-dom": "^18.0.1",
+    "happy-dom": "^20.0.2",
     "marked": "14.1.2",
     "playwright": "^1.54.2",
     "postcss": "^8.5.6",
