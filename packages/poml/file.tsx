@@ -510,10 +510,14 @@ export class PomlFile {
     const type = xmlAttribute(element, 'type')?.value;
     const name = xmlAttribute(element, 'name')?.value;
     const value = xmlAttribute(element, 'value')?.value;
+    const isDefault = xmlAttribute(element, 'default')?.value?.toLowerCase() === 'true';
 
     // Case 1: <let name="var1" src="/path/to/file" />, case insensitive
     // or <let src="/path/to/file" />, case insensitive
     if (source) {
+      if (name && isDefault && Object.prototype.hasOwnProperty.call(contextOut, name)) {
+        return true;
+      }
       let content: any;
       try {
         content = readSource(
@@ -531,14 +535,22 @@ export class PomlFile {
       }
       if (!name) {
         if (content && typeof content === 'object') {
-          Object.assign(contextOut, content);
+          if (isDefault) {
+            for (const [key, value] of Object.entries(content)) {
+              if (!Object.prototype.hasOwnProperty.call(contextOut, key)) {
+                contextOut[key] = value;
+              }
+            }
+          } else {
+            Object.assign(contextOut, content);
+          }
         } else {
           this.reportError(
             'name attribute is expected when the source is not an object.',
             this.xmlElementRange(element),
           );
         }
-      } else {
+      } else if (!(isDefault && Object.prototype.hasOwnProperty.call(contextOut, name))) {
         contextOut[name] = content;
       }
       return true;
@@ -553,13 +565,15 @@ export class PomlFile {
         );
         return true;
       }
-      const evaluated = this.evaluateExpression(
-        value,
-        contextIn,
-        this.xmlAttributeValueRange(xmlAttribute(element, 'value')!),
-        true,
-      );
-      contextOut[name] = evaluated;
+      if (!(isDefault && Object.prototype.hasOwnProperty.call(contextOut, name))) {
+        const evaluated = this.evaluateExpression(
+          value,
+          contextIn,
+          this.xmlAttributeValueRange(xmlAttribute(element, 'value')!),
+          true,
+        );
+        contextOut[name] = evaluated;
+      }
       return true;
     }
 
@@ -582,14 +596,22 @@ export class PomlFile {
       }
       if (!name) {
         if (content && typeof content === 'object') {
-          Object.assign(contextOut, content);
+          if (isDefault) {
+            for (const [key, value] of Object.entries(content)) {
+              if (!Object.prototype.hasOwnProperty.call(contextOut, key)) {
+                contextOut[key] = value;
+              }
+            }
+          } else {
+            Object.assign(contextOut, content);
+          }
         } else {
           this.reportError(
             'name attribute is expected when the source is not an object.',
             this.xmlElementRange(element),
           );
         }
-      } else {
+      } else if (!(isDefault && Object.prototype.hasOwnProperty.call(contextOut, name))) {
         contextOut[name] = content;
       }
 

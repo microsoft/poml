@@ -49,6 +49,16 @@ POML supports various JavaScript expressions within the double curly brackets. T
 
 The `<let>` tag allows you to define variables, import data from external files, and set values within your POML template.
 
+To provide a fallback value that only applies when a variable hasn't been set yet, add `default="true"` to the `<let>` element. When used without a `name`, only properties that are not already defined will be merged into the context.
+
+```xml
+<poml>
+  <let name="greeting" value="'Hello'" />
+  <let name="greeting" value="'Hi'" default="true" />
+  <p>{{greeting}}</p> <!-- Outputs: Hello -->
+</poml>
+```
+
 ### Syntax 1: Setting a variable from a value
 
 ```xml
