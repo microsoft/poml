@@ -16,7 +16,7 @@
   "keywords": [],
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.54.2",
+    "@playwright/test": "^1.56.1",
     "@rollup/plugin-alias": "^5.1.1",
     "@rollup/plugin-commonjs": "26.0.1",
     "@rollup/plugin-json": "^6.1.0",
@@ -32,7 +32,7 @@
     "dompurify": "3.2.4",
     "happy-dom": "^18.0.1",
     "marked": "14.1.2",
-    "playwright": "^1.54.2",
+    "playwright": "^1.56.1",
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
