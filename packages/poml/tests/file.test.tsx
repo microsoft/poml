@@ -314,6 +314,27 @@ describe('templateEngine', () => {
     expect(await poml(text)).toBe('2\n\n4');
     expect(ErrorCollection.empty()).toBe(true);
   });
+
+  test('letDefaultSetsWhenUnset', async () => {
+    const text = '<let name="greeting" value="\'Hi\'" default="true" /><p>{{greeting}}</p>';
+    expect(await poml(text)).toBe('Hi');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letDefaultDoesNotOverride', async () => {
+    const text =
+      '<let name="greeting" value="\'Hello\'" />' +
+      '<let name="greeting" value="\'Hi\'" default="true" />' +
+      '<p>{{greeting}}</p>';
+    expect(await poml(text)).toBe('Hello');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letDefaultObjectMerge', async () => {
+    const text = '<let>{ "a": 1 }</let><let default="true">{ "a": 2, "b": 3 }</let><p>{{a}} {{b}}</p>';
+    expect(await poml(text)).toBe('1 3');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
 });
 
 describe('expressionEvaluation', () => {
