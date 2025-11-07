@@ -458,7 +458,7 @@
     "@xml-tools/ast": "^5.0.5",
     "@xml-tools/content-assist": "^3.1.11",
     "@xml-tools/parser": "^1.0.11",
-    "ai": "^5.0.11",
+    "ai": "^5.0.52",
     "cheerio": "^1.0.0",
     "closest-match": "^1.3.3",
     "d3-dsv": "~2.0.0",
