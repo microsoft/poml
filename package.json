@@ -464,7 +464,7 @@
     "d3-dsv": "~2.0.0",
     "jquery": "^3.7.1",
     "js-tiktoken": "^1.0.20",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "json-schema-to-zod": "^2.6.1",
     "lodash.throttle": "^4.1.1",
     "mammoth": "^1.9.0",
