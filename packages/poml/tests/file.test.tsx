@@ -200,6 +200,43 @@ describe('templateEngine', () => {
     expect(ErrorCollection.empty()).toBe(true);
   });
 
+  test('ifConditionAllowsXmlSensitiveOperators', async () => {
+    const text = '<p><p if="mood_points >= 5 && mood_points < 8">cheerful</p></p>';
+    expect(write(await read(text, undefined, { mood_points: 6 }))).toBe('cheerful');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('ifConditionDecodesXmlEntitiesBeforeEvaluation', async () => {
+    const text = '<p><p if="mood_points &gt;= 5 &amp;&amp; mood_points &lt; 8">cheerful</p></p>';
+    expect(write(await read(text, undefined, { mood_points: 6 }))).toBe('cheerful');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('ifElementCondition', async () => {
+    const text = '<p><if condition="enabled">visible</if><if condition="disabled">hidden</if></p>';
+    expect(write(await read(text, undefined, { enabled: true, disabled: false }))).toBe('visible');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('ifConditionTreatsMissingBareIdentifierAsFalse', async () => {
+    const text = '<p><p if="{{ optional_file }}">hidden</p><p if="{{ !optional_file }}">visible</p></p>';
+    expect(write(await read(text))).toBe('visible');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('missingVariablesCanFallbackWithLogicalOr', async () => {
+    const text = '<p>{{ missing_name || "friend" }}</p>';
+    expect(await poml(text)).toBe('friend');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('toolPolicyAlias', async () => {
+    const rendered = await poml('<tool-policy>Ask before using destructive tools.</tool-policy>');
+    expect(rendered).toContain('Tool Policy');
+    expect(rendered).toContain('Ask before using destructive tools.');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
   test('let', async () => {
     const text = '<p><let name="i" value="1"/><p>{{i}}</p></p>';
     expect(await poml(text)).toBe('1');
@@ -234,6 +271,12 @@ describe('templateEngine', () => {
   test('letContent', async () => {
     const text = '<let>{ "name": "world" }</let><p>hello {{name}}</p>';
     expect(write(await read(text))).toBe('hello world');
+  });
+
+  test('letContentAllowsXmlSensitiveText', async () => {
+    const text = '<let>{ "heart": "<3", "operator": "a && b" }</let><p>{{heart}} {{operator}}</p>';
+    expect(write(await read(text))).toBe('<3 a && b');
+    expect(ErrorCollection.empty()).toBe(true);
   });
 
   test('letObject', async () => {
@@ -274,6 +317,14 @@ describe('templateEngine', () => {
   test('letValueExpression', async () => {
     const text = '<let name="result" value="5 * 8 + 2" /><p>{{result}}</p>';
     expect(await poml(text)).toBe('42');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
+  test('letValueMultilineCurlyExpression', async () => {
+    const text = `<let name="mode" value="{{ 
+      points >= 5 ? 'cheerful' : 'neutral'
+    }}" /><p>{{mode}}</p>`;
+    expect(write(await read(text, undefined, { points: 6 }))).toBe('cheerful');
     expect(ErrorCollection.empty()).toBe(true);
   });
 
