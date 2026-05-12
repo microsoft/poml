@@ -957,6 +957,8 @@ export class PomlFile {
       .replace(/&quot;/g, '"')
       .replace(/&apos;/g, "'")
       .replace(/&amp;/g, '&')
+      .replace(new RegExp(XML_TEXT_LT_SENTINEL, 'g'), '<')
+      .replace(new RegExp(XML_TEXT_AMP_SENTINEL, 'g'), '&')
       .replace(/#lt;/g, '<')
       .replace(/#gt;/g, '>')
       .replace(/#amp;/g, '&')
@@ -1112,7 +1114,9 @@ export class PomlFile {
       const ifElement = this.handleIfElement(element, globalContext, currentLocal);
       if (ifElement !== undefined) {
         if (ifElement) {
-          resultElements.push(ifElement);
+          resultElements.push(
+            forLoopedContext.length > 1 ? <React.Fragment key={`if-${i}`}>{ifElement}</React.Fragment> : ifElement,
+          );
         }
         continue;
       }
@@ -1179,41 +1183,7 @@ export class PomlFile {
           attrib.key = `key-${i}`;
         }
 
-        const contents = xmlElementContents(element).filter((el) => {
-          // Filter out stylesheet and context element in the root poml element
-          if (
-            tagName === 'poml' &&
-            el.type === 'XMLElement' &&
-            ['context', 'stylesheet'].includes((el as XMLElement).name?.toLowerCase() ?? '')
-          ) {
-            return false;
-          } else {
-            return true;
-          }
-        });
-
-        const avoidObject = (el: any) => {
-          if (typeof el === 'object' && el !== null && !React.isValidElement(el)) {
-            return JSON.stringify(el);
-          }
-          return el;
-        };
-
-        const processedContents = contents.reduce((acc, el, i) => {
-          if (el.type === 'XMLTextContent') {
-            // const isFirst = i === 0,
-            //   isLast = i === contents.length - 1;
-            // const text = this.config.trim ? trimText(el.text || '', isFirst, isLast) : el.text || '';
-            acc.push(
-              ...this.handleText(el.text ?? '', { ...globalContext, ...currentLocal }, this.xmlElementRange(el)).map(
-                avoidObject,
-              ),
-            );
-          } else if (el.type === 'XMLElement') {
-            acc.push(this.parseXmlElement(el, globalContext, currentLocal));
-          }
-          return acc;
-        }, [] as any[]);
+        const processedContents = this.processXmlContents(element, globalContext, currentLocal);
 
         elementToAdd = React.createElement(component.render.bind(component), attrib, ...processedContents);
       }
@@ -1547,6 +1517,9 @@ export class PomlFile {
 /**
  * XML utility functions.
  */
+const XML_TEXT_LT_SENTINEL = '\uE000';
+const XML_TEXT_AMP_SENTINEL = '\uE001';
+
 const normalizePomlXmlInput = (text: string): string => {
   let normalized = '';
   let i = 0;
@@ -1571,11 +1544,11 @@ const normalizePomlXmlInput = (text: string): string => {
 
   const appendEscapedTextChar = (char: string, offset: number): number => {
     if (char === '<') {
-      normalized += '#lt;';
+      normalized += XML_TEXT_LT_SENTINEL;
       return offset + 1;
     }
     if (char === '&' && !startsEntity(offset)) {
-      normalized += '#amp;';
+      normalized += XML_TEXT_AMP_SENTINEL;
       return offset + 1;
     }
     normalized += char;

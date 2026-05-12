@@ -218,6 +218,22 @@ describe('templateEngine', () => {
     expect(ErrorCollection.empty()).toBe(true);
   });
 
+  test('ifElementWorksInsideForLoop', async () => {
+    const text = '<p><if for="item in items" condition="item.show">{{ item.name }}</if></p>';
+    expect(
+      write(
+        await read(text, undefined, {
+          items: [
+            { name: 'first', show: true },
+            { name: 'second', show: false },
+            { name: 'third', show: true },
+          ],
+        }),
+      ),
+    ).toBe('firstthird');
+    expect(ErrorCollection.empty()).toBe(true);
+  });
+
   test('ifConditionTreatsMissingBareIdentifierAsFalse', async () => {
     const text = '<p><p if="{{ optional_file }}">hidden</p><p if="{{ !optional_file }}">visible</p></p>';
     expect(write(await read(text))).toBe('visible');
@@ -449,6 +465,19 @@ describe('expressionEvaluation', () => {
     expect(file.getExpressionEvaluations({ start: tokens[1].range.start, end: tokens[1].range.end })).toStrictEqual([
       3,
     ]);
+  });
+
+  test('keeps expression ranges stable after xml-sensitive normalization', () => {
+    ErrorCollection.clear();
+    const text = '<p>{{ value < 3 && value > 1 }}</p>';
+    const file = new PomlFile(text);
+    file.react({ value: 2 });
+    const tokens = file.getExpressionTokens();
+    const expressionStart = text.indexOf('{{');
+    const expressionEnd = text.indexOf('}}') + 1;
+    expect(tokens.length).toBe(1);
+    expect(tokens[0].range).toStrictEqual({ start: expressionStart, end: expressionEnd });
+    expect(file.getExpressionEvaluations(tokens[0].range)).toStrictEqual([true]);
   });
 });
 
