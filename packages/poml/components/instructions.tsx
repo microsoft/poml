@@ -81,6 +81,30 @@ export const Task = component('Task')((props: React.PropsWithChildren<Customizab
 });
 
 /**
+ * ToolPolicy describes when and how model-callable tools should be used.
+ *
+ * @param caption - The title or label for the policy paragraph. Default is `Tool Policy`.
+ * @param captionSerialized - The serialized version of the caption when using "serializer" syntaxes. Default is `toolPolicy`.
+ *
+ * @see {@link Paragraph} for other props available.
+ *
+ * @example
+ * ```xml
+ * <tool-policy>Use tools only when fresh data or external actions are required.</tool-policy>
+ * ```
+ */
+export const ToolPolicy = component('ToolPolicy', { aliases: ['toolPolicy', 'tool-policy'] })((
+  props: React.PropsWithChildren<CustomizableCaptionParagraphProps>,
+) => {
+  const { children, caption = 'Tool Policy', captionSerialized = 'toolPolicy', ...others } = props;
+  return (
+    <CaptionedParagraph caption={caption} captionSerialized={captionSerialized} {...others}>
+      {children}
+    </CaptionedParagraph>
+  );
+});
+
+/**
  * Output format deals with the format in which the model should provide the output.
  * It can be a specific format such as JSON, XML, or CSV, or a general format such as a story,
  * a diagram or steps of instructions.

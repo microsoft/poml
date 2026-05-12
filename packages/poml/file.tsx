@@ -133,6 +133,7 @@ export class PomlFile {
   }
 
   private readXml(text: string) {
+    text = normalizePomlXmlInput(text);
     const { cst, tokenVector, lexErrors, parseErrors } = parseXML(text);
     const errors: ReadError[] = [];
 
@@ -218,7 +219,7 @@ export class PomlFile {
       return undefined;
     }
 
-    const text = xmlElementText(element[0]);
+    const text = this.unescapeText(xmlElementText(element[0]));
     try {
       return JSON.parse(text);
     } catch (e) {
@@ -330,7 +331,7 @@ export class PomlFile {
         elementName === 'tool'
       ) {
         const parserAttr = xmlAttribute(element, 'parser');
-        const text = xmlElementText(element).trim();
+        const text = this.unescapeText(xmlElementText(element)).trim();
 
         // Check if it's an expression (either explicit parser="eval" or auto-detected)
         if (parserAttr?.value === 'eval' || (!parserAttr && !text.trim().startsWith('{'))) {
@@ -490,6 +491,7 @@ export class PomlFile {
       context,
       this.xmlAttributeValueRange(ifCondition),
       true,
+      true,
     );
     if (condition) {
       return true;
@@ -497,6 +499,35 @@ export class PomlFile {
       return false;
     }
   };
+
+  private handleIfElement(
+    element: XMLElement,
+    globalContext: { [key: string]: any },
+    localContext: { [key: string]: any },
+  ): React.ReactElement | null | undefined {
+    if (element.name?.toLowerCase() !== 'if') {
+      return undefined;
+    }
+
+    const conditionAttr = xmlAttribute(element, 'condition') ?? xmlAttribute(element, 'test');
+    if (!conditionAttr?.value) {
+      this.reportError('condition attribute is expected for <if>.', this.xmlElementRange(element));
+      return null;
+    }
+
+    const condition = this.evaluateExpression(
+      conditionAttr.value,
+      { ...globalContext, ...localContext },
+      this.xmlAttributeValueRange(conditionAttr),
+      true,
+      true,
+    );
+    if (!condition) {
+      return null;
+    }
+
+    return <>{this.processXmlContents(element, globalContext, localContext)}</>;
+  }
 
   private handleLet = (
     element: XMLElement,
@@ -566,7 +597,7 @@ export class PomlFile {
     // Case 3: <let>{ JSON }</let>
     // or <let name="var1" type="number">{ JSON }</let>
     if (element.textContents.length > 0) {
-      const text = xmlElementText(element);
+      const text = this.unescapeText(xmlElementText(element));
       let content: any;
       try {
         content = parseText(text, type as AnyValue | undefined);
@@ -684,7 +715,7 @@ export class PomlFile {
           | 'json'
           | 'eval')
       : undefined;
-    const text = xmlElementText(element).trim();
+    const text = this.unescapeText(xmlElementText(element)).trim();
 
     // Get the range for the text content (if available)
     const textRange =
@@ -921,6 +952,13 @@ export class PomlFile {
 
   private unescapeText = (text: string): string => {
     return text
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&amp;/g, '&')
+      .replace(new RegExp(XML_TEXT_LT_SENTINEL, 'g'), '<')
+      .replace(new RegExp(XML_TEXT_AMP_SENTINEL, 'g'), '&')
       .replace(/#lt;/g, '<')
       .replace(/#gt;/g, '>')
       .replace(/#amp;/g, '&')
@@ -989,13 +1027,27 @@ export class PomlFile {
     context: { [key: string]: any },
     range?: Range,
     stripCurlyBrackets: boolean = false,
+    missingIdentifierAsUndefined: boolean = false,
   ) {
     try {
+      expression = this.unescapeText(expression);
       if (stripCurlyBrackets) {
-        const curlyMatch = expression.match(/^\s*{{\s*(.+?)\s*}}\s*$/m);
+        const curlyMatch = expression.match(/^\s*{{\s*([\s\S]+?)\s*}}\s*$/);
         if (curlyMatch) {
           expression = curlyMatch[1];
         }
+      }
+      const bareIdentifier = expression.trim();
+      if (
+        /^[A-Za-z_$][\w$]*$/.test(bareIdentifier) &&
+        !['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'].includes(bareIdentifier) &&
+        !(bareIdentifier in context) &&
+        !(bareIdentifier in globalThis)
+      ) {
+        if (missingIdentifierAsUndefined) {
+          return undefined;
+        }
+        throw new ReferenceError(`${bareIdentifier} is not defined`);
       }
       const result = evalWithVariables(expression, context || {});
       if (range) {
@@ -1057,6 +1109,15 @@ export class PomlFile {
 
       // Common logic for handling if-conditions
       if (!this.handleIfCondition(element, context)) {
+        continue;
+      }
+      const ifElement = this.handleIfElement(element, globalContext, currentLocal);
+      if (ifElement !== undefined) {
+        if (ifElement) {
+          resultElements.push(
+            forLoopedContext.length > 1 ? <React.Fragment key={`if-${i}`}>{ifElement}</React.Fragment> : ifElement,
+          );
+        }
         continue;
       }
       // Common logic for handling meta elements and new schema/tool elements
@@ -1122,41 +1183,7 @@ export class PomlFile {
           attrib.key = `key-${i}`;
         }
 
-        const contents = xmlElementContents(element).filter((el) => {
-          // Filter out stylesheet and context element in the root poml element
-          if (
-            tagName === 'poml' &&
-            el.type === 'XMLElement' &&
-            ['context', 'stylesheet'].includes((el as XMLElement).name?.toLowerCase() ?? '')
-          ) {
-            return false;
-          } else {
-            return true;
-          }
-        });
-
-        const avoidObject = (el: any) => {
-          if (typeof el === 'object' && el !== null && !React.isValidElement(el)) {
-            return JSON.stringify(el);
-          }
-          return el;
-        };
-
-        const processedContents = contents.reduce((acc, el, i) => {
-          if (el.type === 'XMLTextContent') {
-            // const isFirst = i === 0,
-            //   isLast = i === contents.length - 1;
-            // const text = this.config.trim ? trimText(el.text || '', isFirst, isLast) : el.text || '';
-            acc.push(
-              ...this.handleText(el.text ?? '', { ...globalContext, ...currentLocal }, this.xmlElementRange(el)).map(
-                avoidObject,
-              ),
-            );
-          } else if (el.type === 'XMLElement') {
-            acc.push(this.parseXmlElement(el, globalContext, currentLocal));
-          }
-          return acc;
-        }, [] as any[]);
+        const processedContents = this.processXmlContents(element, globalContext, currentLocal);
 
         elementToAdd = React.createElement(component.render.bind(component), attrib, ...processedContents);
       }
@@ -1173,6 +1200,45 @@ export class PomlFile {
       // Cases where there are multiple elements or zero elements.
       return <>{resultElements}</>;
     }
+  }
+
+  private processXmlContents(
+    element: XMLElement,
+    globalContext: { [key: string]: any },
+    localContext: { [key: string]: any },
+  ): any[] {
+    const tagName = element.name;
+    const contents = xmlElementContents(element).filter((el) => {
+      if (
+        tagName === 'poml' &&
+        el.type === 'XMLElement' &&
+        ['context', 'stylesheet'].includes((el as XMLElement).name?.toLowerCase() ?? '')
+      ) {
+        return false;
+      } else {
+        return true;
+      }
+    });
+
+    const avoidObject = (el: any) => {
+      if (typeof el === 'object' && el !== null && !React.isValidElement(el)) {
+        return JSON.stringify(el);
+      }
+      return el;
+    };
+
+    return contents.reduce((acc, el) => {
+      if (el.type === 'XMLTextContent') {
+        acc.push(
+          ...this.handleText(el.text ?? '', { ...globalContext, ...localContext }, this.xmlElementRange(el)).map(
+            avoidObject,
+          ),
+        );
+      } else if (el.type === 'XMLElement') {
+        acc.push(this.parseXmlElement(el, globalContext, localContext));
+      }
+      return acc;
+    }, [] as any[]);
   }
 
   private recoverPosition(position: number): number {
@@ -1451,11 +1517,136 @@ export class PomlFile {
 /**
  * XML utility functions.
  */
+const XML_TEXT_LT_SENTINEL = '\uE000';
+const XML_TEXT_AMP_SENTINEL = '\uE001';
+
+const normalizePomlXmlInput = (text: string): string => {
+  let normalized = '';
+  let i = 0;
+  let inTag = false;
+  let quote: '"' | "'" | undefined;
+
+  const startsEntity = (offset: number): boolean =>
+    /^&(?:lt|gt|amp|quot|apos|#[0-9]+|#x[0-9a-fA-F]+);/.test(text.slice(offset));
+  const startsMarkup = (offset: number): boolean => {
+    const next = text[offset + 1];
+    if (next === undefined) {
+      return false;
+    }
+    if (next === '!' || next === '?') {
+      return true;
+    }
+    if (next === '/') {
+      return true;
+    }
+    return /[A-Za-z_:]/.test(next);
+  };
+
+  const appendEscapedTextChar = (char: string, offset: number): number => {
+    if (char === '<') {
+      normalized += XML_TEXT_LT_SENTINEL;
+      return offset + 1;
+    }
+    if (char === '&' && !startsEntity(offset)) {
+      normalized += XML_TEXT_AMP_SENTINEL;
+      return offset + 1;
+    }
+    normalized += char;
+    return offset + 1;
+  };
+
+  while (i < text.length) {
+    const char = text[i];
+
+    if (!inTag) {
+      if (text.startsWith('<!--', i)) {
+        const end = text.indexOf('-->', i + 4);
+        if (end === -1) {
+          normalized += text.slice(i);
+          break;
+        }
+        normalized += text.slice(i, end + 3);
+        i = end + 3;
+        continue;
+      }
+      if (text.startsWith('<![CDATA[', i)) {
+        const end = text.indexOf(']]>', i + 9);
+        if (end === -1) {
+          normalized += text.slice(i);
+          break;
+        }
+        normalized += text.slice(i, end + 3);
+        i = end + 3;
+        continue;
+      }
+      if (text.startsWith('<?', i)) {
+        const end = text.indexOf('?>', i + 2);
+        if (end === -1) {
+          normalized += text.slice(i);
+          break;
+        }
+        normalized += text.slice(i, end + 2);
+        i = end + 2;
+        continue;
+      }
+      if (char === '<' && startsMarkup(i)) {
+        inTag = true;
+        normalized += char;
+        i++;
+        continue;
+      }
+      i = appendEscapedTextChar(char, i);
+      continue;
+    }
+
+    if (quote) {
+      if (char === quote) {
+        quote = undefined;
+        normalized += char;
+        i++;
+        continue;
+      }
+      i = appendEscapedTextChar(char, i);
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      quote = char;
+      normalized += char;
+      i++;
+      continue;
+    }
+
+    if (char === '>') {
+      inTag = false;
+    }
+    normalized += char;
+    i++;
+  }
+
+  return normalized;
+};
+
 const evalWithVariables = (text: string, context: { [key: string]: any }): any => {
-  const variableNames = Object.keys(context);
-  const variableValues = Object.values(context);
-  const fn = new Function(...variableNames, `return ${text}`);
-  return fn(...variableValues);
+  const fn = new Function(
+    'context',
+    `
+const scope = new Proxy(context, {
+  has(target, key) {
+    return key in target || !(key in globalThis);
+  },
+  get(target, key) {
+    if (key === Symbol.unscopables) {
+      return undefined;
+    }
+    return target[key];
+  }
+});
+with (scope) {
+  return ${text};
+}`,
+  );
+  return fn(context);
 };
 
 const hyphenToCamelCase = (text: string): string => {
