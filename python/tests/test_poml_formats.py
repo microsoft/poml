@@ -1,6 +1,8 @@
 import base64
 from pathlib import Path
 
+import pytest
+
 import poml
 from poml.api import (
     ContentMultiMedia,
@@ -126,6 +128,21 @@ def test_message_dict_format():
     result = poml.poml(markup, format="message_dict")
     expected = [{"speaker": "human", "content": "Hello world"}]
     assert result == expected
+
+
+def test_langchain_template_ignores_output_schema_braces():
+    pytest.importorskip("langchain_core")
+    from poml.integration.langchain import LangchainPomlTemplate
+
+    markup = """<poml>
+        <output-schema>{"type": "object", "properties": {"name": {"type": "string"}}}</output-schema>
+        <p>Hello {{name}}</p>
+        </poml>"""
+    template = LangchainPomlTemplate.from_template(markup)
+    file_template = LangchainPomlTemplate.from_file(Path(__file__).parent / "assets" / "response_format.poml")
+
+    assert template.input_variables == ["name"]
+    assert file_template.input_variables == []
 
 
 def test_dict_format_with_schema_tools_runtime():

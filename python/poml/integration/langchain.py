@@ -80,6 +80,10 @@ class LangchainPomlTemplate(PromptTemplate):
 
     @classmethod
     def from_template(cls, *args, speaker_mode: bool = True, **kwargs) -> "LangchainPomlTemplate":
+        # POML uses double braces for variables, while JSON and other schema
+        # formats routinely contain single braces. Jinja's variable scanner
+        # understands the former without treating the latter as fields.
+        kwargs.setdefault("template_format", "jinja2")
         instance: LangchainPomlTemplate = super().from_template(*args, **kwargs)  # type: ignore
         instance.speaker_mode = speaker_mode
         return instance
